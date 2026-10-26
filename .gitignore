@@ -46,3 +46,8 @@ temp/
 # Helper scripts (local maintainer utilities, not part of the plugin)
 remove_meta_files.sh
 helper-scripts/
+
+# Internal planning docs (not for the public repo)
+plan.md
+docs/HOSTED-APP-HANDOFF.md
+docs/INTERNAL-*.md

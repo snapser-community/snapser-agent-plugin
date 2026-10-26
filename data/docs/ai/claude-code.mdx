@@ -6,7 +6,7 @@ export const meta = {
 
 # Claude Code Integration
 
-> ⚠️ **Alpha Release** — The Snapser Plugin for Claude Code is currently in **alpha** and available by invitation only. If you'd like early access, please reach out to **Snapser support** and we'll get you onboarded.
+> ⚠️ **Early Release** — The Snapser Plugin for Claude Code is new and evolving quickly. Behavior and skill names may change between releases.
 
 ## Snapser Plugin for Claude Code
 
@@ -32,29 +32,26 @@ It's like having a Snapser engineer sitting next to you inside Claude Code.
 
 ## How to Enable and Use It
 
-1. **Request Early Access**
-   The plugin is in alpha and gated behind an invite. Contact **Snapser support** at [support@snapser.com](mailto:support@snapser.com) to request access to the private marketplace.
-
-2. **Install Claude Code**
+1. **Install Claude Code**
    Make sure you have [Claude Code](https://claude.com/claude-code) installed and signed in.
 
-3. **Install Prerequisites**
+2. **Install Prerequisites**
    - `snapctl` — the Snapser CLI (`pipx install snapctl` on MacOS/Linux, `pip install --user snapctl` on Windows)
    - Docker Desktop — required for BYOSnap and BYOGS publish commands
 
-   Verify your setup:
+   Log in and verify your setup:
    ```bash
+   snapctl login
    snapctl validate
    ```
 
-4. **Add the Marketplace and Install the Plugin**
-   Once you've been granted access to the private repo:
+3. **Add the Marketplace and Install the Plugin**
    ```bash
-   claude plugin marketplace add snapser-engine/snapser-agent-plugin
+   claude plugin marketplace add snapser-community/snapser-agent-plugin
    claude plugin install snapser@snapser-plugins
    ```
 
-5. **Just Talk to Claude**
+4. **Just Talk to Claude**
    Try prompts like:
    - "Set up a new backend for my multiplayer game with auth and leaderboards"
    - "Build me a flappy bird game with a leaderboard"
@@ -70,4 +67,4 @@ Claude will pick the right skill automatically, run the right `snapctl` commands
 
 - The plugin runs entirely in your local Claude Code session and uses your own `snapctl` credentials — Snapser does not see your prompts or code.
 - All Snapser documentation, API specs, and settings references are bundled **locally** with the plugin, so Claude never reaches out to the web for Snapser answers.
-- Because the plugin is in alpha, behavior and skill names may change between releases. Please send feedback — and any bugs — to Snapser support so we can improve it before the public launch.
+- Behavior and skill names may change between releases. Please send feedback — and any bugs — to Snapser support at [support@snapser.com](mailto:support@snapser.com).

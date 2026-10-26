@@ -61,7 +61,7 @@ Full per-platform instructions (Claude Code, Claude Cowork, Codex, OpenCode, Cur
 Quick start for Claude Code — add the Snapser marketplace, then install the plugin:
 
 ```
-claude plugin marketplace add snapser-engine/snapser-agent-plugin
+claude plugin marketplace add snapser-community/snapser-agent-plugin
 claude plugin install snapser@snapser-plugins
 ```
 

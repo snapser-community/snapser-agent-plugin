@@ -300,7 +300,7 @@ snapctl byosnap publish --help
 # Example:
 snapctl byosnap publish --byosnap-id byosnap-jinks-flask --version "v0.0.1" --path /Users/DevName/Development/SnapserEngine/byosnap-python --profile-filename $profile_filename
 snapctl byosnap publish --byosnap-id $byosnap_id --version $version --path $code_root_path
-byosnap publish --byosnap-id byosnap-python --version "v1.0.0" --path /Users/AJ/Development/byosnap-python --profile-filename my-byosnap-profile.yaml
+snapctl byosnap publish --byosnap-id byosnap-python --version "v1.0.0" --path /Users/DevName/Development/SnapserEngine/byosnap-python --profile-filename my-byosnap-profile.yaml
 ```
 
 #### 5. byosnap sync
