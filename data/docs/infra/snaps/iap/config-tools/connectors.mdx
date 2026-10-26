@@ -1,0 +1,74 @@
+# IAP Connectors
+IAP connectors authorize your snap to validate purchase receipts from app stores and web storefronts. This snap provides your game with the security so that only legitimate transactions receive rewards. The snap supports Apple App Store, Google Play, Steam, and Tebex.
+
+To get started:
+1. Click on Connectors from the side Nav
+2. You will see an "Add a connector" button.
+3. Click on it to add a connector (Apple, Google, Steam, or Tebex).
+
+## Apple Connector
+<Note>
+  Detailed documentation to setup your `Apple IAP Connector` can be found [here](/docs/infra/snaps/iap#apple-setup). We highly recommend going through the documentation before setting up the connector.
+</Note>
+
+### Apple Credentials
+- **Key Id**: This is the team ID from the Apple Developer Console. Looks something like ```2S3G8KZDH3```
+- **Bundle Id**: This is the bundle ID of your app. Looks something like ```com.yourcompany.yourapp```
+- **Issuer**: This is the issuer ID from the Apple Developer Console. Looks something like ```4s252r9d-3d7c-4937-h134-1b8a8506976w```
+
+### Apple IAP Server API Key
+- **Apple IAP Server API Key file**: This is the shared secret from the Apple Developer Console. The file is
+in the .p8 format and looks something like this:
+  <CodeGroup title="Apple IAP Server API key" label=".p8">
+  ```
+  -----BEGIN PRIVATE KEY-----
+  <private key contents>
+  -----END PRIVATE KEY-----
+  ```
+  </CodeGroup>
+
+### Apple IAP Testing
+These settings control how Apple IAP receipts are validated against Apple's sandbox environment. You can switch the entire connector to sandbox, or route only specific users through it while real payments stay live for everyone else.
+
+- **Sandbox**: Toggle this to true if you are testing in the sandbox environment.
+- **Allowlist**: A comma-separated list of user IDs. These users are always validated against Apple's sandbox environment when the global **Sandbox** toggle is off. This lets your production environment process real Apple payments for the general player base while still letting specific QA/test users continue to use sandbox receipts. Leave the field blank to disable the allowlist.
+<Note>
+  `Allowlist` is available in IAP snap version `v1.9.0` and above. The field is editable when the **Sandbox** toggle is off and disabled while Sandbox is on.
+</Note>
+
+## Google Connector
+<Note>
+  Detailed documentation to setup your `Google IAP Connector` can be found [here](/docs/infra/snaps/iap#google-setup). We highly recommend going through the documentation before setting up the connector.
+</Note>
+
+### Google Cloud Service Account Credentials
+- **Google Cloud Service Account Credentials**: The API key from the Google Play Console. It looks
+  something like this:
+  <CodeGroup title="Google Cloud Service Account Credentials" label=".json">
+  ```
+  {
+    "type": "service_account",
+    "project_id": "your-project-id",
+    "private_key_id": "your-private-key-id",
+    "private_key": "-----BEGIN PRIVATE KEY-----"
+  }
+  ```
+  </CodeGroup>
+
+## Steam Connector
+<Note>
+  Detailed documentation to setup your `Steam IAP Connector` can be found [here](/docs/infra/snaps/iap#steam-setup). We highly recommend going through the documentation before setting up the connector.
+</Note>
+
+### Steam Credentials
+- **App Id**: This is the App ID from your Steamworks Dashboard. Looks something like ```240760```
+- **Web API Key**: This is your private Publisher Web API Key. Looks something like ```A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6```
+
+## Tebex Connector
+<Note>
+  Detailed documentation to setup your `Tebex IAP Connector` can be found [here](/docs/infra/snaps/iap#tebex-setup). We highly recommend going through the documentation before setting up the connector.
+</Note>
+
+### Tebex Credentials
+- **Private Key**: This is your secret password from your Tebex Control Panel.
+- **Public Token**: This is your key used to access any public facing APIs.

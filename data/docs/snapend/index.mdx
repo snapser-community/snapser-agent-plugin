@@ -1,0 +1,216 @@
+import {DOCS_ADMIN_TOOLS_PAGE, DOCS_API_EXPLORER_PAGE, DOCS_WS_TESTER_PAGE} from '@/configs/routes'
+
+
+export const description = 'Introduction to Snapend'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Custom Backend
+
+Snapser offers a holistic solution for the backend needs of your application. Its a one stop shop for the trifecta of backend app development viz. pre-built backend features, relay systems, and game servers. Developers can bring their own code, data plane,
+and servers and seamlessly plug them into their infrastructure using Snapser's customization services.
+
+## Snapend
+
+In Snapser, an customized encapsulation of all these building blocks is called a **Snapend**. Each Snapend has built-in network security, a customized SDKs, monitoring tools, live ops tools and audit capabilities.
+
+![snapser-overview](/images/docs/how-it-works.png)
+
+## Tutorials
+
+The best way to understand Snapends is to go through the following tutorials:
+
+1. [Create a Snapend](/docs/guides/tutorials/create-snapend): Basic tutorial to get a simple Snapend up and running.
+1. [Snapend Tools](/docs/guides/tutorials/snapend-tools): This tutorial builds on the basic tutorial to expose you to all the tools available to you in your Snapend. In this tutorial, you will learn about the following tools: Configuration tools, SDK tools, API Explorer, Monitoring tools and Logs.
+1. [Snapend Security](/docs/guides/tutorials/snapend-security): This tutorial will expose you to the security features of your Snapend.
+
+<Note>We highly recommend going through these tutorials.</Note>
+
+## Pre-requisites
+
+### Create an App
+
+Once you log into your Snapser account, click the **Add App** button. Next, enter a `Name`.
+
+![Add App](/images/docs/add-game.png)
+
+### Select your app
+
+After you add an app, you will see your app widget. Please click on your app widget to get to your app view.
+
+![Select app](/images/docs/select-game.png)
+
+## Development Pipeline
+
+Snapser provides a [Development Pipeline](/docs/snapend/dev-pipeline) for your company.
+Each app has three distinct environments:
+
+1. **DEVELOPMENT** - This is the environment for rapid development. You can have multiple Snapends in DEVELOPMENT.
+2. **STAGING** - This is where you will test your Snapends. You can have multiple Snapends in STAGING.
+3. **PRODUCTION** - This is where your Snapends will be live. You can have only one Snapend in PRODUCTION. Only STAGING Snapends can be promoted to PRODUCTION. Note that, Starter Tier subscribers will need to upgrade to the Standard Tier to unlock the production environment.
+
+## Build your Snapend
+
+Once you go to your app view, you will see that we have built a development pipeline for your company. But you have no snapends so far. Let's start creating our first cluster by clicking the `+ Snapend` button under `Development`.
+
+![App view](/images/docs/game-view.png)
+
+#### Name your Snapend
+
+Let's, give your snapend an app. Any alphanumeric string with dashes is allowed as your Snapend name
+
+![Cluster name](/images/docs/cluster-name.png)
+
+#### Select Snaps
+
+Now, start selecting the features you want in your app. For example, pick Authentication and Analytics. However, note that you can choose any number of snaps you want.
+
+<Warning>
+  Authentication snap is mandatory for every snapend. This is so that we can
+  provide secure backends by default.
+</Warning>
+
+You will be able to further configure these snaps using the [Snaps Configuration](/docs/snapend/admin-tools) tool.
+
+<Note>
+  If you are unsure what Snaps to select, consider using the [App
+  Template](/docs/resources/tools/game-templates) tool.
+</Note>
+
+![Cluster snap](/images/docs/cluster-snap.png)
+
+#### Select your customizations
+
+1. **Gateway** - Enable web sockets on your gateway for real-time communication.
+   {/* 2. **BYODS** - (Bring your own Data Store) - Ability to tell Snapser to use your POSTGres or Redis stores instead of Snapser provisioning them for you.
+   <Note>
+   Snapser uses Couchbase for a few Snaps. We have not yet unlocked BYODS for Couchbase. You can only use Snapser's Couchbase instances for now.
+   </Note> */}
+1. **BYOServer** - (Bring your own External Server) - Ability to virtually add your own server to the Snapser cluster. Your gateway will register this as a service, perform authentication checks for every API call coming in and forward authenticated calls to it.
+
+![Cluster customize](/images/docs/cluster-customize.png)
+
+#### Review
+
+Here you can review the Snapend we will build. You can see your Snapends architecture in the Preview widget. Once you are happy with your cluster, hit **Snap it!** After 10-15 seconds, your custom server will be up and running.
+
+![Cluster review](/images/docs/cluster-review.png)
+
+## Accessing your Snapend
+
+Once your snapend is ready, you will see its widget under the app Snapends.
+![Cluster review](/images/docs/app-page.png)
+
+Clicking on this widget will take you to our Snapend page. Every Snapend has a unique snapend Id. You can find yours by clicking on the **Copy** button next to the **Edit** button. You will have access to Monitoring, Logs, Admin Tools, API Explorers, and all other tools for your Snapend.
+
+![My snapend](/images/docs/my-snapend.png)
+
+## Editing your Snapend
+
+Once your snapend is up, you may want to edit your snapend. For example, you may want to add a new snap or remove an existing snap. You can click on the **Update Snapend** button on your Snapend home page. This will take you to the same UX you went through for creation of a Snapend and you can make your changes. Once you are done, hit **Snap it!** and your Snapend will be updated.
+
+<Warning>
+  **IMPORTANT** - Please note that if you are editing your Snapend and are
+  removing a Snaps, you will lose all the data associated with that Snap. For
+  example, if you remove the Analytics Snap, all your analytics data will be
+  deleted. Please be careful while editing your Snapend.
+</Warning>
+
+## Redeploying your Snapend
+
+Sometimes you do not want to change anything about your Snapend; you just want to re-run the deployment with the current architecture and Snap settings. The most common reasons are to pick up a fresh backend image, or to recover a Snapend that landed in a bad state after a transient deploy issue. For these cases, head to **Snapend → Settings → Admin** and use the **Redeploy Snapend** action. Like the Delete flow, redeploy uses a name-typing confirmation modal — type the Snapend's name to confirm. Your user data is preserved across a redeploy.
+
+![Redeploy Snapend](/images/docs/redeploy-snapend.png)
+
+<Note>
+  The Snapend may be briefly unavailable while it restarts. The redeploy is
+  kicked off asynchronously — you will see a confirmation toast once it has
+  started, and the Snapend will return to LIVE once the deployment completes.
+</Note>
+
+<Note>
+  The Redeploy button is disabled while the Snapend is already in the middle of
+  an update or deploy — wait for the state to return to LIVE, WARNING, or FAILED
+  before triggering a redeploy.
+</Note>
+
+<Warning>
+  **Production Snapends cannot be redeployed directly.** Direct Redeploy is only
+  available for DEVELOPMENT and STAGING environments. To redeploy production,
+  redeploy your matching STAGING Snapend, verify the result, and then [promote
+  it to production](/docs/snapend/dev-pipeline). This mirrors the safety model
+  that gates every other Production change.
+</Warning>
+
+Redeploying a Snapend requires the same edit-level permissions as updating one. See the [access control guide](/docs/resources/portal/access) for the exact roles.
+
+## Using your Snapend
+
+Once your Snapend is up, you can start using it in your app. There are two steps to this:
+
+1. Configure your Snapend - Use the Snapser provided tools to configure your snaps for your app.
+2. Integrate your app - Use the Snapser provided SDKs to integrate your app with your Snapend.
+
+### Configure your Snapend via Configuration Tools
+
+Once your snapend is up, you may want to configure your snaps using [Snaps Configuration](/docs/snapend/admin-tools) tools. For example, in the Auth snap you may want to enable anonymous authentication. May be you want to add a new user statistic to be tracked in your app. You can do all of this by clicking on the "Snaps Configuration" button under **Quick Links**. These are the Snapser provided tools to help you configure your snaps. Once your snaps are configured, you can use the API Explorer to see data in and out of your Snapend, or use the WebSocket Tester to test real-time events across multiple users.
+
+<div>
+  <DocsButton
+    href={DOCS_ADMIN_TOOLS_PAGE}
+    variant="contained"
+    color="secondary"
+    size="small"
+    sx={{ml: 2, mb: 1}}>
+    Configuration Tools
+  </DocsButton>
+  <DocsButton
+    href={DOCS_API_EXPLORER_PAGE}
+    variant="contained"
+    color="secondary"
+    size="small"
+    sx={{ml: 2, mb: 1}}>
+    API Explorer
+  </DocsButton>
+  <DocsButton
+    href={DOCS_WS_TESTER_PAGE}
+    variant="contained"
+    color="secondary"
+    size="small"
+    sx={{ml: 2, mb: 1}}>
+    WebSocket Tester
+  </DocsButton>
+</div>
+
+![My snapend](/images/docs/snapend-ql.png)
+
+### App/Game Integration via SDKs
+
+After, you are done with your setup, its time to integrate your backend with your app.
+Snapser provides many [SDKs](/docs/snapend/sdks) to help you with this. On your snapend home page you will find a widget that allows you to download your custom client SDK. Snapser supports all the popular platforms, languages and even game engines. Just select the appropriate language and hit the **Download SDK** button. You can now drop the SDK into your client code, install any dependencies mentioned in the SDK docs and start using your custom snapend!
+
+![My snapend](/images/docs/snapend-sdk.png)
+
+<Note>
+  For those building games in particular, you can download our sample games from
+  the Starter Projects section. Update the Snapend ID in the sample code and you
+  are good to go!
+</Note>
+
+## Monitoring your Snapend
+
+Every Snapend comes with infrastructure [monitoring tools](/docs/snapend/monitoring) and a sophisticated [logs](/docs/snapend/logs) tool.
+
+On the Snapend home page, look for Infrastructure under the main navigation bar. Here you will see the following four tools exposed:
+![Snapend Infra](/images/docs/tutorials/snapend-tools-snapend-infra.png) - **Dashboard**: A view-only summary of what's deployed for this Snapend. Every service shows its availability zones, autoscaler / rate-limiter toggles, and monitoring / alerting indicators. For BYOSnaps you additionally see the live deployment-profile from the snapend manifest: CPU and memory, the real autoscaler (HPA) state — click for replica range and CPU / memory thresholds — and counts for attached secrets, command args, and env vars. Each of those counts is clickable for the full list.
+![Snapend Infra](/images/docs/tutorials/snapend-tools-snapend-infra-dashboard.png) - **Monitor**: Next click on the Monitor tool. This tool exposes graphs for CPI, Memory, Top Requests, Requests per Second, POD restarts, Latency P99 P95 P75 P50, Errors and HTTP method distribution.
+![Snapend Infra](/images/docs/tutorials/snapend-tools-snapend-infra-monitor.png) - **Logs**: Click on the Logs tool. This tool allows you to view the logs for your Snapend. You can filter the logs by time, severity and message. By default, you will see the **Deployment** logs for your Snapend. But you can use the **Queries > Labels** to toggle to see **Snap** or **Fleet** logs instead.
+![Snapend Infra](/images/docs/tutorials/snapend-tools-snapend-infra-logs.png)
+<Note>
+If there is anything wrong with your Snapend, this is the tool you should be coming to check for errors.
+</Note>
+- **Heatmap**: Lastly, click on the Heatmap tool to see a live hex grid of every pod running in your Snapend — both your Kubernetes snap pods and your game server fleet pods — with each cell color-coded by pod state — from healthy and available (mint green), through transitional states like pending (blue) and terminating (peach), to critical failures such as crash loops and OOM kills (red). Click any hex to open a detail panel with the full pod breakdown and quick links to its logs and infrastructure monitor.
+![Snapend Infra](/images/docs/tutorials/snapend-tools-snapend-infra-heatmap.png)

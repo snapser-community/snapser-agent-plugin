@@ -1,0 +1,30 @@
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# User Reporting
+
+User Reporting lets your players report one another from your game client.
+Each report is filed against a **target user** by a **reporting user**, with
+a category and a complaint, and moves through three states as your team works
+it: **Unprocessed**, **Processing**, and **Resolved**.
+
+User Reporting is powered by the Auth snap and becomes available on **Auth
+snap v1.11.1 and above**.
+
+## How it fits together
+
+There are two surfaces for User Reporting in your Snapend:
+
+1. **Retention settings** — configure how long reports are kept in each state
+   before they are automatically deleted. See
+   [Retention](/docs/infra/user-reporting/config-tools/retention).
+2. **User Reports tool** — search, review, and action the reports themselves
+   (change state, assign, add notes). See
+   [User Reports](/docs/snapend/tools/user-reports).
+
+<Note>
+  Reports filed against a specific player are also surfaced in the
+  [User Manager](/docs/snapend/tools/user-manager) when you look that player up.
+</Note>

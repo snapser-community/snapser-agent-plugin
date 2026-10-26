@@ -1,0 +1,288 @@
+
+
+
+export const description = 'BYO Game Server'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Bring your Own Game Server
+
+Bring your own custom game server to Snapser and deploy it via your Snapend's fleet.
+
+## Concept
+
+Snapser allows developers to bring their game server to the Snapser
+platform. Customers can bring any number of game servers to the
+platform and they can be written in any language. Snapser CLI will be able to
+build your game server and push it to your personal Snapser Container
+Registry. You will then be able to publish new versions of your game server which
+your studio developers can peg to their Snapend fleet.
+
+## Tutorials
+The best way to understand BYOGS is to go through the following tutorials
+1. [BYOGS Basic](/docs/guides/tutorials/byogs-basic): Basic tutorial to get you started with BYOGS. In this tutorial, you will deploy a functioning game to your global fleet and play the game.
+
+<Note>
+  We highly recommend going through the tutorial, to understand the use and power of BYOGS.
+</Note>
+
+
+## Pre-requisites
+
+<a id="agones_sdk" />
+### 1. Agones SDK
+
+Snapser's Fleet technology uses Agones under the hood. Your game server code needs to integrate with the Agones SDK.
+This will allow you to use the Agones SDK to manage the lifecycle of your game server in your Snapser fleet. Use the following link
+to download the Agones SDK for your language.
+
+
+<DocsButton href={'https://agones.dev/site/docs/guides/client-sdks/'} variant="contained" color="secondary" size="small" sx={{ml: 2, mb: 1}}>Download Agones SDK</DocsButton>
+<Note>
+  You will not be able use your fleet without the Agones SDK. Please reach out
+  to your support team if you have any questions.
+</Note>
+
+#### Agones Lifecycle Management
+
+While each of the SDKs are canonical to their languages, they all have the following functions that implement the core responsibilities of the SDK.
+For language specific documentation, have a look at the respective source (linked above), and the [examples](https://github.com/googleforgames/agones/tree/release-1.36.0/examples).
+Calling any of state changing functions mentioned below does not guarantee that GameServer Custom Resource object would actually change its state right after the call. For instance, it could be moved to the Shutdown state elsewhere (for example, when a fleet scales down), which leads to no changes in GameServer object. You can verify the result of this call by waiting for the desired state in a callback to WatchGameServer() function.
+
+1. **Ready()**
+   This tells Agones that the Game Server is ready to take player connections. Once a Game Server has specified that it is Ready, then the Snapser Fleet record will be moved to the Ready state, and the details for its public address and connection port will be populated.
+
+   While Agones prefers that Shutdown() is run once a game has completed to delete the GameServer instance, if you want or need to move an Allocated GameServer back to Ready to be reused, you can call this SDK method again to do this.
+
+2. **Health()**
+   This sends a single ping to designate that the Game Server is alive and healthy. Failure to send pings within the configured thresholds will result in the GameServer being marked as Unhealthy.
+
+   See the gameserver.yaml for all health checking configurations.
+
+3. **Reserve(seconds)**
+   With some matchmaking scenarios and systems it is important to be able to ensure that a GameServer is unable to be deleted, but doesn’t trigger a FleetAutoscaler scale up. This is where Reserve(seconds) is useful.
+
+   Reserve(seconds) will move the GameServer into the Reserved state for the specified number of seconds (0 is forever), and then it will be moved back to Ready state. While in Reserved state, the GameServer will not be deleted on scale down or Fleet update, and also it could not be Allocated using GameServerAllocation.
+
+   This is often used when a game server process must register itself with an external system, such as a matchmaker, that requires it to designate itself as available for a game session for a certain period. Once a game session has started, it should call SDK.Allocate() to designate that players are currently active on it.
+
+   Calling other state changing SDK commands such as Ready or Allocate will turn off the timer to reset the GameServer back to the Ready state or to promote it to an Allocated state accordingly.
+
+4. **Allocate()**
+   With some matchmakers and game matching strategies, it can be important for game servers to mark themselves as Allocated. For those scenarios, this SDK functionality exists.
+
+   There is a chance that GameServer does not actually become Allocated after this call. Please refer to the general note in Function Reference above.
+
+   The agones.dev/last-allocated annotation will be set on the GameServer to an RFC3339 formatted timestamp of the time of allocation, even if the GameServer was already in an Allocated state.
+
+   Note that if using SDK.Allocate() in combination with GameServerAllocations, it’s possible for the agones.dev/last-allocated timestamp to move backwards if clocks are not synchronized between the Agones controller and the GameServer pod.
+
+5. **Shutdown()**
+   This tells Agones to shut down the currently running game server. The GameServer state will be set Shutdown and the backing Pod will be Terminated.
+
+   It’s worth reading the Termination of Pods Kubernetes documentation, to understand the termination process, and the related configuration options.
+
+   As a rule of thumb, implement a graceful shutdown in your game sever process when it receives the TERM signal from Kubernetes when the backing Pod goes into Termination state.
+
+   Be aware that if you use a variation of System.exit(0) after calling SDK.Shutdown(), your game server container may restart for a brief period, inline with our Health Checking policies.
+
+   If the SDK server receives a TERM signal before calling SDK.Shutdown(), the SDK server will stay alive for the period of the terminationGracePeriodSeconds until SDK.Shutdown() has been called.
+
+  <Note>
+    Using a GameServerAllocation is preferred in all other scenarios, as it gives
+    Agones control over how packed GameServers are scheduled within your Snapser
+    fleet, whereas with Allocate() you relinquish control to an external service
+    which likely doesn’t have as much information as Agones.
+  </Note>
+
+
+#### Sample Unreal code with Agones SDK
+
+This code shows you **AgonesSubsystem** which is a wrapper over the Agones SDK written by one of our partners.
+This shows you an example of how your game server code can integrate with the Agones SDK.
+
+```cpp
+void ASpecialGameModeBase::BeginPlay()
+{
+    Super::BeginPlay();
+
+    GameStartTime = GetWorld()->GetTimeSeconds();
+
+#if !UE_EDITOR && WITH_SERVER_CODE && (PLATFORM_LINUX || PLATFORM_LINUXARM64)
+    UAgonesSubsystem& AgonesSubsystem = UAgonesSubsystem::Get(GetWorld());
+    if (IsRunningDedicatedServer() && !AgonesSubsystem.IsConnected())
+    {
+        AgonesSubsystem.ConnectedDelegate.AddDynamic(this, &ThisClass::AgonesConnectionSuccessfull);
+        AgonesSubsystem.Connect();
+    }
+#endif
+}
+
+void ASpecialGameModeBase::AgonesConnectionSuccessfull(const FGameServerResponse& GameServerResponse)
+{
+    UAgonesSubsystem& AgonesSubsystem = UAgonesSubsystem::Get(GetWorld());
+    if (AgonesSubsystem.IsConnected())
+    {
+        AgonesSubsystem.Ready({}, {});
+    }
+}
+
+void ASpecialGameModeBase::EndMatch
+{
+#if !UE_EDITOR && WITH_SERVER_CODE && (PLATFORM_LINUX || PLATFORM_LINUXARM64)
+    UAgonesSubsystem& AgonesSubsystem = UAgonesSubsystem::Get(GetWorld());
+    AgonesSubsystem.Shutdown({}, {});
+#endif
+}
+```
+
+<Note>
+  This is just sample code. Please reach out to the Snapser support team if you
+  have any questions.
+</Note>
+
+### 2. Python 3.X and Pip
+The Snapser CLI tool that you will use for BYOGS, has a dependency on Python 3.X and Pip.
+MacOS comes pre installed with Python. But please make sure you are running Python 3.X.
+On Windows, you can download Python 3.X from the Windows store.
+
+### 3. Docker
+Some of the commands also need docker. You can download the latest version of Docker from the
+[Docker website](https://www.docker.com/products/docker-desktop).
+
+<Note>
+  **IMPORTANT**: Open up Docker desktop and settings. Make sure this setting is **disabled**
+  **Use containerd for pulling and storing images**.
+  ![Docker Issue Pic](/images/docs/docker-setting.png)
+  This is because Snapser uses Docker
+  to build and push images to the Snapser registry. Having this setting enabled will
+  cause issues with the Snapser CLI tool.
+</Note>
+
+
+### 4. Snapser CLI
+
+Snapser requires customers to use the Snapser CLI tool to build, upload and
+push images to the Snapser registry. The [Snapctl tool](https://pypi.org/project/snapctl/) is available on Pypi and
+can be installed via pip. The CLI tool supports both MacOSX and Windows OS.
+
+Detailed documentation on the Snapser CLI tool can be found [here](/docs/resources/cli).
+
+#### Installation
+<CodeGroup title="Snapctl Installation" tag="bash" >
+```bash
+pip install --user snapctl
+```
+</CodeGroup>
+
+<Note>
+  After you install snapctl you may have to add the python bin folder to your
+  path. For example, on MacOSX this is usually ~/Library/Python/3.9/bin . On
+  Windows this is usually
+  C:\Users\username\AppData\Roaming\Python\Python39\Scripts .
+</Note>
+
+#### Dockerfile
+
+Your local code needs to have a **Dockerfile** at the root of code. Snapser uses this file to create an image, tag it and
+upload it to the repository.
+
+
+#### Get your Snapser Access Key
+
+<Note>
+  You need to have one of the following roles to generate an API key:
+  - **company-admin**
+  - **company-edit**
+  - **game-admin**
+  - **game-edit**
+</Note>
+
+Log in to your Snapser account. Click on your user icon on the top right and select, User Account.
+In the left navigation click on **Developer** which will bring up your Personal API Key widget.
+If you have not generated an API Key yet click on the **Generate** button to generate a new key.
+You can generate upto 3 API Keys per user account.
+
+<Note>
+  Please make sure you save your API key in a safe place. You will not be able
+  to see it again.
+</Note>
+
+#### Setup a local config
+
+Create a file named `~/.snapser/config`. Open it using the editor of your choice and replace with your
+personal Snapser Access key. Save the file.
+
+<CodeGroup title="Snapser Config" tag="bash" label="~/.snapser/config">
+```bash
+[default]
+SNAPSER_API_KEY=$your_api_key
+```
+</CodeGroup>
+
+Or you can run the following command
+
+on MacOSX
+
+<CodeGroup title="Snapser Config OSX" tag="bash" label="~/.snapser/config">
+```bash
+# $your_api_key = Your Snapser developer key
+echo -e "[default]\nSNAPSER_API_KEY=$your_api_key" > ~/.snapser/config
+```
+</CodeGroup>
+
+on Windows Powershell
+
+<CodeGroup title="Snapser Config Windows" tag="bash" label="~/.snapser/config">
+```bash
+# $your_api_key = Your Snapser developer key
+echo "[default]
+SNAPSER_API_KEY=$your_api_key" | Out-File -encoding utf8 ~\.snapser\config
+```
+</CodeGroup>
+
+#### Verify Snapctl installation
+
+<CodeGroup title="Snapctl validate setup" tag="bash">
+```bash
+snapctl validate
+```
+</CodeGroup>
+
+You should see the latest snapctl version in the output
+
+## Setup
+
+### Upload the server code as a docker image
+
+Now open up Terminal (MacOSX) or Powershell (Windows). In order to upload your
+custom code you will need to download the Snapser CLI and run the following
+command. CLI token can be copied from the Web App.
+
+<Note>
+Make sure you have docker running locally on your computer or build machine.
+</Note>
+
+<CodeGroup title="BYOGS Publish" tag="bash">
+```bash
+# Command to publish your custom game server code
+# $code_root_path: Path to your code root
+# $image_tag: Tag for your image. Max 46 characters
+snapctl byogs publish --tag $image_tag --path $code_root_path
+```
+</CodeGroup>
+
+<Note>
+  It may take up to 2-15 minutes for the build and upload to complete depending
+  on your internet connection. At the end you will get a message like "Success
+  BYOGs publish complete" and you can move to the next step.
+</Note>
+
+
+## Snapser Fleet
+
+BYOGS can only be deployed using [Snapser fleets](/docs/infra/snaps/game-server-fleets).
+Snapser fleet is available once you snap in the **Game Server Fleets** snap to your Snapend.

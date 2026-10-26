@@ -1,0 +1,1123 @@
+export const description = 'Notifications'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Notifications
+
+App clients often need to send push notifications and emails to users to inform users about upcoming events, notify them of invites from other users, and to increase user engagement. The notifications service allows you to send emails, and push notifications (Android and iOS) using pre-defined templates.
+
+## Notification Types
+
+Presently there are two types of notifications supported by the snap:
+
+1. Email
+2. Push Notifications
+3. Roblox Notifications
+
+## Email Notifications
+These are emails that are sent to your users. You can send emails to your users via Snapser by creating a template and then sending the email to a segment of users. The email can be sent to all users or to a segment of users. The email can be scheduled to be sent at a specific time or can be sent immediately.
+
+<Warning>
+Emails have to be set up by validating your domain. Reach out to your support team to get your domain validated. Once your domain is validated, you can start sending emails to your users.
+</Warning>
+
+## Push Notifications
+These are push notifications that are sent to your users' devices. You can send push notifications to your users via Snapser by creating a template and then sending the push notification to a segment of users. The push notification can be sent to all users or to a segment of users. The push notification can be scheduled to be sent at a specific time or can be sent immediately.
+
+Notifications have to be enabled for Android by for iOS by specifying the FCM (Firebase Cloud Messaging) and APNs (Apple Push Notification service) credentials respectively. Your app client can then make an API call to register the device token for a user after they have enabled notifications for the app. Similarly, emails can be registered for the user after they have opted in for email notifications.
+
+### Apple Push Notification Service (APNs) Setup
+
+To enable iOS push notifications through Snapser’s **Notifications Snap**, you’ll need to create an Apple Push Notification certificate and upload it to Snapser.
+
+<Warning>
+Apple now supports two authentication methods for APNs —
+1. **Certificate-based authentication** (.p12/.pem)
+2. **Token-based authentication** (.p8 key)
+
+Snapser currently uses the certificate-based method. Follow the steps below to create and configure your APNs certificate.
+</Warning>
+
+---
+
+#### Prerequisites
+1. An active [Apple Developer Account](https://developer.apple.com/account/)
+1. Mac with **Keychain Access** application (pre-installed on macOS)
+
+#### A. Create a Certificate Signing Request (CSR)
+1. Launch **Keychain Access** (`/Applications/Utilities`).
+1. From the menu, choose **Keychain Access > Certificate Assistant > Request a Certificate from a Certificate Authority**.
+1. In the dialog:
+   - Enter your email address in **User Email Address**.
+   - Enter a descriptive name in **Common Name** (e.g., *$orgName Push Key*).
+   - Leave **CA Email Address** blank.
+1. Choose **Saved to disk**, then click **Continue** to save the CSR file locally.
+
+---
+
+#### B. Create a New Push Notification Certificate
+1. Log in to your [Apple Developer Account](https://developer.apple.com/account/).
+1. Navigate to **Certificates, Identifiers & Profiles → Certificates**.
+    ![Apple Dev Console](/images/docs/apple-dev-console.png)
+1. Click the **+** button to create a new certificate.
+    ![Apple Cert Add](/images/docs/apple-cert-add.png)
+1. Ignore the **Software** section and scroll down to the **Services** section.
+1. Under **Services**, select **Apple Push Notification service SSL (Sandbox & Production)** and click **Continue**.
+1. Choose the relevant **App ID** for your app and click **Continue**.
+    ![Apple Cert App Id](/images/docs/apple-cert-select-app-id.png)
+1. Upload the CSR file created in Step 1, then click **Continue**.
+    ![Apple Cert File](/images/docs/apple-cert-chose-file.png)
+1. Once generated, click **Download** to download the resulting `.cer` file.
+
+---
+
+#### C. Convert the .cer to a .pem File
+1. Double-click the `.cer` file to open it in **Keychain Access**.
+1. Locate the certificate under **My Certificates**.
+1. Right-click the **certificate name (parent line)** and choose **Export**.
+    ![Apple Cert Export](/images/docs/apple-keychain-cert-export.png)
+    <Warning>
+    IMPORTANT: If you see a parent-child row structure, only export the *parent certificate*. Exporting both may result in an invalid file.
+    </Warning>
+1. Choose **Personal Information Exchange (.p12)** as the format and click **Save**.
+1. When prompted, set an optional password — this will be needed later when uploading to Snapser.
+1. Convert the `.p12` file to `.pem` using OpenSSL:
+   ```bash
+   openssl pkcs12 -in YourP12FileName.p12 -out YourCertificateName.pem -nodes -clcerts -legacy
+   ```
+   <Warning>
+    You will need to install OpenSSL if you don't have it already. Mac users can install it via Homebrew using the command `brew install openssl`. Windows users can download it from [here](https://slproweb.com/products/Win32OpenSSL.html).
+    </Warning>
+
+---
+
+#### D. Upload the .pem File to Snapser
+1. Open the Snapser Admin Tool.
+1. Navigate to Notifications Snap → Connectors.
+1. Click Add Connector and select APNs Connector.
+1. Enter your app’s Bundle ID. You can find this in your Xcode project settings under the **General** tab or in your Apple Developer account under **Identifiers**.
+    ![Admin Bundle Identifiers](/images/docs/apple-bundle-identifiers.png)
+1. Select the environment to which the certificate applies: `sandbox` (development) or `production`.
+1. Upload the .pem file and enter the password you set when exporting the .p12 file. You will leave the password blank if you did not set one.
+1. Save your configuration.
+    ![Admin Apple Pic](/images/docs/notifications-admin-apple.png)
+
+---
+
+### Firebase Cloud Messaging (FCM) Setup
+
+To enable push notifications through Snapser’s **Notifications Snap**, you’ll need to create a Firebase Cloud Messaging (FCM) service account and upload its credentials JSON file to Snapser.
+
+---
+
+#### A. Create a Firebase Project
+1. Go to the [Firebase Console](https://console.firebase.google.com/)
+1. Click **Add project** and enter your project name
+1. Follow the setup steps to create a new Firebase project
+
+---
+
+#### B. Enable Firebase Cloud Messaging (FCM)
+1. In the Firebase console, select your project
+1. Click the **gear icon** next to *Project Overview* → **Project settings**
+    ![Firebase Project Settings](/images/docs/firebase-console-project-settings.png)
+1. Go to the **Cloud Messaging** tab
+1. If FCM is not already enabled, click **Enable**
+    ![Firebase FCM Enable](/images/docs/firebase-console-fcm-enabled.png)
+---
+
+#### C. Create a Service Account for FCM
+1. This part now has to be done in the Google Cloud Console. Google automatically creates a Google Cloud project when you create a Firebase project.
+1. Under project settings, click on the `Cloud Messaging` tab and then click on the `Manage Service Accounts` link which takes you to the Google Cloud Console.
+1. On the [Google Cloud Console](https://console.cloud.google.com/), make sure your project is selected and you are under `IAM & Admin > Service Accounts`.
+1. Click **Create Service Account**
+    ![Firebase Service Account](/images/docs/gcp-service-account.png)
+1. Enter a name and description, then click **Create**
+    ![Firebase SA Step One](/images/docs/gcp-sa-create-step-1.png)
+1. Under *Permissions*, choose the role:
+    - **Firebase Admin** *(recommended)*
+    - or **Editor** if Firebase Admin is not available
+        ![Firebase SA Step Two](/images/docs/gcp-sa-create-step-2.png)
+1. Optionally add `Principals with Access`. These are the users that have permissions to manage this service account.
+    ![Firebase SA Step Three](/images/docs/gcp-sa-create-step-3.png)
+1. Click **Done** to finish creating the service account
+
+---
+
+#### D. Download Service Account Credentials (JSON)
+1. In the Google Cloud Console, go to **IAM & Admin > Service Accounts**
+1. Select the service account you just created.
+1. Under the **Keys** tab, click **Add Key → Create new key**
+1. Choose **JSON** as the key type and click **Create**
+    ![Firebase SA Key](/images/docs/gcp-sa-create-json-key.png)
+1. The JSON file will automatically download — **keep it safe** (it contains your private key)
+
+---
+
+#### E. Upload the JSON File to Snapser
+1. Open the **Snapser Admin Tool**
+1. Navigate to **Notifications Snap → Connectors**
+1. Click **Add Connector** and select **FCM Connector**
+1. Add your Firebase Project ID. You can find this in your Firebase project settings under the **General** tab.
+    ![Firebase Project Id](/images/docs/fcm-project-id.png)
+1. Upload the JSON file you downloaded from Google Cloud Console
+1. Save your configuration
+
+![Admin Google Pic](/images/docs/notifications-admin-google.png)
+
+
+## Roblox Notifications
+These are notifications that are sent to your users on Roblox. Presently, we only support sending notifications to Roblox users via a CSV.
+
+<Note>
+  Soon we will enhance the capability to send transactional notifications and schedule campaigns for Roblox notifications.
+</Note>
+
+## Notification Delivery
+There are two types of notifications supported by the Notifications snap:
+1. Transactional Notifications
+2. Scheduled Campaigns
+
+### Transactional Notifications
+
+Transactional notifications are sent to individual users in response to a specific event.
+For example, when a user receives a friend request, or when a user is invited to a game,
+a transactional notification is sent to the user. Transactional notifications are sent immediately and are not scheduled.
+
+### Scheduled Campaigns
+
+Notifications can be scheduled and sent in bulk to multiple users at the same time in the form of campaigns. Snapser supports both one-time and recurring campaigns. Campaigns only work for emails and push notifications.
+
+#### Campaign Targets
+##### All Users
+Campaigns can be sent to all users. It should be noted that both email and push notifications need the game client to register the user's email and device token respectively. So if a user has not registered their email or device token, they will not receive the notification.
+
+##### Segments
+
+Instead of sending your notifications to All users, you can use Segments from User Statistics service, to send notifications to a specific group of users. For example, you can send notifications to users who have spent more than $100 in your game.
+
+Some other examples for using segments are as follows:
+1. Users under level 5; Send a notification that gives them helpful tips and hints.
+2. Users that have spent N dollars; You may send them notifications informing about items available for sale.
+3. Users above level 100; Send a notification inviting them to join an upcoming tournament.
+
+#### Importing campaigns
+
+You can import campaigns from a CSV file. The CSV file should have the following columns in the specified order:
+
+- `name`: The name of the campaign.
+- `campaign_type`: The type of the campaign. Accepted values are `email` or `push_notification`.
+- `all_users`: A boolean that indicates if the campaign is for all users or a specific segment. Use `true` for all users and `false` for a specific segment.
+- `segment_name`: The name of the segment for the campaign. Leave this field empty if `all_users` is set to `true`.
+- `template`: The name of the template to be used for the campaign.
+- `variables`: A JSON map containing variables to be replaced in the template.
+- `metadata`: A JSON map of only string key-value pairs.
+- `schedule_time`: A UNIX timestamp indicating when the campaign should be scheduled. Should be in future.
+- `schedule_type`: The schedule type of the campaign. Accepted values are `one_time` or `recurring`.
+- `end_time`: A UNIX timestamp indicating when the campaign ends. This field should only be filled for recurring campaigns.
+- `cron_expr`: A cron expression for the campaign. This field only needs to be filled for recurring campaigns, leave it blank otherwise.
+
+All time must be in UTC timezone.
+
+Here's a sample CSV file:
+
+<CodeGroup>
+```
+name,campaign_type,all_users,segment_name,template,variables,metadata,schedule_time,schedule_type,end_time,cron_expr
+campaign1,email,FALSE,somesegment,template1,"{
+  ""playerName"": ""Alex"",
+  ""gameName"": ""Epic Adventure"",
+}
+","{
+  ""playerName"": ""Alex"",
+  ""discountPercentage"": ""20""
+}
+",1722917511,one_time,,
+campaign2,email,FALSE,somesegment,template1,"{
+  ""playerName"": ""Alex"",
+  ""gameName"": ""Epic Adventure"",
+}
+","{
+  ""playerName"": ""Alex"",
+  ""discountPercentage"": ""20""
+}
+",1722917511,recurring,1728187911,0 0 1 * *
+campaign3,push_notification,TRUE,,template2,"{
+  ""playerName"": ""Alex"",
+  ""gameName"": ""Epic Adventure"",
+}
+","{
+  ""playerName"": ""Alex"",
+  ""discountPercentage"": ""20""
+}
+",1722917511,recurring,1728187911,0 0 1 * *
+
+```
+</CodeGroup>
+
+
+### Dynamic Notifications
+
+The notifications snap supports dynamic content via templates. Notification templates essentially contain with placeholder variables that are setup by the game studio. These placeholder variables are substituted with the actual values when the notification is to be sent.
+
+#### Templates
+
+You can add templates for emails and push notifications through the Admin tools. The notifications service uses a battle hardened library for templates. In a template you define variables by enclosing them in `{{` and `}}` markers. Consider the following template:
+
+```
+Hello, {{ .title }} {{ .name }}!
+{{ .sender }} challenges you to a match on {{ .map }}.
+```
+
+This template can be created beforehand, and then used every time a player
+challenges another player by passing in the values for the template variables
+like so -
+
+<CodeGroup>
+```
+{
+  "title": "Commander",
+  "name": "Shepard",
+  "sender": "Tom",
+  "map": "The Citadel"
+}
+```
+</CodeGroup>
+
+Variables can be added to both the title (subject) and the body of push notifications and emails.
+
+##### Importing templates
+
+You can import notification templates from a CSV file. The CSV file should have the following columns in order: `name`, `type`, `locale`, `title`, `body`. The first row is reserved for headers.
+
+Here's a brief description of each column:
+
+- `name`: The name of the template.
+- `type`: The type of the template. Accepted values are `push_notification` or `email`.
+- `locale`: The locale of the template. This is used to differentiate between templates for different locales.
+- `title`: The title of the template for the particular locale.
+- `body`: The body of the template.
+
+Below is a sample CSV file:
+
+<CodeGroup>
+```
+name,type,locale,title,body
+template1,email,en_US,title 1 en_US,template body {{.variable}}
+template1,email,en_GB,title 1 en_GB,template body {{.variable}}
+template2,email,en_US,sometitle2,template body {{.variable}}
+template3,push_notification,en_GB,sometitle3,template body {{.variable}}
+```
+</CodeGroup>
+
+## Snap Configuration Tools
+Once you have snapped the `Notifications` snap to your snapend follow the next steps to get started:
+1. Click on the Snaps Configuration from under quick links.
+2. Select the `Notifications` Snap from the left Nav bar.
+
+### 1. Notification Connectors
+This tool allows you to setup the APNS, FCM and Roblox credentials for your game. You can also view the existing connectors and delete them if needed.
+
+To get started:
+1. Click on `Setup > Notifications` from the side Nav.
+2. Click on the `Add a Connector` button and pick the connector you want to add.
+
+#### Google Cloud Messaging (FCM) Connector
+
+##### FCM Service Account Details
+1. **Firebase Project Id**: The Firebase project ID.
+2. **Service Account JSON**: The service account JSON file you downloaded from the Google Cloud Console.
+
+#### Apple Push Notification Service (APNS) Connector
+
+##### APNS Bundle Details
+1. **Bundle ID**: The bundle ID of your game. Looks something like `com.yourcompany.yourapp`.
+
+##### APNS Bundle Environment
+1. **APNS Environment**: The environment for which the APNS certificate is valid. Accepted values are `sandbox` or `production`.
+
+##### APNS Certificate Details
+1. **APNS Certificate**: The APNS certificate file. This is the .pem file you created while setting up APNS.
+2. **APNS Certificate Password**: The password you set while exporting the .p12 file to a .pem file.
+
+#### Roblox Connector
+
+##### Roblox Credentials
+1. **Roblox API Key**: The Roblox API key.
+2. **Roblox Universe Id**: The Roblox universe ID for your experience.
+
+## APIs
+
+The `Notifications` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name             | HTTP Method | API Description                                           |
+| -------------------- | ----------- | --------------------------------------------------------- |
+| [NotificationsSendEmail](#notificationssendemail-api)            | POST        | Sends an email to a list of users                         |
+| [NotificationsSendPushNotification](#notificationssendpushnotification-api) | POST        | Sends a push notification to a list of users              |
+| [NotificationsSetupUserEmail](#notificationssetupuseremail-api)       | PUT         | Sets the email address for a user                         |
+| [NotificationsSetupUserPush](#notificationssetupuserpush-api)        | PUT         | Sets the device token & a corresponding locale for a user |
+| [NotificationsSetNotificationPreference](#notificationssetnotificationpreference-api)        | PUT         | Sets the notification preference for a user on a specific channel |
+| [NotificationsGetNotificationPreferences](#notificationsgetnotificationpreferences-api)      | GET         | Gets the notification preferences for a user |
+</div>
+
+### Usage
+#### NotificationsSendEmail API
+<CodeGroup title="Sends an email to a list of users" tag="POST" label="NotificationsSendEmail">
+```csharp
+/// <summary>
+/// Send Email Sends an email to a list of users
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>NotificationsSendEmailResponse</returns>
+public NotificationsSendEmailResponse NotificationsSendEmail(string token, NotificationsSendEmailRequest body)
+{
+    Snapser.Client.ApiResponse<NotificationsSendEmailResponse> localVarResponse = NotificationsSendEmailWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for NotificationsSendEmailRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="NotificationsSendEmailRequest" /> class.
+/// </summary>
+/// <param name="template">Name of the template (required).</param>
+/// <param name="userIds">User IDs of the user (required).</param>
+/// <param name="variables">Key-value pairs of variables to fill the template with (required).</param>
+public NotificationsSendEmailRequest(string template = default(string), List<string> userIds = default(List<string>), Object variables = default(Object))
+{
+    // to ensure "template" is required (not null)
+    if (template == null)
+    {
+        throw new ArgumentNullException("template is a required property for NotificationsSendEmailRequest and cannot be null");
+    }
+    this.Template = template;
+    // to ensure "userIds" is required (not null)
+    if (userIds == null)
+    {
+        throw new ArgumentNullException("userIds is a required property for NotificationsSendEmailRequest and cannot be null");
+    }
+    this.UserIds = userIds;
+    // to ensure "variables" is required (not null)
+    if (variables == null)
+    {
+        throw new ArgumentNullException("variables is a required property for NotificationsSendEmailRequest and cannot be null");
+    }
+    this.Variables = variables;
+}
+
+/// Snapser.Model for NotificationsSendEmailResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="NotificationsSendEmailResponse" /> class.
+/// </summary>
+/// <param name="failed">Number of failures.</param>
+/// <param name="succeeded">Number of successes.</param>
+public NotificationsSendEmailResponse(long failed = default(long), long succeeded = default(long))
+{
+    this.Failed = failed;
+    this.Succeeded = succeeded;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserNotificationsServiceApi::NotificationsSendEmailRequest : public Request
+{
+public:
+    virtual ~NotificationsSendEmailRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserNotificationsSendEmailRequest Body;
+};
+
+class SNAPSER_API SnapserNotificationsSendEmailRequest : public Model
+{
+public:
+    virtual ~SnapserNotificationsSendEmailRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Name of the template */
+    FString _Template;
+    /* User IDs of the user */
+    TArray<FString> UserIds;
+    /* Key-value pairs of variables to fill the template with */
+    TSharedPtr<FJsonObject> Variables;
+};
+
+// Response
+class SNAPSER_API SnapserNotificationsServiceApi::NotificationsSendEmailResponse : public Response
+{
+public:
+    virtual ~NotificationsSendEmailResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserNotificationsSendEmailResponse Content;
+};
+
+class SNAPSER_API SnapserNotificationsSendEmailResponse : public Model
+{
+public:
+    virtual ~SnapserNotificationsSendEmailResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Number of failures */
+    TOptional<int64> Failed;
+    /* Number of successes */
+    TOptional<int64> Succeeded;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### NotificationsSendPushNotification API
+<CodeGroup title="Sends a push notification to a list of users" tag="POST" label="NotificationsSendPushNotification">
+```csharp
+/// <summary>
+/// Send Push Notification Sends a push notification to a list of users
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>NotificationsSendPushNotificationResponse</returns>
+public NotificationsSendPushNotificationResponse NotificationsSendPushNotification(string token, NotificationsSendPushNotificationRequest body)
+{
+    Snapser.Client.ApiResponse<NotificationsSendPushNotificationResponse> localVarResponse = NotificationsSendPushNotificationWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for NotificationsSendPushNotificationRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="NotificationsSendPushNotificationRequest" /> class.
+/// </summary>
+/// <param name="metadata">Key-value pairs that are sent as-is in the notification.</param>
+/// <param name="template">Name of the template (required).</param>
+/// <param name="userIds">User IDs of the user (required).</param>
+/// <param name="variables">Key-value pairs of variables to fill the template with (required).</param>
+public NotificationsSendPushNotificationRequest(Dictionary<string, string> metadata = default(Dictionary<string, string>), string template = default(string), List<string> userIds = default(List<string>), Object variables = default(Object))
+{
+    // to ensure "template" is required (not null)
+    if (template == null)
+    {
+        throw new ArgumentNullException("template is a required property for NotificationsSendPushNotificationRequest and cannot be null");
+    }
+    this.Template = template;
+    // to ensure "userIds" is required (not null)
+    if (userIds == null)
+    {
+        throw new ArgumentNullException("userIds is a required property for NotificationsSendPushNotificationRequest and cannot be null");
+    }
+    this.UserIds = userIds;
+    // to ensure "variables" is required (not null)
+    if (variables == null)
+    {
+        throw new ArgumentNullException("variables is a required property for NotificationsSendPushNotificationRequest and cannot be null");
+    }
+    this.Variables = variables;
+    this.Metadata = metadata;
+}
+
+/// Snapser.Model for NotificationsSendPushNotificationResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="NotificationsSendPushNotificationResponse" /> class.
+/// </summary>
+/// <param name="failed">Number of failures.</param>
+/// <param name="failedResponses">Responses returned by fcm or apns for a failed notification.</param>
+/// <param name="succeeded">Number of successes.</param>
+public NotificationsSendPushNotificationResponse(long failed = default(long), List<NotificationsNotificationResponse> failedResponses = default(List<NotificationsNotificationResponse>), long succeeded = default(long))
+{
+    this.Failed = failed;
+    this.FailedResponses = failedResponses;
+    this.Succeeded = succeeded;
+}
+
+/// Snapser.Model for NotificationsNotificationResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="NotificationsNotificationResponse" /> class.
+/// </summary>
+/// <param name="error">error.</param>
+/// <param name="platform">platform.</param>
+/// <param name="success">success.</param>
+/// <param name="userId">userId.</param>
+public NotificationsNotificationResponse(string error = default(string), string platform = default(string), bool success = default(bool), string userId = default(string))
+{
+    this.Error = error;
+    this.Platform = platform;
+    this.Success = success;
+    this.UserId = userId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserNotificationsServiceApi::NotificationsSendPushNotificationRequest : public Request
+{
+public:
+    virtual ~NotificationsSendPushNotificationRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserNotificationsSendPushNotificationRequest Body;
+};
+
+class SNAPSER_API SnapserNotificationsSendPushNotificationRequest : public Model
+{
+public:
+    virtual ~SnapserNotificationsSendPushNotificationRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Key-value pairs that are sent as-is in the notification */
+    TOptional<TMap<FString, FString>> Metadata;
+    /* Name of the template */
+    FString _Template;
+    /* User IDs of the user */
+    TArray<FString> UserIds;
+    /* Key-value pairs of variables to fill the template with */
+    TSharedPtr<FJsonObject> Variables;
+};
+
+// Response
+class SNAPSER_API SnapserNotificationsServiceApi::NotificationsSendPushNotificationResponse : public Response
+{
+public:
+    virtual ~NotificationsSendPushNotificationResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserNotificationsSendPushNotificationResponse Content;
+};
+
+class SNAPSER_API SnapserNotificationsSendPushNotificationResponse : public Model
+{
+public:
+    virtual ~SnapserNotificationsSendPushNotificationResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Number of failures */
+    TOptional<int64> Failed;
+    /* Responses returned by fcm or apns for a failed notification */
+    TOptional<TArray<SnapserNotificationsNotificationResponse>> FailedResponses;
+    /* Number of successes */
+    TOptional<int64> Succeeded;
+};
+
+class SNAPSER_API SnapserNotificationsNotificationResponse : public Model
+{
+public:
+    virtual ~SnapserNotificationsNotificationResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Error;
+    TOptional<FString> Platform;
+    TOptional<bool> Success;
+    TOptional<FString> UserId;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### NotificationsSetupUserEmail API
+<CodeGroup title="Sets the email address for a user" tag="PUT" label="NotificationsSetupUserEmail">
+```csharp
+/// <summary>
+/// Setup User Email Sets the email address for a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object NotificationsSetupUserEmail(string userId, string token, SetupUserEmailRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = NotificationsSetupUserEmailWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SetupUserEmailRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="SetupUserEmailRequest" /> class.
+/// </summary>
+/// <param name="email">The email address (required).</param>
+/// <param name="locale">The device locale (required).</param>
+public SetupUserEmailRequest(string email = default(string), string locale = default(string))
+{
+    // to ensure "email" is required (not null)
+    if (email == null)
+    {
+        throw new ArgumentNullException("email is a required property for SetupUserEmailRequest and cannot be null");
+    }
+    this.Email = email;
+    // to ensure "locale" is required (not null)
+    if (locale == null)
+    {
+        throw new ArgumentNullException("locale is a required property for SetupUserEmailRequest and cannot be null");
+    }
+    this.Locale = locale;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserNotificationsServiceApi::NotificationsSetupUserEmailRequest : public Request
+{
+public:
+    virtual ~NotificationsSetupUserEmailRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserSetupUserEmailRequest Body;
+};
+
+class SNAPSER_API SnapserSetupUserEmailRequest : public Model
+{
+public:
+    virtual ~SnapserSetupUserEmailRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* The email address */
+    FString Email;
+    /* The device locale */
+    FString Locale;
+};
+
+// Response
+class SNAPSER_API SnapserNotificationsServiceApi::NotificationsSetupUserEmailResponse : public Response
+{
+public:
+    virtual ~NotificationsSetupUserEmailResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### NotificationsSetupUserPush API
+<CodeGroup title="Sets the device token & a corresponding locale for a user" tag="PUT" label="NotificationsSetupUserPush">
+```csharp
+/// <summary>
+/// Setup User Push Sets the device token &amp; a corresponding locale for a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object NotificationsSetupUserPush(string userId, string token, SetupUserPushRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = NotificationsSetupUserPushWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SetupUserPushRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="SetupUserPushRequest" /> class.
+/// </summary>
+/// <param name="locale">The device locale (required).</param>
+/// <param name="token">The device token (required).</param>
+/// <param name="type">Type of the device token. Valid values - apns, fcm (required).</param>
+public SetupUserPushRequest(string locale = default(string), string token = default(string), string type = default(string))
+{
+    // to ensure "locale" is required (not null)
+    if (locale == null)
+    {
+        throw new ArgumentNullException("locale is a required property for SetupUserPushRequest and cannot be null");
+    }
+    this.Locale = locale;
+    // to ensure "token" is required (not null)
+    if (token == null)
+    {
+        throw new ArgumentNullException("token is a required property for SetupUserPushRequest and cannot be null");
+    }
+    this.Token = token;
+    // to ensure "type" is required (not null)
+    if (type == null)
+    {
+        throw new ArgumentNullException("type is a required property for SetupUserPushRequest and cannot be null");
+    }
+    this.Type = type;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserNotificationsServiceApi::NotificationsSetupUserPushRequest : public Request
+{
+public:
+    virtual ~NotificationsSetupUserPushRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserSetupUserPushRequest Body;
+};
+
+class SNAPSER_API SnapserSetupUserPushRequest : public Model
+{
+public:
+    virtual ~SnapserSetupUserPushRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* The device locale */
+    FString Locale;
+    /* The device token */
+    FString Token;
+    /* Type of the device token. Valid values - apns, fcm */
+    FString Type;
+};
+
+// Response
+class SNAPSER_API SnapserNotificationsServiceApi::NotificationsSetupUserPushResponse : public Response
+{
+public:
+    virtual ~NotificationsSetupUserPushResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### NotificationsSetNotificationPreference API
+<CodeGroup title="Sets the notification preference for a user on a specific channel" tag="PUT" label='NotificationsSetNotificationPreference'>
+```csharp
+/// <summary>
+/// Notification Preferences Sets the notification preference for a user on a specific channel
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object NotificationsSetNotificationPreference(string userId, string token, SetNotificationPreferenceRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = NotificationsSetNotificationPreferenceWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SetNotificationPreferenceRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="SetNotificationPreferenceRequest" /> class.
+/// </summary>
+/// <param name="channel">channel (required).</param>
+/// <param name="enabled">Whether the channel is enabled (required).</param>
+/// <param name="reason">Reason for the change (e.g. one_click, preference_page, api).</param>
+public SetNotificationPreferenceRequest(NotificationsNotificationChannel channel = default, bool enabled = default, string reason = default)
+{
+    this.Channel = channel;
+    this.Enabled = enabled;
+    this.Reason = reason;
+}
+
+/// Snapser.Model for NotificationsNotificationChannel
+/// <summary>
+/// Defines notificationsNotificationChannel
+/// </summary>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum NotificationsNotificationChannel
+{
+    /// <summary>
+    /// Enum NOTIFICATIONCHANNELUNSPECIFIED for value: NOTIFICATION_CHANNEL_UNSPECIFIED
+    /// </summary>
+    [EnumMember(Value = "NOTIFICATION_CHANNEL_UNSPECIFIED")] NOTIFICATIONCHANNELUNSPECIFIED = 1,
+
+    /// <summary>
+    /// Enum NOTIFICATIONCHANNELEMAIL for value: NOTIFICATION_CHANNEL_EMAIL
+    /// </summary>
+    [EnumMember(Value = "NOTIFICATION_CHANNEL_EMAIL")] NOTIFICATIONCHANNELEMAIL = 2,
+
+    /// <summary>
+    /// Enum NOTIFICATIONCHANNELPUSH for value: NOTIFICATION_CHANNEL_PUSH
+    /// </summary>
+    [EnumMember(Value = "NOTIFICATION_CHANNEL_PUSH")] NOTIFICATIONCHANNELPUSH = 3,
+
+    /// <summary>
+    /// Enum NOTIFICATIONCHANNELROBLOX for value: NOTIFICATION_CHANNEL_ROBLOX
+    /// </summary>
+    [EnumMember(Value = "NOTIFICATION_CHANNEL_ROBLOX")] NOTIFICATIONCHANNELROBLOX = 4
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserNotificationsServiceApi::NotificationsSetNotificationPreferenceRequest : public Request
+{
+public:
+    virtual ~NotificationsSetNotificationPreferenceRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserSetNotificationPreferenceRequest Body;
+};
+
+class SNAPSER_API SnapserSetNotificationPreferenceRequest : public Model
+{
+public:
+    virtual ~SnapserSetNotificationPreferenceRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    SnapserNotificationsNotificationChannel Channel;
+    /* Whether the channel is enabled */
+    bool Enabled = false;
+    /* Reason for the change (e.g. one_click, preference_page, api) */
+    TOptional<FString> Reason;
+};
+
+class SNAPSER_API SnapserNotificationsNotificationChannel : public Model
+{
+public:
+    virtual ~SnapserNotificationsNotificationChannel() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        NotificationChannelUnspecified,
+        NotificationChannelEmail,
+        NotificationChannelPush,
+        NotificationChannelRoblox,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+// Response
+class SNAPSER_API SnapserNotificationsServiceApi::NotificationsSetNotificationPreferenceResponse : public Response
+{
+public:
+    virtual ~NotificationsSetNotificationPreferenceResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### NotificationsGetNotificationPreferences API
+<CodeGroup title="Gets the notification preferences for a user" tag="PUT" label='NotificationsGetNotificationPreferences'>
+```csharp
+/// <summary>
+/// Notification Preferences Gets the notification preferences for a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <returns>NotificationsGetNotificationPreferencesResponse</returns>
+public NotificationsGetNotificationPreferencesResponse NotificationsGetNotificationPreferences(string userId, string token)
+{
+    Snapser.Client.ApiResponse<NotificationsGetNotificationPreferencesResponse> localVarResponse = NotificationsGetNotificationPreferencesWithHttpInfo(userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for NotificationsGetNotificationPreferencesResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="NotificationsGetNotificationPreferencesResponse" /> class.
+/// </summary>
+/// <param name="preferences">preferences.</param>
+public NotificationsGetNotificationPreferencesResponse(List<NotificationsNotificationPreference> preferences = default)
+{
+    this.Preferences = preferences;
+}
+
+/// Snapser.Model for NotificationsNotificationPreference
+/// <summary>
+/// Initializes a new instance of the <see cref="NotificationsNotificationPreference" /> class.
+/// </summary>
+/// <param name="channel">channel.</param>
+/// <param name="enabled">enabled.</param>
+public NotificationsNotificationPreference(NotificationsNotificationChannel? channel = default, bool enabled = default)
+{
+    this.Channel = channel;
+    this.Enabled = enabled;
+}
+
+/// Snapser.Model for NotificationsNotificationChannel
+/// <summary>
+/// Defines notificationsNotificationChannel
+/// </summary>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum NotificationsNotificationChannel
+{
+    /// <summary>
+    /// Enum NOTIFICATIONCHANNELUNSPECIFIED for value: NOTIFICATION_CHANNEL_UNSPECIFIED
+    /// </summary>
+    [EnumMember(Value = "NOTIFICATION_CHANNEL_UNSPECIFIED")] NOTIFICATIONCHANNELUNSPECIFIED = 1,
+
+    /// <summary>
+    /// Enum NOTIFICATIONCHANNELEMAIL for value: NOTIFICATION_CHANNEL_EMAIL
+    /// </summary>
+    [EnumMember(Value = "NOTIFICATION_CHANNEL_EMAIL")] NOTIFICATIONCHANNELEMAIL = 2,
+
+    /// <summary>
+    /// Enum NOTIFICATIONCHANNELPUSH for value: NOTIFICATION_CHANNEL_PUSH
+    /// </summary>
+    [EnumMember(Value = "NOTIFICATION_CHANNEL_PUSH")] NOTIFICATIONCHANNELPUSH = 3,
+
+    /// <summary>
+    /// Enum NOTIFICATIONCHANNELROBLOX for value: NOTIFICATION_CHANNEL_ROBLOX
+    /// </summary>
+    [EnumMember(Value = "NOTIFICATION_CHANNEL_ROBLOX")] NOTIFICATIONCHANNELROBLOX = 4
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserNotificationsServiceApi::NotificationsGetNotificationPreferencesRequest : public Request
+{
+public:
+    virtual ~NotificationsGetNotificationPreferencesRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserNotificationsServiceApi::NotificationsGetNotificationPreferencesResponse : public Response
+{
+public:
+    virtual ~NotificationsGetNotificationPreferencesResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserNotificationsGetNotificationPreferencesResponse Content;
+};
+
+class SNAPSER_API SnapserNotificationsGetNotificationPreferencesResponse : public Model
+{
+public:
+    virtual ~SnapserNotificationsGetNotificationPreferencesResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserNotificationsNotificationPreference>> Preferences;
+};
+
+class SNAPSER_API SnapserNotificationsNotificationPreference : public Model
+{
+public:
+    virtual ~SnapserNotificationsNotificationPreference() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserNotificationsNotificationChannel> Channel;
+    TOptional<bool> Enabled;
+};
+
+class SNAPSER_API SnapserNotificationsNotificationChannel : public Model
+{
+public:
+    virtual ~SnapserNotificationsNotificationChannel() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        NotificationChannelUnspecified,
+        NotificationChannelEmail,
+        NotificationChannelPush,
+        NotificationChannelRoblox,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/notifications-api.png)
+
+### Error Codes returned by the service
+
+This service only returns [generic errors](../generic-errors).
+
+## Additional Details
+
+### Data Stores
+
+POSTGRES
+
+### Service Dependencies
+
+The notifications service does not depend on any other Snap.
+
+### Recommended Services
+
+The notifications service works best with the Auth, Scheduler and Statistics &
+Segmentation services.
+
+### Upcoming enhancements
+
+None planned at the moment.
+
+```
+
+```

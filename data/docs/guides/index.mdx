@@ -1,0 +1,99 @@
+
+
+export const description = 'Guides'
+
+export const meta = {
+  author: 'Brian Immel',
+}
+
+# Guides
+
+Below you will find a collection of Tutorials, Starter Projects, Bring your own Snaps (BYOSnap) and Bring your own Game Servers (BYOGS) examples to help you get started with Snapser.
+
+## Tutorials
+
+  Each tutorial is a step by step guide that will help you get acquainted with Snapser and its features.
+
+### Core Tutorials
+    * [Create a Snapend](guides/tutorials/create-snapend) - Quick start guide to get a custom backend up and running.
+    * [Snapend Tools](guides/tutorials/snapend-tools) - Learn about the Snapend tools like Configuration tools, SDK tool, API Explorer and Monitoring tools.
+    * [Snapend Settings & Clone](guides/tutorials/snapend-settings-clone) - Learn how to manage your Snap configuration settings and how they impact clone and sync operations.
+    * [Setup Snapser CLI](guides/tutorials/setup-snapctl) - Setup Snapser CLI tool called **snapctl** on your local machine.
+
+### Security and Authentication Tutorials
+    * [Snapend Security](guides/tutorials/snapend-security) - Understand the security features of Snapser and how to secure your Snapend.
+    * [App Authentication](guides/tutorials/app-authentication) - Learn how to use the Authentication snap for in-app authentication.
+
+### BYOSnap Tutorials
+    * [BYOSnap Basic](guides/tutorials/byosnap-basic) - Deploy a simple BYOSnap to your Snapend.
+    * [BYOSnap Intermediate](guides/tutorials/byosnap-intermediate) - Integrate the internal SDK into your BYOSnap, debug your code locally and then deploy it to your Snapend.
+    * [BYOSnap Advanced One](guides/tutorials/byosnap-advanced-one) - Tap into the Snapser Hooks system from your BYOSnap. Leverage the Snapend sync and clone features, BYOSnap custom configuration tools, and the User data reset and delete hooks.
+    * [BYOSnap Advanced Two](guides/tutorials/byosnap-advanced-one) - Tap into the Snapser Hooks system from your BYOSnap. Leverage the Snapend sync and clone features. and the User data reset and delete hooks. Learn how to build your own HTML/JS/CSS based configuration and user manager tools using the Snapser JS SDK.
+    * [BYOSnap Realtime](guides/tutorials/byosnap-realtime) - Tap into the Snapser Event Bus system from your BYOSnap. Leverage realtime events and subscribe to them as well as publish your own events for delivery over your Snapends WebSocket connection.
+
+### BYOGS Tutorials
+    * [BYOGame Server Basic](guides/tutorials/byogs-basic) - Deploy an open source game Super Tux Kart to the global Snapser network and play the game.
+    * [BYOGame Server Intermediate](guides/tutorials/byogs-intermediate) - Deploy a CPP, Go or a Unity server example to the global Snapser network.
+
+## Starter Projects
+
+  Starer projects are pre-build client side games, web apps and mobile apps that are ready to be integrated with Snapser. These projects are built using popular game engines and provide a quick way to get started with Snapser.
+
+### Game Examples
+    * [Unity](/docs/guides/samples/unity) - Integrate Snapser with Unity for multiplayer game development. It covers installing Unity, setting up Snapser, configuring snaps, installing the Snapser SDK, and provides usage examples and a demo for authentication, profiles, storage, stats, and leaderboards.
+    * [Unity Realtime](/docs/guides/samples/unity-real-time) - Offers a rapid setup for building Unity realtime multiplayer games with Snapser integration. It covers Unity installation, Snapser setup, configuring game snaps, installing the Snapser SDK, and incorporating additional dependencies like Mirror and Native Websockets. It includes usage examples, demo instructions, and gameplay details for both single-player and multiplayer games.
+    * [Unity Discord Activity](/docs/guides/samples/unity-discord) - Provides a guide for getting Unity C# games up and running in a Discord Activity using Snapser and [Dissonity](https://github.com/snapser-community/Dissonity).
+    * [Unreal Engine](/docs/guides/samples/unreal-engine) - Covers how to setup and use Snapser Plugin in Unreal Engine. It includes steps for downloading and building the example project, highlights the plugin's code layout and subsystem interface, and provides a demonstration of signing in and handling server responses using Blueprints.
+    * [Roblox](/docs/guides/samples/roblox) - Demonstrates integrating Snapser services into a Roblox game. It includes steps for setting up Snapser snaps, downloading the example project, building it with Rojo, and playing the game to observe the Snapser integration.
+    * [Web Game](/docs/guides/samples/web-game) - A simple web game that demonstrates how to integrate Snapser services into a web game using Typescript. It includes features like user authentication, user statistics, and leaderboard functionality.
+
+### Web App Examples
+    * [Social Todo App](/docs/guides/samples/web-app-social-todo) - Demonstrates how to create a collaborative todo web application powered by Snapser. This sample highlights core capabilities such as user authentication, profile management, and persistent data storage.
+    * [Education App](/docs/guides/samples/web-app-edu) - Showcases the development of a learning-focused web application using Snapser services. The example covers authentication and expands into advanced features including remote configuration, quest systems, and competitive leaderboards.
+### Mobile App Examples
+    * [E-commerce App](/docs/guides/samples/mobile-app-ecommerce) - An end-to-end mobile commerce example illustrating how Snapser can support user accounts, profile data, product storage, and inventory management within a transactional application.
+    * [Social Networking App](/docs/guides/samples/mobile-app-social-network) - Explores the construction of a mobile social platform with Snapser, featuring authenticated users, profiles, private inbox messaging, social graph relationships, and built-in analytics through statistics and trackables.
+
+## BYOSnap Examples
+
+  Bring your own server code written in any language as a Snap and attach it to your backend.
+
+### Basic Examples
+These examples demonstrate how to create a simple BYOSnap that can be deployed to a Snapend within minutes.
+
+    * [Basic C#](https://github.com/snapser-community/snapser-byosnaps/tree/main/basic/ByoSnapCSharp) - Basic example of a BYOSnap written in C#.
+    * [Basic Go](https://github.com/snapser-community/snapser-byosnaps/tree/main/basic/byosnap-go) - Basic example of a BYOSnap written in Go.
+    * [Basic Python](https://github.com/snapser-community/snapser-byosnaps/tree/main/basic/byosnap-python) - Basic example of a BYOSnap written in Python 3.X.
+    * [Basic Node Typescript](https://github.com/snapser-community/snapser-byosnaps/tree/main/basic/byosnap-node-ts) - Basic example of a BYOSnap written in Node Typescript.
+    * [Anthropic](https://github.com/snapser-community/snapser-byosnaps/tree/main/ai/byosnap-anthropic) - This BYOSnap is a wrapper around the Anthropic API, allowing you to use their APIs in your game.
+    * [Gemini](https://github.com/snapser-community/snapser-byosnaps/tree/main/ai/byosnap-gemini) - This BYOSnap is a wrapper around the Google Gemini API, allowing you to use their APIs in your game.
+    * [OpenAI](https://github.com/snapser-community/snapser-byosnaps/tree/main/ai/byosnap-openai) - This BYOSnap is a wrapper around the OpenAI API, allowing you to use their APIs in your game.
+    * [Model Context Protocol](https://github.com/snapser-community/snapser-byosnaps/tree/main/ai/byosnap-mcp) - This BYOSnap helps you build a secure, two-way connection between your game data sources and any AI-powered tools.
+
+### Intermediate Examples
+These examples demonstrate how you can integrate your BYOSnap with the internal SDK, allowing you to communicate with other Snaps in your Snapend. Also, locally debug your code using Snapser "Bring your own workstation" technology and then deploy it to a Snapend.
+    * [Basic C#](https://github.com/snapser-community/snapser-byosnaps/tree/main/intermediate/ByoSnapCSharp) - Intermediate example of a BYOSnap written in C#.
+    * [Basic Go](https://github.com/snapser-community/snapser-byosnaps/tree/main/intermediate/byosnap-go) - Intermediate example of a BYOSnap written in Go.
+    * [Basic Python](https://github.com/snapser-community/snapser-byosnaps/tree/main/intermediate/byosnap-python) - Intermediate example of a BYOSnap written in Python 3.X.
+    * [Basic Node Typescript](https://github.com/snapser-community/snapser-byosnaps/tree/intermediate/basic/byosnap-node-ts) - Intermediate example of a BYOSnap written in Node Typescript.
+
+### Advanced Examples
+These examples demonstrate how you can tap into the Snapser Hooks system from your BYOSnap. Leverage the Snapend sync and clone features, BYOSnap custom configuration tools, and the User data reset and delete hooks.
+
+    * [Advanced Python](https://github.com/snapser-community/snapser-byosnaps/tree/main/intermediate/byosnap-python) - Advanced example of a BYOSnap written in Python 3.X.
+    * [Game Characters](https://github.com/snapser-community/snapser-byosnaps/tree/main/games/byosnap-characters) - BYOSnap created to support characters in game. This BYOSnap creates a character map, containing an ID and a Session token for each character, allowing game studios to start storing information into the Snaps for each character. It also integrates with the Snapser Hooks system.
+
+## BYOGS Examples
+
+  Bring your own game server code and host it on Snapsers global network.
+
+### Basic Examples
+These examples demonstrate how to get the open source game Super Tux Racer up and running on Snapser.
+
+    * [Basic Game Server STK](https://github.com/snapser-community/snapser-byogs/tree/main/basic/supertuxkart) - Super Tux Kart game server example.
+
+
+### Intermediate Examples
+These examples demonstrate how to deploy a CPP, Go or a Unity server example to the global Snapser network.
+
+    * [Intermediate Game Server](https://github.com/snapser-community/snapser-byogs/tree/main/inter) - Intermediate game server example in C++, Go or Unity.

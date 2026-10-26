@@ -1,0 +1,210 @@
+
+
+export const description = 'Sequencer'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Sequencer
+
+The Sequencer unlocks automation via API chaining. This Snap allows you to chain together multiple API calls and execute them in a sequence. You can use the response from one API call as input to the next API call. This Snap is useful when you want to automate a workflow that requires multiple API calls to be made in a sequence.
+
+<Warning>
+  This is a Premium snap. You will need to be on a Premium plan to use it.
+</Warning>
+
+## Sequencer Use
+
+Lets say that you are building an app and when a user signs up for your app
+you want to send them a welcome email, fire off an analytics event and create a user profile. Without the sequencer your client will have to fire off individual API calls to the email service, the analytics service and the user profile service. With the sequencer you can create a workflow that will do all of this for you. All your client will have to do is make a single API call to the sequencer.
+
+## Concept
+
+A sequence is a combination of one or more APIs from snaps you see in the marketplace or the snaps you have brought via BYOSnap. You can use responses from API in a sequence and configure them as variables. You can then use these variables to feed into downstream APIs in the sequence. Once your chain is configured you can then execute it by making a single API call to the sequencer.
+
+### API Chaining
+
+Every API exposed by each Snap from the Snapser marketplace can be chained together.
+
+### Chain limit
+
+Presently the sequencer Snap allows you to chain 10 API calls.
+
+### Private Snap Integration
+
+BYOSnap APIs can also be added to your chain. Please be sure to have your swagger.json at the root of your code when you are publishing your Snap. Snapser ingests this file to understand the APIs exposed by your Snap.
+
+### Failed Chain Execution
+By default the sequencer will run the entire sequence even if there is a failure. However, you can configure the sequence to stop on the first failure. To do this you can click on the **Stop sequence on first error?** checkbox while setting up your sequence.
+
+## Example
+
+Yes, lets say your snapend has the Auth Snap and the Profile Snap snapped in. You now want to create a typical login sequence for an app. Making a single API call you want the user to login and then you want to retrieve their user profile.
+
+![Admin Start Pic](/images/docs/sequencer-start.png)
+
+### Add HTTP Action
+
+First thing you want to do is click on the **Add a HTTP Action** button. This will open up
+the action drawer. You can then select the Auth Snap and pick the **Anon Login API** action from the nav. This API takes in a parameter for **username** in the payload. You can add a variable `{{.username}}` and hit save. Note the value of this will be coming from your API call payload. This will add the HTTP action to your sequence.
+
+![Admin Explorer Pic](/images/docs/sequencer-explorer.png)
+
+### Add your variables
+
+You may now want to use variables from the response of this API in the next API call. You can do this by clicking on the **Add Variable** button. For your convenience you can see the expected output of the API call. Now, add a **key** for the variable and put the appropriate value. As you can see from the snapshot above the response is going to be a dictionary with a key called **user**.
+So lets add:
+- Key: `user_id`  Value: `user.id`
+- Key: `user_token` Value: `user.session_token`
+
+![Admin Explorer Pic](/images/docs/sequencer-variables.png)
+
+### Add a chained sequence
+
+Now we want to chain together the next API call. Click on the **Add a HTTP Action** button again. This time select the **Profile Snap** and pick the **Get Profile API** action from the nav. This API takes in a parameter for **user_id** in the URL and the **Token** in the header. You can now use your previously created variables `{{.user_id}}` and `{{.user_token}}` to fill in the values. Then go ahead and hit save. This will add the HTTP action to your chain.
+
+![Profile Api Pic](/images/docs/sequencer-profile-api.png)
+
+### Execute
+
+Your client can now hit the Execute Sequence API with the appropriate payload that takes in `{{.username}}` and the sequencer will execute the sequence and return the results.
+
+
+## APIs
+
+The `Sequencer` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name        | HTTP Method | API Description      |
+| --------------- | ----------- | -------------------- |
+| [SequencerExecuteSequence](#sequencerexecutesequence-api) | POST        | Execute the automation sequence |
+</div>
+
+### Usage
+#### SequencerExecuteSequence API
+<CodeGroup title="Execute the automation sequence" tag="POST" label="SequencerExecuteSequence">
+```csharp
+/// <summary>
+/// Execute Sequence execute the sequence
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="name"></param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>SequencerExecuteSequenceResponse</returns>
+public SequencerExecuteSequenceResponse SequencerExecuteSequence(string name, string token, ExecuteSequenceRequest body)
+{
+    Snapser.Client.ApiResponse<SequencerExecuteSequenceResponse> localVarResponse = SequencerExecuteSequenceWithHttpInfo(name, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ExecuteSequenceRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="ExecuteSequenceRequest" /> class.
+/// </summary>
+/// <param name="parameters">JSON representation of parameters (required).</param>
+public ExecuteSequenceRequest(Object parameters = default(Object))
+{
+    // to ensure "parameters" is required (not null)
+    if (parameters == null)
+    {
+        throw new ArgumentNullException("parameters is a required property for ExecuteSequenceRequest and cannot be null");
+    }
+    this.Parameters = parameters;
+}
+
+/// Snapser.Model for SequencerExecuteSequenceResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="SequencerExecuteSequenceResponse" /> class.
+/// </summary>
+/// <param name="result">result.</param>
+public SequencerExecuteSequenceResponse(List<Object> result = default(List<Object>))
+{
+    this.Result = result;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSequencerServiceApi::SequencerExecuteSequenceRequest : public Request
+{
+public:
+    virtual ~SequencerExecuteSequenceRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    FString Name;
+    /* User session token */
+    FString Token;
+    SnapserExecuteSequenceRequest Body;
+};
+
+class SNAPSER_API SnapserExecuteSequenceRequest : public Model
+{
+public:
+    virtual ~SnapserExecuteSequenceRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* JSON representation of parameters */
+    TSharedPtr<FJsonObject> Parameters;
+};
+
+// Response
+class SNAPSER_API SnapserSequencerServiceApi::SequencerExecuteSequenceResponse : public Response
+{
+public:
+    virtual ~SequencerExecuteSequenceResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserSequencerExecuteSequenceResponse Content;
+};
+
+class SNAPSER_API SnapserSequencerExecuteSequenceResponse : public Model
+{
+public:
+    virtual ~SnapserSequencerExecuteSequenceResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<TSharedPtr<FJsonObject>>> Result;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/sequencer-api.png)
+
+### Error Codes returned by the service
+
+This service only returns [generic errors](../generic-errors).
+
+## Additional Details
+
+### Data Stores
+
+POSTGRES
+
+### Service Dependencies
+
+The sequencer service does not depend on any other Snap. However it needs
+at least one other Snap to be snapped in to be useful.
+
+### Recommended Services
+
+The sequencer service works best with the Auth service.
+
+### Upcoming enhancements
+
+None planned at the moment.

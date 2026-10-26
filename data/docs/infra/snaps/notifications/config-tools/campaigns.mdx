@@ -1,0 +1,44 @@
+# Schedule Campaigns
+This tool allows you to schedule push notification and email campaigns for your users.
+
+To get started:
+1. Click on `Send > Campaigns` from the side Nav.
+2. Click on the `Add a Campaign` button to create a new campaign.
+
+## Campaign Details
+1. **Name**: The name of the campaign. This should be a unique alphanumeric string.
+
+## Campaign Category
+1. **Type**: The type of the campaign. Accepted values are `push_notification` or `email`.
+
+## Campaign Audience
+1. **Target**: This is the target audience for the campaign. Accepted values are `all_users` or `segment`.
+2. **Segment Name**: The name of the segment for the campaign. This field is required if the target is set to `segment`.
+
+## Campaign Schedule
+1. **Schedule Type**: This is the schedule type of the campaign. Accepted values are `one_time` or `recurring`. If you select `recurring`, you will have to fill in the `end_time` and `cron_expr` fields.
+2. **Start Time**: Date time in UTC when the campaign should be scheduled. You can use the calendar picker to select the date and time.
+3. **End Time**: Date time in UTC when the campaign should end. This field should only be filled for recurring campaigns.
+4. **Cron Expression**: A cron expression for the campaign. This field only needs to be filled for recurring campaigns. You can use the cron expression builder to create the cron expression.
+
+## Campaign Content
+1. **Template**: The name of the template to be used for the campaign. You have to use the template builder tool to create the template.
+2. **Variables**: A JSON map containing variables to be replaced in the template.
+
+![Admin Campaigns Pic](/images/docs/notifications-admin-campaigns.png)
+
+## Campaigns Import
+This tool allows you to import campaigns from a CSV file.
+
+To get started:
+1. Click on `Send > Campaigns` from the side Nav.
+2. Click on the `Import Campaign` button to create a new campaign.
+
+## Campaign Import Details
+1. **CSV File**: The CSV file containing the campaigns. The CSV file should have the following columns in order: `name`, `campaign_type`, `all_users`, `segment_name`, `template`, `variables`, `metadata`, `schedule_time`, `schedule_type`, `end_time`, `cron_expr`.
+
+<CodeGroup>
+```
+welcome,push_notification,false,all_users,welcome, {"playerName": "John"}, {"key1": "value1"}, 1722917511,one_time,1728187911, 0 0 1 * *
+```
+</CodeGroup>

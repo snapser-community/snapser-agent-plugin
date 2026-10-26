@@ -1,0 +1,521 @@
+export const description = 'Auth'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Discord Login
+
+Click here to view all Auth Snap [connectors](/docs/infra/snaps/auth/connectors).
+
+## Overview
+
+Discord is a popular communication platform for gamers, and integrating Discord login into your game can enhance user experience by allowing players to log in using their existing Discord accounts. This guide will help you set up Discord login for your game using the Snapser platform.
+
+## Setup Requirements
+You need to have a Discord app in the Discord Developer Portal
+
+### 1. Create a Discord App
+- Go to Discord Developer Websites [applications page](https://discord.com/developers/applications).
+- Click on the "New Application" button.
+- Enter a name for your application and click "Create".
+- Navigate to the "OAuth2" tab on the left sidebar.
+- Here you will see your **Client ID** and **Client Secret**. You will need these for the configuration.
+- Note, if you are creating this app for the first time, you may have to click on the **Reset Secret** button to generate your secret key.
+
+![DiscordAppCreate](/images/docs/tutorials/discord-app-id-secret.png)
+
+## How it works
+
+To implement Discord Login, game studios must configure the connector via the Auth Configuration, Connector tool. Details on setting this up are available below in the "Configuration Tool" section.
+
+After configuration, the studio should integrate the [Discord SDK](https://discord.com/developers/docs/discord-social-sdk/getting-started) for the relevant platform into the game client. Discord has plugins for both Unity and Unreal. The Discord SDK, upon successful authentication, returns an access_token which should then be sent to the Auth snap. The Auth Snap receives this access_token, verifies its authenticity with Discords's servers, and if valid, issues a user ID and session token back to the game client. This enables user authentication within the game.
+
+Let's dive into both these steps in detail below.
+
+## Configuration Tool
+The Discord Connector configuration tool needs the following details:
+
+### Credentials
+These credentials can be found in your Discord Apps - OAuth2 section.
+1. <u>Client Id</u> - The **client_id** of your application. This is a unique identifier for your app.
+2. <u>Client Secret</u> - A secret that Discord generates for your app. Please do not share this secret with anyone. This is used to authenticate your app with Discord.
+
+## Integrating with Unity Unreal Engine and Discord Activities
+
+Before we begin, go to your Discord App tools, Downloads section and download the Unity or Unreal SDK tar.
+
+### A. Unity
+#### Project Setup
+- Open Window > Package Manager
+- Click + > Add package from tarball...
+- Select the downloaded tar file.
+- Click Install.
+- Next, in your project add a Scripts folder and create a **DiscordManager.cs** script.
+```csharp
+using UnityEngine;
+using UnityEngine.UI;
+using Discord.Sdk;
+using System.Linq;
+
+public class DiscordManager : MonoBehaviour
+{
+    [SerializeField]
+    private ulong clientId; // Set this in the Unity Inspector from the dev portal
+
+    [SerializeField]
+    private Button loginButton;
+
+    [SerializeField]
+    private Text statusText;
+
+    private Client client;
+    private string codeVerifier;
+}
+```
+- Add an empty object to the scene (GameObject > Create Empty) called DiscordManager and attach the DiscordManager.cs script to it.
+- Add a button to the scene GameObject > UI > Legacy > Button
+- Add text to the scene GameObject > UI > Legacy > Text
+- Position the button and text somewhere visible on the screen
+- Attach the button and text to the DiscordManager in the inspector
+- Run it!
+
+
+#### Setting up SDK Event Handling
+Let's add some event handlers to monitor what's happening with our Discord connection. We'll set up two important callbacks:
+- A logging callback to see what the SDK is doing
+- A status callback to know when we can start using Discord features
+
+Lets now add the following code to the `DiscordManager.cs` script:
+```csharp
+void Start()
+{
+    client = new Client();
+
+    // Modifying LoggingSeverity will show you more or less logging information
+    client.AddLogCallback(OnLog, LoggingSeverity.Error);
+    client.SetStatusChangedCallback(OnStatusChanged);
+
+    // Make sure the button has a listener
+    if (loginButton != null)
+    {
+        // loginButton.onClick.AddListener(StartOAuthFlow);
+    }
+    else
+    {
+        Debug.LogError("Login button reference is missing, connect it in the inspector!");
+    }
+
+    // Set initial status text
+    if (statusText != null)
+    {
+        statusText.text = "Ready to login";
+    }
+    else
+    {
+        Debug.LogError("Status text reference is missing, connect it in the inspector!");
+    }
+}
+
+private void OnLog(string message, LoggingSeverity severity)
+{
+    Debug.Log($"Log: {severity} - {message}");
+}
+
+private void OnStatusChanged(Client.Status status, Client.Error error, int errorCode)
+{
+    Debug.Log($"Status changed: {status}");
+    statusText.text = status.ToString();
+    if (error != Client.Error.None)
+    {
+        Debug.LogError($"Error: {error}, code: {errorCode}");
+    }
+}
+```
+
+#### Account Linking with Discord
+This is the part that does the OAuth2 authentication. As part of this we will:
+1. Open the Discord app or a browser window for Discord login
+1. Get an authorization code
+1. Exchange it for an access token
+1. Connect to Discord
+
+Lets add the following code to the `DiscordManager.cs` script:
+```csharp
+private void StartOAuthFlow()
+{
+    var authorizationVerifier = client.CreateAuthorizationCodeVerifier();
+    codeVerifier = authorizationVerifier.Verifier();
+
+    var args = new AuthorizationArgs();
+    args.SetClientId(clientId);
+    args.SetScopes(Client.GetDefaultPresenceScopes());
+    args.SetCodeChallenge(authorizationVerifier.Challenge());
+    client.Authorize(args, OnAuthorizeResult);
+}
+
+private void OnAuthorizeResult(ClientResult result, string code, string redirectUri)
+{
+    Debug.Log($"Authorization result: [{result.Error()}] [{code}] [{redirectUri}]");
+    if (!result.Successful())
+    {
+        return;
+    }
+    GetTokenFromCode(code, redirectUri);
+}
+
+private void GetTokenFromCode(string code, string redirectUri)
+{
+    client.GetToken(clientId,
+                    code,
+                    codeVerifier,
+                    redirectUri,
+                    (result, token, refreshToken, tokenType, expiresIn, scope) =>
+                    {});
+}
+```
+
+#### Authenticating with your Auth Snap
+Now that you have the Discord access token, you can hit the DiscordLogin API in your Snapser SDK and pass in the access token. You will get the user ID and session token back from the Auth Snap. Additionally, you can in parallel continue using the Discord SDK to start accessing the Discord features.
+
+
+### B. Unreal Engine
+#### Project Setup
+- Locate your Unreal project in the Windows file explorer.
+- Create a new directory named `Plugins` in the base of your project directory (`DiscordSocialUnreal/Plugins`).
+- Extract the Discord SDK archive in the Plugins directory. You should end up with a directory called `DiscordPartnerSDK` inside of Plugins `DiscordSocialUnreal/Plugins/DiscordPartnerSDK`.
+    <Note>
+      Double check the name of the `DiscordPartnerSDK` folder once you've extracted it. It may change between versions and you'll need to add the correct name in the code below.
+    </Note>
+- Reload Unreal Editor and open the project. It should ask if you'd like to recompile the `DiscordPartnerSDK` plugin on launch.
+- Open Visual Studio from the `Tools -> Open Visual Studio` menu in Unreal Editor.
+- Open your `DiscordSocialUnreal.Build.cs` file located at `/Source/DiscordSocialUnreal/` and add the following line after `PublicDependencyModuleNames` array:
+
+```cpp
+PrivateDependencyModuleNames.AddRange(new string[]{"DiscordPartnerSDK"});
+```
+- Back in Unreal Editor, refresh the Visual Studio Project from the `Tools -> Refresh Visual Studio Project` menu.
+- In the Unreal Editor, compile the code with `Ctrl-Alt-F11`. You should see a "Live coding succeeded" modal window if the compilation is successful.
+
+#### Initialize the SDK
+In this section, we'll add callbacks for logging and status of the SDK and OAuth2 authentication to support account linking with Discord. This process will:
+
+1. Open the Discord app or a browser window for Discord login
+1. Get an authorization code
+1. Exchange it for an access token
+1. Connect to Discord
+
+##### DiscordLocalPlayerSubsystem
+- To use the Social SDK with Unreal Engine, we will need to include the `DiscordLocalPlayerSubsystem` which is responsible for managing the lifecycle of the client and executing the `RunCallbacks` event loop.
+- Add the following code to DiscordSocialUnrealCharacter.h:
+```cpp
+#include "DiscordLocalPlayerSubsystem.h"
+```
+- Now let's add the following functions to the public section of the DiscordSocialUnrealCharacter class:
+```cpp
+// DiscordSocialUnrealCharacter.h
+UFUNCTION(Exec)
+void DiscordConnect();
+
+UFUNCTION()
+void OnStatusChanged(EDiscordClientStatus Status, EDiscordClientError Error, int32 ErrorDetail);
+
+UPROPERTY()
+UDiscordAuthorizationCodeVerifier* CodeVerifier;
+
+UPROPERTY()
+UDiscordLocalPlayerSubsystem* Discord;
+```
+- And add the following functions to the protected section of the DiscordSocialUnrealCharacter class:
+```cpp
+// DiscordSocialUnrealCharacter.h
+void BeginPlay();
+void OnLogMessage(FString Message, EDiscordLoggingSeverity Severity);
+void OnAuthorizeCompleted(UDiscordClientResult* Result, FString Code, FString RedirectUri);
+void OnTokenExchange(UDiscordClientResult* Result, FString AccessToken, FString RefreshToken, EDiscordAuthorizationTokenType TokenType, int32 ExpiresIn, FString Scope);
+void OnTokenUpdated(UDiscordClientResult* Result);
+```
+- Now let's add the implementation of these functions to the `DiscordSocialUnrealCharacter.cpp` file.
+- In the `DiscordSocialUnrealCharacter.cpp` file, add the following code:
+```cpp
+#define APPLICATION_ID 1111111111111111111
+
+void ADiscordSocialUnrealCharacter::BeginPlay()
+{
+    auto PlayerController = Cast<APlayerController>(GetController());
+    auto LocalPlayer = PlayerController->GetLocalPlayer();
+    Discord = ULocalPlayer::GetSubsystem<UDiscordLocalPlayerSubsystem>(LocalPlayer);
+    auto LogCallback = FDiscordClientLogCallback::CreateUObject(this, &ADiscordSocialUnrealCharacter::OnLogMessage);
+    FScriptDelegate StatusChanged;
+    StatusChanged.BindUFunction(this, "OnStatusChanged");
+    Discord->Client->AddLogCallback(LogCallback, EDiscordLoggingSeverity::Info);
+    Discord->OnStatusChanged.Add(StatusChanged);
+}
+
+void ADiscordSocialUnrealCharacter::DiscordConnect()
+{
+    CodeVerifier = Discord->Client->CreateAuthorizationCodeVerifier();
+    auto AuthArgs = NewObject<UDiscordAuthorizationArgs>();
+    AuthArgs->Init();
+    AuthArgs->SetClientId(APPLICATION_ID);
+    AuthArgs->SetScopes(UDiscordClient::GetDefaultPresenceScopes());
+    AuthArgs->SetCodeChallenge(CodeVerifier->Challenge());
+    Discord->Client->Authorize(AuthArgs, FDiscordClientAuthorizationCallback::CreateUObject(this, &ADiscordSocialUnrealCharacter::OnAuthorizeCompleted));
+}
+
+void ADiscordSocialUnrealCharacter::OnLogMessage(FString Message, EDiscordLoggingSeverity Severity)
+{
+    UE_LOG(LogTemplateCharacter, Log, TEXT("[%s] %s"), *UEnum::GetValueAsString(Severity), *Message);
+}
+
+void ADiscordSocialUnrealCharacter::OnStatusChanged(EDiscordClientStatus Status, EDiscordClientError Error, int32 ErrorDetail)
+{
+    UE_LOG(LogTemplateCharacter, Log, TEXT("Connection status: %s"), *UEnum::GetValueAsString(Status));
+    if (Status == EDiscordClientStatus::Ready)
+    {
+        UE_LOG(LogTemplateCharacter, Log, TEXT("Connected to Discord! Ready to go! You can now start using Discord features."));
+    }
+    else if (Error != EDiscordClientError::None)
+    {
+        UE_LOG(LogTemplateCharacter, Log, TEXT("Connection error: %s (Detail: %d)"), *UEnum::GetValueAsString(Error), ErrorDetail);
+    }
+}
+
+void ADiscordSocialUnrealCharacter::OnAuthorizeCompleted(UDiscordClientResult* Result, FString Code, FString RedirectUri)
+{
+    if (!Result->Successful())
+    {
+        UE_LOG(LogTemplateCharacter, Error, TEXT("Discord authorization failed: %s"), *Result->Error());
+        return;
+    }
+
+    UE_LOG(LogTemplateCharacter, Log, TEXT("Authorization successful! Getting access token..."));
+    Discord->Client->GetToken(APPLICATION_ID, Code, CodeVerifier->Verifier(), RedirectUri, FDiscordClientTokenExchangeCallback::CreateUObject(this, &ADiscordSocialUnrealCharacter::OnTokenExchange));
+}
+
+void ADiscordSocialUnrealCharacter::OnTokenExchange(UDiscordClientResult* Result, FString AccessToken, FString RefreshToken, EDiscordAuthorizationTokenType TokenType, int32 ExpiresIn, FString Scope)
+{
+    if (!Result->Successful())
+    {
+        UE_LOG(LogTemplateCharacter, Error, TEXT("Discord token exchange failed: %s"), *Result->Error());
+    }
+
+    Discord->Client->UpdateToken(TokenType, AccessToken, FDiscordClientUpdateTokenCallback::CreateUObject(this, &ADiscordSocialUnrealCharacter::OnTokenUpdated));
+}
+
+void ADiscordSocialUnrealCharacter::OnTokenUpdated(UDiscordClientResult* Result)
+{
+    Discord->Client->Connect();
+}
+```
+
+#### What's Happening Here?
+1. We create a code verifier for OAuth2 PKCE security
+1. Set up authorization arguments with your app ID and required scopes
+1. Start the auth flow with `Client::Authorize`, which opens a browser
+1. When authorized, we exchange the code for an access token
+1. `Client::UpdateToken` tells the SDK to use our access token for Discord API calls
+1. Once the token is updated, we call `Client::Connect`, and the SDK will begin connecting asynchronously
+
+#### Authenticating with your Auth Snap
+Now that you have the Discord access token, you can hit the DiscordLogin API in your Snapser SDK and pass in the access token. You will get the user ID and session token back from the Auth Snap. Additionally, you can in parallel continue using the Discord SDK to start accessing the Discord features.
+
+### C. Discord Activities
+Discord activities are SPAs that run inside the Discord client in an iframe. The Discord Social Unity and Unreal SDKs do not work in WebGl builds. To run a Discord activity while having access to Discord features, you need to use the [Embedded App SDK](https://discord.com/developers/docs/developer-tools/embedded-app-sdk). If you are making a web game using HTML/JS/CSS this is straightforward. However, if you want to use your game written in Unity C# and make a WebGl build, we recommend that you use Dissonity. Snapser has forked this project and is available in a [repo](https://github.com/snapser-community/Dissonity) under the snapser-community organization. Following the installation instructions, you will get the **access_token** bubbled up to your Unity C# code. You can then use the DiscordLogin API to authenticate the user.
+
+We have added a sample guide that shows you how to get a Unity game working in a Discord activity. You can follow the [guide](/docs/guides/samples/unity-discord) to know more.
+
+
+## Usage
+
+Game studios have the option to start user sessions with an Anonymous login and later upgrade to a secure Discord login, or they can begin directly with an Discord login. If opting for the latter, simply store and utilize the user ID and session token returned by the Auth Snap to interact with other APIs on your Snapend. For upgrading from an Anonymous to an Discord login, follow the example below.
+
+### Example
+
+1. Assume a game client initiates an AnonLogin request using the device's unique identifier as the username.
+2. The Auth Snap generates a new user profile with `user_id=395d9b91-72fd-40f2-a3cd-cf5a1e7a604f` and `session_token=9a052312-48f6-4710-a072-230ddd046a2d`.
+3. The game client prompts the user to secure their account via Discord Login, initiating the OAuth2 flow described above.
+4. As part of the flow, the client receives an **access_token**.
+5. Next, the client submits an **DiscordLogin** request with the **access_token** and sets **create_user=true**.
+6. The client receives a new **user_id** and **session_token** linked to the Discord account.
+7. To merge these accounts, the client utilizes the **AssociateLogins** API, specifying which account to retain and which to discard.
+8. The Auth Snap finalizes the association, discarding the unwanted user ID and token, preserving the necessary ones.
+
+This procedure ensures the account remains secure, as access cannot be gained merely through knowing the username used in the AnonLogin API.
+
+## APIs
+
+Here are the relevant APIs
+
+<div className="apisTable">
+| API Name                | HTTP Method | API Description                                                                         |
+| ----------------------- | ----------- | --------------------------------------------------------------------------------------- |
+| [DiscordLogin](#discordlogin-api)         | PUT         | Logs in the user based on the discord token specified and returns a session                |
+</div>
+
+#### DiscordLogin API
+<CodeGroup title="Discord Login Logs in the user based on the discord token specified and returns a session" tag="PUT" label="DiscordLogin">
+```csharp
+/// <summary>
+/// Discord Login Logs in the user based on the discord token specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthDiscordLoginResponse</returns>
+public AuthDiscordLoginResponse DiscordLogin(AuthDiscordLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthDiscordLoginResponse> localVarResponse = DiscordLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthDiscordLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthDiscordLoginRequest" /> class.
+/// </summary>
+/// <param name="accessToken">Discord access token generated on the client.</param>
+/// <param name="code">Discord code generated on the client.</param>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+public AuthDiscordLoginRequest(string accessToken = default(string), string code = default(string), bool createUser = default(bool))
+{
+    this.AccessToken = accessToken;
+    this.Code = code;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthDiscordLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthDiscordLoginResponse" /> class.
+/// </summary>
+/// <param name="accessToken">accessToken.</param>
+/// <param name="user">user.</param>
+public AuthDiscordLoginResponse(string accessToken = default(string), AuthUser user = default(AuthUser))
+{
+    this.AccessToken = accessToken;
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::DiscordLoginRequest : public Request
+{
+public:
+    virtual ~DiscordLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthDiscordLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthDiscordLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthDiscordLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Discord access token generated on the client */
+    TOptional<FString> AccessToken;
+    /* Discord code generated on the client */
+    TOptional<FString> Code;
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::DiscordLoginResponse : public Response
+{
+public:
+    virtual ~DiscordLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthDiscordLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthDiscordLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthDiscordLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> AccessToken;
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>

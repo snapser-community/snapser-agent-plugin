@@ -1,0 +1,63 @@
+# 1.6.0
+##### February 23, 2026
+
+## Spotlight
+1. BYOSnap Direct Deploy is a new development workflow that allows developers to deploy BYOSnaps directly to Snapends without publishing first. This enables smoother development iteration with live debugging support, making it easier to test and iterate on your BYOSnaps in a live environment.
+2. Snapctl now includes a graphical interface (beta) with command history and click-to-rerun functionality, providing a more user-friendly experience for developers who prefer visual tools.
+
+## Snapctl
+1. Added BYOSnap Direct Deploy command - deploy snaps directly to Snapends for development without going through the publish flow.
+2. Introduced GUI mode (beta) with command history and click-to-rerun functionality for a more interactive experience.
+3. Added `snapctl byows detach` command to detach the tunnelling from the Snapend.
+
+## Snaps
+### Matchmaking
+1. Added a new endpoint to get queue size, allowing you to monitor the number of tickets per queue in real-time.
+2. Match ID is now forwarded to GSF on server spawn, providing better tracking and debugging capabilities.
+3. Debug logs have been reduced to trace level for improved performance and cleaner log output.
+
+### In-App Purchases
+1. Added Steam connector for IAP, enabling seamless integration with Steam's in-app purchase system.
+
+### Inventory
+1. Added support for one-time grants. The system now automatically tracks and grants items to users, ensuring items marked as one-time are only granted once per user.
+
+### Leaderboards
+1. Added batch endpoints for Get, Set, and Increment scores, allowing you to perform bulk operations more efficiently.
+
+### Lobbies
+1. Region parameter is now case-insensitive and automatically normalized, preventing errors from inconsistent casing.
+
+### Parties
+1. Added Transfer Ownership API, allowing party owners to transfer ownership to another member.
+
+### Rewards
+1. Reward items can now contain drop tables, enabling more complex reward structures where players can receive randomized items from a pool.
+2. Drop tables in rewards support all existing drop table features including weights and probabilities.
+3. Drop tables can be nested within quest rewards for more flexible reward systems.
+
+## Web App
+1. Added BYOSnap Direct Deploy tool - manage direct deployments from the portal with full visibility into deployed snaps and their configurations.
+2. Direct deployed BYOSnaps are now clearly marked and protected from accidental additions or modifications, preventing unintended changes to development deployments.
+3. Admin tool updates for Quests now include drop table support in rewards, allowing you to configure complex reward structures directly from the portal.
+4. Admin tool updates for Trackables, improving the configuration experience and adding new filtering options.
+5. Improved Changes Modal for more admin tools, providing better visibility into configuration changes before saving.
+6. Logs tool now includes a sort parameter and infinite scroll for better UX, making it easier to navigate large log files.
+7. User Manager now displays improved delete confirmation messaging, providing clearer context about what will be deleted.
+8. Email addresses are now automatically normalized to lowercase throughout the system, preventing duplicate accounts due to case sensitivity.
+9. Fixed a bug in the Promotion tool that was not correctly handling soft-dependent settings during promotion, which could cause configuration issues in the promoted Snapend.
+10. The following snap configuration tools now support unsaved changes warnings to prevent accidental loss of work:
+    - Quests
+    - API Key Manager
+    - Auth Connectors
+    - Bundles
+    - Discounts
+    - Currency Tools
+    - Templates
+    - Notifications
+    - Sequencer
+    - Tasks
+
+## Documentation
+1. Added documentation for the BYOSnap Direct Deploy workflow, including setup instructions, deployment commands, and best practices.
+2. Other minor documentation updates and corrections.

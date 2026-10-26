@@ -1,0 +1,213 @@
+
+export const description =
+  'This guide assists users to understand their backends security.'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Snapend Tools
+
+Each Snapend comes with a variety of tools to help with your app development journey.
+
+## Introduction
+
+This beginner-friendly guide is going to help you understand the primary tools of a Snapend:
+
+1. Configuration Tools
+2. Downloads Tool
+3. API Explorer
+4. WebSocket Tester
+5. Monitoring Tools
+
+## Step 0: Pre-requisites
+
+### A. Create a Snapend
+
+Before you begin, ensure you have access to a basic Snapend with the Authentication Snap. You can get setup following the tutorial below.
+
+<div className="parent">
+  <div className="servicesBox">
+    # Create a Snapend
+
+    Check out the tutorial to create a Snapend with the Authentication snap with the Anonymous Connector enabled.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/create-snapend'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+
+  </div>
+</div>
+
+<Checkpoint step={0}>You are now ready to begin the tutorial.</Checkpoint>
+
+## Step 1: Snap Configuration Tools
+
+Each Snap within your Snapend includes a suite of configuration tools. These tools enable you to tailor the behavior of the Snapend to meet the specific requirements of your game or application.
+
+1. Go to the Snapend home page and click on the **Snaps Configuration** button under **Quick Links**. This will take you to the Snap Configuration tools.
+   ![Snapend Dashboard](/images/docs/tutorials/create-snapend-snapend-dashboard.png)
+
+1. This is the main Snap configuration home page. In the left sub-navigation section you will see a list of all the Snaps you have added to your Snapend. You can click on any of the Snaps to view its configuration tools. You can also click the **Configuration** button you see for each Snap in the section on the right.
+   ![Snap Configuration Home](/images/docs/tutorials/snapend-tools-config-home.png)
+
+1. Click on the **Authentication Snap** to view its configuration tools.
+
+1. You will now see a sub-navigation section with a list of all the configuration tools available for the Authentication Snap. At the bottom, you will see a couple buttos for **Docs** and **API**, to quickly view the Documentation and API Explorer for the Authentication Snap. Additionally, at the top of the sub-navigation, you will find a back button to return to the main Snap configuration home page.
+   ![Snap Configuration Home](/images/docs/tutorials/snapend-tools-config-auth.png)
+
+<Checkpoint step={1}>
+  You now know where to go to configure your Snapend according to your
+  application's needs. Next, lets look at the Downloads tool to download the
+  SDKs and Protos for your Snapend.
+</Checkpoint>
+
+## Step 2: Downloads Tool
+
+1. Click on the Breadcrumb at the top of your page or Snapend from the main navigation bar to go back to your Snapend home page.
+   ![Snap Breadcrumb](/images/docs/tutorials/snapend-tools-breadcrumb.png)
+
+2. On the Snapend home page, look for Tool > Downloads from the main navigation bar. This will take you to the Downloads tool.
+
+3. The Downloads tool is divided into four sections:
+
+   1. **Client SDKs** - These SDKs are meant to be used from the client side of your app.
+   2. **Standard Language SDKs** - These SDKs are meant to be used for developers using custom game engines as well as studios who want to communicate with their Snapend from game servers.
+   3. **Protos** - These are the Protobuf files for all the Snaps you have added to your Snapend.
+   4. **Manifest** - Infrastructure as code representation of your Snapend. This is a JSON or a YAML file that contains all the information about your Snapend, including the Snaps you have added and the configuration of each Snap
+
+4. For this tutorial, select the platform you are building your app in and click **Generate**.
+   ![Downloads](/images/docs/tutorials/snapend-tools-downloads.png)
+
+5. In a minute or two, you will see a pop-up window with the zip file containing the SDK. Once you unzip the file you should be able to add the specified dependencies and drop the code into your client project.
+
+   <Note>
+     Snapser do not ship engine plugins, but instead ships the raw source code
+     for the SDK.
+   </Note>
+   ![Download Zip](/images/docs/tutorials/snapend-tools-download-zip.png)
+
+6. You can also download your Snapend Manifest and protos from the appropriate sections.
+   <Note>
+     We highly recommend all Snapser users to download their Snapend manifest
+     and store it in version control. You can use this manifest to track the
+     changes made to your Snapend over time. Additionally, you can use the
+     Snapser CLI tool to automate creation, cloning and deployment of your
+     Snapend.
+   </Note>
+
+<Checkpoint step={2}>
+  You have successfully downloaded a SDK for your custom backend and are ready
+  to integrate it into your app. Next, lets look at another important tool, the
+  API Explorer that allows you to test the APIs of your Snapend from the Snapser
+  Web app.
+</Checkpoint>
+
+## Step 3: API Explorer
+
+Every Snapend comes with an API Explorer that allows you to test the APIs of your Snapend.
+
+1. You can access the API Explorer by clicking on the **API Explorer** button under **Quick Links**.
+   ![Snapend Dashboard](/images/docs/tutorials/create-snapend-snapend-dashboard.png)
+
+1. This will take you to the API Explorer home page. In the sub-navigation section, you will see a list of all the Snaps you have added to your Snapend. You can click on any of the Snaps to view the APIs that the Snap exposes.
+   ![API Explorer](/images/docs/tutorials/snapend-tools-api-home.png)
+
+1. Click on the **Authentication Snap** to view its APIs. Then click on **Anonymous Login > AnonLogin** to view the API documentation and test the API.
+
+   - You will then see the sub-navigation show you all the APIs that exposed by the Authentication Snap.
+   - Next to it, you will see the interactive widget that makes a call to your Snapend. - The last section, shows you documentation about the API. Clicking on APIs will keep opening new tabs, allowing you to explore multiple APIs at once.
+   - Similar to the configuration tool, you will see two buttons for **Docs** and **Tools** to quickly view the Documentation and Configuration tools for the current Snap.
+   - At the top of the sub-navigation, you will find a back button to return to the main API Explorer home page.
+     ![API Explorer](/images/docs/tutorials/snapend-tools-api-auth.png)
+
+1. **IMPORTANT**: You will also see tabs at the top of the sub-navigation that shows you the Auth Type viz. **User**, **Api-Key** and **Internal**. Clicking on different Auth-Types show you only the APIs that are available for that Auth type. Eg: If an API is only meant to be used from trusted servers, think Batch APIs that update multiple users at once, you will see that API under the **API Key** Auth type. This is important to note as you will need to use the correct Auth type when making API calls from your app or server.
+
+1. In the API interraction section you will see some useful sub-tools of the API explorer:
+
+   - **Stream Tool**: This tool allows you to stream event data for a user from your Snapend. Only usable if you have enabled Websockets on your Snapend gateway.
+   - **API History and Variables Tool**: This tool allows you to view the history of API calls made to your Snapend and also view the variables allowing you to reuse inputs for your API calls.
+   - **CURL Code**: This shows you the CURL code for the API call you are making. This is useful if you want to test the API from your own code or a different tool.
+   - **Cache Request Inputs**: This is a toggle that allows you to cache the inputs for the API call you are making. This is useful if you want to reuse the inputs for your API calls.
+     ![API Explorer](/images/docs/tutorials/snapend-tools-api-sub-tools.png)
+
+1. In the **Payload** section of the API widget, add update the **username** to anything you want and click **PUT**. This will actually fire a call to your Snapend and show you the response.
+   ![Anon User](/images/docs/tutorials/byosnap-basic-anon-user.png)
+
+<Checkpoint step={3}>
+  You have successfully used the API explorer to test one of the APIs of your
+  Snapend. Next lets look at the WebSocket Tester for real-time event testing.
+</Checkpoint>
+
+## Step 4: WebSocket Tester
+
+If your Snapend has WebSockets enabled on the gateway and includes the Event Bus snap, you can use the [WebSocket Tester](/docs/snapend/tools/ws-tester) to test real-time events across multiple users simultaneously.
+
+1. Go to your Snapend home page and click on the **WebSocket Tester** button under **Quick Links**.
+2. Select the number of simultaneous connections you want to open (up to 25) and click **Connect**.
+3. Each connected user gets their own card with a service/API dropdown, input fields, and a logs section.
+4. Trigger an action from one user (e.g., create a lobby) and observe the real-time events appearing in other users' logs.
+
+<Note>
+  The WebSocket Tester requires Anonymous Authentication, Gateway WebSockets,
+  and the Event Bus Snap to be enabled. See the [WebSocket Tester
+  documentation](/docs/snapend/tools/ws-tester) for full details.
+</Note>
+
+<Checkpoint step={4}>
+  You now know how to test real-time events across multiple users. Next lets
+  look at some of the monitoring tools that exist at your disposal.
+</Checkpoint>
+
+## Step 5: Monitoring Tools
+
+1. Click on the Breadcrumb at the top of your page or Snapend from the main navigation bar to go back to your Snapend home page.
+   ![Snap Breadcrumb](/images/docs/tutorials/snapend-tools-breadcrumb.png)
+2. On the Snapend home page, look for Infrastructure under the main navigation bar. Here you will see the following four tools exposed:
+   ![Snapend Infra](/images/docs/tutorials/snapend-tools-snapend-infra.png)
+   - **Dashboard**: A view-only summary of what's deployed for this Snapend. Every service shows its availability zones, autoscaler / rate-limiter toggles, and monitoring / alerting indicators. For BYOSnaps you additionally see the live deployment-profile from the snapend manifest: CPU and memory, the real autoscaler (HPA) state — click for replica range and CPU / memory thresholds — and counts for attached secrets, command args, and env vars. Each of those counts is clickable for the full list.
+     ![Snapend Infra](/images/docs/tutorials/snapend-tools-snapend-infra-dashboard.png)
+   - **Monitor**: Next click on the Monitor tool. This tool exposes graphs for CPI, Memory, Top Requests, Requests per Second, POD restarts, Latency P99 P95 P75 P50, Errors and HTTP method distribution.
+     ![Snapend Infra](/images/docs/tutorials/snapend-tools-snapend-infra-monitor.png)
+   - **Logs**: Click on the Logs tool. This tool allows you to view the logs for your Snapend. You can filter the logs by time, severity and message. By default, you will see the **Deployment** logs for your Snapend. But you can use the **Queries > Labels** to toggle to see **Snap** or **Fleet** logs instead.
+     ![Snapend Infra](/images/docs/tutorials/snapend-tools-snapend-infra-logs.png)
+     <Note>
+       If there is anything wrong with your Snapend, this is the tool you should
+       be coming to check for errors.
+     </Note>
+   - **Heatmap**: Click on the Heatmap tool to see a live hex grid of every pod running in your Snapend — both your Kubernetes snap pods and your game server fleet pods — with each cell color-coded by pod state — from healthy and available (mint green), through transitional states like pending (blue) and terminating (peach), to critical failures such as crash loops and OOM kills (red). Click any hex to open a detail panel with the full pod breakdown and quick links to its logs and infrastructure monitor.
+     ![Snapend Infra](/images/docs/tutorials/snapend-tools-snapend-infra-heatmap.png)
+
+<Checkpoint step={5}>
+  Congratulations! You have successfully used the Snapend tools to configure,
+  monitor and test your Snapend. Check out the other tutorials to learn more
+  about Snapser and its features.
+</Checkpoint>
+
+## Next Steps
+
+Check out some of the following tutorials.
+
+<div className="parent">
+  <div className="servicesBox">
+    # Snapend Security
+
+    Check out the tutorial to understand how Snapend security works. This tutorial will help you understand how to secure your Snapend and the services running on it.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/snapend-security'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+
+  </div>
+  <div className="tutorialBox">
+    # Setup Snapser CLI
+
+    You can go through the Setup Snapser CLI tutorial to install and configure Snapctl.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/setup-snapctl'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+
+  </div>
+</div>

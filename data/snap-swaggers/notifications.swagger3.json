@@ -1,0 +1,898 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Send email and push notifications to your players",
+    "title" : "Notifications",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "NotificationsService"
+  } ],
+  "paths" : {
+    "/v1/notifications/email" : {
+      "post" : {
+        "description" : "Sends an email to a list of users",
+        "operationId" : "SendEmail",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/notificationsSendEmailRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/notificationsSendEmailResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Email",
+        "tags" : [ "NotificationsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/notifications/email/all" : {
+      "post" : {
+        "description" : "Sends an email to all users",
+        "operationId" : "SendEmailToAll",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/notificationsSendEmailToAllRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Send Email to All users",
+        "tags" : [ "NotificationsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/notifications/email/segments/{segment_name}" : {
+      "post" : {
+        "description" : "Sends an email to a segment",
+        "operationId" : "SendEmailToSegment",
+        "parameters" : [ {
+          "description" : "Name of the segment",
+          "explode" : false,
+          "in" : "path",
+          "name" : "segment_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SendEmailToSegment_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Send Email to Segment",
+        "tags" : [ "NotificationsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/notifications/push" : {
+      "post" : {
+        "description" : "Sends a push notification to a list of users",
+        "operationId" : "SendPushNotification",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/notificationsSendPushNotificationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/notificationsSendPushNotificationResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Push Notifications",
+        "tags" : [ "NotificationsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/notifications/push/all" : {
+      "post" : {
+        "description" : "Sends a push notification to all users",
+        "operationId" : "SendPushNotificationToAll",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/notificationsSendPushNotificationToAllRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Send Push to All users",
+        "tags" : [ "NotificationsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/notifications/push/segments/{segment_name}" : {
+      "post" : {
+        "description" : "Sends a push notification to a segment",
+        "operationId" : "SendPushNotificationToSegment",
+        "parameters" : [ {
+          "description" : "Name of the segment",
+          "explode" : false,
+          "in" : "path",
+          "name" : "segment_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SendPushNotificationToSegment_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Send Push to Segment",
+        "tags" : [ "NotificationsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/notifications/roblox" : {
+      "post" : {
+        "description" : "Sends a roblox notification to a list of users",
+        "operationId" : "SendRobloxNotification",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/notificationsSendRobloxNotificationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/notificationsSendRobloxNotificationResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Roblox Notifications",
+        "tags" : [ "NotificationsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/notifications/user-device-tokens/{user_id}" : {
+      "put" : {
+        "description" : "[Deprecated: Use SetupUserPush instead] Sets the device token for a user",
+        "operationId" : "SetDeviceToken",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetDeviceToken_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Push Notifications (Deprecated)",
+        "tags" : [ "NotificationsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/notifications/user-emails/{user_id}" : {
+      "put" : {
+        "description" : "[Deprecated: Use SetupUserEmail instead] Sets the email address for a user",
+        "operationId" : "SetEmail",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetEmail_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Email",
+        "tags" : [ "NotificationsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/notifications/users/{user_id}/email" : {
+      "put" : {
+        "description" : "Sets the email address for a user",
+        "operationId" : "SetupUserEmail",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetupUserEmail_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Email",
+        "tags" : [ "NotificationsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/notifications/users/{user_id}/preferences" : {
+      "get" : {
+        "description" : "Gets the notification preferences for a user",
+        "operationId" : "GetNotificationPreferences",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/notificationsGetNotificationPreferencesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Notification Preferences",
+        "tags" : [ "NotificationsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Sets the notification preference for a user on a specific channel",
+        "operationId" : "SetNotificationPreference",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetNotificationPreference_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/notificationsSetNotificationPreferenceResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Notification Preferences",
+        "tags" : [ "NotificationsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/notifications/users/{user_id}/push" : {
+      "put" : {
+        "description" : "Sets the device token & a corresponding locale for a user",
+        "operationId" : "SetupUserPush",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetupUserPush_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Push Notifications",
+        "tags" : [ "NotificationsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/notifications/users/{user_id}/roblox" : {
+      "put" : {
+        "description" : "Setup the roblox user ID for a user",
+        "operationId" : "SetupRobloxUser",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetupRobloxUser_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Roblox Notifications",
+        "tags" : [ "NotificationsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "SendEmailToSegment_request" : {
+        "properties" : {
+          "template" : {
+            "description" : "Name of the template",
+            "type" : "string"
+          },
+          "variables" : {
+            "description" : "Key-value pairs of variables to fill the template with",
+            "type" : "object"
+          }
+        },
+        "required" : [ "template", "variables" ],
+        "type" : "object"
+      },
+      "SendPushNotificationToSegment_request" : {
+        "properties" : {
+          "metadata" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "Key-value pairs that are sent as-is in the notification",
+            "type" : "object"
+          },
+          "template" : {
+            "description" : "Name of the template",
+            "type" : "string"
+          },
+          "variables" : {
+            "description" : "Key-value pairs of variables to fill the template with",
+            "type" : "object"
+          }
+        },
+        "required" : [ "template", "variables" ],
+        "type" : "object"
+      },
+      "SetDeviceToken_request" : {
+        "properties" : {
+          "token" : {
+            "description" : "The device token",
+            "type" : "string"
+          },
+          "type" : {
+            "description" : "Type of the device token. Valid values - apns, fcm",
+            "type" : "string"
+          }
+        },
+        "required" : [ "token", "type" ],
+        "type" : "object"
+      },
+      "SetEmail_request" : {
+        "properties" : {
+          "email" : {
+            "description" : "The email address",
+            "type" : "string"
+          }
+        },
+        "required" : [ "email" ],
+        "type" : "object"
+      },
+      "SetNotificationPreference_request" : {
+        "properties" : {
+          "channel" : {
+            "$ref" : "#/components/schemas/notificationsNotificationChannel"
+          },
+          "enabled" : {
+            "description" : "Whether the channel is enabled",
+            "type" : "boolean"
+          },
+          "reason" : {
+            "description" : "Reason for the change (e.g. one_click, preference_page, api)",
+            "type" : "string"
+          }
+        },
+        "required" : [ "channel", "enabled" ],
+        "type" : "object"
+      },
+      "SetupRobloxUser_request" : {
+        "properties" : {
+          "roblox_user_id" : {
+            "description" : "The Roblox user ID",
+            "type" : "string"
+          }
+        },
+        "required" : [ "roblox_user_id" ],
+        "type" : "object"
+      },
+      "SetupUserEmail_request" : {
+        "properties" : {
+          "email" : {
+            "description" : "The email address",
+            "type" : "string"
+          },
+          "locale" : {
+            "description" : "The device locale",
+            "type" : "string"
+          }
+        },
+        "required" : [ "email", "locale" ],
+        "type" : "object"
+      },
+      "SetupUserPush_request" : {
+        "properties" : {
+          "locale" : {
+            "description" : "The device locale",
+            "type" : "string"
+          },
+          "token" : {
+            "description" : "The device token",
+            "type" : "string"
+          },
+          "type" : {
+            "description" : "Type of the device token. Valid values - apns, fcm",
+            "type" : "string"
+          }
+        },
+        "required" : [ "locale", "token", "type" ],
+        "type" : "object"
+      },
+      "notificationsGetNotificationPreferencesResponse" : {
+        "properties" : {
+          "preferences" : {
+            "items" : {
+              "$ref" : "#/components/schemas/notificationsNotificationPreference"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "notificationsNotificationChannel" : {
+        "default" : "NOTIFICATION_CHANNEL_UNSPECIFIED",
+        "enum" : [ "NOTIFICATION_CHANNEL_UNSPECIFIED", "NOTIFICATION_CHANNEL_EMAIL", "NOTIFICATION_CHANNEL_PUSH", "NOTIFICATION_CHANNEL_ROBLOX" ],
+        "type" : "string"
+      },
+      "notificationsNotificationPreference" : {
+        "properties" : {
+          "channel" : {
+            "$ref" : "#/components/schemas/notificationsNotificationChannel"
+          },
+          "enabled" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "notificationsNotificationResponse" : {
+        "properties" : {
+          "error" : {
+            "type" : "string"
+          },
+          "platform" : {
+            "type" : "string"
+          },
+          "success" : {
+            "type" : "boolean"
+          },
+          "user_id" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "notificationsSendEmailRequest" : {
+        "properties" : {
+          "template" : {
+            "description" : "Name of the template",
+            "type" : "string"
+          },
+          "user_ids" : {
+            "description" : "User IDs of the user",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "variables" : {
+            "description" : "Key-value pairs of variables to fill the template with",
+            "type" : "object"
+          }
+        },
+        "required" : [ "template", "user_ids", "variables" ],
+        "type" : "object"
+      },
+      "notificationsSendEmailResponse" : {
+        "properties" : {
+          "failed" : {
+            "description" : "Number of failures",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "skipped" : {
+            "description" : "Number of users skipped due to notification preferences",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "succeeded" : {
+            "description" : "Number of successes",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "notificationsSendEmailToAllRequest" : {
+        "properties" : {
+          "template" : {
+            "description" : "Name of the template",
+            "type" : "string"
+          },
+          "variables" : {
+            "description" : "Key-value pairs of variables to fill the template with",
+            "type" : "object"
+          }
+        },
+        "required" : [ "template", "variables" ],
+        "type" : "object"
+      },
+      "notificationsSendPushNotificationRequest" : {
+        "properties" : {
+          "metadata" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "Key-value pairs that are sent as-is in the notification",
+            "type" : "object"
+          },
+          "template" : {
+            "description" : "Name of the template",
+            "type" : "string"
+          },
+          "user_ids" : {
+            "description" : "User IDs of the user",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "variables" : {
+            "description" : "Key-value pairs of variables to fill the template with",
+            "type" : "object"
+          }
+        },
+        "required" : [ "template", "user_ids", "variables" ],
+        "type" : "object"
+      },
+      "notificationsSendPushNotificationResponse" : {
+        "properties" : {
+          "failed" : {
+            "description" : "Number of failures",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "failed_responses" : {
+            "description" : "Responses returned by fcm or apns for a failed notification",
+            "items" : {
+              "$ref" : "#/components/schemas/notificationsNotificationResponse"
+            },
+            "type" : "array"
+          },
+          "skipped" : {
+            "description" : "Number of users skipped due to notification preferences",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "succeeded" : {
+            "description" : "Number of successes",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "notificationsSendPushNotificationToAllRequest" : {
+        "properties" : {
+          "metadata" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "Key-value pairs that are sent as-is in the notification",
+            "type" : "object"
+          },
+          "template" : {
+            "description" : "Name of the template",
+            "type" : "string"
+          },
+          "variables" : {
+            "description" : "Key-value pairs of variables to fill the template with",
+            "type" : "object"
+          }
+        },
+        "required" : [ "template", "variables" ],
+        "type" : "object"
+      },
+      "notificationsSendRobloxNotificationRequest" : {
+        "properties" : {
+          "asset_id" : {
+            "description" : "Asset ID of the notification string",
+            "type" : "string"
+          },
+          "user_ids" : {
+            "description" : "User IDs of the user",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "asset_id", "user_ids" ],
+        "type" : "object"
+      },
+      "notificationsSendRobloxNotificationResponse" : {
+        "properties" : {
+          "failed" : {
+            "description" : "Number of failures",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "skipped" : {
+            "description" : "Number of users skipped due to notification preferences",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "succeeded" : {
+            "description" : "Number of successes",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "notificationsSetNotificationPreferenceResponse" : {
+        "type" : "object"
+      },
+      "protobufNullValue" : {
+        "default" : "NULL_VALUE",
+        "description" : "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value.",
+        "enum" : [ "NULL_VALUE" ],
+        "type" : "string"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

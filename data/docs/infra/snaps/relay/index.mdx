@@ -1,0 +1,99 @@
+export const description = 'Snapser Snapser Relay - Multi-region relay'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Relay
+
+The Relay Snap aka Titan equips each Snapend with a control plane to unlock Snapser's global compute.
+The compute runs on Stratos, Snapser's multi-region cloud platform.
+
+## Concept
+Games that have a real-time multiplayer component need to be able to connect players to each other.
+Since the internet is not optimized for Peer to peer play, relay-servers are a better solution for
+real-time PvP games. Additionally, keeping the latency low for all the players involved in a match is
+important for a good experience.
+
+## Workings
+
+### Prerequisites
+The compute reservations are automatically handled by the matchmaking Snap. So, you need to make sure that
+you have the matchmaking Snap in your Snapend.
+
+
+### Setup
+In your matchmaking admin tool, when you create a new match profile, you can select **relay** as the
+"Allocate on Match" option. Additionally, you can select the Stratos regions you want to activate for this
+profile. Now, as you start building rule sets, you can pick the "Latency" rule set. In this rule set,
+you can provide a range of acceptable latency for the match. Since a match profile already supports
+multiple rule sets, you can provide a cascading set of latency rule sets to ensure that the match is
+allocated to the best possible region for the players.
+
+![titan-setup](/images/docs/titan-setup.png)
+![titan-setup](/images/docs/titan-latency-rule.png)
+
+### Use
+First you want to get the latency information from your client device. You can hit the **titanURLs** API to get the list of Snapser Relay gateway URLs.
+```
+curl https://gateway.dev.snapser.io/%7Bcluster_id%7D/v1/matchmaking/titanUrls
+```
+<Note>
+  You will have to hit this endpoint via the Snapser SDK to get the following payload programmatically.
+</Note>
+
+```json
+{
+  "titan_urls":{
+    "oregon":"https://titan-oregon-url.stratos.snapser.com/ping",
+    "singapore":"https://titan-singapore-url.stratos.snapser.com/ping"
+  }
+}
+```
+
+Next, for now you need to hit these endpoints from the client code using the HTTP library of your choice and calculate the latency.
+
+<Note>
+  We are working on automating this functionality and it will be available in the SDK soon. Please reach out to support to know more. After this release, every custom SDK will include a
+  new method to get the Snapser Relay latency payload. The client code can blindly pass in the response from this method to the matchmaking
+  Create Ticket API.
+</Note>
+
+
+Then the client should submit a ticket to the Matchmaking Snap, it should pass a payload to the
+**CreateTicket** API that includes its latency information from all the Snapser Relay regions that you
+have activated for the match profile. Also add the other search fields according to your match profile.
+
+```json
+{
+  "user_id": "some_user_id",
+  "search_fields": {
+    "latency_args": {
+      "oregon": 50,
+      "singapore": 100
+    },
+    "tags": ["ranked"],
+  }
+}
+```
+
+On a successful match, the matchmaking Snap will return a payload that includes the region that the match
+has been allocated to along with a join code for security. The clients can then directly connect to
+Snapser Titan URL & Port and pass in the join code. Once the orchestrator detects that all the players
+have connected, it will start relaying the messages between the clients. Here is a simple swimlane diagram
+that shows the flow of messages between the clients and Snapser Relay.
+
+![titan](/images/docs/titan.png)
+
+
+## FAQs
+
+### What protocols are supported by the Snap?
+Snapser Relay works on Web sockets.
+
+### Does Snapser Relay support UDP?
+Snapser Relay does not support UDP at the moment. We are working on adding UDP support in the future.
+
+### Is this technology compatible with Mirror?
+Yes, this Snap works really well with Mirror. You can use the Mirror transport layer to connect to Snapser
+Relay. In fact, ask your support team to share our sample game.

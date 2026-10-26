@@ -1,0 +1,210 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Set up and apply dynamic configuration for your players",
+    "title" : "GDPR",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "GdprService"
+  } ],
+  "paths" : {
+    "/v1/gdpr/user/{user_id}/data-requests" : {
+      "get" : {
+        "description" : "Get logs for a given user's data requests",
+        "operationId" : "GetUserRequestLog",
+        "parameters" : [ {
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/gdprUserRequestLogResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Request Log",
+        "tags" : [ "GdprService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/gdpr/user/{user_id}/pin" : {
+      "get" : {
+        "description" : "Get user pin",
+        "operationId" : "GetPin",
+        "parameters" : [ {
+          "description" : "User ID for the user who's pin is being returned",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/gdprGetPinResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User",
+        "tags" : [ "GdprService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/gdpr/users/{user_id}" : {
+      "delete" : {
+        "description" : "Deletes user data of given user id",
+        "operationId" : "DeleteUser",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Pin for the user",
+          "explode" : true,
+          "in" : "query",
+          "name" : "pin",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/gdprDeleteUserResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User",
+        "tags" : [ "GdprService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/gdpr/users/{user_id}/details" : {
+      "get" : {
+        "description" : "Get user details",
+        "operationId" : "GetUserDetails",
+        "parameters" : [ {
+          "description" : "User ID for the user who's details are being returned",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Email ID of the user at which the data will be sent",
+          "explode" : true,
+          "in" : "query",
+          "name" : "email_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Pin for the user",
+          "explode" : true,
+          "in" : "query",
+          "name" : "pin",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User",
+        "tags" : [ "GdprService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "gdprDeleteUserResponse" : {
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "gdprGetPinResponse" : {
+        "properties" : {
+          "pin" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "gdprUserRequestLogResponse" : {
+        "properties" : {
+          "timestamps" : {
+            "items" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

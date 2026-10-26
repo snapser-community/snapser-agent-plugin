@@ -1,0 +1,174 @@
+export const description = 'Logs'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Logs
+
+Snapser provides real-time logs of your Snapend. This tool is useful for debugging and monitoring your Snapend and gives you visibility into:
+
+1. **Deployment logs**: Logs created by your Snapend. Any errors like, pods failing to come up, BYOSnap failing to start, BYOGs failing to start, SDK download errors, etc. are all captured in the deployment logs. This should be the first place to look when you are debugging your Snapend.
+2. **Snap logs**: Logs created by your Snaps. Any errors that your snaps are throwing are captured in the snap logs. This should be the first place to look when you are debugging your snaps.
+3. **Fleet logs**: Logs created by your game server fleets. Any errors that your game servers are throwing are captured in the fleet logs. This should be the first place to look when you are debugging your game servers.
+
+![Logs Snap](/images/docs/snapend-logs-labels.png)
+## About
+<Note>
+  This tool has been heavily influenced by Grafana. We have used the same query language
+  and the same log format. If you are used to this tool, you will find the Snapser logs tool very familiar.
+</Note>
+The logs tool mainly has the following components:
+
+### 1. Time Interval
+The time selection widget is used to select the time interval for the logs. You can also run the logs in real-time by enabling the `Sync Mode`.
+![Logs Time Interval](/images/docs/snapend-logs-time-widget.png)
+###  2. Queries
+Queries are used to retrieve log data based on specific criteria. They are essential for
+drilling down into the logs to find relevant information.
+![Logs Queries](/images/docs/snapend-logs-queries.png)
+### 3. Labels
+Labels are key-value pairs associated with each log entry. They are used to retrieve logs based on a grouping aka Labels.
+![Logs Snap](/images/docs/snapend-logs-snap-labels.png)
+### 4. Operations
+Operations are used to filter logs based on specific criteria. They are used to refine the log data displayed based on the content of the log lines.
+![Logs Snap](/images/docs/snapend-logs-operations.png)
+<Note>
+  Do not forget to click on the **Run Query** button after you have built your queries.
+</Note>
+
+## Time Interval
+You can set relative or absolute time intervals for the logs you want to see. You can also
+run the logs in real-time by enabling the `Sync Mode`.
+
+#### Sync Mode
+You can enable the `Sync Mode` to see the logs in real-time. The tool presently supports the following sync modes:
+1. `10 sec`: The logs will be updated every 10 seconds.
+2. `30 sec`: The logs will be updated every 30 seconds.
+3. `1 min`: The logs will be updated every minute.
+
+### **How to Use**
+- Click on the time selector widget right next to the **Run Query** button.
+- You can pick the time interval from the pre-defined options like `Last 5 minutes`, `Last 15 minutes`, `Last 30 minutes`, `Last 1 hour`, `Last 3 hours`, `Last 12 hours`, `Last 1 day` or you can pick a custom time interval which would be an absolute start and end time.
+
+## Queries
+Queries are used to filter the logs. A query is a group of user defined `Labels` and `Operations`. Labels identify the logs you want to see and operations allow you to further
+narrow down the logs based on their content. You can have more than one query and toggle between show and hide as you need.
+
+<Note>
+  The log tool is setup up with one query by default on first render.
+</Note>
+
+### Building Queries
+You can build your queries using the `Builder` widget or for the
+advanced users, you can use the `Code` option to write your queries.
+
+<Note>
+The `Builder` widget is recommended for beginners. The Logs tool automatically generates the query code for you and visa versa.
+</Note>
+
+### **How to Use**:
+- Click on the **Add Query** button to create a new query.
+- Queries can be constructed to filter logs by various parameters, such as time, labels and operations.
+- You can add more than one query with different labels and operations.
+
+## Labels
+
+Labels are key-value pairs associated with each log entry. They are used to retrieve logs based on a grouping aka **label**.
+
+### Label Categories
+The tool supports the following label categories:
+1. `deployment`: Logs from your deployment.
+1. `snaps`: Logs from your Snaps.
+1. `fleets`: Logs from your game server.
+
+#### Category Snaps
+You can filter logs based on the following Snap categories:
+1. `snaps`: You can pick one or more snaps to filter logs.
+2. `level`: You can pick one or more of `debug`, `info`, `warn` or `critical` logs levels.
+3. `group`: You can pick one or more log groups like `access_log` and `service_log`.
+
+#### Category Fleets
+You can filter logs based on the following Fleet categories:
+1. `fleets`: You can pick one or more fleets to filter logs.
+2. `region`: You can pick one or more of the regions where your fleet is present.
+3. `servers`: You can pick one or more of the servers in your fleet.
+
+### Label Operators
+Operators are used to filter logs based on the following categories:
+1. `=~`: Regex match.
+2. `!~`: Regex does not match.
+3. `=`: Exact match.
+4. `!=`: Exact does not match.
+<Note>
+If you pick a regex based operator, you can select one or more labels. If you pick an exact match operator, you can only select one label.
+</Note>
+
+### **How to Use**:
+- After you Add a new query, you will see a section named **Labels**.
+- You can first select the category of the label you want to filter logs on.
+- Based on the category you select, you can pick the label, the operator and the value.
+
+<Note>
+  If you want to see your game server fleet logs, do not forget to select the `fleets` category.
+</Note>
+
+## Operations
+Operations are used to refine the log data displayed based on the content of the log lines.
+Essentially you can search for specific text or patterns in the logs using operations. Snapser
+presently supports **Line Filter Operations**.
+
+### Line Filters
+Think of Line filters as a search bar for your logs.
+
+#### Line Filter Categories
+With line filters you can filter logs based on the following categories:
+1. `Line contains`: You can filter logs based on the text present in the logs.
+2. `Line does not contain`: You can filter logs based on the text not present in the logs.
+3. `Line matches`: You can filter logs based on the regex pattern present in the logs.
+4. `Line does not match`: You can filter logs based on the regex pattern not present in the logs.
+
+### **How to Use**:
+- Once you have added a query, click on the **+Line Filter** button.
+- You can now pick your line filter category.
+- Then you can enter the text or regex pattern you want to filter the logs on.
+
+## Visualization
+
+The logs tool provides a visualization of the log volume. Additionally, the visualization tool groups the logs based on the `log level`.
+You can click on the log level to filter the logs based on the log level.
+
+![Logs Snap](/images/docs/logs-byogs.png)
+
+## Logs Content
+The logs content area shows the logs based on the queries you have built. This widget gives you some handy tools
+to better analyze the logs. You can:
+1. `Time`: View or hide the time of the logs.
+2. `Unique Labels`: See the unique labels for that log.
+3. `Wrap lines`: Wrap the lines in the logs.
+4. `Prettify JSON`: Prettify the JSON logs.
+
+Additionally, you have the option to view the logs in the newest first or oldest first order. You
+can also chose the number of logs you want to see per page.
+
+## Download Logs
+You can click on the `Download Logs` button to download the raw logs.
+
+## Query History
+The query history widget shows you the queries you have built. Every successful query is saved in the query history.
+You can further chose to add a name to the query in the history or start your important queries. From the
+query history, you can decide to use the query again or delete the query.
+
+<Note>
+The Web app stores these queries locally in your browser. If you clear your browser cache, you will lose the query history.
+Also only a maximum of 100 queries per day with a max of 14 days are stored.
+</Note>
+
+## Log Format for Custom Code
+
+We recommend using JSON as the log format for your BYOSnaps or BYOGS. This will help you to easily parse
+the logs and also use the logs for further analysis.
+
+<Note>
+  This is just a recommendation. Even if you do not use the log format, you will still be able to see the raw logs.
+</Note>

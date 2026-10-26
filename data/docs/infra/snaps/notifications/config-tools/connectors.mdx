@@ -1,0 +1,38 @@
+# Notification Connectors
+This tool allows you to setup the APNS, FCM and Roblox credentials for your game. You can also view the existing connectors and delete them if needed.
+
+To get started:
+1. Click on `Setup > Notifications` from the side Nav.
+2. Click on the `Add a Connector` button and pick the connector you want to add.
+
+## Apple Push Notification Service (APNS) Connector
+<Note>
+  Detailed documentation to setup your `APNS Connector` can be found [here](/docs/infra/snaps/notifications#apple-push-notification-service-(apns)-setup). We highly recommend going through the documentation before setting up the connector.
+</Note>
+
+### APNS Bundle Details
+1. **Bundle ID**: The bundle ID of your game.
+
+### APNS Bundle Environment
+1. **APNS Environment**: The environment for which the APNS certificate is valid. Accepted values are `sandbox` or `production`.
+
+### APNS Certificate Details
+1. **APNS Certificate**: The APNS certificate file. This is the .pem file you created while setting up APNS.
+2. **APNS Certificate Password**: The password you set while exporting the .p12 file to a .pem file.
+
+
+## Google Cloud Messaging (FCM) Connector
+
+<Note>
+  Detailed documentation to setup your `FCM Connector` can be found [here](/docs/infra/snaps/notifications#firebase-cloud-messaging-(fcm)-setup). We highly recommend going through the documentation before setting up the connector.
+</Note>
+
+### FCM Service Account Details
+1. **Firebase Project Id**: The Firebase project ID.
+2. **Service Account JSON**: The service account JSON file you downloaded from the Google Cloud Console.
+
+## Roblox Connector
+
+### Roblox Credentials
+1. **Roblox API Key**: The Roblox API key.
+2. **Roblox Universe Id**: The Roblox universe ID for your experience.

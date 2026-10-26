@@ -1,0 +1,105 @@
+export const description = 'Dev Pipeline'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Development Pipeline
+
+Setting up a development pipeline is a critical early step in backend development. Snapser fully supports multiple environment types and offers deployment functionality to push deployments and configurations between environments. Snapser is also designed to seamlessly integrate with CI/CD tools like Jenkins, GitHub Actions, Travis, and others, as every Snapser environment treats Config as Code.
+
+![Game View Pic](/images/docs/game-view.png)
+
+## Development
+
+Dev environments are meant to be transient clusters developers use when developing
+features. Studios can have one Dev environment for the entire app or have one per engineer on your team. Allowing them to work independently of others.
+
+## Staging
+
+Every app studio can have one or more staging environments. We recommend using this environment when there are multiple PODs working on massive features. This environment is also useful when you want to test your app with a small group of users before releasing to production. Typically, developers also have a dedicated Staging environment for QA where they get a final sign off before pushing to production.
+
+## Production
+
+This is the environment that powers your live app. It is the most secure and scalable environment. Each app can have at most one production environment for their app.
+
+<Note>
+  Direct **Redeploy** on a Production Snapend is intentionally disabled — for the same reason direct edits are. To redeploy production, redeploy your matching Staging Snapend, verify it, and then promote it using the flow described in [Pushing to production](#pushing-to-production).
+</Note>
+
+### Pushing to production
+
+To ensure engineers do not, by mistake, misconfigure the production environment setup, we only allow you to promote a staging environment to production. Once you have a QA sign off on the Staging environment, click the `promote` button of the staging environment you want to push to production. This kick starts the promotion process. If your Staging environment has any BYOSnaps, the flow has three review steps (Architectural Diff, Customize BYOSnaps, Snap Settings Diff); otherwise it has two (Architectural Diff, Snap Settings Diff).
+
+<Warning>
+**IMPORTANT** note about `Staging to Production Promotion`
+
+
+ It should be noted that promoting a staging environment to production does not mean you are going to keep getting a new Snapend Id for prod, every time you promote. **The production Snapend ID remains the same.** The process of promotion means that you are telling Snapser to make the production environment look exactly like the staging environment you are promoting from. This includes both the architecture as well as the Snap settings.
+</Warning>
+
+#### 1. Architectural Diff Viewer
+First, Snapser will show you the architectural diff between the Staging and Production environments. This will help you understand the changes you are about to make to your production environment.
+
+<Note>
+Especially be in the lookout for any Snaps you are about to delete. Deleting a Snap in production also deletes user data associated with that Snap. Also be sure to check any versions you are about to upgrade or downgrade.
+</Note>
+
+![Architectural Diff](/images/docs/promote-architecture-diff.png)
+
+After you are happy with the architectural changes, you can proceed to the next step.
+
+#### 2. Customize BYOSnaps (only when BYOSnaps are present)
+If your staging environment contains any BYOSnaps, Snapser inserts this middle step so you can override each BYOSnap's production deployment profile before the promote lands. For every BYOSnap in the staging manifest, the UI shows a card with its current hardware, replica count, and HPA state, and lets you open a dialog to edit:
+
+- **Hardware** — CPU and Memory for production.
+- **Scaling** — split into two sub-sections:
+  - **Static — Replicas** — the static replica count, used when HPA is disabled.
+  - **Autoscaler (HPA)** — toggle on to enable autoscaling. When on, you set Min/Max replicas, CPU and Memory utilization thresholds, and the Scale Up / Scale Down behaviors (stabilization window, period, and either a Percent or Pods policy step). When HPA is on, the Static Replicas field above is disabled — the HPA Min/Max take over. When HPA is off, the static Replicas field governs.
+- **Command Override** — optional command for production.
+- **Argument Overrides** — optional CLI args.
+- **Environment Variables** — optional env vars for production.
+
+The dialog seeds from production's existing deployment profile when this is a subsequent promote, or from the BYOSnap's stored `prod_template` defaults on the first-time promote. Edits you make here are validated against the same rules as the Profile Tool (HPA min ≤ max, thresholds in (0, 100], percent vs pods one-of, etc.) and any error surfaces as a field-level toaster.
+
+<Warning>
+  This step — not your `snapser-byosnap-profile.json` — is what sets production's BYOSnap configuration. The profile's `prod_template` is consulted only the first time a given BYOSnap reaches production; after that, production's own manifest is the seed and this dialog is where you change it. The same applies to [secrets](/docs/custom/tools/secrets-manager): a secret added to your profile and re-published will not appear on a BYOSnap production already runs. See [Profile vs. Snapend Manifest](/docs/custom/bring-your-own-snap#profile-vs-snapend-manifest).
+</Warning>
+
+<Note>
+  This step is skipped automatically for snapends that have no BYOSnaps — there's nothing to customize.
+</Note>
+
+#### 3. Snap Settings Diff Viewer
+In this step, Snapser shows you the diff of the Snap settings between the Staging and Production snaps. The UI shows you a nice JSON diff widget broken down at a per Snap level allowing you to see the changes you are about to make.
+
+<Note>
+  Be sure to check the Snap settings diff carefully. Especially be on the lookout for any changes marked in **green** and **red**. Green indicates a new setting or a setting that has been updated. Red indicates a setting that is about to be deleted.
+</Note>
+
+![Snap Settings Diff](/images/docs/promote-settings-diff.png)
+After you are happy with the Snap settings diff, you can click Promote.
+
+<Warning>
+**IMPORTANT**: It should be noted that, promoting a staging environment to production does not mean you are going to keep getting a new Snapend Id for prod, every time you promote. The production Snapend ID remains the same.
+</Warning>
+
+## Access Control for Promotion
+Only users with the role **company-admin** or **game-admin** can push to production. Check our Access control guide to know more.
+
+## Releases History
+Snapser keeps a history of all the releases to the production environment. The app home page will have a button called **Releases** under the production environment widget. Clicking on this will show you all the release history of the production environment. The following information is shown in the Releases UI:
+1. Date Time: The date and time of the release.
+2. Email: The email of the user who pushed the release.
+3. Action: The action that was performed. This can be either **PromoteToProd** or **Rollback**.
+4. Additional Data: This is a JSON object that contains additional data about the release viz. which cluster was promoted.
+
+![Releases History](/images/docs/promote-release-history.png)
+
+## Rollback
+The Releases UI, allows you to easily rollback to a previous release if you find any issues with the current release. Simply click the **Rollback** button on the release row you want to rollback to. You can view the Rollback button after you hover over the row entry that you are trying to rollback. Snapser will show you a confirmation dialog and on approval will rollback the production environment to the state it was in at the time of that release.
+
+<Note>
+Rollbacks are always complex. Always consult with your support team before pulling the trigger on a rollback.
+</Note>

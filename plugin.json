@@ -1,0 +1,23 @@
+{
+  "name": "snapser",
+  "version": "1.16.0",
+  "description": "Snapser game backend integration. Create and manage Snapends, publish custom BYOSnap microservices, sync game servers, attach your local workstation for live debugging, and download SDKs for Unity, Unreal, Roblox and more.",
+  "author": {
+    "name": "Snapser",
+    "email": "aj@snapser.com",
+    "url": "https://snapser.com"
+  },
+  "homepage": "https://snapser.com",
+  "repository": "https://github.com/snapser-engine/snapser-agent-plugin",
+  "license": "MIT",
+  "keywords": [
+    "snapser",
+    "game backend",
+    "baas",
+    "byosnap",
+    "snapend",
+    "gaming",
+    "sdk"
+  ],
+  "skills": "./skills/"
+}

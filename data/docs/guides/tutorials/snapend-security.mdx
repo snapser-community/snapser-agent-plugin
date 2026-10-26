@@ -1,0 +1,702 @@
+
+export const description =
+  'This guide assists users to understand their backends security.'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Snapend Security
+Security is a core feature of Snapser and is built into the platform. Each Snapend that contains the **Authentication** snap, has security enabled by default. The Authentication snap and your gateway enforce a set of rules to ensure that the Snapend is secure and that only authorized users can access it.
+
+## Introduction
+This beginner-friendly theoretical guide is going to help you understand the security and access patterns of your Snapend. You will learn about the various authentication and authorization methods available in Snapser, how to customize them, and how to use them in your app.
+
+## Step 0: Pre-requisites
+### A. Create a Snapend
+Before you begin, ensure you have access to a basic Snapend with the Authentication Snap. You can get setup following the tutorial below.
+
+
+<div className="parent">
+  <div className="servicesBox">
+    # Create a Snapend
+
+    Check out the tutorial to create a Snapend with the Authentication snap with the Anonymous Connector enabled.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/create-snapend'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div>
+</div>
+
+### B. Importance of the Authentication Snap
+The Authentication Snap is a critical component of your Snapend. Without the Authentication Snap, you will have no security and you will allow anyone to access your users app data. This is a security risk and should be avoided at all costs.
+![SnapendNoAuth](/images/docs/tutorials/snapend-security-no-auth.png)
+
+On the other hand, if you have the Authentication Snap, you will have a secure Snapend that only allows authorized users to access your app data. This is the recommended way to setup your Snapend.
+![SnapendWithAuth](/images/docs/tutorials/snapend-security-with-auth.png)
+
+<Checkpoint step={0}>
+  You are now ready to begin the tutorial.
+</Checkpoint>
+
+## Step 1: Snapend Security
+
+Snapser supports three kinds of authentication methods you see below.
+1. **User Auth**: This is the most common authentication method. It requires a user identifier and a JWT session to be provided in the request. This identifier is used to identify the user and authorize them to access the API. Typically game clients or apps will use this method to communicate with the Snapend.
+1. **API Key Auth**: This authentication method is typically embedded in trusted clients or servers. It requires an API key to be provided in the request. This key is used to identify the client or server and authorize them to access the API. The API key auth is more permissive and so should be used with caution. It is recommended to use this method only for trusted clients or servers. You never want your API Key to be leaked.
+1. **Internal Auth**: This authentication method is used for internal communication between Snaps. Once you are in the Snapend, all calls between Snaps, including BYOSnaps are authenticated using this method. This is the most permissive authentication method.
+
+**Note**: some Snaps do expose APIs that do not require authentication. For example, the **Login** API in the **Authentication** Snap does not require authentication. This is useful for allowing users to sign up or login without requiring a JWT session.
+
+### SDKs and API Explorer
+Each API in a Snap, including APIs exposed by BYOSnaps, can be tagged with one of the following authentication methods. Eg: `x-snapser-auth-types: ['api-key', 'internal']` Based on this tag, Snapser ensures that the appropriate APIs show up in the API Explorer and the SDKs. For example, if an Analytics API is tagged by Snapser authors as **Internal Auth**, then you will see this API only in the **Internal** tab of the API Explorer. Also it will only be present if you download the **Internal SDK** of your Snapend.
+
+<Checkpoint step={1}>
+  You are now ready to know each authentication method in detail.
+</Checkpoint>
+
+## Step 2: User Auth
+User Auth is the most common authentication method. Once an app client logs a user in, using the Authentication snaps **Login APIs**, it will receive a user Id and a JWT session token in the response. It is expected for the app client to store this token locally, and pass it with every request to the Snapend.
+
+When Snapser receives a request with a JWT session token, it will verify the token and extract the user Id from it. It will then send this information to the underlying Snap. The underlying Snap will then use this information to authorize the user to access the API or reject the request.
+![UserAuth](/images/docs/tutorials/snapend-security-user-auth.png)
+
+### Example
+To understand how User Auth works, lets take an example of a good actor and a bad actor trying to access the **CreateUserEvent** API in the **Analytics** Snap. We are going to see how your Snapends security, prevents the bad actor from adding analytics telemetry for the good actor.
+
+The Authentication snap provides Login APIs. On a successful login, the app client gets a user Id and a JWT session token. Let's assume that both actors have their respective IDs and Session tokens with them.
+1. Good actor - Id: `good_actor_id`, Session Token: `good_actor_token`
+1. Bad actor - Id: `bad_actor_id`, Session Token: `bad_actor_token`
+
+Both have the SDK installed and are using the same API `CreateUserEvent` to update the Analytics telemetry.
+<CodeGroup title="User Auth SDK" tag="GET" label="CreateUserEvent">
+```csharp
+/// <summary>
+/// User Events Create a new user event
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="eventName">Event to be added</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object CreateUserEvent(string eventName, string token, CreateUserEventRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = CreateUserEventWithHttpInfo(eventName, token, body);
+    return localVarResponse.Data;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAnalyticsServiceApi::CreateUserEventRequest : public Request
+{
+public:
+    virtual ~CreateUserEventRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Event to be added */
+    FString EventName;
+    /* User session token */
+    FString Token;
+    SnapserCreateUserEventRequest Body;
+};
+```
+</CodeGroup>
+
+#### Case 1: Good Actor Request
+1. The good actor sends a request to the **CreateUserEvent** API with the following information:
+    - User Id - `good_actor_id`
+    - Session Token - `good_actor_token`
+1. Your Snapend Gateway receives the request from the good actor.
+1. The Gateway verifies the JWT session token and extracts the user Id `good_actor_id` from it.
+1. The Gateway then sends the request to the Analytics Snap with the following information:
+    - User Id - This will be `good_actor_id` in the request.
+    - Header User Id - The user ID `good_actor_id` the gateway extracted from the JWT session token. This tells all downstream snaps who the real caller is.
+1. The Analytics Snaps **CreateUserEvent** API enforces that only the logged in user can update their telemetry, so it checks the user Id in the request and the user Id in the header. If they match, it will allow the request. If they don't match, it will reject the request.
+1. In case of the good actor, the user Id in the request and the user Id in the header match. So the Analytics Snap accepts the request.
+
+#### Case 2: Bad Actor Request
+1. The bad actor sends a request to the **CreateUserEvent** API with the following information:
+    - User Id - `good_actor_id`
+    - Session Token - `bad_actor_token`
+1. They are trying to impersonate the good actor by using their user Id `good_actor_id`.
+1. Your Snapend Gateway receives the request from the bad actor.
+1. The Gateway verifies the JWT session token and extracts the user Id `bad_actor_id` from it.
+1. The Gateway then sends the request to the Analytics Snap with the following information:
+    - User Id - This will be `good_actor_id` in the request.
+    - Header User Id - The user ID `bad_actor_id` the gateway extracted from the JWT session token. This tells all downstream snaps who the real caller is.
+1. The Analytics snap checks the user Id in the request and the user Id in the header. Since they don't match, it rejects the request.
+
+### Restricting User Auth APIs
+Some developers may decide to lock down APIs to not be accessible by the app client via **User Auth**. This is a common pattern in game development where you may want certain APIs to only be accessible from trusted game servers viz **Api-Key** or **Internal** auth. You can do this by using the **User Auth Restrictions** tool that the Auth Snap provides.
+![SnapendSecurityUserAuthRestrictions](/images/docs/tutorials/snapend-security-user-auth-restrictions.png)
+
+<Checkpoint step={2}>
+  You now have a good understanding of how User Auth works. You are now ready to learn about API Key Auth.
+</Checkpoint>
+
+## Step 3: API Key Auth
+API Key Auth is typically used from trusted servers or trusted secure non-public code. This form of authentication, requires the caller to pass an API key with every request. This key is used to identify the caller and authorize them to access the API. Callers can access any user's data using this API key. This is useful for game servers or other trusted entities that need to access user data without requiring a user Id and a JWT session token. Eg: At the end of your battle, your game server code, may want to use a BatchAPI to update the user data for all users in the battle. In this case, you can use the API Key Auth to access the API without requiring a user Id and a JWT session token for each user.
+
+<Note>
+It is recommended to use this method only for trusted non-public entities. You do not want your API Key to be leaked.
+</Note>
+
+![APIKeyAuth](/images/docs/tutorials/snapend-security-api-key-auth.png)
+
+#### API Key Generation
+You can generate an API key using the **API Key** tool in the Authentication Snap.
+<Note>
+  Once a key is generated you will be able to copy it once. After that you will not be able to see the key again. So make sure to copy it and store it in a secure location.
+</Note>
+
+![APIKeyAuth](/images/docs/tutorials/snapend-security-api-key-auth-tool.png)
+
+#### API Key Expiration
+While creating the API Key, you can also set an expiration date for the API key. This is useful for limiting the lifetime of the API key and ensuring that it is not used indefinitely. You can set the expiration date to a number of days from now. Once a API key is expired you can rotate it out while keeping the old key active for a period of time. This is useful to rollout the new key in your code.
+
+##### API Key Restrictions
+You can either give an API Key access to all Snapend APIs, or nominate a subset of APIs that can be accessed by the API key.
+
+![APIKeyAuth](/images/docs/tutorials/snapend-security-api-key-auth-tool-custom.png)
+
+
+#### Example
+Below you will find an example on how to use the API Key Auth SDK from your trusted server code.
+
+<CodeGroup title="API Key Auth SDK" tag="GET" label="AnalyticsApiKeyCreateUserEvent">
+```csharp
+/// <summary>
+/// User Events Create a new user event
+/// </summary>
+/// <exception cref="SnapserApiKey.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="eventName">Event to be added</param>
+/// <param name="apiKey">API Key</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object AnalyticsApiKeyCreateUserEvent(string eventName, string apiKey, CreateUserEventRequest body)
+{
+    SnapserApiKey.Client.ApiResponse<Object> localVarResponse = AnalyticsApiKeyCreateUserEventWithHttpInfo(eventName, apiKey, body);
+    return localVarResponse.Data;
+}
+```
+```python
+@validate_arguments
+def analytics_api_key_create_user_event(self, event_name : Annotated[StrictStr, Field(..., description="Event to be added")], api_key : Annotated[StrictStr, Field(..., description="API Key")], body : CreateUserEventRequest, **kwargs) -> object:  # noqa: E501
+    """User Events  # noqa: E501
+
+    Create a new user event  # noqa: E501
+    This method makes a synchronous HTTP request by default. To make an
+    asynchronous HTTP request, please pass async_req=True
+
+    >>> thread = api.analytics_api_key_create_user_event(event_name, api_key, body, async_req=True)
+    >>> result = thread.get()
+
+    :param event_name: Event to be added (required)
+    :type event_name: str
+    :param api_key: API Key (required)
+    :type api_key: str
+    :param body: (required)
+    :type body: CreateUserEventRequest
+    :param async_req: Whether to execute the request asynchronously.
+    :type async_req: bool, optional
+    :param _request_timeout: timeout setting for this request.
+            If one number provided, it will be total request
+            timeout. It can also be a pair (tuple) of
+            (connection, read) timeouts.
+    :return: Returns the result object.
+              If the method is called asynchronously,
+              returns the request thread.
+    :rtype: object
+    """
+    kwargs['_return_http_data_only'] = True
+    if '_preload_content' in kwargs:
+        message = "Error! Please call the analytics_api_key_create_user_event_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data"  # noqa: E501
+        raise ValueError(message)
+    return self.analytics_api_key_create_user_event_with_http_info(event_name, api_key, body, **kwargs)  # noqa: E501
+```
+</CodeGroup>
+
+<Checkpoint step={2}>
+  You are now aware of how API Key Auth works. You are now ready to learn about Internal Auth.
+</Checkpoint>
+
+## Step 4: Internal Auth
+Internal Auth is used for internal communication between Snaps. Once you are in the Snapend, all calls between Snaps, including BYOSnaps are authenticated using this method. This is the most permissive authentication method. Where no JWT Token or API Key is required. Instead the caller needs to pass a parameter `Gateway=internal` in the request. (Under the hood the SDK converts this to a Header `Gateway: Internal`) When the receiving snap gets a request with this header, it knows that the request is coming from another Snap in the same Snapend. It will then allow the request to go through without any authentication.
+
+![InternalAuth](/images/docs/tutorials/snapend-security-internal-auth.png)
+
+<Note>
+  It should be noted that the gateway will drop any request it gets from the outside, with the `Gateway: internal` header. Thus, no bad actor can impersonate an internal call coming from over the internet.
+</Note>
+
+### Example
+- For the internal SDK, you have to override the host or basePath to point to the internal URL of the Snap. You can do this as follows:
+<CodeGroup title="Internal Auth SDK" tag="GET" label="Override URL">
+```csharp
+Configuration config = new Configuration();
+// IMPORTANT: Notice the `SNAPEND_{SNAPId}_HTTP_URL` environment variable
+// This is the internal URL that the Snapend uses to communicate with the Snaps
+config.BasePath = Environment.GetEnvironmentVariable("SNAPEND_ANALYTICS_HTTP_URL");
+HttpClient httpClient = new HttpClient();
+HttpClientHandler httpClientHandler = new HttpClientHandler();
+var apiInstance = new AnalyticsServiceApi(httpClient, config, httpClientHandler);
+```
+```python
+# IMPORTANT: Notice the `SNAPEND_{SNAPId}_HTTP_URL` environment variable
+# This is the internal URL that the Snapend uses to communicate with the Snaps
+configuration = snapser_internal.Configuration(host=os.geten("SNAPEND_ANALYTICS_HTTP_URL"))
+    with snapser_internal.ApiClient(configuration) as api_client:
+        # Create an instance of the API class
+        api_instance = snapser_internal.AnalyticsServiceApi(api_client)
+```
+</CodeGroup>
+
+- Then, you can make the call to the Snap API. Below, you will find an example on how to use the Internal Auth SDK from your trusted code.
+<CodeGroup title="Internal Auth SDK" tag="GET" label="AnalyticsInternalCreateUserEvent">
+```csharp
+/// <summary>
+/// User Events Create a new user event
+/// </summary>
+/// <exception cref="SnapserInternal.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="eventName">Event to be added</param>
+/// <param name="gateway">Gateway</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object AnalyticsInternalCreateUserEvent(string eventName, string gateway, CreateUserEventRequest body)
+{
+    SnapserInternal.Client.ApiResponse<Object> localVarResponse = AnalyticsInternalCreateUserEventWithHttpInfo(eventName, gateway, body);
+    return localVarResponse.Data;
+}
+```
+```python
+@validate_arguments
+def analytics_internal_create_user_event(self, event_name : Annotated[StrictStr, Field(..., description="Event to be added")], gateway : Annotated[StrictStr, Field(..., description="Gateway")], body : CreateUserEventRequest, **kwargs) -> object:  # noqa: E501
+    """User Events  # noqa: E501
+
+    Create a new user event  # noqa: E501
+    This method makes a synchronous HTTP request by default. To make an
+    asynchronous HTTP request, please pass async_req=True
+
+    >>> thread = api.analytics_internal_create_user_event(event_name, gateway, body, async_req=True)
+    >>> result = thread.get()
+
+    :param event_name: Event to be added (required)
+    :type event_name: str
+    :param gateway: Gateway (required)
+    :type gateway: str
+    :param body: (required)
+    :type body: CreateUserEventRequest
+    :param async_req: Whether to execute the request asynchronously.
+    :type async_req: bool, optional
+    :param _request_timeout: timeout setting for this request.
+            If one number provided, it will be total request
+            timeout. It can also be a pair (tuple) of
+            (connection, read) timeouts.
+    :return: Returns the result object.
+              If the method is called asynchronously,
+              returns the request thread.
+    :rtype: object
+    """
+    kwargs['_return_http_data_only'] = True
+    if '_preload_content' in kwargs:
+        message = "Error! Please call the analytics_internal_create_user_event_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data"  # noqa: E501
+        raise ValueError(message)
+    return self.analytics_internal_create_user_event_with_http_info(event_name, gateway, body, **kwargs)  # noqa: E501
+
+
+```
+</CodeGroup>
+
+<Checkpoint step={3}>
+  Congratulations! You are now aware of the three security methods available in Snapser. Next, lets understand what you need to do in your custom code (BYOSnaps) to ensure that your APIs are secure.
+</Checkpoint>
+
+## Step 5: BYOSnaps
+Snapser allows you to bring your own custom code, publish it as a Snap using the Snapser CLI tool and deploy it to your Snapend. This is a powerful feature that allows you to extend the functionality of your Snapend and build custom features that are not available in the default Snaps.
+
+Check out the Basic [BYO Snap Tutorial](/docs/guides/tutorials/byosnap-basic) to know more.
+
+<Note>
+Snapser provides your BYOSnaps with protection at the Gateway level. However, its still the responsibility of the BYOSnap authors to ensure that the APIs they expose are secure and only accessible by authorized users. You can use the middleware examples below to ensure that your APIs are secure.
+</Note>
+
+### Security Middleware
+We recommend that you add a middleware to your BYOSnap code, that will validate every incoming request and ensure that it passes the appropriate checks based on the supported Auth Type of the API. For your convenience, most of our **BYOSnap Examples** have a middleware that you can copy and use in your code. Below you will find an example of how to do this in C#, Python, Typescript and Go.
+<CodeGroup title="BYOSnap Middleware" tag="method" label="ValidateAuthorization">
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using System;
+using System.Linq;
+using ByoSnapCSharp.Models;
+using ByoSnapCSharp.Utilities;
+using Microsoft.Extensions.Logging;
+
+namespace ByoSnapCSharp.Filters
+{
+public class ValidateAuthorizationAttribute : ActionFilterAttribute
+{
+    private readonly string[] _allowedAuthTypes;
+    private readonly string _userIdResourceKey;
+
+    public ValidateAuthorizationAttribute(params string[] allowedAuthTypes)
+    {
+        _allowedAuthTypes = allowedAuthTypes;
+        _userIdResourceKey = "userParams"; // Default key, can be set differently if needed
+    }
+
+    private string ExtractUserId(ActionExecutingContext context, string defaultValue = "")
+    {
+        if (context.ActionArguments.TryGetValue(_userIdResourceKey, out var userParams))
+        {
+            // Try to cast the object to UserIdParameterSchema
+            if (userParams is UserIdParameterSchema userIdParams)
+            {
+                // Now you can access the UserId property
+                return userIdParams.UserId ?? defaultValue;
+            }
+        }
+        return defaultValue;
+    }
+
+    public override void OnActionExecuting(ActionExecutingContext context)
+    {
+        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<ValidateAuthorizationAttribute>>(); // Get the logger
+        // logger.LogInformation("Starting authorization check.");
+        // logger.LogInformation($"Allowed Auth Types: {string.Join(", ", _allowedAuthTypes)}");
+
+        var httpContext = context.HttpContext;
+        var request = httpContext.Request;
+
+        // Get Gateway Header
+        var gatewayHeaderValue = request.Headers[AppConstants.gatewayHeaderKey].FirstOrDefault() ?? "";
+        var isInternalCall = gatewayHeaderValue.ToLower() == AppConstants.internalAuthType;
+
+        // Get Auth Type Header
+        var authTypeHeaderValue = request.Headers[AppConstants.authTypeHeaderKey].FirstOrDefault() ?? "";
+        var isApiKeyAuth = authTypeHeaderValue.ToLower() == AppConstants.apiKeyAuthType;
+
+        // Get User Id Header
+        var userIdHeaderValue = request.Headers[AppConstants.userIdHeaderKey].FirstOrDefault() ?? "";
+        var targetUser = ExtractUserId(context, userIdHeaderValue);
+        var isTargetUser = userIdHeaderValue == targetUser && !string.IsNullOrEmpty(userIdHeaderValue);
+        // logger.LogInformation("User ID auth detected." + userIdHeaderValue + " == " + targetUser);
+
+        // Validate
+        bool validationPassed = false;
+        foreach (var authType in _allowedAuthTypes)
+        {
+            if (authType == AppConstants.internalAuthType && isInternalCall)
+            {
+                // logger.LogInformation("Internal call detected.");
+                validationPassed = true;
+                break;
+            }
+            else if (authType == AppConstants.apiKeyAuthType && isApiKeyAuth && !isInternalCall)
+            {
+                // logger.LogInformation("API Key auth detected.");
+                validationPassed = true;
+                break;
+            }
+            else if (authType == AppConstants.userAuthType && isTargetUser && !isInternalCall && !isApiKeyAuth)
+            {
+                // logger.LogInformation("User auth detected.");
+                validationPassed = true;
+                break;
+            }
+        }
+
+        if (!validationPassed)
+        {
+            context.Result = new ObjectResult(new ErrorResponseSchema { ErrorMessage = "Unauthorized " }) { StatusCode = 401 };
+        }
+
+        base.OnActionExecuting(context);
+    }
+}
+}
+```
+
+```python
+def validate_authorization(*allowed_auth_types, user_id_resource_key="user_id"):
+    '''
+    Decorator to validate authorization headers
+    '''
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            # Get Gateway Header
+            gateway_header_value = request.headers.get(GATEWAY_HEADER_KEY, "")
+            is_internal_call = \
+                gateway_header_value.lower() == GATEWAY_HEADER_INTERNAL_ORIGIN_VALUE
+            # Get Auth Type Header
+            auth_type_header_value = request.headers.get(
+                AUTH_TYPE_HEADER_KEY, "")
+            is_api_key_auth = \
+                auth_type_header_value.lower() == AUTH_TYPE_HEADER_VALUE_API_KEY_AUTH
+            # Get User Id Header
+            user_id_header_value = request.headers.get(USER_ID_HEADER_KEY, "")
+            # If the API has a URL parameter for user_id, then use that
+            # Otherwise, use the User-Id header value as the default
+            target_user = kwargs.get(
+                user_id_resource_key, user_id_header_value)
+            is_target_user = \
+                user_id_header_value == target_user and user_id_header_value != ""
+
+            # Validate
+            validation_passed = False
+            for auth_type in allowed_auth_types:
+                if auth_type == GATEWAY_HEADER_INTERNAL_ORIGIN_VALUE:
+                    # If `Auth-Type: Internal`, then the call must be internal
+                    if not is_internal_call:
+                        # Failed validation
+                        continue
+                    validation_passed = True
+                elif auth_type == AUTH_TYPE_HEADER_VALUE_API_KEY_AUTH:
+                    # If `Auth-Type: Api-Key`, and the call is not internal, then the call must be pass the Api-Key validation
+                    if not is_internal_call and not is_api_key_auth:
+                        # Failed validation
+                        continue
+                    validation_passed = True
+                elif auth_type == AUTH_TYPE_HEADER_VALUE_USER_AUTH:
+                    # If `Auth-Type: User`, and the call is not internal or of type api-key auth, then the call must be pass the User validation
+                    if not is_internal_call and not is_api_key_auth and not is_target_user:
+                        # Failed validation
+                        continue
+                    validation_passed = True
+
+            # Check if the provided auth_type is within the allowed types for this endpoint
+            if not validation_passed:
+                return make_response(jsonify({'error_message': 'Unauthorized'}), 400)
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
+```
+
+```typescript
+import { Request, Response, NextFunction } from 'express';
+import { ErrorResponse } from '../types/responses';
+
+// Define constants for auth types and headers as in the previous example
+const AUTH_TYPE_HEADER_KEY = 'Auth-Type';
+const USER_ID_HEADER_KEY = 'User-Id';
+const GATEWAY_HEADER_KEY = 'Gateway';
+const GATEWAY_HEADER_INTERNAL_ORIGIN_VALUE = 'internal';
+const AUTH_TYPE_HEADER_VALUE_USER_AUTH = 'user';
+const AUTH_TYPE_HEADER_VALUE_API_KEY_AUTH = 'api-key';
+
+export const authMiddleware = (allowedAuthTypes: string[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const gatewayHeaders = req.headers[GATEWAY_HEADER_KEY.toLowerCase()];
+    const authTypeHeaders = req.headers[AUTH_TYPE_HEADER_KEY.toLowerCase()];
+    const userIdHeaders = req.headers[USER_ID_HEADER_KEY.toLowerCase()];
+    let gatewayHeaderValue: string = ''
+    let authTypeHeaderValue: string = ''
+    let userIdHeaderValue: string = ''
+    if(gatewayHeaders) {
+        gatewayHeaderValue = Array.isArray(gatewayHeaders) ? gatewayHeaders[0].toLowerCase() : gatewayHeaders.toLowerCase();
+    }
+    if(authTypeHeaders) {
+        authTypeHeaderValue = Array.isArray(authTypeHeaders) ? authTypeHeaders[0].toLowerCase() : authTypeHeaders.toLowerCase();
+    }
+    if(userIdHeaders) {
+        userIdHeaderValue = Array.isArray(userIdHeaders) ? userIdHeaders[0].toLowerCase() : userIdHeaders.toLowerCase();
+    }
+    // If the API has a URL parameter for user_id, then use that
+    // Otherwise, use the User-Id header value as the default
+    const targetUser = req.params['userId'] ?? userIdHeaderValue;
+    const isInternalCall = gatewayHeaderValue.toLowerCase() === GATEWAY_HEADER_INTERNAL_ORIGIN_VALUE;
+    const isApiKeyAuth = authTypeHeaderValue.toLowerCase() === AUTH_TYPE_HEADER_VALUE_API_KEY_AUTH;
+    const isTargetUser = userIdHeaderValue === targetUser && userIdHeaderValue !== '';
+    let isAuthorized = false;
+    for(let i = 0; i < allowedAuthTypes.length; i++) {
+        if(allowedAuthTypes[i] === GATEWAY_HEADER_INTERNAL_ORIGIN_VALUE) {
+            if(!isInternalCall) {
+                continue;
+            }
+            isAuthorized = true;
+        }
+        else if(allowedAuthTypes[i] === AUTH_TYPE_HEADER_VALUE_API_KEY_AUTH) {
+            if(!isInternalCall && !isApiKeyAuth) {
+                continue;
+            }
+            isAuthorized = true;
+        }
+        else if(allowedAuthTypes[i] === AUTH_TYPE_HEADER_VALUE_USER_AUTH) {
+            if(!isInternalCall && !isApiKeyAuth && !isTargetUser) {
+                continue;
+            }
+            isAuthorized = true;
+        }
+    }
+
+    if (!isAuthorized) {
+        let errorResponse: ErrorResponse = {
+            error_message: 'Unauthorized'
+        };
+        return res.status(401).json(errorResponse);
+    }
+    next();
+  };
+};
+```
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"net/http"
+	"strings"
+
+	"github.com/gorilla/mux"
+)
+
+// validateAuthorization dynamically checks the allowed authentication methods
+func validateAuthorization(allowedAuthTypes []string, userIDResourceKey string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			gatewayHeaderValue := r.Header.Get(GatewayHeaderKey)
+			isInternalCall := strings.ToLower(gatewayHeaderValue) == GatewayHeaderValueInternalOrigin
+			authTypeHeaderValue := r.Header.Get(AuthTypeHeaderKey)
+			isApiKeyAuth := strings.ToLower(authTypeHeaderValue) == AuthTypeHeaderValueApiKeyAuth
+			userIDHeaderValue := r.Header.Get(UserIDHeaderKey)
+			// If the API has a URL parameter for user_id, then use that
+      // Otherwise, use the User-Id header value as the default
+			targetUser := mux.Vars(r)[userIDResourceKey]
+			if targetUser == "" {
+				targetUser = userIDHeaderValue
+			}
+			isTargetUser := userIDHeaderValue == targetUser && userIDHeaderValue != ""
+
+			validationPassed := false
+			for _, authType := range allowedAuthTypes {
+				switch authType {
+				case GatewayHeaderValueInternalOrigin:
+					if isInternalCall {
+						validationPassed = true
+					}
+				case AuthTypeHeaderValueApiKeyAuth:
+					if !isInternalCall && isApiKeyAuth {
+						validationPassed = true
+					}
+				case AuthTypeHeaderValueUserAuth:
+					if !isInternalCall && !isApiKeyAuth && isTargetUser {
+						validationPassed = true
+					}
+				}
+
+				if validationPassed {
+					break
+				}
+			}
+
+			if !validationPassed {
+				w.WriteHeader(http.StatusUnauthorized)
+				errorResponse := ErrorResponseSchema{
+					ErrorMessage: "Unauthorized",
+				}
+				json.NewEncoder(w).Encode(errorResponse)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+```
+</CodeGroup>
+
+The API definition can then add the middleware annotation while passing the allowed auth types to the middleware. The middleware will intercept each request, run it by the validation algorithm, which ensures the Snapser security rules are met.
+
+<CodeGroup title="BYOSnap API Example" tag="API" label="BYOSnapAPI">
+```csharp
+[HttpGet("game")]
+[SnapserAuth(AppConstants.userAuthType, AppConstants.apiKeyAuthType, AppConstants.internalAuthType)]
+[ValidateAuthorization(AppConstants.userAuthType, AppConstants.apiKeyAuthType, AppConstants.internalAuthType)] // This is the middleware that will validate the incoming request
+[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResponseSchema))]
+[ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResponseSchema))]
+[ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(ErrorResponseSchema))]
+[SwaggerOperation(OperationId = "Get Game", Summary = "Game APIs", Description = "This API will work with User and Api-Key auth. With a valid user token and api-key, you can access this API.")]
+public ActionResult<SuccessResponseSchema> GetGame([FromRoute] UserIdParameterSchema userParams)
+{
+    var authTypeHeader = HttpContext.Request.Headers[AppConstants.authTypeHeaderKey].FirstOrDefault();
+    var userIdHeader = HttpContext.Request.Headers[AppConstants.userIdHeaderKey].FirstOrDefault();
+    return Ok(new SuccessResponseSchema {
+        Api = "GetGame",
+        AuthType = authTypeHeader ?? "N/A",
+        HeaderUserId = userIdHeader ?? "N/A",
+        PathUserId = userParams.UserId,
+        Message = "success"
+    });
+}
+```
+```typescript
+/**
+ * @summary Game APIs
+ */
+@Get("{userId}/game")
+@Extension("x-description", 'This API will work with User and Api-Key auth. With a valid user token and api-key, you can access this API.')
+@Extension("x-snapser-auth-types", ["user", "api-key", "internal"])
+@Response<SuccessResponse>(200, "Successful Response")
+@Response<ErrorResponse>(401, "Unauthorized")
+@Middlewares([authMiddleware(["user", "api-key", "internal"])]) // This is the middleware that will validate the incoming request
+public async getGame(
+    @Res() _unauthorized: TsoaResponse<401, ErrorResponse>,
+    @Path() userId: string,
+    @Request() req: ExpressRequest,
+    @Header('Token') token?: string
+): Promise<SuccessResponse> {
+  const expressReq = req as ExpressRequest;
+  const authType = expressReq.header("Auth-Type");
+  const headerUserId = expressReq.header("User-Id");
+  return {
+    api: 'getGame',
+    authType: authType ?? 'N/A',
+    headerUserId: headerUserId ?? 'N/A',
+    pathUserId: userId,
+    message: 'success'
+  };
+}
+```
+```python
+@app.route("/v1/byosnap-basic/users/<user_id>/game", methods=["GET"])
+@validate_authorization(AUTH_TYPE_HEADER_VALUE_USER_AUTH, AUTH_TYPE_HEADER_VALUE_API_KEY_AUTH, GATEWAY_HEADER_INTERNAL_ORIGIN_VALUE, user_id_resource_key="user_id") # This is the middleware that will validate the incoming request
+def get_game(user_id):
+  ...
+```
+```go
+// API Endpoints
+getGameHandler := http.HandlerFunc(GetGame)
+r.Handle("/v1/byosnap-basic/users/{user_id}/game", validateAuthorization([]string{AuthTypeHeaderValueUserAuth, AuthTypeHeaderValueApiKeyAuth, GatewayHeaderValueInternalOrigin}, "user_id")(getGameHandler)).Methods("GET")
+```
+</CodeGroup>
+
+## Next Steps
+Learn more about In-App authentication flows for your users and how to build your own custom code and deploy that in your Snapend.
+
+<div className="parent">
+  <div className="servicesBox">
+    # In-app Authentication
+
+    Learn how to implement authentication flows for your users using the Authentication Snap.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/app-authentication'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div>
+  <div className="tutorialBox">
+    # BYOSnap Basic
+
+    Learn how to build and deploy your custom code to your Snapend using the Snapser CLI tool.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/byosnap-basic'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div>
+</div>

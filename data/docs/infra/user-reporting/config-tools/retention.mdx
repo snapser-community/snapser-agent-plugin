@@ -1,0 +1,54 @@
+# Retention
+
+The **User Reporting** retention settings control how long user reports are
+kept in your Snapend before they are automatically deleted. Reports flow through
+three states — **Unprocessed**, **Processing**, and **Resolved** — and you set a
+retention duration for each state independently.
+
+<Note>
+  User Reporting is available on **Auth snap v1.11.1 and above**. If your Auth
+  snap is on an older version, this tool will prompt you to upgrade. Update the
+  Auth snap to start using it.
+</Note>
+
+## Pre-requisites
+
+You need at least the **cluster-service-view** role with **Auth** service
+access to view these settings, and update access to change them. If you do not
+have the required permissions, please reach out to your company administrator
+to upgrade your role.
+
+## Tool Location
+
+From your Snapend, open **Snaps Configuration** and click **User Reporting**
+in the side navigation.
+
+These values are configured **per environment** — use the **Dev / Stage / Prod**
+tabs at the top to switch between them. Each environment keeps its own retention
+configuration.
+
+## Retention Settings
+
+You can set a retention duration for each report state:
+
+1. **Unprocessed reports** — reports that have not yet been triaged.
+2. **Reports being processed** — reports an agent is actively working on.
+3. **Resolved reports** — reports that have been actioned and closed.
+
+![snapser-user-reporting-settings](/images/docs/user-reporting-settings.png)
+
+Each setting is a duration (for example 14, 30, 60, or 90 days). Choosing
+**Never delete** retains reports in that state indefinitely. When a report's age
+in a given state exceeds its retention duration, it is automatically removed.
+
+Only the values you change are sent when you save, so you can tune a single
+state without affecting the others.
+
+<Note>
+  Retention is evaluated per state. Moving a report to a new state (for example
+  from Unprocessed to Resolved) means it is then retained according to that new
+  state's duration.
+</Note>
+
+To review and action the reports themselves, use the
+[User Reports](/docs/snapend/tools/user-reports) tool.

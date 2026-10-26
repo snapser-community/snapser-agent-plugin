@@ -1,0 +1,741 @@
+
+export const description =
+  'This guide will help you set up a Web app with Snapser.'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Web App - Education App
+This guide will help you set up a Web app with Snapser. This app allows users to solve a daily quiz and get falcon points. Users can also see a global leaderboard of top learners along with the users own stats.
+
+## Prerequisites
+<div className="parent">
+  <div className="servicesBox">
+    # Install Node and NPM
+
+    Make sure you have installed Node and NPM from [npm website](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
+
+    <div>
+      <DocsButton href={'https://docs.npmjs.com/downloading-and-installing-node-js-and-npm'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Download Node & NPM</DocsButton>
+    </div>
+  </div>
+</div>
+
+<Checkpoint step={0}>
+  You are now ready to begin the tutorial.
+</Checkpoint>
+
+## Step 1: Set up your app
+
+To integrate Snapser features into your app, you need to create an account and add your app to it. This section demonstrates how to do that.
+
+<Note>
+  If you have already created an app in Snapser, you can skip this step and proceed to the next one.
+</Note>
+
+1. **Log in to your Snapser account** at https://snapser.com/login.
+2. Navigate to the **Apps dashboard** and click on the **New App** button located in the upper right corner.
+3. **Enter the name of your app** in the designated field. It's advisable to use a name that closely matches your applications title to avoid confusion among your team members. Click **Add** when done.
+    ![Add new game name](/images/docs/tutorials/create-snapend-add-game.png)
+    <Note>
+    Avoid adding prefixes like "dev", "staging", or "prod". Snapser supports multiple environments for each app, allowing you to create a separate custom backend for each stage of your development.
+    </Note>
+
+<Checkpoint step={1}>
+  Shortly after, your app will appear in the Apps dashboard, ready for you to build your first custom backend.
+</Checkpoint>
+
+
+## Step 2: Create a Snapend
+
+1. In the **Apps dashboard**, click on the app you have added. This action brings up a view that shows the development, staging, and production environments. Since there are currently no Snapends, let's add one.
+![GameClick](/images/docs/tutorials/create-snapend-game.png)
+1. In the Development environment, click on **Create a Snapend**.
+![GameClick](/images/docs/tutorials/create-snapend-game-home.png)
+1. **Enter the name of your Snapend** in the **Name your Snapend** field and click **Continue**.
+    ![Name your Snapend](/images/docs/quick-start/name-your-snapend.png)
+1. On the next page, select the following snaps:
+   1. Authentication
+   2. Statistics
+   3. Remote-config
+   4. Leaderboards
+   5. Quests
+    ![Cluster](/images/docs/tutorials/edu-app-create-snapend.png)
+1. Click **Customize** to continue to the next step. In this tutorial, we are not doing any customization and so click the **Review** button to go to the final step.
+1. At the final step you can review your Snapend details. Next, click the **Snap It** button. A pop-up window will appear showing you the state of creating your cluster, which takes a moment or two to complete.
+1. As Snapser finishes setting up the Snapser cluster in Kubernetes (which includes infrastructure, configuration of Snaps, network and security, and generating your Snapend), click the **App** button to wait for your Snapend to be operational.
+1. Once the Snapend is ready, you will see a green dot mark on the Snapend widget. This indicates that your Snapend is ready to use.
+![Snap Dashboard](/images/docs/tutorials/social-todo-app-view.png)
+1. Click on the Snapend widget to go to the Snapend dashboard.
+![Snapend Dashboard](/images/docs/tutorials/edu-app-snapend-home.png)
+
+<Checkpoint step={2}>
+  You now have a backend setup. We can now proceed toward downloading our custom SDK, configuring our snaps for our app and then putting it altogether.
+</Checkpoint>
+
+## Step 3: Configure Snaps
+On your Snapend homepage look for Quick links. Click the **Snaps Configuration** button under **Quick Links** to go to the Snaps configuration home page. Now, lets configure the Snaps one by one.
+
+### A. Authentication Configuration
+<Note>
+    In our Web app, we want the user to start using the app using username and password as a means to authenticate. This is why we are going to add the `Username password` connector. To add the connector, please follow the instructions below.
+</Note>
+
+1. Click on the **Authentication** widget to open the Auth snaps configuration page.
+1. Select the `Authentication > Connectors` tool from the tool navigation and then click on the **Add a connector** button. You will see quite a few connectors in the menu but lets select **Username Password** and press Save.
+![Add Username Password Authentication](/images/docs/tutorials/edu-app-user-pass-setup.png)
+1. Click `Any Characters` for the password policy and then set the `Min` to `1` and `Max` to `64`.
+    <Note>
+      In real world applications, you should set a strong password policy. Here we are keeping it simple for demo purposes.
+    </Note>
+1. Click Save.
+1. Then click the back button to go back to the configuration home page.
+
+### B. Statistics Configuration
+<Note>
+  In our app, we want a live tracker to store the users correct answers, their wrong answers and the number of falcon cards earned. This is why we are going to add the `User Statistics` snap. To add the statistics please follow the instructions below.
+</Note>
+1. Click on the **Statistics** widget to open the Statistics snaps configuration page.
+1. Click on `+ Statistic` button to add a new statistic. We are going to add 3 statistics.
+
+#### Correct Answers Statistic
+1. Key: `correct_answers`
+1. Type: `counter`
+1. Negative values allowed: `disabled`
+1. Scope: `external`
+1. Click Save.
+![Stat One Config](/images/docs/tutorials/edu-app-stats-one-setup.png)
+
+#### Wrong Answers Statistic
+1. Key: `wrong_answers`
+1. Type: `counter`
+1. Negative values allowed: `disabled`
+1. Scope: `external`
+1. Click Save.
+![Stat Two Config](/images/docs/tutorials/edu-app-stats-two-setup.png)
+
+#### Falcon Cards Statistic
+1. Key: `falcon_cards`
+1. Type: `counter`
+1. Negative values allowed: `disabled`
+1. Scope: `external`
+1. Click Save.
+![Stat Three Config](/images/docs/tutorials/edu-app-stats-three-setup.png)
+
+### B. Leaderboard Configuration
+<Note>
+    In our Web app, we are going to track the top learners on our platform. This is why we are going to add the `Leaderboards` snap. To add a leaderboard please follow the instructions below.
+</Note>
+1. Click on the **Leaderboards** widget to open the Leaderboards snaps configuration page.
+1. To create a leaderboard, click on the `Leaderboards` tool from the tool navigation and click on the **+ Leaderboard** button. This will open up a form, where you can add the new leaderboard details. Please add the following configuration and click save.
+   1. `Name` - `puzzles_completed`
+   1. `Description` - `Leaderboard of puzzles completed by users`
+   1. `Behavior` - `counter` - This is because we want to store counts per player.
+   1. `Sort` - `descending` - This is because we want the leaderboard to show the users with the highest number of puzzles completed at the top.
+   1. `Scope` - `external` - This is because we want to track the leaderboard across all users.
+   1. `Period - Start time` - Use the date picker to select the current date time, such that the leaderboard is active.
+   ![Leaderboard Config](/images/docs/tutorials/edu-app-leaderboard-setup.png)
+   1. `Period - Type` - `non-recurring` - This is because we want to keep the leaderboard running indefinitely.
+    1. `Type` - `global` - This is because we want to have a single leaderboard for all players.
+    1. Click Save.
+1. Then click the back button to go back to the configuration home page.
+
+### C. Quests Configuration
+<Note>
+    In our Web app, we want to have a daily quiz that users can solve and get falcon points. This is why we are going to add the `Quests` snap. To add a quest please follow the instructions below.
+</Note>
+1. Click on the **Quests** widget to open the Quests snaps configuration page.
+1. To create a quest, click on the `Quests` tool from the tool navigation and click on the **+ Quest** button. This will open up a form, where you can add the new quest details. Please add the following leaderboard and click save.
+1. `Name` - `daily_puzzle`
+1. `Description` - `Daily recurring puzzle`
+1. `Tags` and `Metadata` - Leave it empty
+![Quest One Config](/images/docs/tutorials/edu-app-quests-one-setup.png)
+1. `Audience` - `All Users` - This is because we want all users to be able to participate in the quest.
+1. `Auto-assign` - `Enabled` - This is because we want the quest to be automatically assigned to all users.
+1. `Schedule` - `Recurring` - This is because we want the quest to be available every day. Select 0, 0, 0 in the first three dropdowns so our quest is available every day at midnight UTC.
+![Quest Two Config](/images/docs/tutorials/edu-app-quests-two-setup.png)
+1. `Task` - Now lets add a task for the quest.
+    1. Click on the **+ Add Task** button.
+    1. `Task Name` - `task_completion`
+    1. `Description` - `Set when the puzzle is completed`
+    1. `Metadata` - Leave it empty
+    1. `Goal Setup > Goal Type` - `counter`
+    1. `Goal Setup > Goal` - `1` - This is because we want the user to complete the task once.
+    1. Click on the `Add Task Reward` button to add a reward for completing the task.
+    1. `Reward Type` - `statistic`
+    1. `Statistic` - `falcon_cards` - This is the statistic we created earlier to track the number of falcon cards a user has.
+    1. `Amount` - `5` - This is because we want to give the user 5 falcon cards for completing the task.
+    1. Click Save.
+![Quest Three Config](/images/docs/tutorials/edu-app-quests-three-setup.png)
+1. Then click the back button to go back to the configuration home page.
+
+### B. Remote Config Configuration
+<Note>
+    Remote Config is used to send the new puzzle to the users. In our Web app, we want to send a new puzzle every day. This is why we are going to add the `Remote Config` snap. To add a remote config please follow the instructions below.
+</Note>
+1. Click on the **Remote Config** widget to open the Remote config snaps configuration page.
+1. Click the `+ Key Value` button to open the add new key value form.
+1. Lets add the puzzle details
+   1. `Key` - `puzzle`
+   1. `Value` - Add the following JSON value
+    ```json
+    {
+      "id": "puzzle-1",
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What is the largest planet in our solar system?",
+          "category": "easy",
+          "choices": [
+            "Earth",
+            "Jupiter",
+            "Saturn",
+            "Mars"
+          ],
+          "answer": "Jupiter"
+        },
+        {
+          "id": "q2",
+          "question": "Which animal is known as the 'King of the Jungle'?",
+          "category": "medium",
+          "choices": [
+            "Tiger",
+            "Elephant",
+            "Lion",
+            "Cheetah"
+          ],
+          "answer": "Lion"
+        },
+        {
+          "id": "q3",
+          "question": "What do bees collect from flowers to make honey?",
+          "category": "hard",
+          "choices": [
+            "Pollen",
+            "Nectar",
+            "Petals",
+            "Seeds"
+          ],
+          "answer": "Nectar"
+        }
+      ]
+    }
+    ```
+    <Note>
+      In the repo, the puzzle is stored at `/data/puzzle.json`.
+    </Note>
+    ![Remote Config](/images/docs/tutorials/edu-app-remote-config-setup.png)
+
+<Warning>
+    In a real world application, you would have a backend service that would update the remote config with a new puzzle every day at midnight UTC.
+</Warning>
+
+<Checkpoint step={3}>
+  We have configured all the required snaps. Our Snapend is now ready to integrate with our app.
+</Checkpoint>
+
+## Step 4: Download the Snapser SDK
+1. On the Snapend home page scroll down to the SDK download widget called **Game Client SDKs**.
+    - Select **Web - Typescript** for the platform
+    - Select **Fetch** for the HTTP library
+    - Click Generate
+![Web SDK](/images/docs/tutorials/web-game-sdk.png)
+1. In a few minutes you will see a pop up of a Zip file. Download the zip file and extract it.
+1. You will see a folder structure like this:
+```bash
+  ├── sdk-typescript-fetch-web/ (👈 You will copy the contents of this folder)
+    │   ├── api/
+    │   ├── index.ts
+    │   ├── models/
+    │   ├── runtime.ts
+    │       └── Snapser/
+    │       └── link.xml
+    │       └── Snapser.asmdef
+```
+
+<Checkpoint step={4}>
+  You now have a SDK that is going to be integrated into your Web project. Lets move on to the next step.
+</Checkpoint>
+
+## Step 5: Download the Web App
+1. Talk to Snapser support to get access to this [repo](https://github.com/snapser-community/snapser-demo-web-edu-app).
+2. Clone or download this example project.
+
+## Step 6: Install Dependencies
+<Note>
+    The Web project comes with a `package.json` file. We need to install the dependencies using npm. To do that, open a terminal and navigate to the root of the project and run the following command:
+    ```bash
+    cd snapser-demo-web-edu-app
+    npm install
+    ```
+</Note>
+{/* Reached till here */}
+
+## Step 7: Understand the Code
+1. To understand the usage, you should look at `/src/services/SnapserManager.cs`. This class acts as the link between the app logic and the Snapser sdk.
+1. Here you will see stub methods for the following functionalities:
+   1. User authentication
+   2. Getting the puzzle
+   3. Getting the leaderboard
+   4. Getting user stats
+```typescript
+import { LeaderboardsUserScore, StatisticsUserStatistic } from "@/snapser-sdk";
+
+export type Question = {
+  id: string;
+  question: string;
+  category: 'easy' | 'medium' | 'hard';
+  choices: Array<string>;
+  answer: string;
+};
+
+export type Puzzle = {
+  id: string;
+  questions: Array<Question>;
+};
+
+export type PuzzleMetaData = {
+  active: boolean;
+  reward: {
+    name: string;
+    count: number;
+  }
+}
+
+export class SnapserManager {
+  // TODO: wire to real backend auth later
+  static async login(username: string, password: string): Promise<{ userId: string }> {
+    // TODO implement
+    throw new Error("TODO");
+  }
+
+  static async signup(username: string, password: string): Promise<{ userId: string }> {
+    // TODO implement
+    throw new Error("TODO");
+  }
+
+  static getCurrentUserId(): string | null {
+    // TODO implement
+    throw new Error("TODO");
+  }
+
+  static getCurrentUser(): { id: string | null; username: string | null } {
+    // TODO implement
+    throw new Error("TODO");
+  }
+
+  static async logout(): Promise<boolean> {
+    // TODO implement
+    throw new Error("TODO");
+  }
+
+  static async getUserStatistics(): Promise<StatisticsUserStatistic[]> {
+    // TODO implement
+    throw new Error("TODO");
+  }
+
+  // JSON blob getters (later will fetch from backend)
+  static async getFalconCards(): Promise<number> {
+    // TODO implement
+    throw new Error("TODO");
+  }
+
+  static async getUserStats(): Promise<{
+    correct_answers: number;
+    incorrect_answers: number;
+    accuracy: string;
+  }> {
+    // TODO implement
+    throw new Error("TODO");
+  }
+
+  static async getLeaderboard(): Promise<LeaderboardsUserScore[]> {
+    // TODO implement
+    throw new Error("TODO");
+  }
+
+  static async getPuzzleMetaData(): Promise<null | PuzzleMetaData> {
+    // TODO implement
+    throw new Error("TODO");
+  }
+
+  static async getDailyPuzzleQuestions(): Promise<Puzzle | null> {
+    // TODO implement
+    throw new Error("TODO");
+  }
+
+  static async puzzleCompleted(correctAnswers: number, wrongAnswers: number): Promise<boolean> {
+    // TODO implement
+    throw new Error("TODO");
+  }
+}
+```
+
+We will be implementing these methods in the next step.
+
+## Step 8: Update the Code
+- Copy the downloaded SDK contents into the `src/snapser-sdk` folder. If there is an existing folder in the repo, you can delete it and replace it with the new SDK code.
+```bash
+  ├── sdk-typescript-fetch-web/ (👈 You will copy the contents of this folder)
+    │   ├── api/
+    │   ├── index.ts
+    │   ├── models/
+    │   ├── runtime.ts
+    │       └── Snapser/
+    │       └── link.xml
+    │       └── Snapser.asmdef
+```
+
+<Note>
+You will be copying the contents `sdk-typescript-fetch-web` folder into your Web projects `src/snapser-sdk`folder. You will have to create the `snapser-sdk` folder if it does not exist.
+</Note>
+
+- Open **SnapserManager.ts** in the `src/services/` folder and update its contents with the following.
+```typescript
+//Copy this file to SnapserManager.ts and uncomment the code below
+//
+import { AuthLogoutRequest, AuthServiceApi, AuthUsernamePasswordLoginOperationRequest, AuthUsernamePasswordLoginRequest, AuthUsernamePasswordLoginResponse, LeaderboardsGetScoresRequest, LeaderboardsGetScoresResponse, LeaderboardsIncrementScoreRequest, LeaderboardsServiceApi, LeaderboardsUserScore, QuestsClaimTaskRewardsRequest, QuestsGetActiveQuestsRequest, QuestsGetAvailableQuestsRequest, QuestsGetAvailableQuestsResponse, QuestsIncrementTaskProgressRequest, QuestsServiceApi, QuestsTaskProgress, QuestsUserQuests, RemoteConfigGetUserConfigRequest, RemoteConfigGetUserConfigResponse, RemoteConfigServiceApi, StatisticsGetUserStatisticRequest, StatisticsGetUserStatisticsRequest, StatisticsGetUserStatisticsResponse, StatisticsIncrementUserStatisticRequest, StatisticsServiceApi, StatisticsUserStatistic } from "@/snapser-sdk";
+
+export type Question = {
+  id: string;
+  question: string;
+  category: 'easy' | 'medium' | 'hard';
+  choices: Array<string>;
+  answer: string;
+};
+
+export type Puzzle = {
+  id: string;
+  questions: Array<Question>;
+};
+
+export type PuzzleMetaData = {
+  active: boolean;
+  reward: {
+    name: string;
+    count: number;
+  }
+}
+
+export class SnapserManager {
+  private static authApi = new AuthServiceApi();
+  private static leaderboardsApi = new LeaderboardsServiceApi();
+  private static remoteConfigApi = new RemoteConfigServiceApi();
+  private static questsApi = new QuestsServiceApi();
+  private static statisticsApi =  new StatisticsServiceApi();
+  private static currentUserId: string | null = null;
+  private static sessionToken: string | null = null;
+  private static currentUserName: string | null = null;
+
+  static async login(username: string, password: string): Promise<{ userId: string } | null> {
+    try {
+      const loginBody: AuthUsernamePasswordLoginRequest = {
+        username: username,
+        password: password,
+        createUser: false,
+      };
+
+      const request: AuthUsernamePasswordLoginOperationRequest = {
+        body: loginBody
+      };
+
+      const response: AuthUsernamePasswordLoginResponse = await this.authApi.authUsernamePasswordLogin(request);
+
+      if (response.user) {
+        //Save to local storage or memory
+        localStorage.setItem('sessionToken', response.user.sessionToken || '');
+        localStorage.setItem('currentUserId', response.user.id || '');
+        localStorage.setItem('currentUserName', username);
+        this.sessionToken = response.user.sessionToken || null;
+        this.currentUserId = response.user.id || null;
+        this.currentUserName = username;
+        return {
+          userId: response.user.id || '',
+        };
+      }
+      throw new Error("Invalid credentials");
+    } catch (error) {
+      console.error('Login failed:', error);
+      return null;
+    }
+  }
+
+  static async signup(username: string, password: string): Promise<{ userId: string }> {
+    try {
+      const loginBody: AuthUsernamePasswordLoginRequest = {
+        username: username,
+        password: password,
+        createUser: true,
+      };
+
+      const request: AuthUsernamePasswordLoginOperationRequest = {
+        body: loginBody
+      };
+
+      const response: AuthUsernamePasswordLoginResponse = await this.authApi.authUsernamePasswordLogin(request);
+
+      if (response.user) {
+        localStorage.setItem('sessionToken', response.user.sessionToken || '');
+        localStorage.setItem('currentUserId', response.user.id || '');
+        localStorage.setItem('currentUserName', username);
+        this.currentUserId = response.user.id || null;
+        this.sessionToken = response.user.sessionToken || null;
+        this.currentUserName = username;
+        return {
+          userId: response.user.id || '',
+        };
+      }
+      throw new Error("Invalid credentials");
+    } catch (error) {
+      console.error('Login failed:', error);
+      return null;
+    }
+  }
+
+  static getCurrentUserId(): string | null {
+    if (!this.currentUserId) {
+      this.currentUserId = localStorage.getItem('currentUserId');
+    }
+    if (!this.sessionToken) {
+      this.sessionToken = localStorage.getItem('sessionToken');
+    }
+    if (!this.currentUserName) {
+      this.currentUserName = localStorage.getItem('currentUserName');
+    }
+    return this.currentUserId;
+  }
+
+  static getCurrentUser(): { id: string | null; username: string | null } {
+    if (!this.currentUserId) {
+      this.currentUserId = localStorage.getItem('currentUserId');
+    }
+    if (!this.sessionToken) {
+      this.sessionToken = localStorage.getItem('sessionToken');
+    }
+    if (!this.currentUserName) {
+      this.currentUserName = localStorage.getItem('currentUserName');
+    }
+    return {
+      id: this.currentUserId,
+      username: this.currentUserName,
+    };
+  }
+
+  static async logout(): Promise<boolean> {
+    const authLogoutRequestData: AuthLogoutRequest = {
+      token: this.sessionToken || undefined,
+      token2: this.sessionToken || undefined,
+    };
+    await this.authApi.authLogout(authLogoutRequestData);
+    this.sessionToken = null;
+    this.currentUserId = null;
+    this.currentUserName = null;
+    localStorage.removeItem('sessionToken');
+    localStorage.removeItem('currentUserId');
+    localStorage.removeItem('currentUserName');
+    return true
+  }
+
+  static async getUserStatistics(): Promise<StatisticsUserStatistic[]> {
+    const getUserStatisticsRequest: StatisticsGetUserStatisticsRequest = {
+      userId: this.getCurrentUserId() || '',
+      token: this.sessionToken || undefined,
+    }
+    const userStatisticsResponse: StatisticsGetUserStatisticsResponse = await this.statisticsApi.statisticsGetUserStatistics(getUserStatisticsRequest)
+    return userStatisticsResponse.userStatistics || [];
+  }
+
+  // JSON blob getters (later will fetch from backend)
+  static async getFalconCards(): Promise<number> {
+    const userStatistics = await this.getUserStatistics();
+    const userStatistic = userStatistics.find(stat => stat.key === 'falcon_cards');
+    if(!userStatistic) {
+      return 0;
+    }
+    return parseInt(userStatistic.value || '0', 10) || 0;
+  }
+
+  static async getUserStats(): Promise<{
+    correct_answers: number;
+    incorrect_answers: number;
+    accuracy: string;
+  }> {
+    const userStatistics = await this.getUserStatistics();
+    const correct_answers = userStatistics.find(stat => stat.key === 'correct_answers');
+    const incorrect_answers = userStatistics.find(stat => stat.key === 'wrong_answers');
+    const correct = parseInt(correct_answers?.value || '0', 10) || 0;
+    const incorrect = parseInt(incorrect_answers?.value || '0', 10) || 0;
+    const total = correct + incorrect;
+    let finalAccuracy = '0%';
+    if (total !== 0) {
+      const accuracy = (correct / total) * 100;
+      finalAccuracy = `${accuracy.toFixed(2)}%`;
+    };
+    return {
+      correct_answers: correct,
+      incorrect_answers: incorrect,
+      accuracy: finalAccuracy,
+    };
+  }
+
+  static async getLeaderboard(): Promise<LeaderboardsUserScore[]> {
+    const leaderboardGetScoresRequest: LeaderboardsGetScoresRequest = {
+      //userId: this.getCurrentUserId() || '',
+      leaderboardName: 'puzzles_completed',
+      token: this.sessionToken || undefined,
+      range: 'top',
+      count: 10,
+      withMetadata: true, //This gives us the ability to show usernames instead of Ids
+    }
+    const leaderboardScores: LeaderboardsGetScoresResponse = await this.leaderboardsApi.leaderboardsGetScores(leaderboardGetScoresRequest)
+    return leaderboardScores.userScores || [];
+  }
+
+  static async getPuzzleMetaData(): Promise<null | PuzzleMetaData> {
+    const getActiveQuestRequest: QuestsGetActiveQuestsRequest  = {
+      userId: this.getCurrentUserId() || '',
+      token: this.sessionToken || undefined,
+      includeRewardContents: true,
+    }
+
+    const getActiveQuestResponse: QuestsUserQuests = await SnapserManager.questsApi.questsGetActiveQuests(getActiveQuestRequest)
+    if(!getActiveQuestResponse.quests || Object.keys(getActiveQuestResponse.quests).length === 0) {
+      return null
+    }
+    const puzzleQuest =  'daily_puzzle' in getActiveQuestResponse.quests ? getActiveQuestResponse.quests['daily_puzzle'] : null
+    if(!puzzleQuest) {
+      return null
+    }
+    const puzzleTasks = puzzleQuest.tasks
+    if('task_completion' in puzzleTasks) {
+      const taskCompletion: QuestsTaskProgress = puzzleTasks['task_completion'];
+      const firstReward = taskCompletion.rewardStatistics && taskCompletion.rewardStatistics.length > 0 ? taskCompletion.rewardStatistics[0] : null;
+      const puzzleMetaData: PuzzleMetaData = {
+        active: puzzleQuest.status === 'completed' ? false : true,
+        reward: {
+          name: firstReward?.name || '',
+          count: firstReward.count || 0,
+        }
+      }
+      return puzzleMetaData;
+    }
+    return {
+      active: false,
+      reward: {
+        name: '',
+        count: 0,
+      }
+    }
+  }
+
+  static async getDailyPuzzleQuestions(): Promise<Puzzle | null> {
+    const remoteConfigRequest: RemoteConfigGetUserConfigRequest = {
+      userId: this.getCurrentUserId() || '',
+      token: this.sessionToken || undefined,
+    }
+    const getPuzzleResponse: RemoteConfigGetUserConfigResponse = await this.remoteConfigApi.remoteConfigGetUserConfig(remoteConfigRequest);
+    if (getPuzzleResponse.config && 'puzzle' in getPuzzleResponse.config) {
+      return getPuzzleResponse.config.puzzle as Puzzle;
+    }
+    return null;
+  }
+
+  static async puzzleCompleted(correctAnswers: number, wrongAnswers: number): Promise<boolean> {
+    // Incrementing the task by 1 completes the quest task
+    const incrementTaskProgressRequest: QuestsIncrementTaskProgressRequest = {
+      userId: this.getCurrentUserId() || '',
+      questName: 'daily_puzzle',
+      taskName: 'task_completion',
+      token: this.sessionToken || undefined,
+      body: {
+        delta64: 1
+      }
+    }
+    await this.questsApi.questsIncrementTaskProgress(incrementTaskProgressRequest)
+    //Now get the reward
+    const claimTaskRewardRequest: QuestsClaimTaskRewardsRequest = {
+      userId: this.getCurrentUserId() || '',
+      questName: 'daily_puzzle',
+      taskName: 'task_completion',
+      token: this.sessionToken || undefined,
+    }
+    await this.questsApi.questsClaimTaskRewards(claimTaskRewardRequest)
+    // Update the leaderboard
+    const incrementLeaderboardRequest: LeaderboardsIncrementScoreRequest = {
+      leaderboardName: 'puzzles_completed',
+      userId: this.getCurrentUserId() || '',
+      token: this.sessionToken || undefined,
+      body: {
+        delta: 1,
+        userMetadata: {
+          name: this.currentUserName || this.getCurrentUserId || 'Unknown'
+        }
+      }
+    }
+    await this.leaderboardsApi.leaderboardsIncrementScore(incrementLeaderboardRequest)
+    // Update statistics
+    if(correctAnswers > 0) {
+      const correctAnswersUpdateRequest: StatisticsIncrementUserStatisticRequest = {
+        userId: this.getCurrentUserId() || '',
+        token: this.sessionToken || undefined,
+        key: 'correct_answers',
+        body: {
+          delta: correctAnswers
+        }
+      }
+      await this.statisticsApi.statisticsIncrementUserStatistic(correctAnswersUpdateRequest)
+    }
+    if(wrongAnswers > 0) {
+      const wrongAnswersUpdateRequest: StatisticsIncrementUserStatisticRequest = {
+        userId: this.getCurrentUserId() || '',
+        token: this.sessionToken || undefined,
+        key: 'wrong_answers',
+        body: {
+          delta: wrongAnswers
+        }
+      }
+      await this.statisticsApi.statisticsIncrementUserStatistic(wrongAnswersUpdateRequest)
+    }
+    return true;
+  }
+}
+```
+
+<Note>
+  We have added a commented out version of the code above in a file called `TODO_Update_SnapserManager.ts` in the same folder. You can copy the contents of that file and replace the contents of `SnapserManager.ts` file with it.
+  Additionally, we highly recommend you to go through the code and understand how the Snapser SDK is being used.
+</Note>
+
+<Checkpoint step={8}>
+  At this point, try compiling the app and it should work without any errors. If you see any errors, please check the console and make sure you have installed the dependencies correctly.
+</Checkpoint>
+
+## Step 9: Run the app
+1. Go to the root of your web code and run.
+    ```bash
+    npm run dev
+    ```
+
+2. Go to the browser and open `http://localhost:8080`. You should see the app running.
+![alt_text](/images/docs/tutorials/edu-app-working.png)
+    <Note>
+      Since we have enabled username and password authentication, you can enter any username and password to get into the app.
+    </Note>
+
+3. You should see a puzzle to solve. Click on the puzzle to open it. Answer the questions and submit the puzzle. You should see your stats updated and you should see your name in the leaderboard.
+4. Once you have completed the puzzle, you wont be able to see the puzzle again until the next day.
+4. Create an account with a different username and repeat the process. You should see the leaderboard updated with the new user.
+
+<Checkpoint step={9}>
+  You should now have a working education app.
+</Checkpoint>
+
+## Step 10: Validate the data in Snapser
+- You can go to your Snapend home page, under quick links click on the `User Manager Tool`.
+- Enter the username you used to login to the app and click search.
+- You should see the user you just created and see their details.
+
+<Checkpoint step={10}>
+  Congratulations! You should have a fully working web app that is integrated with the backend we just created.
+</Checkpoint>

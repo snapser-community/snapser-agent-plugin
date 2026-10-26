@@ -1,0 +1,20 @@
+# KWS Setup
+This tool allows you to configure the KWS service with your Snapend. You will need to input the following details, typically provided by the KWS Team during the onboarding process.
+
+To get started:
+1. Click on `Credentials` from the side Nav.
+2. You will see the form where you can configure your KWS setup.
+
+## Credentials Details
+1. **Product Id**: The product Id from KWS dashboard. Every app that uses KWS has a unique alpha-numericID. A product has the same product ID for both its test modes and production modes.
+2. **Client Id**: The client Id from KWS dashboard. Every app also has a unique client ID which is like the public encryption key in a key pair. Required to request API access tokens from the KWS authentication service. Each product should have 2 client IDs, one for test mode and one for production mode.
+3. **Product API Key**: The API key from the KWS dashboard. A unique client secret which is like the private key in a key pair. Required to request API access tokens from the KWS authentication service.
+4. **Web Hook Secret**: The webhook secret that you generate for Snapser in the KWS dashboard. Like a private key, required to verify data returned by the CM Service in webhook payloads.
+5. **Service URL**: The base URL for KWS API endpoints.
+6. **OAuth URL**: The URL that is used to get oauth tokens to access KWS apis.
+7. **Org Client Id**: The KWS org client ID. There will be 2 sets of org client IDs. One for test mode, one for production mode.
+8. **Org API Key**: The KWS org API Key. There will be 2 sets of org API keys. One for test mode, one for production mode.
+
+<Note>
+  All these credentials are provided by the KWS team during the onboarding process.
+</Note>

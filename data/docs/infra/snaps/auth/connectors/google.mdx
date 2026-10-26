@@ -1,0 +1,513 @@
+export const description = 'Auth'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Google Login
+
+Click here to view all Auth Snap [connectors](/docs/infra/snaps/auth/connectors).
+
+## Overview
+
+Google Login is a connector that allows users to log into your application using their Google ID.
+This connector leverages the Sign in with Google API to ensure a smooth and secure login experience.
+
+## Setup Requirements
+### Step 1: Create a Google Cloud Project:
+- Go to the [Google Cloud Console](https://console.cloud.google.com/) and create a new project.
+- Enable the Google Sign-In API for your project.
+
+## How it works
+
+To implement Google Login, developers must configure the connector via the Auth Configuration, Connector tool.
+Details on setting this up are available below in the "Configuration Tool" section.
+
+After configuration, the studio should integrate the Google SDK (Engine based or Firebase SDK) for the appropriate platform into the app client.
+The SDK, upon successful authentication, returns a token which should then be sent to the backend server. The
+Auth Snap receives this token, verifies its authenticity with Google's servers, and if valid, issues a user
+ID and session token back to the app client. This enables user authentication within the app.
+
+Let's dive into both these steps in detail below.
+
+## Configuration Tool
+The Google Connector configuration tool needs the following details:
+
+### Credentials
+Please open up your Google / Android Developer portal to get your app's client Id and secret
+1. <u>Client Id</u> - Your unique app client identifier
+2. <u>Client Secret</u> - Your game's or app's secret
+
+## Integrating the Google SDK
+Google provides a SDK for Unity however there isn't one for Unreal Engine.
+
+### Unity Integration
+1. Download the Google Sign-In SDK for Unity: Visit the [GitHub repository](https://github.com/googlesamples/google-signin-unity) to download the Google Sign-In SDK for Unity.
+2. Import the SDK into your Unity project using the **Unity Package Manager** or by importing the **.unitypackage** file.
+3. Configure the SDK: Open the sample scene provided with the SDK and enter your Web Client ID in the SignInSampleScript component. Ensure you have configured a web client ID in the Google Cloud Console for your project.
+4. Implement Google Login: Use the SDK to implement the login flow. You can use the sample scripts provided to handle user authentication.
+```csharp
+using GoogleSignIn;
+
+public class GoogleSignInExample : MonoBehaviour
+{
+    public void Login()
+    {
+        GoogleSignIn.Configuration = new GoogleSignInConfiguration("YOUR_WEB_CLIENT_ID");
+        GoogleSignIn.DefaultInstance.SignIn();
+    }
+}
+```
+#### Firebase Integration (Optional):
+1. Create a Firebase project and enable Google Sign-In in the Firebase console.
+2. Import the Firebase Auth SDK into your Unity project.
+3. Follow Firebase's documentation for integrating Google Sign-In with Unity using Firebase.
+
+### Unreal Engine Integration
+Unfortunately, there isn't a native Google Sign-In SDK for Unreal Engine like there is for Unity. However, you can manually implement Google authentication using Google's REST API or by integrating a third-party plugin.
+
+1. Manual Implementation: Use Google's REST API to handle authentication manually. This involves creating a login flow where users are redirected to Google for authentication and then return to your app with an access token.
+2. Third-Party Plugins: Look for community-created plugins that integrate Google authentication into Unreal Engine.
+
+## Usage
+
+Developers have the option to start user sessions with an Anonymous login and later upgrade to a secure
+Google login, or they can begin directly with an Google login. If opting for the latter, simply store and
+utilize the user ID and session token returned by the Auth Snap to interact with other APIs on your Snapend.
+For upgrading from an Anonymous to an Google login, follow the example below.
+
+### Example
+
+1. Assume a game client initiates an AnonLogin request using the device's unique identifier as the username.
+2. The Auth Snap generates a new user profile with `user_id=395d9b91-72fd-40f2-a3cd-cf5a1e7a604f` and `session_token=9a052312-48f6-4710-a072-230ddd046a2d`.
+3. The game client prompts the user to secure their account via Google Login, displaying the UI recommended by Google.
+4. The client interacts with the Firebase SDK to authenticate the user and receives a **token**.
+5. Next, the client submits an **GoogleLogin** request with the **token** and sets **create_user=true**.
+6. The client receives a new **user_id** and **session_token** linked to the Google account.
+7. To merge these accounts, the client utilizes the **AssociateLogins** API, specifying which account to retain and which to discard.
+8. The Auth Snap finalizes the association, discarding the unwanted user ID and token, preserving the necessary ones.
+
+This procedure ensures the account remains secure, as access cannot be gained merely through knowing the username used in the AnonLogin API.
+
+## APIs
+
+Here are the relevant APIs
+
+<div className="apisTable">
+| API Name                | HTTP Method | API Description                                                                         |
+| ----------------------- | ----------- | --------------------------------------------------------------------------------------- |
+| [AssociateLogins](#associatelogins-api)         | PUT         | Associates two logins based on their session tokens                                     |
+| [AnonLogin](#anonlogin-api)               | PUT         | Logs in the user with an arbitrary identifier specified and returns a session           |
+| [GoogleLogin](#googlelogin-api)             | PUT         | Logs in the user based on the google credential token specified and returns a session   |
+</div>
+
+#### AssociateLogins API
+<CodeGroup title="Associates two logins based on their session tokens" tag="PUT" label="AssociateLogins">
+```csharp
+/// <summary>
+/// Associate Multiple Logins Associates two logins based on their session tokens
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object AssociateLogins(AuthAssociateLoginsRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = AssociateLoginsWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthAssociateLoginsRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAssociateLoginsRequest" /> class.
+/// </summary>
+/// <param name="discardUserToken">Token of the user to discard (required).</param>
+/// <param name="keepUserToken">Token of the user to keep (required).</param>
+public AuthAssociateLoginsRequest(string discardUserToken = default(string), string keepUserToken = default(string))
+{
+    // to ensure "discardUserToken" is required (not null)
+    if (discardUserToken == null)
+    {
+        throw new ArgumentNullException("discardUserToken is a required property for AuthAssociateLoginsRequest and cannot be null");
+    }
+    this.DiscardUserToken = discardUserToken;
+    // to ensure "keepUserToken" is required (not null)
+    if (keepUserToken == null)
+    {
+        throw new ArgumentNullException("keepUserToken is a required property for AuthAssociateLoginsRequest and cannot be null");
+    }
+    this.KeepUserToken = keepUserToken;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AssociateLoginsRequest : public Request
+{
+public:
+    virtual ~AssociateLoginsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthAssociateLoginsRequest Body;
+};
+
+class SNAPSER_API SnapserAuthAssociateLoginsRequest : public Model
+{
+public:
+    virtual ~SnapserAuthAssociateLoginsRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Token of the user to discard */
+    FString DiscardUserToken;
+    /* Token of the user to keep */
+    FString KeepUserToken;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AssociateLoginsResponse : public Response
+{
+public:
+    virtual ~AssociateLoginsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AnonLogin API
+<CodeGroup title="Logs in the user with an arbitrary identifier specified and returns a session" tag="PUT" label="AnonLogin">
+```csharp
+/// <summary>
+/// Anonymous Login Logs in the user with an arbitrary identifier specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthAnonLoginResponse</returns>
+public AuthAnonLoginResponse AnonLogin(AuthAnonLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthAnonLoginResponse> localVarResponse = AnonLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthAnonLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAnonLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="username">User&#39;s login ID (required).</param>
+public AuthAnonLoginRequest(bool createUser = default(bool), string username = default(string))
+{
+    // to ensure "username" is required (not null)
+    if (username == null)
+    {
+        throw new ArgumentNullException("username is a required property for AuthAnonLoginRequest and cannot be null");
+    }
+    this.Username = username;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthAnonLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAnonLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthAnonLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AnonLoginRequest : public Request
+{
+public:
+    virtual ~AnonLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthAnonLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthAnonLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthAnonLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* User's login ID */
+    FString Username;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AnonLoginResponse : public Response
+{
+public:
+    virtual ~AnonLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthAnonLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthAnonLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthAnonLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GoogleLogin API
+<CodeGroup title="Logs in the user based on the google credential token specified and returns a session" tag="PUT" label="GoogleLogin">
+```csharp
+/// <summary>
+/// Google Login Logs in the user based on the google credential token specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthGoogleLoginResponse</returns>
+public AuthGoogleLoginResponse GoogleLogin(AuthGoogleLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthGoogleLoginResponse> localVarResponse = GoogleLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthGoogleLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthGoogleLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="token">Google IDtoken generated on the client (required).</param>
+public AuthGoogleLoginRequest(bool createUser = default(bool), string token = default(string))
+{
+    // to ensure "token" is required (not null)
+    if (token == null)
+    {
+        throw new ArgumentNullException("token is a required property for AuthGoogleLoginRequest and cannot be null");
+    }
+    this.Token = token;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthGoogleLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthGoogleLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthGoogleLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::GoogleLoginRequest : public Request
+{
+public:
+    virtual ~GoogleLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthGoogleLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthGoogleLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthGoogleLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* Google IDtoken generated on the client */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::GoogleLoginResponse : public Response
+{
+public:
+    virtual ~GoogleLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthGoogleLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthGoogleLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthGoogleLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+

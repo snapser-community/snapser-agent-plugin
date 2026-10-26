@@ -1,0 +1,189 @@
+# 1.13.0
+##### August 11, 2026
+
+## Breaking Changes
+1. **Client SDK — Go enum constants renamed** — every exported enum constant in the client `sdk-go` moves from a bare name to `<TYPENAME>_<VALUE>` form. Go code that names the old constants fails to compile. Only the Go SDK changes. All four scopes are affected across 21 enum types: `unified` (101 constants), `internal` (101), `api-key` (93), and `user` (89). See [Client SDK Go enum renames](#client-sdk-go-enum-renames) for the full list.
+   <Note>
+     The wire values are unchanged. The serialized JSON is byte-for-byte identical, so this is an identifier rename only.
+   </Note>
+
+2. **Admin SDK — `AuthEnableAppleLoginRequest` payload restructured** — this is the request body for the enable Apple login admin endpoint. The four required top-level fields `key_id`, `private_key`, `service_id`, and `team_id` are removed. Two optional nested objects replace them:
+   - `app` → `AuthAppleAppCredentials` (`bundle_id`, `key_id`, `private_key`, `team_id`) — for native app Sign in with Apple.
+   - `web` → `AuthAppleWebCredentials` (`key_id`, `private_key`, `service_id`, `team_id`) — for web Sign in with Apple.
+
+   `environment` stays the only required top-level field. Build an `AuthAppleAppCredentials` or an `AuthAppleWebCredentials` and assign it to `app` or `web`.
+   <Warning>
+     Any caller that constructs this request with the old flat fields breaks. Statically typed SDKs fail to compile. Python errors at construction, because the fields no longer exist.
+   </Warning>
+
+   ```
+   # before (release-1.12)
+   AuthEnableAppleLoginRequest(environment, key_id, private_key, service_id, team_id)
+
+   # after (release-1.13)
+   AuthEnableAppleLoginRequest(
+       environment,
+       app = AuthAppleAppCredentials(bundle_id, key_id, private_key, team_id),   # optional
+       web = AuthAppleWebCredentials(key_id, private_key, service_id, team_id),  # optional
+   )
+   ```
+
+3. **Admin SDK — Go enum constants renamed** — the same type-prefix rename applies to the Admin `sdk-go`. It covers 48 constants across 11 enum types. Go code that names the old constants fails to compile. The other seven Admin SDK languages keep the bare enum names. See [Admin SDK Go enum renames](#admin-sdk-go-enum-renames) for the full list.
+
+---
+
+## ⚠️ Deprecations
+1. **Apple Login endpoint split** — `PUT /v1/auth/login/apple` is **deprecated**. It still works and routes to your **App Login** credentials. New integrations should call the dedicated endpoint for their flow:
+   - `PUT /v1/auth/apple/app/login` — native app Sign in with Apple
+   - `PUT /v1/auth/apple/web/login` — web Sign in with Apple
+<Note>
+Both endpoints resolve to the **same** Snapser user for a given Apple account. Apple's user identifier is scoped to your developer team, not to the client Id. A player who signs in from your app and later from the web lands on one account.
+</Note>
+
+2. **Apple connector settings are now nested** — the Apple settings payload moves from flat fields to nested `app` / `web` objects. The old top-level `service_id`, `team_id`, `key_id` and `private_key` fields are **deprecated**. They may still appear on the wire, but read from `app` / `web` instead.
+   <Warning>
+     **Admin SDK calls to the Apple connector settings endpoints require a matching Auth snap version.** An Admin SDK generated before v1.13 cannot read or write Apple connector settings on Auth v1.13.0 or above. An SDK generated at v1.13+ cannot do so against earlier Auth versions. If you manage Apple connector settings via the Admin SDK, regenerate it during the upgrade. All other Admin SDK calls are unaffected.
+   </Warning>
+   <Note>
+     Your existing connector configuration is preserved. Snapser migrates connectors configured before v1.13 into the **App Login** set automatically once the Auth snap is on v1.13.0 or above. That single field was already the app Bundle Id. Existing native app logins continue to work unchanged.
+   </Note>
+
+---
+
+## Spotlight
+1. **Accounts & Roles CSV Sync** — manage your studio's entire access list as one CSV. Download, edit, upload, preview, and apply. Snapser reconciles roles, invites, and offboarding to match the file. It is available as **Sync** in the Access tool and as `snapctl accounts` for version control and CI.
+2. **Matchmaking Simulator** — a new Snap Tool for matchmaking. Build scenarios that describe your player population and rules, then run them. Compare two scenarios side by side, and browse the history of every run.
+3. **Cluster Service User roles** — three new roles: `cluster-service-user-admin`, `cluster-service-user-edit`, and `cluster-service-user-view`. They sit at the bottom of the role hierarchy and grant access to the **User Manager tool only, for a single Snap**. Give this role to a Customer Support team that looks up and fixes player data without seeing Snap configuration.
+4. **Sign in with Apple — app and web, side by side** — one Apple connector now holds two credential sets. **App Login** uses your **Bundle Id** for native app sign-in. **Web Login** uses a dedicated Apple **Service Id** for web sign-in. Web Sign in with Apple was not configurable before 1.13; now it works alongside your app login.
+5. **Fleet Counters & Lists** — Game Server Fleets now support [Agones Counters and Lists](https://agones.dev/site/docs/guides/counters-and-lists/). Declare named counters and lists on a fleet; every game server inherits them.
+
+---
+
+## Snaps
+
+### Auth
+1. **Apple App and Web login together** — the Apple connector now carries two independent credential sets. Each set has its own client Id (**Bundle Id** for app, **Service Id** for web), Team Id, Key Id, and Apple Private Key. At least one set must be complete to enable the connector. Enable, disable, and delete act on the whole connector, so they affect both flows together.
+2. **OTP validation attempts are now configurable** — you can cap how many one-time-password validation attempts an email address gets. This stops an attacker from scripting through `000000`–`999999`.
+
+### Inventory
+1. **`ConsumeItems` API** — a new endpoint for consuming items from a user's inventory.
+
+### Remote Config
+1. **Config changes fire an event** — updating an App config or a User config now publishes a change event to all users. Connected clients can react to the change instead of polling for it.
+
+### Profiles
+1. **Bug fix: typecasting crash** — a typecasting error crashed the Profiles snap. Fixed.
+
+### Game Server Fleets
+1. **Counters & Lists** — declare Agones Counters and Lists on a fleet, up to 10 counters and 10 lists each. Counters carry a starting count and a max count. Lists carry a max number of entries (up to 1000). Names share one namespace and are validated for uniqueness. Values flow through to every game server's spec and live status, ready for SDK use.
+
+### Queues
+1. **Logging pass** — a logging pass across the snap improves observability and debugging.
+
+---
+
+## Web App
+
+### New Tools
+1. **Matchmaking Simulator** — a new Snap Tool under Matchmaking. **Scenarios** holds your saved scenario library, with a modal editor, hover actions for Edit / Delete / Run, and a confirmation step before a delete. **Runs** lists every run, filterable by scenario; opening one shows the full report with ticket property distributions, wait time, and match quality graphs. **Compare** puts two scenarios side by side. The Snap Tools navigation now groups Matchmaking's tools under a single Matchmaking entry.
+2. **Accounts & Roles Sync** — the Access tool has a new **Sync** button. Download the accounts and roles as a CSV, edit it, and upload it. Snapser computes a preview of adds, revokes, invites, offboards, and no-ops. It highlights removals and offboards, and lists validation and guardrail errors inline with row numbers. Apply stays blocked until the file is valid. Company admins run it organization-wide from **Access > Portal**; app admins run it per-app from the Access tool.
+<Warning>
+A sync is a **full replace, not an append**. The CSV you upload becomes the complete list of roles for the scope you picked. Any role missing from it is revoked. In an organization-wide sync, users left with no roles are removed from your organization. Always read the preview before you apply.
+</Warning>
+3. **Admin SDK download at the Snapend level** — the Admin SDK download tool was previously only at the app level. It is now also under Tools inside a Snapend, and it pulls the Snapend-specific SDK. `game-*` roles and above see it at the app level; `cluster-*` roles and above see it inside a Snapend.
+
+### Access & Roles
+1. **Cluster Service User roles** — `cluster-service-user-admin`, `cluster-service-user-edit`, and `cluster-service-user-view` are selectable in the Access tools at both the app and Snapend level. Like the `cluster-service-*` roles, you pick a cluster and a Snap when assigning them. They grant access to the User Manager tool for that one Snap and nothing else. Every higher role keeps its existing access to User Manager.
+2. **One role per resource** — assigning a role to someone who already has a role on the same resource now **replaces** that role. It no longer adds a second row. Previously, giving `aj@snapser.com` a `snapend-view` role on a resource where they already held `snapend-admin` rendered two conflicting rows. A toast tells you when a replacement happens.
+3. **Roles table is sorted** — the roles table now sorts by email, then by resource in hierarchy order (company → app → Snapend → Snap). Every row for a user sits together, and rows for the same Snapend stay adjacent.
+
+### User Manager
+1. **Permissions keyed on the new role** — User Manager access is now checked against a minimum of `cluster-service-user-*` rather than `cluster-service-*`. Higher roles keep access.
+2. **User Manager V2** — a cleanup pass across the user tools. The view tables (Summary, Storage, Statistics, Trackables, Inventory, Purchases, Guilds, Lobbies, Segments, Experiments, Remote Config, KWS, XP, Notifications, Suspend, and more) were rebuilt on shared components with consistent permission handling. The Inventory grant flows were reworked alongside them.
+
+### Fleets
+1. **Counters & Lists section** — a new fleet-level section in the fleet configuration form. Declare counters (Name, Starting Count, Max Count) and lists (Name, Max Entries), with inline validation and a learn-more popover.
+2. **Counters & Lists on a game server** — the server expand panel now shows each game server's live counters and lists.
+
+### Logs
+1. **Fleets category** — the game server list for the Fleets category is now sorted. It is easier to find the server you want when a fleet has many of them.
+
+### Bug Fixes
+1. **User Manager "Permission Denied"** — the User Manager summary page showed "Permission Denied" for users who did have access to it. Fixed.
+2. **Asset downloads** — the Download button in the Assets tool opened some files (like `.json`) in a new tab instead of downloading them. Every asset now downloads.
+3. **EventBus admin activations with filters** — activations configured with a filter did not work from the EventBus admin tool. Fixed.
+4. **Fleets — Server Rotation** — entering `0` to disable rotation now works correctly in the edit form.
+5. **Snapend Settings Admin** — copy cleanup on the Settings Admin page.
+
+---
+
+## Snapctl
+
+### Commands
+#### Accounts
+1. `snapctl accounts export --out-path-filename ./accounts.csv [--application-id <id>]` — writes the current accounts and roles for your scope to a CSV. This is the seed you edit.
+2. `snapctl accounts sync --accounts-path-filename ./accounts.csv [--dry-run] [--force] [--application-id <id>]` — reconciles your organization to the CSV. `--dry-run` previews the diff and applies nothing. Without it, the command asks you to confirm first, and `--force` skips that prompt for non-interactive jobs. The full server response is echoed on stdout as JSON, while the diff and result tables go to stderr, so `snapctl accounts sync ... | jq` works. The command exits non-zero if the CSV is invalid, a guardrail trips, or any row fails to apply.
+<Note>
+`snapctl accounts` requires an **admin** API Key. A non-admin key gets a permission error (exit code 117) on every subcommand. A company admin can sync the whole company. An application admin can only sync the applications they administer, and their CSV cannot contain `company` rows.
+</Note>
+
+---
+
+## Documentation
+1. **Docs site: staying logged in** — the session cookie TTL on the documentation site was too short, forcing repeated logins. Extended.
+
+---
+
+## Appendix
+
+The tables below list the renamed Go enum constants from [Breaking Changes](#breaking-changes). Each row shows one enum type and one example rename. Every constant on that type gains the same `<TYPENAME>_` prefix.
+
+<Note>
+The old bare names collided across enums. `UNKNOWN`, `UNKNOWN_STATUS`, and `UNSPECIFIED_STATUS` each appeared on several types. The type prefix disambiguates them, matching openapi-generator's default Go enum naming.
+</Note>
+
+### Client SDK Go enum renames
+
+These 21 enum types are present in the `unified` and `internal` scopes. `user` and `api-key` carry subsets of them.
+
+| Enum type | Old → new (example) | # constants |
+|---|---|---|
+| `AuthEmailLoginTypeType` | `UNSPECIFIED_EMAIL_LOGIN_TYPE` → `AUTHEMAILLOGINTYPETYPE_UNSPECIFIED_EMAIL_LOGIN_TYPE` | 3 |
+| `AuthLoginTypeType` | `UNSPECIFIED_LOGIN_TYPE` → `AUTHLOGINTYPETYPE_UNSPECIFIED_LOGIN_TYPE` | 15 |
+| `AuthUserReportState` | `USER_REPORT_STATE_UNSPECIFIED` → `AUTHUSERREPORTSTATE_USER_REPORT_STATE_UNSPECIFIED` | 4 |
+| `GameServerFleetsGameServerState` | `UNKNOWN` → `GAMESERVERFLEETSGAMESERVERSTATE_UNKNOWN` | 4 |
+| `GameServerState` | `UNSPECIFIED_STATE` → `GAMESERVERSTATE_UNSPECIFIED_STATE` | 8 |
+| `GuildsMembershipRequestStatus` | `MEMBERSHIP_REQUEST_STATUS_UNKNOWN` → `GUILDSMEMBERSHIPREQUESTSTATUS_MEMBERSHIP_REQUEST_STATUS_UNKNOWN` | 4 |
+| `InboxReceiverType` | `DEFAULT` → `INBOXRECEIVERTYPE_DEFAULT` | 6 |
+| `InventoryUnlockCostType` | `UNSPECIFIED_TYPE` → `INVENTORYUNLOCKCOSTTYPE_UNSPECIFIED_TYPE` | 4 |
+| `LobbiesLobbyAccessibility` | `ACCESSIBILITY_UNKNOWN` → `LOBBIESLOBBYACCESSIBILITY_ACCESSIBILITY_UNKNOWN` | 6 |
+| `LobbiesLobbyVisibility` | `VISIBILITY_UNKNOWN` → `LOBBIESLOBBYVISIBILITY_VISIBILITY_UNKNOWN` | 3 |
+| `LobbiesPlacementStrategy` | `UNKNOWN_PLACEMENT_STRATEGY` → `LOBBIESPLACEMENTSTRATEGY_UNKNOWN_PLACEMENT_STRATEGY` | 3 |
+| `MatchmakingMatchDataStatus` | `UNKNOWN_STATUS` → `MATCHMAKINGMATCHDATASTATUS_UNKNOWN_STATUS` | 3 |
+| `NotificationsNotificationChannel` | `NOTIFICATION_CHANNEL_UNSPECIFIED` → `NOTIFICATIONSNOTIFICATIONCHANNEL_NOTIFICATION_CHANNEL_UNSPECIFIED` | 4 |
+| `PartiesPartyStatus` | `PARTY_STATUS_UNKNOWN` → `PARTIESPARTYSTATUS_PARTY_STATUS_UNKNOWN` | 4 |
+| `PartiesPartyVisibility` | `PARTY_VISIBILITY_UNKNOWN` → `PARTIESPARTYVISIBILITY_PARTY_VISIBILITY_UNKNOWN` | 5 |
+| `PartiesRequestChannel` | `REQUEST_CHANNEL_UNKNOWN` → `PARTIESREQUESTCHANNEL_REQUEST_CHANNEL_UNKNOWN` | 1 |
+| `PartiesRequestStatus` | `REQUEST_STATUS_UNKNOWN` → `PARTIESREQUESTSTATUS_REQUEST_STATUS_UNKNOWN` | 4 |
+| `SearchFieldOperator` | `UNSPECIFIED_OPERATOR` → `SEARCHFIELDOPERATOR_UNSPECIFIED_OPERATOR` | 4 |
+| `TrackablesRewardGrantStatusStatus` | `UNKNOWN_STATUS` → `TRACKABLESREWARDGRANTSTATUSSTATUS_UNKNOWN_STATUS` | 5 |
+| `UpdateUserStreakInfoOutcome` | `UNKNOWN_OUTCOME` → `UPDATEUSERSTREAKINFOOUTCOME_UNKNOWN_OUTCOME` | 8 |
+| `UserMessageReadStatus` | `UNSPECIFIED_STATUS` → `USERMESSAGEREADSTATUS_UNSPECIFIED_STATUS` | 3 |
+
+### Admin SDK Go enum renames
+
+These 11 enum types cover 48 renamed constants.
+
+| Enum type | Old → new (example) | # constants |
+|---|---|---|
+| `AuthApiKeyState` | `API_KEY_STATE_ENABLED` → `AUTHAPIKEYSTATE_API_KEY_STATE_ENABLED` | 6 |
+| `FleetDeploymentFleetDeploymentStatus` | `DEPLOYING` → `FLEETDEPLOYMENTFLEETDEPLOYMENTSTATUS_DEPLOYING` | 6 |
+| `GameServerFleetsFleetStatus` | `LIVE` → `GAMESERVERFLEETSFLEETSTATUS_LIVE` | 5 |
+| `GameServerState` | `READY` → `GAMESERVERSTATE_READY` | 8 |
+| `InventoryUnlockCostType` | `ITEM` → `INVENTORYUNLOCKCOSTTYPE_ITEM` | 4 |
+| `KeySearchableType` | `PRIMARY` → `KEYSEARCHABLETYPE_PRIMARY` | 3 |
+| `MatchmakingAutoExpansionStrategy` | `AUTO_EXPANSION_BALANCED` → `MATCHMAKINGAUTOEXPANSIONSTRATEGY_AUTO_EXPANSION_BALANCED` | 4 |
+| `MatchmakingExpansionFormationStrategy` | `BALANCED` → `MATCHMAKINGEXPANSIONFORMATIONSTRATEGY_BALANCED` | 4 |
+| `MatchmakingTeamFormationStrategy` | `TEAM_FORMATION_ALTERNATE` → `MATCHMAKINGTEAMFORMATIONSTRATEGY_TEAM_FORMATION_ALTERNATE` | 3 |
+| `QueuesActionType` | `ACTION_TYPE_EMIT` → `QUEUESACTIONTYPE_ACTION_TYPE_EMIT` | 3 |
+| `QueuesQueueType` | `QUEUE_TYPE_FIFO` → `QUEUESQUEUETYPE_QUEUE_TYPE_FIFO` | 2 |

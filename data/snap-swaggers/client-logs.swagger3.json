@@ -1,0 +1,72 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Service to enable send client logs",
+    "title" : "Client Logs",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "ClientLogsService"
+  } ],
+  "paths" : {
+    "/v1/client-logs/entry" : {
+      "post" : {
+        "description" : "Creates a log entry for client logs",
+        "operationId" : "CreateEntry",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/client_logsCreateEntryRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Log",
+        "tags" : [ "ClientLogsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "client_logsCreateEntryRequest" : {
+        "properties" : {
+          "log_level" : {
+            "description" : "Log level of the message. Supported levels are debug, info, warn, error",
+            "enum" : [ "debug", "info", "warn", "error" ],
+            "type" : "string"
+          },
+          "msg" : {
+            "description" : "Message to be logged",
+            "type" : "string"
+          }
+        },
+        "required" : [ "log_level", "msg" ],
+        "type" : "object"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

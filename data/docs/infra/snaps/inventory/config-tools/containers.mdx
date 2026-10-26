@@ -1,0 +1,53 @@
+# Inventory Containers
+This tool allows you to create, update, and delete containers. You can also view all the containers in the catalog.
+
+To get started:
+1. Click on Inventory > Containers from the side Nav.
+2. Click on the Add Container button.
+
+## Container Item Details
+- **Name**: The name of the item. This should be an alphanumeric string.
+- **Display Name**: The display name of the item. This will be the user facing name of the item.
+- **Description**: An optional description of the item.
+
+## Container Categorization
+- **Class Name**: The class name of the item. This is used to categorize the item.
+- **Tags**: Tags to categorize the item. This is a comma separated list of strings.
+- **Metadata**: Additional metadata for the item. This is a JSON object.
+
+## Container Instances
+- **Instance Limit**: This is the maximum number of instances of this container that a user can have in their inventory. For example, if you want a container to be unique, you can set the limit to 1. If you want a user to be able to have multiple instances of the same container, you can set the instance limit to a higher number. If you want to allow unlimited containers of the item, you can set the instance limit to 0.
+
+## Sub-Inventory Container Instances
+- **Per Sub-Inventory Instance Limit**: This is the maximum number of instances of this container that a user can have within a single sub-inventory. Unlike the global instance limit, this limit only counts containers within the specific sub-inventory being granted to. Use 0 for unlimited.
+
+## Container Consumption
+- **Behavior**: This can be stackable or durable. Consumable items are used up after a single use.
+  Durable items can be used multiple times. Consumable items can also be stackable. Stackable items
+  occupy a single slot in the inventory. Items can also be marked as tradable.
+
+## Container Pricing
+- **Pricing behavior**: Items can be purchasable or non-purchasable. Purchasable items can be bought by the player using virtual currencies. If you mark an item as purchasable, you need to set the price of the currency in which the item can be bought.
+Optionally, discounts can be applied to each purchase price of the container, with a strategy to select either the best or worst discount. You can also set a floor price, ensuring the discounted price does not fall below this value.
+
+## Container Items
+This will be one or more of the following:
+- **Items**: Items that the container can contain.
+- **Currency**: Virtual currencies that the container can contain.
+- **Drop Tables**: Drop tables that the container can contain.
+
+## Container Unlock
+This will be one or more of the following:
+- **Items**: Items that will be consumed to unlock the container.
+- **Currency**: Virtual currencies that will be consumed to unlock the container.
+- **Energy**: Energy that will be consumed to unlock the container.
+
+Optionally, discounts can be applied to each unlock cost of the container, with a strategy to select either the best or worst discount. You can also set a floor price, ensuring the discounted price does not fall below this value.
+<Note>
+If you have multiple items added to be used for unlock, any one of them will be used to unlock the container. Essentially it is an OR operation.
+</Note>
+
+## Container Expiration
+- **Time to Live**: This is the time in seconds after which the item will be removed from the user's inventory.
+
+![Admin Container](/images/docs/inventory-container-2.png)

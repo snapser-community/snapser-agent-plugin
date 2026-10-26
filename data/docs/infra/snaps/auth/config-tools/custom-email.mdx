@@ -1,0 +1,28 @@
+# Custom Email Template
+Custom email templates allow you to personalize verification emails sent to your users as
+part of email auth. You can customize the content and design of the emails to match your game branding. You can setup templates for the following:
+1. Email Login: Email sent with a OTP to the user.
+2. Email Verification: Email sent to the user when they verify their email address.
+3. Account Recovery: Email sent to the user when they request a password reset.
+
+To get started:
+1. Click on **Email Setup** from the side Nav
+2. Pick the email template you want to update.
+
+## Requirement
+Each template needs some mandatory placeholders:
+
+- `{{.OTP}}`: This placeholder will be replaced with the actual OTP.
+- `{{.TTL}}`: This placeholder will be replaced with the time duration until the OTP remains valid.
+
+![Custom Template Admin](/images/docs/auth-custom-template.png)
+
+## Template Setup
+The template setup takes the following inputs
+1. <u>Sender</u> - This is the sender email address. Note that you need to verify your sender
+   with Snapser. Please reach out to support to get your process started. It can take up to
+   24 hours for us to activate your custom sender address.
+2. <u>Subject</u> - Subject line for your email. Please be careful when selecting your subject line. Many email providers may mark emails as spam based on the subject line.
+3. <u>Template</u> - This is the actual body of the email. It should be noted that Snapser requires
+   the template to have `{{.OTP}} and {{.TTL}}`in your template. Snapser uses these variables
+   in the template to populate the one-time-password and expiry at runtime.

@@ -1,0 +1,39 @@
+# beta-0.41.0
+##### October 31, 2024
+
+## Breaking Changes
+- **Snapctl**: Snapend download command now takes new required parameters. This was done to support the new internal SDK useful for BYOSnaps.
+
+## Snaps
+### Batch APIs
+- Added batch APIs in Trackables, Statistics, Storage and Leaderboards.
+
+### Matchmaking
+- Team formation information is now forwarded to the Lobbies.
+- Matchmaker forwards geo allocation details to the lobby.
+
+### Parties
+- Parties now kicks players on disconnect.
+
+## Web App
+- **BYOSnap Tool Builder**: We have added a new tool to the Snaps section called the BYOSnap Tool Builder. This tool allows you to create a configuration tool for your BYOSnap. This tool will allow you to create a form that will be rendered in your BYOSnap. Additionally, it will also allow you to view and save the configuration.
+- **SDK**: Snapser now exports an SDK for BYOSnap to Snapend snaps communication (internal). This SDK is BYOSnap specific and is available for download from the Snapend Downloads tool.
+- **Logs Tool**: Logs tool lifted the requirement to have at least one label. Now you can have view all Snapend and fleet logs without any labels.
+- **UX improvements**: We shipped quite a lot of UX improvements across the Snapser web app. This includes font sizing consistency, content alignment, and color contrast.
+
+## Snapctl - CLI Tool
+- **Sync** command: Snapctl now supports a new `sync` command. This command allows you to do a
+  one click BYOSnap deploy to your backend as well as BYOGs deploy to your game server fleets.
+
+## Bug Fixes
+- **Storage**: CAS value for a Delete blob call is now optional.
+- **Web App**: Snapser blogs page now renders properly on mobile devices.
+- **Social graph**: Social graph now checks for a friend request before allowing users to add friends.
+- **Experiments**: Experiment review tool now shows the correct variants.
+- **Matchmaking**: Updated the Team Formation algorithm to balance players across teams as they're being formed, fixing scenarios where matches weren't being formed due to lopsided teams.
+- **General**: Snapend update command from the CLI tool now gets added to the Audit history.
+
+## Documentation
+- Updated the documentation UX and Navigation for better readability.
+- Added documentation for Snapser's internal SDK.
+- Added documentation for the new BYOSnap configuration tool creator.

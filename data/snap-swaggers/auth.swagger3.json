@@ -1,0 +1,2721 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Authentication in a snapser cluster",
+    "title" : "Authentication and Users",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "AuthService"
+  } ],
+  "paths" : {
+    "/v1/auth/admissions-queue/consume-rate" : {
+      "get" : {
+        "description" : "Returns whether the admissions queue is enabled, the max_rate backstop, and the current consume_rate.",
+        "operationId" : "GetAdmissionsQueueConsumeRate",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authGetAdmissionsQueueConsumeRateResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Admission Queue",
+        "tags" : [ "AuthService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Updates the admissions queue consume_rate (capped at max_rate). Broadcasts a rate-changed event to connected users when the value changes.",
+        "operationId" : "UpdateAdmissionsQueueConsumeRate",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authUpdateAdmissionsQueueConsumeRateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Admission Queue",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/app-verify/{type}" : {
+      "get" : {
+        "description" : "Verifies the session token and returns appropriate response based on the type",
+        "operationId" : "AppVerify",
+        "parameters" : [ {
+          "description" : "Type of app trying to verify the session token. Only acceptable value is 'photon'",
+          "explode" : false,
+          "in" : "path",
+          "name" : "type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Session token of the user",
+          "explode" : true,
+          "in" : "query",
+          "name" : "session_token",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Shared secret used to verify the request",
+          "explode" : true,
+          "in" : "query",
+          "name" : "client_secret",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/apiHttpBody"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Token",
+        "tags" : [ "AuthService" ],
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/apple/app/login" : {
+      "put" : {
+        "description" : "Logs in the user based on the apple credential token from native-app Sign in with Apple and returns a session",
+        "operationId" : "AppleAppLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authAppleAppLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authAppleAppLoginResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Apple Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/apple/web/login" : {
+      "put" : {
+        "description" : "Logs in the user based on the apple credential token from web-based Sign in with Apple and returns a session",
+        "operationId" : "AppleWebLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authAppleWebLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authAppleWebLoginResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Apple Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/associate-logins" : {
+      "put" : {
+        "description" : "Associates two logins based on their session tokens",
+        "operationId" : "AssociateLogins",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authAssociateLoginsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authAssociateLoginsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Associate Multiple Logins",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/change-email" : {
+      "post" : {
+        "description" : "Starts a login email change for the calling user and sends a verification code to the new email address",
+        "operationId" : "InitiateChangeEmail",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authInitiateChangeEmailRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Change Email",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user" ]
+      },
+      "put" : {
+        "description" : "Confirms the login email change using the verification code sent to the new email address",
+        "operationId" : "ConfirmChangeEmail",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authConfirmChangeEmailRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authConfirmChangeEmailResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Change Email",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user" ]
+      }
+    },
+    "/v1/auth/discord/login" : {
+      "put" : {
+        "description" : "Logs in the user based on the discord token specified and returns a session",
+        "operationId" : "DiscordLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authDiscordLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authDiscordLoginResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Discord Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/email-password/account-recovery" : {
+      "post" : {
+        "description" : "Sends an email to the user for account recovery",
+        "operationId" : "RecoverEmailAccount",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authRecoverEmailAccountRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Email Password Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/email-password/login" : {
+      "put" : {
+        "description" : "Logs in the user based on the email and password specified and returns a session",
+        "operationId" : "EmailPasswordLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authEmailPasswordLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authEmailPasswordLoginResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Email Password Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/email-password/password" : {
+      "put" : {
+        "description" : "Updates the email and password of the user",
+        "operationId" : "UpdateEmailPassword",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authUpdateEmailPasswordRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Email Password Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/email-password/verification" : {
+      "post" : {
+        "description" : "Verifies the email and returns a session",
+        "operationId" : "VerifyEmail",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authVerifyEmailRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authVerifyEmailResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Email Password Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/login/anon" : {
+      "put" : {
+        "description" : "Logs in the user with an arbitrary identifier specified and returns a session",
+        "operationId" : "AnonLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authAnonLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authAnonLoginResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Anonymous Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/login/apple" : {
+      "put" : {
+        "deprecated" : true,
+        "description" : "Deprecated. Alias of Apple App Login (uses the app credential set). Use AppleAppLogin or AppleWebLogin instead. Logs in the user based on the apple credential token specified and returns a session",
+        "operationId" : "AppleLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authAppleLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authAppleLoginResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Apple Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/login/email" : {
+      "put" : {
+        "description" : "Logs in the user based on the email and OTP specified and returns a session",
+        "operationId" : "EmailLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authEmailLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authEmailLoginResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Email Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/login/epic" : {
+      "put" : {
+        "description" : "Logs in the user based on the epic credentials specified and returns a session",
+        "operationId" : "EpicLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authEpicLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authEpicLoginResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Epic Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/login/facebook" : {
+      "put" : {
+        "description" : "Logs in the user based on the facebook credential token specified and returns a session",
+        "operationId" : "FacebookLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authFacebookLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authFacebookLoginResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Facebook Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/login/google" : {
+      "put" : {
+        "description" : "Logs in the user based on the google credential token specified and returns a session",
+        "operationId" : "GoogleLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authGoogleLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authGoogleLoginResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Google Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/login/steam" : {
+      "put" : {
+        "deprecated" : true,
+        "description" : "Logs in the user based on the steam token specified and returns a session",
+        "operationId" : "SteamLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authSteamLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authSteamLoginResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Steam Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/login/xbox" : {
+      "put" : {
+        "description" : "Logs in the user based on the xbox token specified and returns a session",
+        "operationId" : "XboxLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authXboxLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authXboxLoginResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Xbox Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/logout/{token}" : {
+      "delete" : {
+        "description" : "Ends the current session of the user",
+        "operationId" : "Logout",
+        "parameters" : [ {
+          "description" : "Session token to logout",
+          "explode" : false,
+          "in" : "path",
+          "name" : "token",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Logout User",
+        "tags" : [ "AuthService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/otp" : {
+      "post" : {
+        "description" : "Generates an OTP and sends it to the email for logging in",
+        "operationId" : "Otp",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authOtpRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Email Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/queue/status" : {
+      "get" : {
+        "description" : "Retrieves the current admissions-queue status for the authenticated user",
+        "operationId" : "GetQueueStatus",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authQueueStatus"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Admission Queue",
+        "tags" : [ "AuthService" ],
+        "x-snapser-auth-types" : [ "user" ]
+      }
+    },
+    "/v1/auth/refresh" : {
+      "patch" : {
+        "description" : "Refreshes the session and returns a new session token with refreshed validity",
+        "operationId" : "Refresh",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authRefreshRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authRefreshResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Token",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/reports" : {
+      "post" : {
+        "description" : "File a moderation report against another user. The reporting_user_id must match the authenticated user. Subject to per-user rate limiting.",
+        "operationId" : "ReportUser",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authReportUserRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authReportUserResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Report User",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/settings/reports" : {
+      "get" : {
+        "description" : "List user reports with optional combined filters and offset/limit pagination.",
+        "operationId" : "ListUserReports",
+        "parameters" : [ {
+          "description" : "Optional state filter. Omit (or send UNSPECIFIED) for no filter.",
+          "explode" : true,
+          "in" : "query",
+          "name" : "state",
+          "required" : false,
+          "schema" : {
+            "default" : "USER_REPORT_STATE_UNSPECIFIED",
+            "enum" : [ "USER_REPORT_STATE_UNSPECIFIED", "USER_REPORT_STATE_UNPROCESSED", "USER_REPORT_STATE_PROCESSING", "USER_REPORT_STATE_RESOLVED" ],
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Optional category filter (exact match).",
+          "explode" : true,
+          "in" : "query",
+          "name" : "category",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Optional UserID filter for the reporter.",
+          "explode" : true,
+          "in" : "query",
+          "name" : "reporting_user_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Optional UserID filter for the reported user.",
+          "explode" : true,
+          "in" : "query",
+          "name" : "target_user_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Row offset for paging. Default 0.",
+          "explode" : true,
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Page size. Default 50, max 100. Pass 0 or omit for the default.",
+          "explode" : true,
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Optional assignee email filter (exact match).",
+          "explode" : true,
+          "in" : "query",
+          "name" : "assignee",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authListUserReportsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "List User Reports",
+        "tags" : [ "AuthService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/settings/reports/{id}" : {
+      "patch" : {
+        "description" : "Change a user report's state and/or notes. At least one of state or notes must be supplied.",
+        "operationId" : "UpdateUserReport",
+        "parameters" : [ {
+          "description" : "ID of the user report to update.",
+          "explode" : false,
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateUserReport_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authUpdateUserReportResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Update User Report",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/steam/openid/login" : {
+      "put" : {
+        "description" : "Logs in the user based on the steam open ID token specified and returns a session",
+        "operationId" : "SteamOpenIdLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authSteamOpenIdLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authSteamLoginResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Steam Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/steam/session-ticket/login" : {
+      "put" : {
+        "description" : "Logs in the user based on the steam session ticket specified and returns a session",
+        "operationId" : "SteamSessionTicketLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authSteamSessionTicketLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authSteamLoginResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Steam Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/user" : {
+      "get" : {
+        "description" : "Retrieves a user based on user_id",
+        "operationId" : "GetUser",
+        "parameters" : [ {
+          "description" : "UserID of the user, used if specified",
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Login ID of the user, used in conjunction with login_type if user_id is not specified",
+          "explode" : true,
+          "in" : "query",
+          "name" : "login_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Login type of the user",
+          "explode" : true,
+          "in" : "query",
+          "name" : "login_type",
+          "required" : false,
+          "schema" : {
+            "default" : "UNSPECIFIED_LOGIN_TYPE",
+            "enum" : [ "UNSPECIFIED_LOGIN_TYPE", "EMAIL", "PASSWORD", "ANON", "FACEBOOK", "GOOGLE", "APPLE", "STEAM", "XBOX", "EPIC", "APP", "DISCORD", "EMAIL_PASSWORD", "USERNAME_PASSWORD", "X" ],
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "If true, includes login IDs in the response",
+          "explode" : true,
+          "in" : "query",
+          "name" : "include_login_ids",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authGetUserResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Get User",
+        "tags" : [ "AuthService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/user/{id}/ban" : {
+      "put" : {
+        "description" : "Bans the user based on the user ID specified",
+        "operationId" : "AppBan",
+        "parameters" : [ {
+          "description" : "UserID of the user to be banned",
+          "explode" : false,
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Ban User",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/user/{id}/suspend" : {
+      "put" : {
+        "description" : "Suspends a user by their ID",
+        "operationId" : "SuspendUser",
+        "parameters" : [ {
+          "description" : "UserID of the user to be suspended",
+          "explode" : false,
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SuspendUser_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authSuspendUserResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Suspend User",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/user/{id}/unban" : {
+      "put" : {
+        "description" : "Unbans the user based on the user ID specified",
+        "operationId" : "AppUnban",
+        "parameters" : [ {
+          "description" : "UserID of the user to be unbanned",
+          "explode" : false,
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Unban User",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/username-password/availability" : {
+      "get" : {
+        "description" : "Checks if the username is available",
+        "operationId" : "GetUsernameAvailability",
+        "parameters" : [ {
+          "description" : "Username to check",
+          "explode" : true,
+          "in" : "query",
+          "name" : "username",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authGetUsernameAvailabilityResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Username Password Login",
+        "tags" : [ "AuthService" ],
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/username-password/login" : {
+      "put" : {
+        "description" : "Logs in the user based on the username and password specified and returns a session",
+        "operationId" : "UsernamePasswordLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authUsernamePasswordLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authUsernamePasswordLoginResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Username Password Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/username-password/password" : {
+      "put" : {
+        "description" : "Updates the username and password of the user",
+        "operationId" : "UpdateUsernamePassword",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authUpdateUsernamePasswordRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Username Password Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/users" : {
+      "get" : {
+        "description" : "Get UserIDs by login IDs and login types",
+        "operationId" : "GetUserIdsByLoginIds",
+        "parameters" : [ {
+          "description" : "Comma separated login IDs of the user to be retrieved",
+          "explode" : true,
+          "in" : "query",
+          "name" : "login_ids",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Login type to search by. Values must be one of 'email', 'anon', 'apple', 'facebook', 'google', 'steam', 'xbox', 'epic'",
+          "explode" : true,
+          "in" : "query",
+          "name" : "login_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authGetUserIdsByLoginIdsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Get User Ids",
+        "tags" : [ "AuthService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/users/search" : {
+      "get" : {
+        "description" : "Search users by id or any connector login id. Supports EQUALS / NOT_EQUALS / LIKE / NOT_LIKE with offset/limit paging. If no filter is supplied, returns the newest users by created_at.",
+        "operationId" : "SearchUsers",
+        "parameters" : [ {
+          "description" : "Optional field to filter on. One of 'id', 'email', 'anon', 'apple', 'google', 'facebook', 'steam', 'xbox', 'epic', 'discord', 'x', 'username_password', 'email_password'. Value is optional in all cases — if omitted, returns all users (when key is 'id' or unset) or all users with the given login type. Operator is required only when value is set.",
+          "explode" : true,
+          "in" : "query",
+          "name" : "key",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Operator. EQUALS / NOT_EQUALS = exact match. LIKE / NOT_LIKE = case-insensitive substring (ILIKE %value%).",
+          "explode" : true,
+          "in" : "query",
+          "name" : "operator",
+          "required" : false,
+          "schema" : {
+            "default" : "SEARCH_USERS_OPERATOR_UNSPECIFIED",
+            "enum" : [ "SEARCH_USERS_OPERATOR_UNSPECIFIED", "SEARCH_USERS_OPERATOR_EQUALS", "SEARCH_USERS_OPERATOR_NOT_EQUALS", "SEARCH_USERS_OPERATOR_CONTAINS", "SEARCH_USERS_OPERATOR_NOT_CONTAINS", "SEARCH_USERS_OPERATOR_STARTS_WITH", "SEARCH_USERS_OPERATOR_ENDS_WITH" ],
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Value to compare against. Pass the raw value — standard query-string encoding is applied by the HTTP client, and the server does not unescape a second time. Optional — when omitted, value is not filtered (key='id' with empty value behaves the same as no key; a login-type key with empty value returns all users of that login type).",
+          "explode" : true,
+          "in" : "query",
+          "name" : "value",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Row offset for paging. Default 0.",
+          "explode" : true,
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Page size. Default 100, max 100. Pass 0 or omit for the default.",
+          "explode" : true,
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authSearchUsersResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Search Users",
+        "tags" : [ "AuthService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/users/{user_id}/change-email" : {
+      "put" : {
+        "description" : "Changes a user's login email without OTP verification; api-key/internal callers only",
+        "operationId" : "AdminChangeEmail",
+        "parameters" : [ {
+          "description" : "UserID of the user whose login email is being changed",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdminChangeEmail_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authAdminChangeEmailResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Change Email",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/users/{user_id}/disassociation" : {
+      "post" : {
+        "description" : "Disassociates the specified login from a user",
+        "operationId" : "DisassociateLogin",
+        "parameters" : [ {
+          "description" : "UserID of the user to be unbanned",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DisassociateLogin_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authDisassociateLoginResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Disassociate",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/validate" : {
+      "post" : {
+        "description" : "Validates the session of the user and returns the user info",
+        "operationId" : "Validate",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authValidateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authValidateResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Token",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/x/login" : {
+      "put" : {
+        "description" : "Logs in the user based on the X login credentials specified and returns a session",
+        "operationId" : "XLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authXLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authXLoginResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "X Login",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "AdminChangeEmail_request" : {
+        "properties" : {
+          "login_type" : {
+            "$ref" : "#/components/schemas/authEmailLoginTypeType"
+          },
+          "new_email" : {
+            "description" : "New email address to use for login",
+            "type" : "string"
+          }
+        },
+        "required" : [ "login_type", "new_email" ],
+        "type" : "object"
+      },
+      "DisassociateLogin_request" : {
+        "properties" : {
+          "login_type" : {
+            "$ref" : "#/components/schemas/authLoginTypeType"
+          }
+        },
+        "required" : [ "login_type" ],
+        "type" : "object"
+      },
+      "SuspendUser_request" : {
+        "properties" : {
+          "suspend_for" : {
+            "description" : "Duration in seconds for which the user should be suspended",
+            "format" : "uint64",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "suspend_for" ],
+        "type" : "object"
+      },
+      "UpdateUserReport_request" : {
+        "properties" : {
+          "assignee" : {
+            "description" : "Replacement assignee email. Omit/null to leave unchanged. Pass \"\" to clear (unassign). Max 255 chars.",
+            "type" : "string"
+          },
+          "notes" : {
+            "description" : "Replacement notes. Omit/empty to leave notes unchanged. Max 8192 chars. Replaces (does not append) existing notes.",
+            "type" : "string"
+          },
+          "state" : {
+            "$ref" : "#/components/schemas/authUserReportState"
+          }
+        },
+        "type" : "object"
+      },
+      "apiHttpBody" : {
+        "description" : "Message that represents an arbitrary HTTP body. It should only be used for\npayload formats that can't be represented as JSON, such as raw binary or\nan HTML page.\n\n\nThis message can be used both in streaming and non-streaming API methods in\nthe request as well as the response.\n\nIt can be used as a top-level request field, which is convenient if one\nwants to extract parameters from either the URL or HTTP template into the\nrequest fields and also want access to the raw HTTP body.\n\nExample:\n\n    message GetResourceRequest {\n      // A unique request id.\n      string request_id = 1;\n\n      // The raw HTTP body is bound to this field.\n      google.api.HttpBody http_body = 2;\n\n    }\n\n    service ResourceService {\n      rpc GetResource(GetResourceRequest)\n        returns (google.api.HttpBody);\n      rpc UpdateResource(google.api.HttpBody)\n        returns (google.protobuf.Empty);\n\n    }\n\nExample with streaming methods:\n\n    service CaldavService {\n      rpc GetCalendar(stream google.api.HttpBody)\n        returns (stream google.api.HttpBody);\n      rpc UpdateCalendar(stream google.api.HttpBody)\n        returns (stream google.api.HttpBody);\n\n    }\n\nUse of this type only changes how the request and response bodies are\nhandled, all other features will continue to work unchanged.",
+        "properties" : {
+          "content_type" : {
+            "description" : "The HTTP Content-Type header value specifying the content type of the body.",
+            "type" : "string"
+          },
+          "data" : {
+            "description" : "The HTTP request/response body as raw binary.",
+            "format" : "byte",
+            "pattern" : "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+            "type" : "string"
+          },
+          "extensions" : {
+            "description" : "Application specific response metadata. Must be set in the first response\nfor streaming APIs.",
+            "items" : {
+              "$ref" : "#/components/schemas/protobufAny"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "authAdminChangeEmailResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authAnonLoginRequest" : {
+        "properties" : {
+          "create_user" : {
+            "description" : "Whether to create a user, if it does not exist",
+            "type" : "boolean"
+          },
+          "login_metadata" : {
+            "$ref" : "#/components/schemas/authLoginMetadata"
+          },
+          "username" : {
+            "description" : "User's login ID",
+            "type" : "string"
+          }
+        },
+        "required" : [ "username" ],
+        "type" : "object"
+      },
+      "authAnonLoginResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authAppleAppLoginRequest" : {
+        "properties" : {
+          "create_user" : {
+            "description" : "Whether to create a user, if it does not exist",
+            "type" : "boolean"
+          },
+          "login_metadata" : {
+            "$ref" : "#/components/schemas/authLoginMetadata"
+          },
+          "token" : {
+            "description" : "Apple token generated on the client",
+            "type" : "string"
+          }
+        },
+        "required" : [ "token" ],
+        "type" : "object"
+      },
+      "authAppleAppLoginResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authAppleLoginRequest" : {
+        "properties" : {
+          "create_user" : {
+            "description" : "Whether to create a user, if it does not exist",
+            "type" : "boolean"
+          },
+          "login_metadata" : {
+            "$ref" : "#/components/schemas/authLoginMetadata"
+          },
+          "token" : {
+            "description" : "Apple token generated on the client",
+            "type" : "string"
+          }
+        },
+        "required" : [ "token" ],
+        "type" : "object"
+      },
+      "authAppleLoginResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authAppleWebLoginRequest" : {
+        "properties" : {
+          "create_user" : {
+            "description" : "Whether to create a user, if it does not exist",
+            "type" : "boolean"
+          },
+          "login_metadata" : {
+            "$ref" : "#/components/schemas/authLoginMetadata"
+          },
+          "token" : {
+            "description" : "Apple token generated on the client",
+            "type" : "string"
+          }
+        },
+        "required" : [ "token" ],
+        "type" : "object"
+      },
+      "authAppleWebLoginResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authAssociateLoginsRequest" : {
+        "properties" : {
+          "discard_user_token" : {
+            "description" : "Token of the user to discard",
+            "type" : "string"
+          },
+          "keep_user_token" : {
+            "description" : "Token of the user to keep",
+            "type" : "string"
+          }
+        },
+        "required" : [ "discard_user_token", "keep_user_token" ],
+        "type" : "object"
+      },
+      "authAssociateLoginsResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authConfirmChangeEmailRequest" : {
+        "properties" : {
+          "login_type" : {
+            "$ref" : "#/components/schemas/authEmailLoginTypeType"
+          },
+          "new_email" : {
+            "description" : "New email address to use for login; must match the initiated change",
+            "type" : "string"
+          },
+          "verification_code" : {
+            "description" : "Verification code received at the new email address",
+            "type" : "string"
+          }
+        },
+        "required" : [ "login_type", "new_email", "verification_code" ],
+        "type" : "object"
+      },
+      "authConfirmChangeEmailResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authDisassociateLoginResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authDiscordLoginRequest" : {
+        "properties" : {
+          "access_token" : {
+            "description" : "Discord access token generated on the client. One of code or access_token is required",
+            "type" : "string"
+          },
+          "code" : {
+            "description" : "Discord code generated on the client. One of code or access_token is required",
+            "type" : "string"
+          },
+          "create_user" : {
+            "description" : "Whether to create a user, if it does not exist",
+            "type" : "boolean"
+          },
+          "login_metadata" : {
+            "$ref" : "#/components/schemas/authLoginMetadata"
+          }
+        },
+        "type" : "object"
+      },
+      "authDiscordLoginResponse" : {
+        "properties" : {
+          "access_token" : {
+            "type" : "string"
+          },
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authEmailLoginRequest" : {
+        "properties" : {
+          "create_user" : {
+            "description" : "Whether to create a user, if it does not exist",
+            "type" : "boolean"
+          },
+          "email" : {
+            "description" : "Email address used as login",
+            "type" : "string"
+          },
+          "login_metadata" : {
+            "$ref" : "#/components/schemas/authLoginMetadata"
+          },
+          "otp" : {
+            "description" : "OTP code received by the user",
+            "type" : "string"
+          }
+        },
+        "required" : [ "email", "otp" ],
+        "type" : "object"
+      },
+      "authEmailLoginResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authEmailLoginTypeType" : {
+        "default" : "UNSPECIFIED_EMAIL_LOGIN_TYPE",
+        "enum" : [ "UNSPECIFIED_EMAIL_LOGIN_TYPE", "EMAIL", "EMAIL_PASSWORD" ],
+        "type" : "string"
+      },
+      "authEmailPasswordLoginRequest" : {
+        "properties" : {
+          "create_user" : {
+            "description" : "Whether to create a user, if it does not exist",
+            "type" : "boolean"
+          },
+          "email" : {
+            "description" : "Email address used as login",
+            "type" : "string"
+          },
+          "login_metadata" : {
+            "$ref" : "#/components/schemas/authLoginMetadata"
+          },
+          "password" : {
+            "description" : "Password used for login",
+            "type" : "string"
+          }
+        },
+        "required" : [ "email", "password" ],
+        "type" : "object"
+      },
+      "authEmailPasswordLoginResponse" : {
+        "properties" : {
+          "email_verification_required" : {
+            "description" : "Whether email verification is required or not",
+            "type" : "boolean"
+          },
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authEpicLoginRequest" : {
+        "properties" : {
+          "code" : {
+            "description" : "code generated on the client",
+            "type" : "string"
+          },
+          "create_user" : {
+            "description" : "Whether to create a user, if it does not exist",
+            "type" : "boolean"
+          },
+          "exchange_code" : {
+            "description" : "exchange_code generated on the client",
+            "type" : "string"
+          },
+          "grant_type" : {
+            "description" : "token generated on the client",
+            "type" : "string"
+          },
+          "login_metadata" : {
+            "$ref" : "#/components/schemas/authLoginMetadata"
+          },
+          "password" : {
+            "description" : "exchange_code generated on the client",
+            "type" : "string"
+          },
+          "username" : {
+            "description" : "exchange_code generated on the client",
+            "type" : "string"
+          }
+        },
+        "required" : [ "grant_type" ],
+        "type" : "object"
+      },
+      "authEpicLoginResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authFacebookLoginRequest" : {
+        "properties" : {
+          "create_user" : {
+            "description" : "Whether to create a user, if it does not exist",
+            "type" : "boolean"
+          },
+          "login_metadata" : {
+            "$ref" : "#/components/schemas/authLoginMetadata"
+          },
+          "token" : {
+            "description" : "Facebook token generated on the client",
+            "type" : "string"
+          }
+        },
+        "required" : [ "token" ],
+        "type" : "object"
+      },
+      "authFacebookLoginResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authGetAdmissionsQueueConsumeRateResponse" : {
+        "properties" : {
+          "consume_rate" : {
+            "description" : "Current target admission rate in players/sec",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "enabled" : {
+            "description" : "Whether the admissions queue is enabled",
+            "type" : "boolean"
+          },
+          "max_rate" : {
+            "description" : "Ceiling admission rate in players/sec (hard backstop); consume_rate cannot exceed it",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "authGetUserIdsByLoginIdsResponse" : {
+        "properties" : {
+          "user_ids" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "authGetUserResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authGetUsernameAvailabilityResponse" : {
+        "properties" : {
+          "available" : {
+            "description" : "Whether the username is available or not",
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "authGoogleLoginRequest" : {
+        "properties" : {
+          "create_user" : {
+            "description" : "Whether to create a user, if it does not exist",
+            "type" : "boolean"
+          },
+          "login_metadata" : {
+            "$ref" : "#/components/schemas/authLoginMetadata"
+          },
+          "token" : {
+            "description" : "Google IDtoken generated on the client",
+            "type" : "string"
+          }
+        },
+        "required" : [ "token" ],
+        "type" : "object"
+      },
+      "authGoogleLoginResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authInitiateChangeEmailRequest" : {
+        "properties" : {
+          "login_type" : {
+            "$ref" : "#/components/schemas/authEmailLoginTypeType"
+          },
+          "new_email" : {
+            "description" : "New email address to use for login",
+            "type" : "string"
+          }
+        },
+        "required" : [ "login_type", "new_email" ],
+        "type" : "object"
+      },
+      "authListUserReportsResponse" : {
+        "properties" : {
+          "has_more" : {
+            "type" : "boolean"
+          },
+          "reports" : {
+            "items" : {
+              "$ref" : "#/components/schemas/authUserReport"
+            },
+            "type" : "array"
+          },
+          "total_count" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "authLoginId" : {
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/authLoginTypeType"
+          }
+        },
+        "type" : "object"
+      },
+      "authLoginMetadata" : {
+        "properties" : {
+          "agent" : {
+            "type" : "string"
+          },
+          "device" : {
+            "type" : "string"
+          },
+          "location" : {
+            "type" : "string"
+          },
+          "platform" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "authLoginTypeType" : {
+        "default" : "UNSPECIFIED_LOGIN_TYPE",
+        "enum" : [ "UNSPECIFIED_LOGIN_TYPE", "EMAIL", "PASSWORD", "ANON", "FACEBOOK", "GOOGLE", "APPLE", "STEAM", "XBOX", "EPIC", "APP", "DISCORD", "EMAIL_PASSWORD", "USERNAME_PASSWORD", "X" ],
+        "type" : "string"
+      },
+      "authOtpRequest" : {
+        "properties" : {
+          "email" : {
+            "description" : "Email address to send OTP to",
+            "type" : "string"
+          },
+          "validate_user_exists" : {
+            "description" : "If set to true, OTP won't be sent if user doesn't exist",
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "email" ],
+        "type" : "object"
+      },
+      "authQueueStatus" : {
+        "description" : "QueueStatus is a point-in-time snapshot of a user's place in the admission\nqueue. Returned by GetQueueStatus and embedded in the login response.",
+        "properties" : {
+          "admitted" : {
+            "description" : "Whether the user has been admitted (holds an admission grant)",
+            "type" : "boolean"
+          },
+          "enabled" : {
+            "description" : "Whether the admissions queue is enabled",
+            "type" : "boolean"
+          },
+          "estimated_wait_seconds" : {
+            "description" : "Estimated wait in seconds: position / observed_rate (0 if rate ~0)",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "observed_rate" : {
+            "description" : "Measured admission rate in players/sec",
+            "format" : "double",
+            "type" : "number"
+          },
+          "position" : {
+            "description" : "The user's live position in line (1 = next to be admitted; 0 if not enrolled)",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "authRecoverEmailAccountRequest" : {
+        "properties" : {
+          "email" : {
+            "description" : "Email address to recover",
+            "type" : "string"
+          }
+        },
+        "required" : [ "email" ],
+        "type" : "object"
+      },
+      "authRefreshRequest" : {
+        "properties" : {
+          "login_metadata" : {
+            "$ref" : "#/components/schemas/authLoginMetadata"
+          },
+          "session_token" : {
+            "description" : "Session token to refresh",
+            "type" : "string"
+          }
+        },
+        "required" : [ "session_token" ],
+        "type" : "object"
+      },
+      "authRefreshResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authReportUserRequest" : {
+        "properties" : {
+          "category" : {
+            "description" : "Customer-defined category for the report (e.g. 'harassment', 'cheating'). Max 50 chars.",
+            "type" : "string"
+          },
+          "complaint" : {
+            "description" : "Free-form complaint describing the incident. Max 4096 chars.",
+            "type" : "string"
+          },
+          "reporting_user_id" : {
+            "description" : "UserID of the user filing the report (must match the authenticated user).",
+            "type" : "string"
+          },
+          "target_user_id" : {
+            "description" : "UserID of the user being reported.",
+            "type" : "string"
+          }
+        },
+        "required" : [ "category", "complaint", "reporting_user_id", "target_user_id" ],
+        "type" : "object"
+      },
+      "authReportUserResponse" : {
+        "properties" : {
+          "report" : {
+            "$ref" : "#/components/schemas/authUserReport"
+          }
+        },
+        "type" : "object"
+      },
+      "authSearchUsersOperator" : {
+        "default" : "SEARCH_USERS_OPERATOR_UNSPECIFIED",
+        "enum" : [ "SEARCH_USERS_OPERATOR_UNSPECIFIED", "SEARCH_USERS_OPERATOR_EQUALS", "SEARCH_USERS_OPERATOR_NOT_EQUALS", "SEARCH_USERS_OPERATOR_CONTAINS", "SEARCH_USERS_OPERATOR_NOT_CONTAINS", "SEARCH_USERS_OPERATOR_STARTS_WITH", "SEARCH_USERS_OPERATOR_ENDS_WITH" ],
+        "type" : "string"
+      },
+      "authSearchUsersResponse" : {
+        "properties" : {
+          "has_more" : {
+            "type" : "boolean"
+          },
+          "total_count" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "users" : {
+            "items" : {
+              "$ref" : "#/components/schemas/authUser"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "authSteamLoginRequest" : {
+        "properties" : {
+          "create_user" : {
+            "description" : "Whether to create a user, if it does not exist",
+            "type" : "boolean"
+          },
+          "login_metadata" : {
+            "$ref" : "#/components/schemas/authLoginMetadata"
+          },
+          "openid_parameters" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "Key value pairs of the openid parameters",
+            "type" : "object"
+          }
+        },
+        "required" : [ "openid_parameters" ],
+        "type" : "object"
+      },
+      "authSteamLoginResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authSteamOpenIdLoginRequest" : {
+        "properties" : {
+          "create_user" : {
+            "description" : "Whether to create a user, if it does not exist",
+            "type" : "boolean"
+          },
+          "login_metadata" : {
+            "$ref" : "#/components/schemas/authLoginMetadata"
+          },
+          "openid_parameters" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "Key value pairs of the openid parameters",
+            "type" : "object"
+          }
+        },
+        "required" : [ "openid_parameters" ],
+        "type" : "object"
+      },
+      "authSteamSessionTicketLoginRequest" : {
+        "properties" : {
+          "create_user" : {
+            "description" : "Whether to create a user, if it does not exist",
+            "type" : "boolean"
+          },
+          "identity" : {
+            "description" : "Identity string used to generate session ticket (if applicable)",
+            "type" : "string"
+          },
+          "login_metadata" : {
+            "$ref" : "#/components/schemas/authLoginMetadata"
+          },
+          "session_ticket" : {
+            "description" : "Session ticket generated on the client",
+            "type" : "string"
+          }
+        },
+        "required" : [ "session_ticket" ],
+        "type" : "object"
+      },
+      "authSuspendUserResponse" : {
+        "properties" : {
+          "suspended_until" : {
+            "description" : "Timestamp until which the user is suspended",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "authUpdateAdmissionsQueueConsumeRateRequest" : {
+        "properties" : {
+          "consume_rate" : {
+            "description" : "New target admission rate in players/sec; 0 <= consume_rate <= max_rate",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "authUpdateEmailPasswordRequest" : {
+        "properties" : {
+          "email" : {
+            "description" : "Email address to update",
+            "type" : "string"
+          },
+          "new_password" : {
+            "description" : "New password to be set",
+            "type" : "string"
+          },
+          "old_password" : {
+            "description" : "Old password to be verified. One of old_password or recovery_code is required",
+            "type" : "string"
+          },
+          "recovery_code" : {
+            "description" : "Recovery code received by the user. One of old_password or recovery_code is required",
+            "type" : "string"
+          }
+        },
+        "required" : [ "email", "new_password" ],
+        "type" : "object"
+      },
+      "authUpdateUserReportResponse" : {
+        "properties" : {
+          "report" : {
+            "$ref" : "#/components/schemas/authUserReport"
+          }
+        },
+        "type" : "object"
+      },
+      "authUpdateUsernamePasswordRequest" : {
+        "properties" : {
+          "new_password" : {
+            "description" : "New password to be set",
+            "type" : "string"
+          },
+          "old_password" : {
+            "description" : "Old password to be verified",
+            "type" : "string"
+          },
+          "username" : {
+            "description" : "User's login ID",
+            "type" : "string"
+          }
+        },
+        "required" : [ "new_password", "old_password", "username" ],
+        "type" : "object"
+      },
+      "authUser" : {
+        "properties" : {
+          "created" : {
+            "description" : "Whether user was created or not",
+            "type" : "boolean"
+          },
+          "created_at" : {
+            "description" : "Unix timestamp of when the user was created",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "first_login" : {
+            "description" : "Unix timestamp of when the user was first logged in",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "id" : {
+            "description" : "User ID for the user",
+            "type" : "string"
+          },
+          "is_banned" : {
+            "description" : "Whether user is banned or not",
+            "type" : "boolean"
+          },
+          "is_suspended" : {
+            "description" : "Whether user is suspended or not",
+            "type" : "boolean"
+          },
+          "is_verified" : {
+            "description" : "Whether user is verified or not",
+            "type" : "boolean"
+          },
+          "login_types" : {
+            "description" : "Login types",
+            "items" : {
+              "$ref" : "#/components/schemas/authLoginTypeType"
+            },
+            "type" : "array"
+          },
+          "logins" : {
+            "description" : "List of login IDs associated with the user",
+            "items" : {
+              "$ref" : "#/components/schemas/authLoginId"
+            },
+            "type" : "array"
+          },
+          "queue" : {
+            "$ref" : "#/components/schemas/authQueueStatus"
+          },
+          "refreshed_at" : {
+            "description" : "Unix timestamp of when the session was last refreshed (If applicable)",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "session_token" : {
+            "description" : "Session token of the user (If applicable)",
+            "type" : "string"
+          },
+          "suspended_until" : {
+            "description" : "Unix timestamp of when the user is suspended until",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "tags" : {
+            "description" : "Different tags attached to the user like flagged",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "token_validity_seconds" : {
+            "description" : "Validity of the token in seconds (If applicable)",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "authUserReport" : {
+        "properties" : {
+          "assignee" : {
+            "type" : "string"
+          },
+          "category" : {
+            "type" : "string"
+          },
+          "complaint" : {
+            "type" : "string"
+          },
+          "created_at" : {
+            "description" : "Unix epoch seconds. Convention across this service — see User.created_at,\nUser.first_login, User.suspended_until. Never use google.protobuf.Timestamp\nin this codebase.",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "reporting_user_id" : {
+            "type" : "string"
+          },
+          "state" : {
+            "$ref" : "#/components/schemas/authUserReportState"
+          },
+          "target_user_id" : {
+            "type" : "string"
+          },
+          "updated_at" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "authUserReportState" : {
+        "default" : "USER_REPORT_STATE_UNSPECIFIED",
+        "description" : "UserReportState is the lifecycle state of a user report. The DB column\nstores the enum name suffix in uppercase ('UNPROCESSED', 'PROCESSING',\n'RESOLVED'); the handler converts to/from these strings via\nuserReportStateToString / stringToUserReportState in user_reports.go.",
+        "enum" : [ "USER_REPORT_STATE_UNSPECIFIED", "USER_REPORT_STATE_UNPROCESSED", "USER_REPORT_STATE_PROCESSING", "USER_REPORT_STATE_RESOLVED" ],
+        "type" : "string"
+      },
+      "authUsernamePasswordLoginRequest" : {
+        "properties" : {
+          "create_user" : {
+            "description" : "Whether to create a user, if it does not exist",
+            "type" : "boolean"
+          },
+          "login_metadata" : {
+            "$ref" : "#/components/schemas/authLoginMetadata"
+          },
+          "password" : {
+            "description" : "Password used for login",
+            "type" : "string"
+          },
+          "username" : {
+            "description" : "User's login ID",
+            "type" : "string"
+          }
+        },
+        "required" : [ "password", "username" ],
+        "type" : "object"
+      },
+      "authUsernamePasswordLoginResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authValidateRequest" : {
+        "properties" : {
+          "method" : {
+            "description" : "HTTP method of the request to your backend (OPTIONAL: required to validate user auth restrictions)",
+            "type" : "string"
+          },
+          "path" : {
+            "description" : "Path of the request to your backend (OPTIONAL: required to validate user auth restrictions)",
+            "type" : "string"
+          },
+          "session_token" : {
+            "description" : "Session token to validate",
+            "type" : "string"
+          }
+        },
+        "required" : [ "session_token" ],
+        "type" : "object"
+      },
+      "authValidateResponse" : {
+        "properties" : {
+          "admitted_at" : {
+            "description" : "Unix seconds when the user was admitted past the queue; 0 if not admitted (still waiting, queue disabled, or a legacy server predating the queue)",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authVerifyEmailRequest" : {
+        "properties" : {
+          "email" : {
+            "description" : "Email address to verify",
+            "type" : "string"
+          },
+          "verification_code" : {
+            "description" : "Verification code received by the user",
+            "type" : "string"
+          }
+        },
+        "required" : [ "email", "verification_code" ],
+        "type" : "object"
+      },
+      "authVerifyEmailResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authXLoginRequest" : {
+        "properties" : {
+          "access_token" : {
+            "description" : "X access token generated on the client. One of code or access_token is required",
+            "type" : "string"
+          },
+          "code" : {
+            "description" : "X code generated on the client. One of code or access_token is required",
+            "type" : "string"
+          },
+          "code_verifier" : {
+            "description" : "X code verifier generated on the client",
+            "type" : "string"
+          },
+          "create_user" : {
+            "description" : "Whether to create a user, if it does not exist",
+            "type" : "boolean"
+          },
+          "login_metadata" : {
+            "$ref" : "#/components/schemas/authLoginMetadata"
+          },
+          "redirect_uri" : {
+            "description" : "redirect url for client",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "authXLoginResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authXboxLoginRequest" : {
+        "properties" : {
+          "code" : {
+            "description" : "code generated on the client",
+            "type" : "string"
+          },
+          "create_user" : {
+            "description" : "Whether to create a user, if it does not exist",
+            "type" : "boolean"
+          },
+          "login_metadata" : {
+            "$ref" : "#/components/schemas/authLoginMetadata"
+          },
+          "redirect_url" : {
+            "description" : "redirect url for client",
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "redirect_url" ],
+        "type" : "object"
+      },
+      "authXboxLoginResponse" : {
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "protobufAny" : {
+        "additionalProperties" : {
+          "type" : "object"
+        },
+        "description" : "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(&foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n    // or ...\n    if (any.isSameTypeAs(Foo.getDefaultInstance())) {\n      foo = any.unpack(Foo.getDefaultInstance());\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := &pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := &pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": <string>,\n      \"lastName\": <string>\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }",
+        "properties" : {
+          "@type" : {
+            "description" : "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com. As of May 2023, there are no widely used type server\nimplementations and no plans to implement one.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics.",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

@@ -1,0 +1,66 @@
+# Guild Settings
+
+This tool allows you to configure the settings for your application guilds or clans. You can set the maximum number of members allowed in a guild. Additionally, if you have the leaderboards snap, you can enable an inter guild leaderboards.
+
+To get started:
+
+1. Click on Settings from the side Nav
+2. The guild snap comes with a default setting of 50 members per guild. You can change this to any number you like.
+3. Additionally, you will see a button to enable the inter guild leaderboard.
+
+![Admin Settings Pic](/images/docs/guilds-admin-settings.png)
+{/* ![Admin Settings Pic](/images/docs/guilds-admin-settings-2.png) */}
+![Admin Settings Pic](/images/docs/guilds-admin-settings-3.png)
+
+## Max Users
+
+- **Max Users** - Set the maximum number of members allowed in a guild. This can be any number between 1 and 50. Default is 50.
+
+## Invite TTL hours
+- **Invite TTL Hours** - Set the number of ttl hours for your guild's invite. Default is 0.
+
+{/* ## Intra-guild properties
+
+- **Behavior** - The behavior of the intra-guild leaderboard. The behavior can be counter, maximum, minimum or most recent score. Default is counter.
+  Counter means that the leaderboard will keep track of the per user score. Maximum means that the leaderboard will keep track of the maximum score of a user. Minimum means that the leaderboard will keep track of the minimum score of a user. Most recent score means that the leaderboard will keep track of the most recent score of a user.
+- **Sort** - The sort order can either be ascending or descending. Selecting descending you will see the highest score at the top. Selecting ascending will show the lowest score on the top. Default is highest first.
+- **Scope** - The scope of the leaderboard can be either external or internal. If you chose internal, the leaderboard can only be updated over app auth.
+
+## Intra-guild period
+
+- **Period** - The period for the leaderboard. The period can be recurring or non-recurring. If you pick recurring you can set the duration after which the snap will automatically roll over the leaderboard. Default is non-recurring.
+- **Duration** - Only active for recurring leaderboards. The duration for the leaderboard. The duration has to be a positive integer. Default is 1.
+- **Time Unit** - Only active for recurring leaderboards. The time unit for the duration. The time unit can be hours, days, weeks, months.
+
+## Intra-guild type
+
+- **Type** - The type of the leaderboard can either be global or tiered. If you pick a tiered leaderboard, you will be able to enter the tier bucket size. Each bucket can have its own size.
+  At least one tier is required for a tiered leaderboard. You should consider using a tiered leaderboard over a global one for better user experience.
+- **Tiers** - Only active for tiered leaderboards. Tiers should be added in ascending order. Say you want to have a league of 3 tiers called bronze, silver and gold. You should add them in that order. The tier should have a unique name and an optional description. Each tier can have its own bucket size. */}
+
+## Inter-guild Leaderboard
+### Inter-guild name
+
+- **Name** - The name of the inter-guild leaderboard. The snap picks a default name, although you can change it to anything you like.
+
+### Inter-guild properties
+
+- **Sort** - The sort order can either be ascending or descending. Selecting descending you will see the highest score at the top. Selecting ascending will show the lowest score on the top. Default is highest first.
+- **Scope** - The scope of the leaderboard can be either external or internal. If you chose internal, the leaderboard can only be updated over app auth.
+  <Note>
+    Unlike the intra guild leaderboard, the inter-guild leaderboard is always a
+    leaderboard or behavior counter. This means the total contribution of all
+    guild members will be summed up against the guild.
+  </Note>
+
+### Inter-guild period
+
+- **Period** - The period for the leaderboard. The period can be recurring or non-recurring. If you pick recurring you can set the duration after which the snap will automatically roll over the leaderboard. Default is non-recurring.
+- **Duration** - Only active for recurring leaderboards. The duration for the leaderboard. The duration has to be a positive integer. Default is 1.
+- **Time Unit** - Only active for recurring leaderboards. The time unit for the duration. The time unit can be hours, days, weeks, months.
+
+### Inter-guild type
+
+- **Type** - The type of the leaderboard can either be global or tiered. If you pick a tiered leaderboard, you will be able to enter the tier bucket size. Each bucket can have its own size.
+  At least one tier is required for a tiered leaderboard. You should consider using a tiered leaderboard over a global one for better user experience.
+- **Tiers** - Only active for tiered leaderboards. Tiers should be added in ascending order. Say you want to have a league of 3 tiers called bronze, silver and gold. You should add them in that order. The tier should have a unique name and an optional description. Each tier can have its own bucket size.

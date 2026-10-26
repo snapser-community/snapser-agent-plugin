@@ -1,0 +1,48 @@
+# Profile Attributes
+
+This tool allows you to set up profile attributes for your app users. You can set up the attribute type and access type for each attribute.
+
+To get started:
+
+1. Click on `Attributes` from the side Nav.
+2. Click on the `Add an attribute` button.
+3. This will open a form where you can configure the attribute details.
+
+## Attribute Details
+
+1. **Attribute Name**: This is the name of the attribute you want to set up. The attribute should be unique and can be an alphanumeric string with dashes and underscores.
+
+## Attribute Category
+
+Each attribute can belong to one of the categories:
+
+1. **Regular**: These attributes are stored for retrieval but are neither unique or searchable.
+2. **Unique**: This attribute will be unique across your user base. Unique attributes are by default searchable.
+3. **Searchable**: This attribute is not unique across your user base, however, is searchable via the Profile Search APIs.
+
+<Note>
+  You can have a maximum of 10 unique attributes and 10 purely searchable
+  attributes. If you need to add more or have made a mistake during the
+  configuration, please reach out to your support team.
+</Note>
+
+## Attribute Type
+
+1. **Attribute Type Selector**: This is a dropdown where you can select the type of attribute you want to set up. The service supports the following attribute types:
+   - **Text**: Any text-based input
+   - **Number**: Any number-based input
+   - **Timestamp**: Any datetime-based input
+   - **Multi Select**: Input where you want to give users multiple options to select. This should be a comma separated list of options.
+   - **Single Select**: Input where you want to give users a single option to select from many options. This should be a comma separated list of options.
+
+## Attribute Presence
+
+1. **Presence Checkbox**: This is a checkbox that allows you to set the attribute as required. If you check this box, the attribute will be mandatory for the user to fill in. Any profile updates sent without this attribute will be rejected.
+
+## Attribute Access
+
+1. **Access Selector**: This is a dropdown where you can select the access type for the attribute. The service supports the following access types:
+   - **Public**: The attribute value is visible to all
+   - **Private**: The attribute value is visible to only the owner
+
+![Admin Pic](/images/docs/profiles-admin.png)

@@ -1,0 +1,611 @@
+
+
+export const description = 'Queues'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'AJ Apte',
+}
+
+# Queues
+
+The Queues snap lets your game hand off work to be processed reliably and in the
+background, instead of doing everything inside a single player request.
+
+Typical uses:
+
+- **Smooth out spikes** — accept a burst of actions (match results, purchases,
+  analytics events) instantly and process them at a steady pace.
+- **Run work after the fact** — grant rewards, send notifications, or update
+  another service without making the player wait.
+- **Decouple your snaps** — one BYOSnap drops a message on a queue; another (or
+  the queue itself) handles it.
+
+You **create and configure queues once** in the Snapser Portal, then your
+BYOSnaps **enqueue** and (for some queue types) **dequeue / acknowledge**
+messages at runtime through the three simple APIs below.
+
+<Note>
+  Each snapend can have a **maximum of 3 queues**. Queues are created and edited
+  in the Portal's Queues admin tool — see [Add a
+  Queue](/docs/infra/snaps/queues/config-tools/add) for a walkthrough of every
+  setting.
+</Note>
+
+---
+
+## Concepts
+
+A **queue** holds **messages** until they are processed.
+
+A message is just a **body** (any string — usually JSON) plus optional
+**attributes** (small key/value metadata). Each message you enqueue gets an
+**id**.
+
+Every queue has:
+
+- A **type** — `standard` or `fifo` (ordering guarantee).
+- An **action** — what happens to a message once it reaches the front of the
+  queue: `pull`, `deliver`, or `emit`.
+
+You pick these when you create the queue. They decide which of the runtime APIs
+you use.
+
+### Queue types
+
+| Type | Ordering | Use it when |
+|------|----------|-------------|
+| `standard` | Best-effort order, high throughput | Order doesn't matter (analytics, fan-out notifications). |
+| `fifo` | Strict first-in-first-out, one at a time | Order matters (e.g. sequential inventory or currency operations). |
+
+<Note>
+  FIFO trades throughput for ordering: messages are handed out one at a time and
+  the next is not released until the current one is acknowledged.
+</Note>
+
+### Actions — what happens to a message
+
+| Action | What it does | You call |
+|--------|--------------|----------|
+| `pull` | The queue holds messages; your BYOSnap pulls them on its own schedule. | `Enqueue`, then `Dequeue` + `Ack` |
+| `deliver` | The queue pushes each message to one of your BYOSnaps over HTTP. | `Enqueue` only |
+| `emit` | The queue publishes each message as a Snapser EventBus event. | `Enqueue` only |
+
+With **deliver** and **emit**, the queue does the work of getting the message to
+its destination — you only ever enqueue. With **pull**, you are in control of
+consumption.
+
+---
+
+## APIs
+
+The `Queues` snap exposes the following runtime APIs. They are **internal-only**
+— there is no client SDK for them. Call them from your BYOSnaps, snap-to-snap
+inside the snapend, by addressing the Queues snap directly at
+`http://service-queues:8090/v1/queues` with the header **`Gateway: internal`**
+(no API key needed for internal traffic).
+
+The same endpoints are also reachable from a game client through your snapend
+gateway — swap the host for your gateway URL and the `Gateway: internal` header
+for an `Api-Key` (both `internal` and `api-key` auth are accepted). For example,
+an enqueue from outside the cluster looks like:
+
+```bash
+curl -X POST "https://gateway.<env>.snapser.io/<snapend>/v1/queues/queues/reward-grants/messages" \
+  -H "Api-Key: <your-api-key>" \
+  -H "Content-Type: application/json" \
+  -d '{ "body": "{\"userId\":\"u-123\"}" }'
+```
+
+The internal examples below are the common case for server-authoritative work.
+
+<div className="apisTable">
+| API Name | HTTP Method | API Description |
+| -------- | ----------- | --------------- |
+| [Enqueue a message](#enqueue-a-message) | POST | Enqueue a message onto a queue. Works for every queue type and action. |
+| [Dequeue messages](#dequeue-messages) | GET | Long-poll for messages on a pull queue. |
+| [Acknowledge a message](#acknowledge-a-message) | DELETE | Acknowledge (delete) a dequeued message using its receipt handle. |
+</div>
+
+### Usage
+
+#### Enqueue a message
+
+Add a message to a queue. Works for every queue type and action.
+
+```http
+POST /v1/queues/queues/{queue}/messages
+```
+
+Parameters:
+
+| Parameter | In | Required | Notes |
+|-----------|----|----------|-------|
+| `queue` | path | yes | Queue name. |
+| `Gateway` | header | yes | Pass `internal` for snap-to-snap calls. Use an `Api-Key` header instead when calling through the snapend gateway. |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `body` | string | yes | The message payload, as a string (usually JSON). Max 256 KB. |
+| `attributes` | map\<string,string> | no | Optional message attributes returned to consumers. Up to 7 small key/value pairs. |
+| `dedup_id` | string | no | **FIFO only.** Two enqueues with the same `dedup_id` within the dedup window are treated as one. Defaults to a SHA-256 of the body. Ignored for standard queues. |
+| `recipients` | string[] | no | **Emit queues only.** Sets the emitted event's recipients (e.g. user ids for Hermes routing). Ignored for other action types. |
+
+<CodeGroup title="Enqueue a message" tag="POST" label="Enqueue">
+```bash
+curl -X POST "http://service-queues:8090/v1/queues/queues/reward-grants/messages" \
+  -H "Gateway: internal" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "body": "{\"userId\":\"u-123\",\"reward\":\"gold\",\"amount\":100}",
+    "attributes": { "source": "match-end" }
+  }'
+```
+```go
+package main
+
+import (
+    "bytes"
+    "encoding/json"
+    "fmt"
+    "net/http"
+)
+
+func main() {
+    payload, _ := json.Marshal(map[string]any{
+        "body":       `{"userId":"u-123","reward":"gold","amount":100}`,
+        "attributes": map[string]string{"source": "match-end"},
+    })
+
+    req, _ := http.NewRequest(http.MethodPost,
+        "http://service-queues:8090/v1/queues/queues/reward-grants/messages",
+        bytes.NewReader(payload))
+    req.Header.Set("Gateway", "internal")
+    req.Header.Set("Content-Type", "application/json")
+
+    resp, err := http.DefaultClient.Do(req)
+    if err != nil {
+        panic(err)
+    }
+    defer resp.Body.Close()
+
+    var out struct {
+        ID    string `json:"id"`
+        Depth string `json:"depth"`
+    }
+    json.NewDecoder(resp.Body).Decode(&out)
+    fmt.Printf("enqueued %s (depth %s)\n", out.ID, out.Depth)
+}
+```
+```python
+import requests
+
+resp = requests.post(
+    "http://service-queues:8090/v1/queues/queues/reward-grants/messages",
+    headers={"Gateway": "internal"},
+    json={
+        "body": '{"userId":"u-123","reward":"gold","amount":100}',
+        "attributes": {"source": "match-end"},
+    },
+)
+resp.raise_for_status()
+
+data = resp.json()
+print(f"enqueued {data['id']} (depth {data['depth']})")
+```
+```csharp
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+
+var http = new HttpClient { BaseAddress = new Uri("http://service-queues:8090") };
+http.DefaultRequestHeaders.Add("Gateway", "internal");
+
+var response = await http.PostAsJsonAsync(
+    "/v1/queues/queues/reward-grants/messages",
+    new {
+        body = "{\"userId\":\"u-123\",\"reward\":\"gold\",\"amount\":100}",
+        attributes = new { source = "match-end" }
+    });
+response.EnsureSuccessStatusCode();
+
+var result = await response.Content.ReadFromJsonAsync<EnqueueResponse>();
+Console.WriteLine($"enqueued {result?.Id} (depth {result?.Depth})");
+
+record EnqueueResponse(string Id, string Depth);
+```
+```cpp
+#include <curl/curl.h>
+
+int main()
+{
+    CURL* curl = curl_easy_init();
+
+    const char* body =
+        "{\"body\":\"{\\\"userId\\\":\\\"u-123\\\"}\","
+        "\"attributes\":{\"source\":\"match-end\"}}";
+
+    curl_slist* headers = nullptr;
+    headers = curl_slist_append(headers, "Gateway: internal");
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+
+    curl_easy_setopt(curl, CURLOPT_URL,
+                     "http://service-queues:8090/v1/queues/queues/reward-grants/messages");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
+
+    curl_easy_perform(curl);
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+    return 0;
+}
+```
+</CodeGroup>
+
+Response:
+
+```json
+{
+  "id": "a1b2c3...",
+  "depth": "42"
+}
+```
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | string | Id of the enqueued message. |
+| `depth` | string (int64) | Approximate number of messages in the queue — handy for estimating a message's position / backlog. Cached, so it may lag recent enqueues/dequeues. |
+
+#### Dequeue messages
+
+Long-poll for messages to process. Only valid on `pull` queues.
+
+```http
+GET /v1/queues/queues/{queue}/messages?max_messages=1&wait_time_seconds=20
+```
+
+Parameters:
+
+| Parameter | In | Required | Default | Notes |
+|-----------|----|----------|---------|-------|
+| `queue` | path | yes | — | Queue name. |
+| `max_messages` | query | no | 1 | How many to return at once (1–10). FIFO always returns at most 1. |
+| `wait_time_seconds` | query | no | 0 | How long to wait for a message before returning empty (0–20). Use ~20 to avoid tight polling loops. |
+| `Gateway` | header | yes | `internal` | Pass `internal` for snap-to-snap calls; use an `Api-Key` header through the gateway. |
+
+<CodeGroup title="Dequeue messages" tag="GET" label="Dequeue">
+```bash
+curl "http://service-queues:8090/v1/queues/queues/reward-grants/messages?max_messages=10&wait_time_seconds=20" \
+  -H "Gateway: internal"
+```
+```go
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "net/http"
+)
+
+func main() {
+    req, _ := http.NewRequest(http.MethodGet,
+        "http://service-queues:8090/v1/queues/queues/reward-grants/messages?max_messages=10&wait_time_seconds=20",
+        nil)
+    req.Header.Set("Gateway", "internal")
+
+    resp, err := http.DefaultClient.Do(req)
+    if err != nil {
+        panic(err)
+    }
+    defer resp.Body.Close()
+
+    var out struct {
+        Messages []struct {
+            ID           string            `json:"id"`
+            Body         string            `json:"body"`
+            Attributes   map[string]string `json:"attributes"`
+            Receipt      string            `json:"receipt"`
+            ReceiveCount int               `json:"receive_count"`
+        } `json:"messages"`
+    }
+    json.NewDecoder(resp.Body).Decode(&out)
+
+    for _, m := range out.Messages {
+        fmt.Printf("got %s (receipt %s)\n", m.ID, m.Receipt)
+    }
+}
+```
+```python
+import requests
+
+resp = requests.get(
+    "http://service-queues:8090/v1/queues/queues/reward-grants/messages",
+    headers={"Gateway": "internal"},
+    params={"max_messages": 10, "wait_time_seconds": 20},
+)
+resp.raise_for_status()
+
+for msg in resp.json().get("messages", []):
+    print(f"got {msg['id']} (receipt {msg['receipt']})")
+```
+```csharp
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+
+var http = new HttpClient { BaseAddress = new Uri("http://service-queues:8090") };
+http.DefaultRequestHeaders.Add("Gateway", "internal");
+
+var result = await http.GetFromJsonAsync<DequeueResponse>(
+    "/v1/queues/queues/reward-grants/messages?max_messages=10&wait_time_seconds=20");
+
+foreach (var m in result?.Messages ?? Array.Empty<Message>())
+{
+    Console.WriteLine($"got {m.Id} (receipt {m.Receipt})");
+}
+
+record Message(string Id, string Body, string Receipt, int ReceiveCount);
+record DequeueResponse(Message[] Messages);
+```
+```cpp
+#include <curl/curl.h>
+#include <string>
+
+static size_t Append(char* ptr, size_t size, size_t nmemb, void* userdata)
+{
+    static_cast<std::string*>(userdata)->append(ptr, size * nmemb);
+    return size * nmemb;
+}
+
+int main()
+{
+    CURL* curl = curl_easy_init();
+    std::string response;
+
+    curl_slist* headers = nullptr;
+    headers = curl_slist_append(headers, "Gateway: internal");
+
+    curl_easy_setopt(curl, CURLOPT_URL,
+                     "http://service-queues:8090/v1/queues/queues/reward-grants/messages"
+                     "?max_messages=10&wait_time_seconds=20");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, Append);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+
+    curl_easy_perform(curl);
+    // `response` now holds the JSON body — parse it with your JSON library.
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+    return 0;
+}
+```
+</CodeGroup>
+
+Response:
+
+```json
+{
+  "messages": [
+    {
+      "id": "a1b2c3...",
+      "body": "{\"userId\":\"u-123\",...}",
+      "attributes": { "source": "match-end" },
+      "receipt": "r-xyz...",
+      "receive_count": 1
+    }
+  ]
+}
+```
+
+`messages` is empty if nothing was available within your wait window — that's
+normal; just poll again. Each entry contains:
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | string | Message id. |
+| `body` | string | Message body. |
+| `attributes` | map\<string,string> | Caller-supplied message attributes. |
+| `receipt` | string | Receipt handle required to acknowledge the message. |
+| `receive_count` | int32 | Number of times the message has been received. |
+
+<Note>
+  Keep the **`receipt`** — you need it to acknowledge the message. Each delivery
+  gets a fresh receipt.
+</Note>
+
+#### Acknowledge a message
+
+Tell the queue you've finished processing a message so it isn't delivered again.
+Only valid on `pull` queues.
+
+```http
+DELETE /v1/queues/queues/{queue}/messages/{id}?receipt={receipt}
+```
+
+Parameters:
+
+| Parameter | In | Required | Notes |
+|-----------|----|----------|-------|
+| `queue` | path | yes | Queue name. |
+| `id` | path | yes | Message id being acknowledged. |
+| `receipt` | query | yes | Receipt handle returned by dequeue. |
+| `Gateway` | header | yes | Pass `internal` for snap-to-snap calls; use an `Api-Key` header through the gateway. |
+
+<CodeGroup title="Acknowledge a message" tag="DELETE" label="Ack">
+```bash
+curl -X DELETE "http://service-queues:8090/v1/queues/queues/reward-grants/messages/a1b2c3...?receipt=r-xyz..." \
+  -H "Gateway: internal"
+```
+```go
+package main
+
+import (
+    "fmt"
+    "net/http"
+    "net/url"
+)
+
+func main() {
+    id := "a1b2c3..."
+    receipt := "r-xyz..."
+
+    endpoint := fmt.Sprintf(
+        "http://service-queues:8090/v1/queues/queues/reward-grants/messages/%s?receipt=%s",
+        id, url.QueryEscape(receipt))
+
+    req, _ := http.NewRequest(http.MethodDelete, endpoint, nil)
+    req.Header.Set("Gateway", "internal")
+
+    resp, err := http.DefaultClient.Do(req)
+    if err != nil {
+        panic(err)
+    }
+    defer resp.Body.Close()
+    fmt.Println("acked:", resp.Status)
+}
+```
+```python
+import requests
+
+message_id = "a1b2c3..."
+receipt = "r-xyz..."
+
+resp = requests.delete(
+    f"http://service-queues:8090/v1/queues/queues/reward-grants/messages/{message_id}",
+    headers={"Gateway": "internal"},
+    params={"receipt": receipt},
+)
+resp.raise_for_status()
+```
+```csharp
+using System;
+using System.Net.Http;
+
+var http = new HttpClient { BaseAddress = new Uri("http://service-queues:8090") };
+http.DefaultRequestHeaders.Add("Gateway", "internal");
+
+var id = "a1b2c3...";
+var receipt = "r-xyz...";
+
+var response = await http.DeleteAsync(
+    $"/v1/queues/queues/reward-grants/messages/{id}?receipt={Uri.EscapeDataString(receipt)}");
+response.EnsureSuccessStatusCode();
+```
+```cpp
+#include <curl/curl.h>
+
+int main()
+{
+    CURL* curl = curl_easy_init();
+
+    curl_slist* headers = nullptr;
+    headers = curl_slist_append(headers, "Gateway: internal");
+
+    curl_easy_setopt(curl, CURLOPT_URL,
+                     "http://service-queues:8090/v1/queues/queues/reward-grants/messages/"
+                     "a1b2c3...?receipt=r-xyz...");
+    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+    curl_easy_perform(curl);
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+    return 0;
+}
+```
+</CodeGroup>
+
+A successful acknowledgement returns an empty object (`{}`).
+
+If you **don't** acknowledge a message before the visibility timeout (see
+below), it becomes available again and is redelivered. This is what makes
+processing reliable: a crash mid-work means the message simply comes back.
+
+#### The pull loop, in short
+
+1. `Dequeue` (with a wait of ~20s).
+2. For each message: do your work.
+3. `Ack` it using its `receipt`.
+4. Repeat.
+
+---
+
+## Reliability: timeouts, retries, and the dead-letter queue
+
+- **Visibility timeout (~30s):** once a message is dequeued (pull) or an attempt
+  starts (deliver), it's hidden from other consumers for this window. Ack within
+  it, or the message is redelivered. This guarantees **at-least-once** delivery.
+
+- **Retries & max attempts:** for `deliver`, a failed HTTP attempt (or an
+  un-acked pull message) is retried. After **`max_attempts`** (default **5**),
+  the message is moved to the queue's **dead-letter queue (DLQ)**.
+
+- **Dead-letter queue (DLQ):** a holding area for messages that could not be
+  processed. You can inspect, requeue, or delete them from the Snapser Portal.
+  Nothing is silently lost.
+
+- **`auto_ack` (at-most-once):** an optional per-queue setting. When on, a
+  message is considered done the moment it's handed out (pull) or attempted
+  (deliver) — no retries, no dead-lettering. Use it for fire-and-forget work
+  where dropping the occasional message is acceptable. Default is off
+  (at-least-once, with retries).
+
+- **TTL (retention):** messages that sit unprocessed past the queue's TTL
+  (default **4 days**) are discarded automatically.
+
+---
+
+## Queue settings reference
+
+You set these in the Portal when creating or editing a queue. Name and type are
+fixed once created (to change them, delete and recreate); everything else can be
+edited later. See [Add a Queue](/docs/infra/snaps/queues/config-tools/add) for
+the full tool walkthrough.
+
+| Setting | What it controls | Default |
+|---------|------------------|---------|
+| **Name** | Unique queue name (letters, digits, `-`, `_`; up to 80 chars). | — |
+| **Type** | `standard` or `fifo`. | `standard` |
+| **Action** | `pull`, `deliver`, or `emit`. | — (required) |
+| **Deliver target** | For `deliver`: the BYOSnap (`byosnap-<name>`) and HTTP path (`/v1/...`) to POST each message to. | — |
+| **Max attempts** | Delivery attempts before dead-lettering. | `5` |
+| **Queue TTL** | How long an unprocessed message is retained (60s–14d). | 4 days |
+| **Message TTL** | Optional shorter per-message expiry. `0` = none. | none |
+| **Dequeue rate** | Optional rate limit (messages/second + burst) for how fast messages are released. | unlimited |
+| **Backlog limit** | Reject new enqueues once the backlog reaches this depth (back-pressure). `0` = no limit. | none |
+| **Auto-ack** | At-most-once mode (see above). Pull and deliver only. | off |
+
+---
+
+## Limits & defaults
+
+| Thing | Value |
+|-------|-------|
+| Max message size | 256 KB |
+| Max attributes per message | 7 |
+| Queues per snapend | 3 (maximum) |
+| Dequeue batch size | 1–10 messages |
+| Long-poll wait | 0–20 seconds |
+| Queue TTL range | 60 seconds – 14 days |
+| Default max delivery attempts | 5 |
+| Visibility timeout | ~30 seconds |
+
+---
+
+## Choosing the right queue — quick guide
+
+- **Process work yourself, in your own BYOSnap, on your own schedule?**
+  → `pull` queue. Use `Enqueue` + `Dequeue` + `Ack`.
+
+- **Hand each message to one of your BYOSnaps over HTTP automatically?**
+  → `deliver` queue. Use `Enqueue` only; set the target BYOSnap + path.
+
+- **Broadcast each message to other services / players via events?**
+  → `emit` queue. Use `Enqueue` only; set `recipients` if routing to users.
+
+- **Order matters?** Make it `fifo`. Otherwise `standard` for higher throughput.

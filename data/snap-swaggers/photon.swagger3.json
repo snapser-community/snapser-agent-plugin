@@ -1,0 +1,18 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "photon_services.proto",
+    "version" : "version not set"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "PhotonService"
+  } ],
+  "paths" : { },
+  "components" : {
+    "schemas" : { }
+  },
+  "x-original-swagger-version" : "2.0"
+}

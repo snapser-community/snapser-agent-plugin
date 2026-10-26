@@ -1,0 +1,47 @@
+# beta-0.39.0
+##### October 4, 2024
+
+## Snaps
+### Profile
+- Profile Snap got a major upgrade. You can now specify 6 searchable attributes out of which 3 can be unique.
+
+### Lobbies
+- Lobbies now support auto start on a specific TTL.
+
+### Matchmaking
+- You can now specify a criterion for host selection in the matchmaking Snap. The criterion will be based
+  on the rule attributes added to a rule set in your Matchmaking profile. Currently supported criteria are
+  `leaderboard`, `statistic`, `custom number`.
+
+### Trackables
+- You can now specific a requirement to unlock a trackable XP ladder. This allows you to chain Trackables
+  together, ensuring that a player must complete one XP ladder before moving on to the next.
+
+### Quests
+- Quests now support a new type of task, `trackable`. This task type allows you to create a task that
+  requires a player to complete a trackable to progress in the quest.
+
+### Auth
+- You can now control the user token validity and inactivity settings. This is useful, especially in the
+  non-production environments to test your "Token Expiry" and "Inactivity Timeout" UX flow.
+
+## Web App
+- **API Explorer**: The API Explorer now tracks your API call history and allows you to copy attributes.
+  This is useful when you are testing your APIs.
+- **Palette**: The Palette now shows all Snapends in the game view, allowing you to easily navigate to a
+  specific Snapend.
+
+## Snapctl - CLI Tool
+- You now have the option to provide `--resources-path` during your build uploads, allowing you to
+  specify the path to the resources directory in your Snap. This ensures, you are not forced to put
+  the Dockerfile in the root directory of your Snap.
+
+## Bug Fixes
+- **Leaderboards**: Increased limit on users queried from 100 to 5000.
+- **Snapctl**: Added support for Python 3.10 in the Snapctl tool.
+- **Web App**: Fixed a bug where the API Explorer at times used to show the previously clicked Snap's API.
+- **Storage**: Fixed a bug to correctly use TTL when inserting a blob using ReplaceBlob method.
+
+## Documentation
+- Updated Documentation for the Snapctl commands.
+- Added documentation showing how a BYOSnap can make internal calls to other Snaps in a Snapend.

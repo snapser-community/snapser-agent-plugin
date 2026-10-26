@@ -1,0 +1,76 @@
+export const description = 'Live Operations tools'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# User Manager Tool
+
+## Concept
+The **User Manager** tool enables manipulation of user's app data within your Snapend, particularly beneficial during live app operations when engineers or customer service agents need to make adjustments to user data.
+
+<Note>
+  If there is a tool you want us to accelerate development on, please reach out to us.
+</Note>
+
+## Pre-requisites
+You need to have at least **cluster-service-user-view** role with **Auth** service access to be able to use this tool. **cluster-service-\*** roles and above with **Auth** service access also have access to this tool.
+
+<Note>
+  If you do not have the required permissions, please reach out to your company administrator to upgrade your role.
+</Note>
+
+<Warning>
+**IMPORTANT**: **cluster-service-user-\*** and **cluster-service-\*** roles point at the same resource — a Snapend Snap — so a user can hold only **one** of them per Snap. Granting a **cluster-service-user-\*** role to someone who already has a **cluster-service-\*** role on that Snap **replaces** it, which would take away their Snap configuration access. Since **cluster-service-\*** already grants this tool, only assign **cluster-service-user-\*** when you specifically want to withhold Configuration access. See [One role per resource](/docs/resources/portal/access#one-role-per-resource).
+</Warning>
+
+## Tool Location
+
+You can access the user tools by going to the Snapend homepage. Once you are on it, you will see a button called "User Manager" under **Quick Links** or in the left navigation bar depending on what Studio function is assigned to you. Once you click on the tool,
+you will see a text box where you can enter the user Id of the user you want to manipulate.
+
+![snapser-user-tool-id](/images/docs/user-tool-id.png)
+
+Once you enter the user Id, you will see a list of tools that you can use to manipulate the user data.
+
+![snapser-user-tool-view](/images/docs/user-tool-view.png)
+
+<Note>
+Every action taken on the User tool is recorded in the Audit logs.
+</Note>
+
+## Resetting User Data
+
+Snapser provides a way to reset or delete user data for a particular user from your Snapend. This is useful especially during the development phase.
+
+### Tool location
+The right hand side panel has a section called **Actions**. Here you will see two options to reset or delete the user data.
+
+### Options
+1. **Reset User Data**: This resets users app data from every Snap except Auth. This allows you to continue using the same user ID and token.
+2. **Delete User Data**: This deletes the user data from every Snap including Auth. This will remove the user data from the entire system. The user ID and token will also be deleted.
+
+## Bulk User Data Reset or Delete
+You can also reset or delete user data in bulk. This is useful when you want to reset or delete multiple users at once. You can do this by clicking on the **Bulk User Data** button in the right hand side panel.
+
+![snapser-user-tool-bulk](/images/docs/user-manager-bulk-delete.png)
+
+You will then see a text box where you can enter comma separated user IDs of the users you want to reset or delete. You can enter upto 100 user IDs at once.
+
+![snapser-user-tool-bulk-view](/images/docs/user-manager-bulk-delete-form.png)
+
+<Warning>
+  The reset and delete of user data only works for non-production Snapends.
+</Warning>
+
+## BYOSnap Hook
+Snapser provides a way for your BYOSnap to hook into this action you are taking in the User manager tool, to delete user data. This is to allow you to delete any data you have about the user.
+
+When you press the **Reset Snap Data** button, Snapser will call all BYOSnaps on the following URL:
+1. **URL**: `/v1/$byosnapId/settings/users/<user_id>/data`
+2. **Method**: `DELETE`
+3. **Headers**:
+   - `Gateway: internal`
+
+Check out the [BYOSnap Advanced](/docs/guides/tutorials/byosnap-advanced-two) tutorial for more information on how to implement this.

@@ -1,0 +1,1734 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "quests_services.proto",
+    "version" : "version not set"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "QuestsService"
+  } ],
+  "paths" : {
+    "/v1/quests/batch/quests/claim_rewards" : {
+      "post" : {
+        "description" : "Claim rewards for multiple quests in a single request",
+        "operationId" : "BatchClaimQuestRewards",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/questsBatchClaimQuestRewardsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/questsBatchClaimQuestRewardsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Quest",
+        "tags" : [ "QuestsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/quests/batch/tasks" : {
+      "patch" : {
+        "description" : "Batch Increment Task Progress",
+        "operationId" : "BatchIncrementTaskProgress",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/questsBatchIncrementTaskProgressRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/questsBatchIncrementTaskProgressResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Quest Task",
+        "tags" : [ "QuestsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/quests/batch/tasks/claim_rewards" : {
+      "post" : {
+        "description" : "Claim rewards for multiple tasks in a batch",
+        "operationId" : "BatchClaimTaskRewards",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/questsBatchClaimTaskRewardsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/questsBatchClaimTaskRewardsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Quest Task",
+        "tags" : [ "QuestsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/quests/users/batch/active_quests" : {
+      "post" : {
+        "description" : "Get active quests for users",
+        "operationId" : "BatchGetActiveQuests",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/questsBatchGetActiveQuestsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/questsBatchGetActiveQuestsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Quests",
+        "tags" : [ "QuestsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/quests/users/{user_id}/active_quests" : {
+      "get" : {
+        "description" : "Get active quests for user",
+        "operationId" : "GetActiveQuests",
+        "parameters" : [ {
+          "description" : "User id",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Comma separated tags to filter quests",
+          "explode" : true,
+          "in" : "query",
+          "name" : "tags",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "If true, include contents of containers, drop tables in the rewards",
+          "explode" : true,
+          "in" : "query",
+          "name" : "include_reward_contents",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/questsUserQuests"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Quests",
+        "tags" : [ "QuestsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/quests/users/{user_id}/available_quests" : {
+      "get" : {
+        "description" : "Get available quests for user",
+        "operationId" : "GetAvailableQuests",
+        "parameters" : [ {
+          "description" : "User id",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Comma separated tags to filter quests",
+          "explode" : true,
+          "in" : "query",
+          "name" : "tags",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "If true, include contents of containers, drop tables in the rewards",
+          "explode" : true,
+          "in" : "query",
+          "name" : "include_reward_contents",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/questsGetAvailableQuestsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Quests",
+        "tags" : [ "QuestsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/quests/users/{user_id}/quests/{quest_name}" : {
+      "delete" : {
+        "description" : "Delete user quest",
+        "operationId" : "DeleteUserQuest",
+        "parameters" : [ {
+          "description" : "User id",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of the quest to delete",
+          "explode" : false,
+          "in" : "path",
+          "name" : "quest_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Quest",
+        "tags" : [ "QuestsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/quests/users/{user_id}/quests/{quest_name}/assign" : {
+      "post" : {
+        "description" : "Assign a quest to a user",
+        "operationId" : "AssignQuest",
+        "parameters" : [ {
+          "description" : "User id",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of the quest to assign",
+          "explode" : false,
+          "in" : "path",
+          "name" : "quest_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/questsUserQuest"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Quest",
+        "tags" : [ "QuestsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/quests/users/{user_id}/quests/{quest_name}/claim_rewards" : {
+      "post" : {
+        "description" : "Claim rewards for a quest",
+        "operationId" : "ClaimQuestRewards",
+        "parameters" : [ {
+          "description" : "User id",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of the quest to claim rewards for",
+          "explode" : false,
+          "in" : "path",
+          "name" : "quest_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/questsClaimQuestRewardsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Quest",
+        "tags" : [ "QuestsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/quests/users/{user_id}/quests/{quest_name}/tasks/{task_name}" : {
+      "put" : {
+        "description" : "Increment or decrement progress for a quest assigned to a user",
+        "operationId" : "IncrementTaskProgress",
+        "parameters" : [ {
+          "description" : "User id",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of the quest to update task progress",
+          "explode" : false,
+          "in" : "path",
+          "name" : "quest_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of the task to update progress",
+          "explode" : false,
+          "in" : "path",
+          "name" : "task_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/IncrementTaskProgress_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/questsUserQuest"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Quest Task",
+        "tags" : [ "QuestsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/quests/users/{user_id}/quests/{quest_name}/tasks/{task_name}/claim_rewards" : {
+      "post" : {
+        "description" : "Claim rewards for a task",
+        "operationId" : "ClaimTaskRewards",
+        "parameters" : [ {
+          "description" : "User id",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of the quest",
+          "explode" : false,
+          "in" : "path",
+          "name" : "quest_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of the task to claim rewards for",
+          "explode" : false,
+          "in" : "path",
+          "name" : "task_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/questsClaimTaskRewardsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Quest Task",
+        "tags" : [ "QuestsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/quests/users/{user_id}/quests/{quest_name}/tasks/{task_name}/metadata" : {
+      "put" : {
+        "description" : "Update metadata of a task for a quest assigned to a user",
+        "operationId" : "UpdateTaskMetadata",
+        "parameters" : [ {
+          "description" : "User id",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of the quest to update task progress",
+          "explode" : false,
+          "in" : "path",
+          "name" : "quest_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of the task to update progress",
+          "explode" : false,
+          "in" : "path",
+          "name" : "task_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateTaskMetadata_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/questsUserQuest"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Quest Task",
+        "tags" : [ "QuestsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "IncrementTaskProgress_request" : {
+        "properties" : {
+          "delta" : {
+            "description" : "Progress to update (Deprecated: Use delta64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "delta64" : {
+            "description" : "Progress to update",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "UpdateTaskMetadata_request" : {
+        "properties" : {
+          "metadata" : {
+            "description" : "Metadata to attach to task",
+            "type" : "object"
+          }
+        },
+        "required" : [ "metadata" ],
+        "type" : "object"
+      },
+      "protobufNullValue" : {
+        "default" : "NULL_VALUE",
+        "description" : "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value.",
+        "enum" : [ "NULL_VALUE" ],
+        "type" : "string"
+      },
+      "questsAvailableQuest" : {
+        "properties" : {
+          "description" : {
+            "description" : "Description of the quest",
+            "type" : "string"
+          },
+          "metadata" : {
+            "description" : "Additional metadata attached to the quest",
+            "type" : "object"
+          },
+          "name" : {
+            "description" : "Name of the quest",
+            "type" : "string"
+          },
+          "reward_currencies" : {
+            "description" : "Currencies to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardCurrency"
+            },
+            "type" : "array"
+          },
+          "reward_drop_tables" : {
+            "description" : "Drop tables to be evaluated on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardDropTable"
+            },
+            "type" : "array"
+          },
+          "reward_energy" : {
+            "description" : "Energy to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardEnergy"
+            },
+            "type" : "array"
+          },
+          "reward_inventory_items" : {
+            "description" : "Items to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardInventoryItem"
+            },
+            "type" : "array"
+          },
+          "reward_statistics" : {
+            "description" : "Statistics to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardStatistic"
+            },
+            "type" : "array"
+          },
+          "reward_xp" : {
+            "description" : "XP to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardXp"
+            },
+            "type" : "array"
+          },
+          "tags" : {
+            "description" : "Tags to categorize the quest",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "tasks" : {
+            "description" : "Tasks to be completed to finish the quest",
+            "items" : {
+              "$ref" : "#/components/schemas/questsAvailableTask"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "questsAvailableTask" : {
+        "properties" : {
+          "auto_progress" : {
+            "description" : "Whether the task should be automatically progressed",
+            "type" : "boolean"
+          },
+          "comparison_type" : {
+            "description" : "Type of the comparison to be made",
+            "type" : "string"
+          },
+          "description" : {
+            "description" : "Description of the task",
+            "type" : "string"
+          },
+          "goal" : {
+            "description" : "Goal to be achieved (Deprecated: Use goal_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "goal_64" : {
+            "description" : "Goal to be achieved",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "goal_sign" : {
+            "description" : "Positive or negative, indicates whether item tracked is gained or used",
+            "type" : "string"
+          },
+          "goal_type" : {
+            "description" : "Indicates whether the goal is absolute or delta",
+            "type" : "string"
+          },
+          "metadata" : {
+            "description" : "Additional metadata to attached to task",
+            "type" : "object"
+          },
+          "name" : {
+            "description" : "Name of the task",
+            "type" : "string"
+          },
+          "reward_currencies" : {
+            "description" : "Currencies to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardCurrency"
+            },
+            "type" : "array"
+          },
+          "reward_drop_tables" : {
+            "description" : "Drop tables to be evaluated on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardDropTable"
+            },
+            "type" : "array"
+          },
+          "reward_energy" : {
+            "description" : "Energy to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardEnergy"
+            },
+            "type" : "array"
+          },
+          "reward_inventory_items" : {
+            "description" : "Items to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardInventoryItem"
+            },
+            "type" : "array"
+          },
+          "reward_statistics" : {
+            "description" : "Statistics to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardStatistic"
+            },
+            "type" : "array"
+          },
+          "reward_xp" : {
+            "description" : "XP to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardXp"
+            },
+            "type" : "array"
+          },
+          "tracking_object_name" : {
+            "description" : "name of the object to be tracked",
+            "type" : "string"
+          },
+          "tracking_object_type" : {
+            "description" : "Type of the object to be tracked",
+            "type" : "string"
+          }
+        },
+        "title" : "---------------------------------------------------------------------------------------------------------------------",
+        "type" : "object"
+      },
+      "questsBatchClaimQuestRewardsRequest" : {
+        "properties" : {
+          "requests" : {
+            "description" : "Requests for each user",
+            "items" : {
+              "$ref" : "#/components/schemas/questsClaimQuestRewardsRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "questsBatchClaimQuestRewardsResponse" : {
+        "properties" : {
+          "responses" : {
+            "description" : "Responses for each user",
+            "items" : {
+              "$ref" : "#/components/schemas/questsBatchClaimQuestRewardsSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "questsBatchClaimQuestRewardsSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "description" : "Message for the request",
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/questsClaimQuestRewardsRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/questsClaimQuestRewardsResponse"
+          },
+          "success" : {
+            "description" : "Whether the request was successful",
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "questsBatchClaimTaskRewardsRequest" : {
+        "properties" : {
+          "requests" : {
+            "description" : "Requests for each user",
+            "items" : {
+              "$ref" : "#/components/schemas/questsClaimTaskRewardsRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "questsBatchClaimTaskRewardsResponse" : {
+        "properties" : {
+          "responses" : {
+            "description" : "Responses for each user",
+            "items" : {
+              "$ref" : "#/components/schemas/questsBatchClaimTaskRewardsSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "questsBatchClaimTaskRewardsSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "description" : "Message for the request",
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/questsClaimTaskRewardsRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/questsClaimTaskRewardsResponse"
+          },
+          "success" : {
+            "description" : "Whether the request was successful",
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "questsBatchGetActiveQuestsRequest" : {
+        "properties" : {
+          "requests" : {
+            "description" : "Requests for each user",
+            "items" : {
+              "$ref" : "#/components/schemas/questsGetActiveQuestsRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "questsBatchGetActiveQuestsResponse" : {
+        "properties" : {
+          "responses" : {
+            "description" : "Responses for each user",
+            "items" : {
+              "$ref" : "#/components/schemas/questsBatchGetActiveQuestsSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "questsBatchGetActiveQuestsSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "description" : "Message for the request",
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/questsGetActiveQuestsRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/questsUserQuests"
+          },
+          "success" : {
+            "description" : "Whether the request was successful",
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "questsBatchIncrementTaskProgressRequest" : {
+        "properties" : {
+          "requests" : {
+            "description" : "Requests for each user",
+            "items" : {
+              "$ref" : "#/components/schemas/questsIncrementTaskProgressRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "questsBatchIncrementTaskProgressResponse" : {
+        "properties" : {
+          "responses" : {
+            "description" : "Responses for each user",
+            "items" : {
+              "$ref" : "#/components/schemas/questsBatchIncrementTaskProgressSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "questsBatchIncrementTaskProgressSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "description" : "Message for the request",
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/questsIncrementTaskProgressRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/questsUserQuest"
+          },
+          "success" : {
+            "description" : "Whether the request was successful",
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "questsClaimQuestRewardsRequest" : {
+        "properties" : {
+          "quest_name" : {
+            "description" : "Name of the quest to claim rewards for",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "User id",
+            "type" : "string"
+          }
+        },
+        "required" : [ "quest_name", "user_id" ],
+        "type" : "object"
+      },
+      "questsClaimQuestRewardsResponse" : {
+        "properties" : {
+          "currencies_granted" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Currencies granted (Deprecated: Use currencies_granted_64)",
+            "type" : "object"
+          },
+          "currencies_granted_64" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "description" : "Currencies granted",
+            "type" : "object"
+          },
+          "drop_table_results" : {
+            "description" : "Results from drop table evaluations",
+            "items" : {
+              "$ref" : "#/components/schemas/questsDropTableGrantResult"
+            },
+            "type" : "array"
+          },
+          "energy_granted" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Energy granted",
+            "type" : "object"
+          },
+          "failed_currencies" : {
+            "description" : "Currencies that failed to grant",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "failed_drop_tables" : {
+            "description" : "Drop tables that failed to grant",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "failed_energy" : {
+            "description" : "Energy that failed to grant",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "failed_items" : {
+            "description" : "Items that failed to grant",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "failed_statistics" : {
+            "description" : "Statistics that failed to grant",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "failed_xp" : {
+            "description" : "XP that failed to grant",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "items_granted" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Items granted",
+            "type" : "object"
+          },
+          "statistics_granted" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Statistics granted",
+            "type" : "object"
+          },
+          "user_inventory_items" : {
+            "description" : "Item instances granted",
+            "items" : {
+              "$ref" : "#/components/schemas/questsUserInventoryItem"
+            },
+            "type" : "array"
+          },
+          "xp_granted" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "XP granted",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "questsClaimTaskRewardsRequest" : {
+        "properties" : {
+          "quest_name" : {
+            "description" : "Name of the quest",
+            "type" : "string"
+          },
+          "task_name" : {
+            "description" : "Name of the task to claim rewards for",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "User id",
+            "type" : "string"
+          }
+        },
+        "required" : [ "quest_name", "task_name", "user_id" ],
+        "type" : "object"
+      },
+      "questsClaimTaskRewardsResponse" : {
+        "properties" : {
+          "currencies_granted" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Currencies granted (Deprecated: Use currencies_granted_64)",
+            "type" : "object"
+          },
+          "currencies_granted_64" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "description" : "Currencies granted",
+            "type" : "object"
+          },
+          "drop_table_results" : {
+            "description" : "Results from drop table evaluations",
+            "items" : {
+              "$ref" : "#/components/schemas/questsDropTableGrantResult"
+            },
+            "type" : "array"
+          },
+          "energy_granted" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Energy granted",
+            "type" : "object"
+          },
+          "failed_currencies" : {
+            "description" : "Currencies that failed to grant",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "failed_drop_tables" : {
+            "description" : "Drop tables that failed to grant",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "failed_energy" : {
+            "description" : "Energy that failed to grant",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "failed_items" : {
+            "description" : "Items that failed to grant",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "failed_statistics" : {
+            "description" : "Statistics that failed to grant",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "failed_xp" : {
+            "description" : "XP that failed to grant",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "items_granted" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Items granted",
+            "type" : "object"
+          },
+          "statistics_granted" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Statistics granted",
+            "type" : "object"
+          },
+          "user_inventory_items" : {
+            "description" : "Item instances granted",
+            "items" : {
+              "$ref" : "#/components/schemas/questsUserInventoryItem"
+            },
+            "type" : "array"
+          },
+          "xp_granted" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "XP granted",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "questsContainerContents" : {
+        "properties" : {
+          "currencies" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Currencies in the container (Deprecated: Use currencies_64)",
+            "type" : "object"
+          },
+          "currencies_64" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "description" : "Currencies in the container",
+            "type" : "object"
+          },
+          "drop_table_contents" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/questsDropTableContents"
+            },
+            "description" : "Drop table contents in the container",
+            "type" : "object"
+          },
+          "drop_tables" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Drop tables in the container",
+            "type" : "object"
+          },
+          "items" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Items in the container",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "questsDropTableContents" : {
+        "properties" : {
+          "drops" : {
+            "description" : "Drops in the drop table",
+            "items" : {
+              "$ref" : "#/components/schemas/questsDropTableDrops"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "questsDropTableDrops" : {
+        "properties" : {
+          "currencies" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/questsDropValues"
+            },
+            "description" : "Map of currency name to drop values",
+            "type" : "object"
+          },
+          "items" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/questsDropValues"
+            },
+            "description" : "Map of item name to drop values",
+            "type" : "object"
+          },
+          "trackables_energy" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/questsDropValues"
+            },
+            "description" : "Map of trackable energy name to drop values",
+            "type" : "object"
+          },
+          "trackables_xp" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/questsDropValues"
+            },
+            "description" : "Map of trackable xp name to drop values",
+            "type" : "object"
+          },
+          "weight" : {
+            "description" : "Weight of item in the drop table",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "weight" ],
+        "type" : "object"
+      },
+      "questsDropTableGrantResult" : {
+        "properties" : {
+          "currencies_granted" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "description" : "Currencies granted from this drop table evaluation",
+            "type" : "object"
+          },
+          "drop_index" : {
+            "description" : "Index of the drop that was selected",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "drop_table_name" : {
+            "description" : "Name of the drop table that was evaluated",
+            "type" : "string"
+          },
+          "energy_granted" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Energy granted from this drop table evaluation",
+            "type" : "object"
+          },
+          "items_granted" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Items granted from this drop table evaluation",
+            "type" : "object"
+          },
+          "xp_granted" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "XP granted from this drop table evaluation",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "questsDropValues" : {
+        "properties" : {
+          "max" : {
+            "description" : "Maximum value of drop. Will be equal to min if not specified (Deprecated: Use max_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "max_64" : {
+            "description" : "Maximum value of drop. Will be equal to min if not specified",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "min" : {
+            "description" : "Minimum value of drop (Deprecated: Use min_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "min_64" : {
+            "description" : "Minimum value of drop",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "multiple" : {
+            "description" : "Increment value of the drop. Defaults to 1 (Deprecated: Use multiple_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "multiple_64" : {
+            "description" : "Increment value of the drop. Defaults to 1",
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "questsGetActiveQuestsRequest" : {
+        "properties" : {
+          "include_reward_contents" : {
+            "description" : "If true, include contents of containers, drop tables in the rewards",
+            "type" : "boolean"
+          },
+          "tags" : {
+            "description" : "Comma separated tags to filter quests",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "User id",
+            "type" : "string"
+          }
+        },
+        "required" : [ "user_id" ],
+        "type" : "object"
+      },
+      "questsGetAvailableQuestsResponse" : {
+        "properties" : {
+          "quests" : {
+            "description" : "List of available quests",
+            "items" : {
+              "$ref" : "#/components/schemas/questsAvailableQuest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "questsIncrementTaskProgressRequest" : {
+        "properties" : {
+          "delta" : {
+            "description" : "Progress to update (Deprecated: Use delta64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "delta64" : {
+            "description" : "Progress to update",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "quest_name" : {
+            "description" : "Name of the quest to update task progress",
+            "type" : "string"
+          },
+          "task_name" : {
+            "description" : "Name of the task to update progress",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "User id",
+            "type" : "string"
+          }
+        },
+        "required" : [ "quest_name", "task_name", "user_id" ],
+        "type" : "object"
+      },
+      "questsRewardCurrency" : {
+        "properties" : {
+          "count" : {
+            "description" : "Count of the currency to be rewarded (Deprecated: Use count_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "count_64" : {
+            "description" : "Count of the currency to be rewarded",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "name" : {
+            "description" : "Name of the currency",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "questsRewardDropTable" : {
+        "properties" : {
+          "count" : {
+            "description" : "Number of times to evaluate the drop table (default 1)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "name" : {
+            "description" : "Name of the drop table",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "questsRewardEnergy" : {
+        "properties" : {
+          "count" : {
+            "description" : "Count of the energy to be rewarded",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "name" : {
+            "description" : "Name of the energy",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "questsRewardInventoryItem" : {
+        "properties" : {
+          "container_contents" : {
+            "$ref" : "#/components/schemas/questsContainerContents"
+          },
+          "count" : {
+            "description" : "Count of the item to be rewarded",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "name" : {
+            "description" : "Name of the item",
+            "type" : "string"
+          }
+        },
+        "title" : "---------------------------------------------------------------------------------------------------------------------",
+        "type" : "object"
+      },
+      "questsRewardStatistic" : {
+        "properties" : {
+          "count" : {
+            "description" : "Count of the statistic to be rewarded (Deprecated: Use count_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "count_64" : {
+            "description" : "Count of the statistic to be rewarded",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "name" : {
+            "description" : "Name of the statistic",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "questsRewardXp" : {
+        "properties" : {
+          "count" : {
+            "description" : "Count of the xp to be rewarded",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "name" : {
+            "description" : "Name of the xp",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "questsTaskProgress" : {
+        "properties" : {
+          "auto_progress" : {
+            "description" : "Whether the task should be automatically progressed",
+            "type" : "boolean"
+          },
+          "comparison_type" : {
+            "description" : "Type of the comparison to be made",
+            "type" : "string"
+          },
+          "completed" : {
+            "description" : "Whether the task is completed",
+            "type" : "boolean"
+          },
+          "current_progress" : {
+            "description" : "Current progress of the task (Deprecated: Use current_progress_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "current_progress_64" : {
+            "description" : "Current progress of the task",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "description" : {
+            "description" : "Description of the task",
+            "type" : "string"
+          },
+          "goal" : {
+            "description" : "Goal of the task (Deprecated: Use goal_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "goal_64" : {
+            "description" : "Goal of the task",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "goal_sign" : {
+            "description" : "Positive or negative, indicates whether item tracked is gained or used",
+            "type" : "string"
+          },
+          "goal_type" : {
+            "description" : "Indicates whether the goal is absolute or delta",
+            "type" : "string"
+          },
+          "metadata" : {
+            "description" : "Additional metadata to attached to task",
+            "type" : "object"
+          },
+          "reward_currencies" : {
+            "description" : "Currencies to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardCurrency"
+            },
+            "type" : "array"
+          },
+          "reward_drop_tables" : {
+            "description" : "Drop tables to be evaluated on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardDropTable"
+            },
+            "type" : "array"
+          },
+          "reward_energy" : {
+            "description" : "Energy to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardEnergy"
+            },
+            "type" : "array"
+          },
+          "reward_inventory_items" : {
+            "description" : "Items to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardInventoryItem"
+            },
+            "type" : "array"
+          },
+          "reward_statistics" : {
+            "description" : "Statistics to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardStatistic"
+            },
+            "type" : "array"
+          },
+          "reward_xp" : {
+            "description" : "XP to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardXp"
+            },
+            "type" : "array"
+          },
+          "status" : {
+            "description" : "Status of the task",
+            "type" : "string"
+          },
+          "tracking_object_name" : {
+            "description" : "Name of the object being tracked",
+            "type" : "string"
+          },
+          "tracking_object_type" : {
+            "description" : "Type of the object being tracked",
+            "type" : "string"
+          },
+          "user_metadata" : {
+            "description" : "Additional metadata to attached to task for user",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "questsUserInventoryItem" : {
+        "properties" : {
+          "catalog_item_name" : {
+            "type" : "string"
+          },
+          "count" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "instance_id" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "questsUserQuest" : {
+        "properties" : {
+          "assigned_at" : {
+            "description" : "Timestamp of when the quest was assigned",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "description" : {
+            "description" : "Description of the quest",
+            "type" : "string"
+          },
+          "metadata" : {
+            "description" : "Additional metadata attached to the quest",
+            "type" : "object"
+          },
+          "resets_at" : {
+            "description" : "Timestamp of when the quest resets",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "reward_currencies" : {
+            "description" : "Currencies to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardCurrency"
+            },
+            "type" : "array"
+          },
+          "reward_drop_tables" : {
+            "description" : "Drop tables to be evaluated on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardDropTable"
+            },
+            "type" : "array"
+          },
+          "reward_energy" : {
+            "description" : "Energy to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardEnergy"
+            },
+            "type" : "array"
+          },
+          "reward_inventory_items" : {
+            "description" : "Items to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardInventoryItem"
+            },
+            "type" : "array"
+          },
+          "reward_statistics" : {
+            "description" : "Statistics to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardStatistic"
+            },
+            "type" : "array"
+          },
+          "reward_xp" : {
+            "description" : "XP to be rewarded on completion",
+            "items" : {
+              "$ref" : "#/components/schemas/questsRewardXp"
+            },
+            "type" : "array"
+          },
+          "status" : {
+            "description" : "Status of the quest",
+            "type" : "string"
+          },
+          "tags" : {
+            "description" : "Tags to categorize the quest",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "tasks" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/questsTaskProgress"
+            },
+            "description" : "Tasks to be completed to finish the quest",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "questsUserQuests" : {
+        "properties" : {
+          "quests" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/questsUserQuest"
+            },
+            "description" : "Quests assigned to the user",
+            "type" : "object"
+          },
+          "updated_at" : {
+            "description" : "Timestamp of the last update",
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

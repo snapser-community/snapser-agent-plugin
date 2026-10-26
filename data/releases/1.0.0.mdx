@@ -1,0 +1,28 @@
+# 1.0.0
+##### September 15, 2025
+
+## Breaking Changes
+1. User, Api-Key and Internal SDKs have now been updated to include a namespace. Existing customers can continue using the old SDKs. The Web App and the Snapser CLI tool has been updated to allow downloading of the legacy SDKs as well as the new namespaced SDKs. If you do not see the legacy SDKs in the Web App or the CLI tool, please reach out to support.
+1. Standard Tier customers now need to add a credit card to their account to continue using paid features. Existing Snapends will continue to work and so there will be no live disruption. However, if you need to create new Snapends or use any paid features, you will need to add a credit card to your account.
+1. Auth Snap is now a required snap to create or update a Snapend. This ensures your backend is secure by default.
+1. Total snaps, seats and BI seats per organizations are now enforced.
+
+## Snaps
+### Analytics
+- Analytics Snap now includes a Query tool to run custom queries on your analytics data. This is useful for customers who do not want to add Snapser BI to their account, but want to run custom queries on their analytics data.
+
+## Web App
+- We have now launched a new self-service tier called the Starter Tier.
+- The Web App now shows the usage and cost breakdown for your account in the new Costs tool. You will also be able to see your invoices.
+- Major UI/UX pass to improve usability and navigation.
+- FTUE has been updated and bugs have been fixed.
+- API Explorer now allows you to upload a custom swagger to test your APIs.
+- Import tool is now available for all tiers. This allows users to import any Snasper manifest and get a Snapend up and running in minutes.
+
+## Bug Fixes
+### API Explorer
+API Explorer was caching an invalid header when you updated the Auth-Type. This has now been fixed.
+
+
+## AI Tools
+- Updated the Snapser MCP to use `application-id` instead of `game-id` for better security and isolation.

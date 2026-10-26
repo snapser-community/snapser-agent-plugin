@@ -1,0 +1,35 @@
+# beta-0.34.0
+##### July 25, 2024
+
+## Enhancements
+- **Unreal Engine 5.5**: Snapser SDK generator has been upgraded to support Unreal Engine 5.5.
+- **UX**: Minor UX improvements to the Snapser Web app.
+
+## Snaps
+### All Snaps
+- Logging for all Snaps has been upgraded to show access logs in non-prod. Allowing game studios to debug issues with their Snapser services.
+
+### Game Server Fleet
+- Now supports, % based buffers for auto-scaling. This allows you to set a buffer percentage for the fleet to scale up or down based on the current load.
+- New UpdateGameServerStatus API and an event has been released for signalling a gameserver is ready to be joined after allocation (requires gameserver to message the GSF API).
+
+### Trackables
+- Trackables Energy now allows overflow
+- XP can now have energy rewards
+- Game studios can now setup user default values for XP and Energy
+
+### Inventory
+- Inventory containers now support lock and unlock operations. Items that can be used for unlocking a container can be configured via the Snaps configuration tool. Unlock API now takes the item the game client wants to use for the unlock.
+- Inventory drop tables now support weight of zero.
+
+### Auth
+- Auth Snap now exposes a new API, allowing users to reverse lookup a user by their third party connection details.
+
+### Matchmaking
+- Updated Partial Match Delay feature to be relative to the match age instead of the ticket age. Now, tickets will stay in a partial match for the full delay duration before a match is formed.
+
+## Bug Fixes
+- The validate session token API now returns the correct associated login Id.
+
+## Documentation
+- Minor updates to the Snapser documentation.

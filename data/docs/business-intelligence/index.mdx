@@ -1,0 +1,159 @@
+export const description = 'Olympus'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Business Intelligence - Olympus
+
+Snapser offers a comprehensive business intelligence tool known as **Olympus**.
+Many developers invest in costly tools for hosting, querying, and visualizing analytics.
+Olympus serves as a centralized solution for product and data analysts, streamlining these processes into
+one integrated platform.
+
+## Features
+
+Snapser Business Intelligence tool provides the following features:
+1. **SQL Lab** - Query your app analytics data using SQL queries.
+2. **Charts** - Create custom charts to visualize your app metrics.
+3. **Dashboard** - Add your charts to create custom dashboards to visualize your app metrics.
+4. **Alerts** - Set alerts to notify you when a metric crosses a certain threshold.
+5. **Reports** - Generate reports to share with your team.
+
+
+## Activate Olympus
+
+<Note>
+  Only users that have access to Snapser will be able to access Olympus. If you
+  want to give access to a user that does not have access to Snapser, you will
+  have to add them to Snapser first.
+</Note>
+
+Olympus is available to all Premium and Studio Pro tier customers. To enable Olympus
+go to the main home page of your Web portal, click on Access and select **Business Intelligence**.
+There you can add users to Olympus.
+
+<Note>
+  Snapser's Premium tier comes with 10 free seats for Olympus. If you need more seats the cost is $199 per user per project.
+</Note>
+
+## Accessing Olympus
+
+Once a user has access, they can click on the Snapend they want to analyze and
+then click on the **Business Intelligence** button under **Quick Links**. This will take them to the Olympus tool.
+
+<Note>
+  Only Snapends that have analytics snap will show the Business Intelligence button.
+</Note>
+
+## Olympus UI Overview
+
+Once you log in you will see the following in UI:
+
+1. **SQL Lab**: This is where you can write your SQL queries and do your data analysis.
+2. **Datasets**: This is where you can create your Datasets for faster access and data preview capability.
+3. **Charts**: This is where you can create charts and visualize your data.
+4. **Dashboard**: This is where you can create dashboards from the charts you have saved on Olympus and share them with your team.
+5. **Alerts**: You will find Alerts and Reports under the Settings tab.
+
+{/* <Image src={dashboardPic} alt={'image'} /> */}
+
+### SQL Lab
+
+SQL Lab is where you can write your SQL queries and do your data analysis. Once you go to the SQL Lab tab you will
+have to pick the cluster you want to do your analysis on. For example: this can be the production cluster of the app
+you work on. Next you should pick "public" schema from the next drop down and then you will start seeing all
+the tables you have access to. You can then pick a table or multiple tables to run your queries. Olympus also shows you
+a preview section of the data you have selected. This is very useful to see if you have selected the right data.
+In the main section of the tool you can run your queries.
+
+Olympus also allows you to create a dataset or a chart directly after running your query.
+
+![Olympus Sql](/images/docs/olympus-sql.png)
+
+### Datasets
+
+The Datasets section is pretty standard. You can pre-create your data sets and
+then use them in your charts. You will have to pick your cluster, then select
+"public" under scheme and pick the table you want to create a dataset for.
+
+![Olympus Datasets](/images/docs/olympus-dataset.png)
+
+### Charts
+
+Click on the Charts tab and you will see an interface where you need to pick
+your Dataset and then pick the type of chart you want to create. Hit "Create
+Chart", which will take you to the Chart creation page. Here you can pick the
+columns you want to visualize. The UI smartly shows the right UI depending on
+the Chart type you have picked in the previous page. But you can also update
+the Chart type here. For adding specific columns to the chart axis, you can
+drag and drop the column from the left side to the right side. You can also
+add filters to your chart. Once you are done, you can hit "Update Chart" which
+will render the chart UI on the right hand side. Once you are happy with it,
+you can finally hit save and give it a name. You can then go to the Dashboard
+tab and add this chart to a dashboard.
+
+![Olympus Charts](/images/docs/olympus-charts.png)
+
+### Dashboard
+
+Olympus Dashboards are a collection of charts. To add a Dashboard go to the
+Dashboard tab and click "Create Dashboard". You will be taken to the Dashboard
+creation page. Here you can drag and drop charts from the right hand side nav
+onto the main canvas. Olympus also allows you to resize your dashboard within
+the canvas. You can add multiple charts and organize them the way you want.
+Once you are happy with it, give your Dashboard a name and save it.
+
+![Olympus Dashboard](/images/docs/olympus-dashboard.png)
+
+<Note>
+  Snapser provides default graphs that have pre-baked charts for Business, Engagement and Session metrics.
+</Note>
+
+#### Dashboards for Experiments
+
+For each experiment you create using the `Experiments` snap, Olympus will automatically create a experiment specific dashboard.
+The dashboard will have the following widgets:
+
+| Metric                                          | Category    |
+| ----------------------------------------------- | ----------- |
+| DAU (Daily Active Users)                        | Growth      |
+| WAU (Weekly Active Users)                       | Growth      |
+| MAU (Monthly Active Users)                      | Growth      |
+| Retention Rates (D1 - D90)                      | Retention   |
+| Conversion Rate                                 | Revenue     |
+| New User Conversion Rate                        | Revenue     |
+| ARPDAU (Average Revenue Per Daily Active User)  | Revenue     |
+| Payer DAU                                       | Revenue     |
+| Lifetime Payer DAU                              | Revenue     |
+| First Transaction                               | Revenue     |
+| Total Revenue                                   | Revenue     |
+| Total Transactions                              | Revenue     |
+
+### Alerts
+Snapser allows you to enter a threshold query for a metric and get notified when the metric crosses that threshold.
+You can setup an alert as follows:
+1. Condition - The condition you want to set for the alert. Here you will have to write a SQL query
+that will return a single value for the database you are querying. Additionally, you can give an
+alert condition and value.
+2. Schedule - You can set the schedule for the alert. You can set it to run every hour, day, week,
+ month or on a cron schedule.
+3. Message Content - You can set the message content for the alert. This can either be your
+dashboard or a chart.
+4. Notification Method - You can set an email to get notified.
+
+![Olympus Alerts](/images/docs/olympus-alerts.png)
+
+## FAQs
+### Can I share and download my chart data?
+
+Yes! You can also download chart data as CSV by clicking the three dot button
+on your chart. You can create dedicated chart links and share them with your
+team mates.
+
+### What is the tech powering Olympus?
+
+We are grateful to the open source community and we are using Apache Superset
+as a foundation for Olympus and are building our own customizations on top of
+it.

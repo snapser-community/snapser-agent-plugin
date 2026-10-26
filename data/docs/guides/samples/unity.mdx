@@ -1,0 +1,308 @@
+
+export const description =
+  'This guide will help you set up a Unity project with Snapser.'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Unity Single Player Game
+This guide will help you set up a Unity game with Snapser. This is a simple single player - flappy bird game, that uses Snapser’s authentication, profiles, storage, statistics and leaderboard snaps. You can use this example to understand how to integrate Snapser into your own game.
+
+## Prerequisites
+<div className="parent">
+  <div className="servicesBox">
+    # Install Unity
+
+    Make sure you have Unity installed on your computer. You can download the latest version of Unity from the [Unity website](https://unity.com/products/unity-personal).
+
+    <div>
+      <DocsButton href={'https://unity.com/products/unity-personal'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Download Unity</DocsButton>
+    </div>
+  </div>
+</div>
+
+<Checkpoint step={0}>
+  You are now ready to begin the tutorial.
+</Checkpoint>
+
+## Step 1: Set up your game
+
+To integrate Snapser features into your game, you need to create an account and add your game to it. This section demonstrates how to do that.
+
+<Note>
+  If you have already created a game in Snapser, you can skip this step and proceed to the next one.
+</Note>
+
+1. **Log in to your Snapser account** at https://snapser.com/login.
+2. Navigate to the **Apps dashboard** and click on the **New Game** button located in the upper right corner.
+3. **Enter the name of your game** in the designated field. It's advisable to use a name that closely matches your game's title to avoid confusion among your team members. Click **Add** when done.
+    ![Add new game name](/images/docs/tutorials/create-snapend-add-game.png)
+    <Note>
+    Avoid adding prefixes like "dev", "staging", or "prod". Snapser supports multiple environments for each game, allowing you to create a separate custom backend for each stage of your game development.
+    </Note>
+
+<Checkpoint step={1}>
+  Shortly after, your game will appear in the Apps dashboard, ready for you to build your first custom backend.
+</Checkpoint>
+
+
+## Step 2: Create a Snapend
+
+1. In the **Apps dashboard**, click on the game you have added. This action brings up a view that shows the development, staging, and production environments. Since there are currently no Snapends, let's add one.
+![GameClick](/images/docs/tutorials/create-snapend-game.png)
+1. In the Development environment, click on **Create a Snapend**.
+![GameClick](/images/docs/tutorials/create-snapend-game-home.png)
+1. **Enter the name of your Snapend** in the **Name your Snapend** field and click **Continue**.
+    ![Name your Snapend](/images/docs/quick-start/name-your-snapend.png)
+1. On the next page, select the following snaps:
+   1. Authentication
+   2. Leaderboard
+   3. Profiles
+   4. Statistics and segmentation
+   5. Storage
+    ![Cluster](/images/docs/tutorials/unity-sp-snapend.png)
+1. Keep clicking **Continue** and then on the Review page click the **Snap It** button. A pop-up window will appear showing you the state of creating your cluster, which takes a moment or two to complete.
+1. As Snapser finishes setting up the Snapser cluster in Kubernetes (which includes infrastructure, configuration of Snaps, network and security, and generating your Snapend), click the **App** button to wait for your Snapend to be operational.
+1. Once the Snapend is ready, you will see a green dot mark on the Snapend widget. This indicates that your Snapend is ready to use.
+![Snap Dashboard](/images/docs/tutorials/create-snapend-cluster-ready.png)
+1. Click on the Snapend widget to go to the Snapend dashboard.
+![Snapend Dashboard](/images/docs/tutorials/unity-sp-snapend-dashboard.png)
+1. **IMPORTANT**: On this page, copy the **Snapend ID**. You will need to replace this in the Unity codebase.
+
+<Checkpoint step={2}>
+  You now have a backend setup. We can now proceed toward downloading our custom SDK, configuring our snaps for our game and then putting it altogether in Unity.
+</Checkpoint>
+
+## Step 3: Configure Snaps
+On your Snapend homepage look for Quick links. Click the **Snaps Configuration** button under **Quick Links** to go to the Snaps configuration home page. Now, lets configure the Snaps one by one.
+
+### A. Authentication Configuration
+<Note>
+    In our Unity game, we want the user to start playing the game without any login friction. This is why we are going to add the anonymous connector. To add the anonymous connector, please follow the instructions below.
+</Note>
+
+1. Click on the **Authentication** widget to open the Auth snaps configuration page.
+1. Select the `Authentication > Connectors` tool from the tool navigation and then click on the **Add a connector** button. You will see quite a few connectors in the menu but lets select **Anonymous** and press Save.
+![Add Anonymous Authentication](/images/docs/tutorials/snapend-create-admin-auth-anon.png)
+1. Then click the back button to go back to the configuration home page.
+
+
+### B. Leaderboard Configuration
+<Note>
+    In our Unity game, we are going to track the max_distance anyone playing the game has traveled. Additionally, we also want to see the distance each player has traveled in total. This is so users playing the game can see how they are doing compared to other players. To add the leaderboards, please follow the instructions below.
+</Note>
+1. Click on the **Leaderboards** widget to open the Leaderboards snaps configuration page.
+1. Here we are going to create one leaderboard:
+    - max_distance
+1. To create a leaderboard, click on the `Leaderboards` tool from the tool navigation and click on the **+ Leaderboard** button. This will open up a form, where you can add the new leaderboard details. Add the following leaderboards and click save.
+   1. `Name` - `max_distance`
+   1. `Description` - `Max distance traveled by the player`
+   1. `Behavior` - `maximum` - This is because we only want to track the maximum distance traveled by the player.
+   1. `Period - Start time` - Use the date picker to select the current date time, such that the leaderboard is active.
+![Leaderboard Config](/images/docs/tutorials/unity-sp-leaderboard.png)
+1. Then click the back button to go back to the configuration home page.
+
+### C. Profiles Configuration
+<Note>
+    We want to allow, players to chose their own profile attributes like a gamertag. To add a profile attribute, please follow the instructions below.
+</Note>
+1. Click on the **Profiles** widget to open the Profiles snaps configuration page.
+1. Select the `Attributes` tool from the tool navigation and then click on the **Profile Attribute** button. This will open up a form, where you can add the new attribute details. Add the following attributes and click save.
+   1. `Name` - `gamertag`
+   2. `Category` - `Unique`
+   3. `Type` - `text`
+1. Keep the default values for the rest of the fields. You can add more attributes if you want to but for this demo we will keep it simple.
+    ![Profile Config](/images/docs/tutorials/unity-sp-profile.png)
+1. Then click the back button to go back to the configuration home page.
+
+### D. Statistics Configuration
+<Note>
+    We want to track the distance traveled by the player in the game and then display it in our UI. Statistics and segmentation snap allows you to store unique metric values for each player. To add a statistics key, please follow the instructions below.
+</Note>
+1. Click on the **Statistics** widget to open the Statistics snaps configuration page.
+1. Select the `Statistics` tool from the tool navigation and then click on the **+ Statistics** button. This will open up a form, where you can add the new statistics details. Add the following statistics and click save.
+   1. `Key` - `distance_traveled`
+1. Keep the default values for the rest of the fields.
+    ![Statistics Config](/images/docs/tutorials/unity-sp-statistics.png)
+1. Then click the back button to go back to the configuration home page.
+
+### E. Storage Configuration
+<Note>
+    Storage snap allows you to store any non-structured or structured data for your game. In our case we want to store the color of the spaceship the user has selected. To add a storage key, please follow the instructions below.
+</Note>
+1. Click on the **Storage** widget to open the Storage snaps configuration page.
+1. Select the `Blob Keys` tool from the tool navigation and then click on the **+ Blob Key** button. This will open up a form, where you can add the new blob key. Add the following details in the form and click save.
+   1. `Blob Keys` - `color`
+1. Keep the default values for the rest of the fields.
+    ![Storage Config](/images/docs/tutorials/unity-sp-storage.png)
+
+<Checkpoint step={3}>
+  We have configured the Authentication, Leaderboard, Profiles, Statistics and Storage snaps. Our Snapend is now ready to integrate with our game.
+</Checkpoint>
+
+## Step 4: Download the Snapser SDK
+1. On the Snapend home page scroll down to the SDK download widget called **Game Client SDKs**.
+    - Select **Unity - C#** for the platform
+    - Select **Unity Web Request** for the HTTP library
+    - Click Generate
+![Unity SDK](/images/docs/tutorials/unity-sp-sdk.png)
+1. In a few minutes you will see a pop up of a Zip file. Download the zip file and extract it.
+1. You will see a folder structure like this:
+```bash
+  ├── sdk-csharp-unitywebrequest-unity/
+    │   ├── api/
+    │   ├── src/
+    │       └── Snapser/ (👈 This is the folder that you are going to need)
+    │       └── link.xml
+    │       └── Snapser.asmdef
+```
+
+<Note>
+You will be copying this `sdk-csharp-unitywebrequest-unity/src/Snapser` folder into your Unity projects `Assets/Packages`folder.
+</Note>
+
+<Checkpoint step={4}>
+  You now have a SDK that is going to be integrated into your Unity project. Lets move on to the next step.
+</Checkpoint>
+
+## Step 5: Download the Unity Project
+1. Talk to Snapser support to get access to this [repo](https://github.com/snapser-community/snapser-demo-unity-sp).
+2. Clone or download this example project and open it in Unity.
+3. After downloading the project you may have a bunch of errors in the console. This is due to the missing Snapser sdk and its dependencies.
+
+## Step 6: Install Dependencies
+<Note>
+    The Unity project comes with all dependencies installed. We still recommend you going through this section.
+</Note>
+In Unity, for the Snapser SDK to work, we need to install a few dependencies. A convenient way to install the dependencies is to use **NuGetForUnity**. This is a convenient nuget interface from within Unity but you can choose to install these dependencies from the Terminal if you wish. Follow these [instructions](https://github.com/GlitchEnzo/NuGetForUnity) to install NuGetForUnity
+
+### Install NuGet packages
+From **Manage NuGet Packages**, Install the following three dependencies -
+    1. Newtonsoft.Json
+    1. Polly
+    1. Microsoft.AspNetCore.Mvc.DataAnnotations
+<Note>
+You may need to restart Unity to access the Nuget via the Unity Toolbar
+These packages will be installed under Assets/Packages in your Unity Project. Also sometimes NuGet installs a different version of DataAnnotations. If it does that please uninstall it from the UI.
+</Note>
+![alt_text](/images/docs/unity/unity-nuget.png)
+
+
+## Step 7: Understand the Code
+1. To understand the usage, you should look at **SnapserManager.cs**. This class acts as the link between the game logic and the Snapser sdk.
+1. For example, the following function makes an anonymous login authentication call to the Snapser’s authentication service.
+```csharp
+
+public async void AuthenticationAnonLoginAsync(Action& lt; SnapserServiceResponse > callback = null)
+
+{
+
+    if (ClusterURL.IsEmptyOrNull())
+
+    {
+
+        Debug.LogError("No cluster url available to start authentication from user/auth services.");
+
+        return;
+    }
+
+    if (_authService == null)
+
+    {
+
+        Debug.LogError("Auth service is not instantiated. This indicates there is a flow issue between cluster creation and the authentication call. Auth call can't be initiated.");
+
+        return;
+    }
+
+    AuthAnonLoginResponse response;
+
+    SnapserServiceResponse authResponse;
+
+    try
+
+    {
+
+        if (UserName.IsEmptyOrNull())
+
+        {
+
+            UserName = GameConstants.DefaultPlayerName + DateTime.UtcNow.ToString("yyyyMMddHHmmssffff");
+        }
+
+        response = await _authService.AnonLoginAsync(new AuthAnonLoginRequest(true, UserName));
+    }
+
+    catch (Exception e)
+
+    {
+
+        Console.WriteLine(e);
+
+        authResponse = new SnapserServiceResponse(false, e.Message, e);
+
+        callback?.Invoke(authResponse);
+
+        Debug.Log("Authentication Call Complete - " + authResponse.Success + " - " + authResponse.ResponseMessage);
+
+        return;
+    }
+
+    if (response != null)
+
+    {
+
+        UserId = response.User.Id;
+
+        SessionToken = response.User.SessionToken;
+
+        authResponse = new SnapserServiceResponse(true, "Ok", response);
+
+        callback?.Invoke(authResponse);
+
+        Debug.Log("Authentication Call Complete - " + authResponse.Success + " - " + authResponse.ResponseMessage + ". UserID - " + response.User.Id + ". SessionToken - " + response.User.SessionToken);
+
+        IsAuthenticated = true;
+
+        InstantiateRequiredSnapserServices();
+
+        OnAuthenticationSuccessful?.Invoke();
+    }
+}
+```
+
+1. Additionally, If you go to the Main scene, each UI element you see on the screen, has its own **game object** with specific classes. Check them out understand how they work.
+![alt_text](/images/docs/unity/unity-project-ui.png)
+
+## Step 8: Update the Code
+- Copy the downloaded SDK into the **Assets/Packages** folder. If there is an existing folder in the repo, you can delete it and replace it with the new SDK code.
+```bash
+  ├── sdk-csharp-unitywebrequest-unity/
+    │   ├── api/
+    │   ├── src/
+    │       └── Snapser/ (👈 Copy this folders contents to Assets/Packages/Snapser)
+    │       └── link.xml
+    │       └── Snapser.asmdef
+```
+- Open **GameConstants.cs** in the **Assets/Scripts/Utilities** folder and update the `$YOUR_SNAPEND_ID` variable with your Snapend ID.
+Additionally, make sure that the **Configuration.cs** in the **Assets/Packages/Snapser/Client** also uses your Snapend Id. 
+```csharp
+public static readonly string DefaultClusterURL = "https://gateway.snapser.com/$YOUR_SNAPEND_ID";
+```
+
+<Checkpoint step={8}>
+  At this point, try compiling the game and it should work without any errors. If you see any errors, please check the console and make sure you have installed the dependencies correctly.
+</Checkpoint>
+
+## Step 9: Run the game
+1. Once all the dependencies are installed, run the Main scene which can be found in the Project window under Assets/Scenes. Click the play button to start the game.
+2. After you click the “Login and Power up Snapser” button, you’ll see the UI update to what you see below
+![alt_text](/images/docs/unity/unity-demo.png)
+
+<Checkpoint step={9}>
+  Congratulations! You should have a fully working game in Unity that is integrated with the backend we just created.
+</Checkpoint>
+
+## Next Steps
+- At the root of the Unity repo you will find a snapser-snapend-manifest.json file. This file is the representation of your Snapend architecture and the configuration. You can essentially just import it in Snapser and skip Steps 2 and 3.

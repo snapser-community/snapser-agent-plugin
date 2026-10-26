@@ -1,0 +1,31 @@
+export const description = 'Audit'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Audit
+
+## Concept
+As someone running a live app, its important to have eyes on everything that is happening
+within the platform. The Audit tool allows you to see all the actions that are being performed by your team members along with the time and date of the action.
+
+<Warning>
+  Full audit tracking is a Premium feature. If you are on a non-premium plan, you will not be able to see the audit tool.
+</Warning>
+
+## Tool
+
+You can access the Audit tool by clicking Tools in the left Nav bar and then clicking the Audit widget. Depending on the context you are the Audit tool will only show you the items that are relevant. For example: If you are in your cluster view and then you click Tools and then select the Audit widget, it will show you the Audit trail only for your cluster. If you are accessing this from your app page, you will see an Audit for the entire app, including all the clusters. If you are accessing this from the Company page (only`company-*` have access to this page), you will see an Audit for the entire company, including all the apps and clusters.
+
+![Audit Pic](/images/docs/audit.png)
+
+## Audit Entries
+
+The Audit tool shows you the following information in a tabular format:
+
+1. **Data Time** - The exact date time when the action was performed.
+2. **Email** - The user who performed the action.
+3. **Action** - The action that was performed.
+4. **Details** - A JSON blob that includes granular details.

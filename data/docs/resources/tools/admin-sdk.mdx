@@ -1,0 +1,82 @@
+export const description = 'Admin SDK'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'AJ Apte',
+}
+
+# Admin SDK
+
+## Concept
+
+Each of your games has one or more Snapends, and every Snapend is made up of
+snaps. The Admin SDK lets you configure those snaps programmatically instead of
+clicking through the portal every time.
+
+Think of all the configuration you do as your game evolves:
+
+- Adding a new global leaderboard
+- Updating guild settings
+- Adding a new storage blob key
+- Adding a new profile attribute
+- Creating a new A/B test
+
+The Admin SDK is built for automating exactly this kind of work. Instead of
+making these changes by hand, you can script them, run them as part of your own
+pipelines, and repeat them reliably across environments.
+
+It also lets you build your own tools. You can create your own HTML-based
+configuration tools on top of the Admin SDK and have them integrate directly
+with the Snapser ecosystem, so your team configures snaps through interfaces you
+design.
+
+## Tool
+
+You can access the Admin SDK by clicking **Tools** in the left nav bar and then
+selecting **Admin SDK**. The same tool lives in two places — **App → Tools →
+Admin SDK** and **Snapend → Tools → Admin SDK** — and the picker only lists
+snaps that have been tagged as Admin SDK enabled.
+
+The App level tool needs app level access or above, while the Snapend level tool
+needs Snapend level access or above, so a teammate scoped to a single Snapend
+can still download the Admin SDK.
+
+To download an Admin SDK:
+
+1. **Select a Platform** — Pick the language or framework you want to generate
+   the SDK for. The Admin SDK supports the same platforms as the Client SDK and
+   the Generic (Server) SDK.
+2. **Select an HTTP Library** — For platforms that support multiple HTTP
+   libraries, choose the one you want.
+3. **Select your Snaps** — Every snap and BYOSnap that supports the Admin SDK is
+   listed and enabled by default. Toggle off the ones you don't need, and pick
+   the version for each snap you keep.
+4. **Download** — Click Download to get the Admin SDK for your selected snaps,
+   then use it to automate your configuration or to power your own tools.
+
+<Warning>
+  If you don't see a snap or version in the list, it doesn't yet support the
+  Admin SDK. It will appear here automatically once it does.
+</Warning>
+
+## BYOSnap Admin SDK Endpoints
+
+If you're building a BYOSnap and want an endpoint to surface in the Admin SDK,
+it needs to satisfy two rules:
+
+1. **URL structure** — the path must include `/settings` immediately after
+   the prefix and snap name: `/v1/<snap-name>/settings/<your-path>`. For
+   example, an `inventory` BYOSnap exposing an admin endpoint for items would
+   use `/v1/inventory/settings/items`. Endpoints that leave out the
+   `/settings` segment aren't routed as Admin SDK endpoints, even if they're
+   otherwise tagged correctly.
+2. **Swagger tag** — the operation must be tagged
+   `x-snapser-sdk-categories: [admin]`. This is what actually places the
+   endpoint in the generated Admin SDK — `admin` is an SDK category, not an
+   auth type, so you still guard the endpoint with `api-key` and/or
+   `internal` auth types.
+
+<Note>
+See the [BYOSnap Authentication & SDK Categories guide](/docs/custom/bring-your-own-snap/byosnap-auth-and-sdk#example-admin-sdk-endpoint)
+for the full code walkthrough across all supported languages.
+</Note>

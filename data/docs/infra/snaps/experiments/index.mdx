@@ -1,0 +1,417 @@
+
+
+export const description = 'Experiments'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Experiments
+
+In modern games and apps, A/B testing is crucial to delivering a more personalized and engaging experience for users. The Experiments Snap provides sophisticated A/B testing capabilities, enabling you to run multiple concurrent experiments, targeting either the entire user base or specific segments.
+
+## Overview
+
+Experiments allow you to deploy different treatments, code, and content to various segments of your user population. This feature enables testing of new game paths, content, and features, as well as scheduling treatments for all or part of your user base.
+
+## Key Concepts
+
+To effectively utilize the Experiments Snap, it's essential to understand the following concepts:
+
+### Audience
+
+There are two options for defining your audience: **All Users** and **Segment**.
+
+1. **All Users**: Target your entire user base, using variants (described below) to provide deterministic treatments.
+2. **Segment**: Target specific user groups based on predefined statistics. For example, to target users with 100 or more logins:
+   - **Statistics Service**: Create a User Statistic called `logins` and increment it each time a user logs in.
+   - **Statistics Service**: Define a Segment with a predicate that `logins` is equal to or greater than 100.
+   - **Experiments Service**: Select this Segment in the Experiments service when defining your audience.
+
+### Experiment Variants
+
+Variants are classified into two types: Control and Treatment.
+
+- **Control Variant**: Acts as the baseline for comparison.
+- **Treatment Variants**: These can vary in number and are compared against the Control Variant.
+
+Each variant is assigned a specific percentage of the population, ensuring that the total traffic percentage equals 100%. The treatment data, which can be as simple as a string or as complex as a JSON blob, defines the content or experience delivered to the users. JSON validation can be enabled for added safety.
+
+### Experiment Exclusion Groups
+
+Exclusion Groups allow you to designate experiments as mutually exclusive, with weights assigned to prioritize which experiment a player is more likely to encounter. When a player enters a group, the system checks if they are already assigned to any experiments within that group. If not, the player is randomly assigned to an experiment based on the weights. This ensures that players do not receive conflicting treatments.
+
+### Treatments
+
+Treatments are the specific experiences or data delivered to the user. Players remain in the assigned treatment variant unless changes occur in the segment or experiment setup. Treatment data can vary in complexity and is validated through a JSON schema if enabled.
+
+### Schedule and States
+
+Experiments can be scheduled by setting start and end timestamps. Depending on these times, the experiment can be in one of the following states:
+
+1. **awaiting**: Start time is in the future.
+2. **started**: Start time has passed, but the end time is still in the future.
+3. **finished**: End time has passed.
+4. **stopped**: The experiment has been explicitly stopped by an admin but can be restarted.
+5. **deleted**: The experiment has been soft-deleted.
+
+## Examples
+
+**Example 1: A/B Testing a New Game Feature**
+
+Imagine you're testing a new feature that changes the way players earn rewards. You could set up two variants:
+- **Control**: The current reward system.
+- **Treatment**: The new reward system.
+
+By splitting your audience into these variants, you can measure which system drives better engagement.
+
+**Example 2: Segment-Based Content Delivery**
+
+You want to test different content for new versus returning players. You can create segments based on user logins and deliver different tutorials or onboarding experiences to each group, helping to optimize the experience for different player types.
+
+## Using Experiments with Remote Config
+
+Pairing Experiments with the Remote Config Snap is the recommended workflow for most product teams. The key idea is that the treatment data in your experiment variants mirrors a Remote Config entry. While an experiment is running, the client reads the active treatment from the Experiments API. Once you have a winning variant, you promote its value directly to the corresponding Remote Config entry, so that all users receive the winning experience going forward — without any client-side code change.
+
+This approach provides a clean separation between the experimentation phase and steady-state rollout:
+
+- **During the experiment**: the client checks Remote Config first; if no entry exists yet, it falls back to the Experiments API to get the assigned variant's treatment.
+- **After the experiment closes**: the winning variant's value has been promoted to Remote Config. All users now receive it automatically, and the experiment can be safely stopped or archived.
+
+## Closing an Experiment
+
+Once your analytics indicate a clear winner, you have two paths to finalize the experiment depending on whether you are using Remote Config.
+
+### Flow A — With Remote Config (Recommended)
+
+1. **Client startup**: the client fetches Remote Config. If the relevant entry exists, use that value directly.
+2. **Fallback**: if the Remote Config entry does not yet exist, call the Experiments API to get the user's assigned variant treatment.
+3. **Finalize**: when the product team is ready to ship the winner, use the Experiments config tool to pick the winning variant and promote its treatment value to the corresponding Remote Config entry (see [Closing an Experiment in the config tool](./config-tools/experiments#closing-an-experiment)).
+4. **Cleanup**: once the value is live in Remote Config, all users receive the winning treatment automatically. The experiment can be stopped or archived.
+
+### Flow B — Without Remote Config
+
+1. **Client reads treatment**: the client calls the Experiments API to get the user's assigned variant treatment and applies it.
+2. **Finalize**: when the product team is ready to ship the winner, copy the winning variant's JSON treatment payload and paste it as the treatment for every other variant — including the control variant — so every user receives the same winning experience regardless of their assignment.
+3. **Cleanup**: once all variants have been updated, the experiment can be stopped or archived.
+
+## Experiment Analytics & Business Intelligence
+
+The Experiments Snap provides valuable insights into player behavior and preferences. By analyzing the results
+of your experiments, you can make data-driven decisions to improve player engagement, retention, and
+monetization. The Experiment Snap is integrated with the `Analytics` Snap and the `Snapser Business Intelligence` tool.
+
+### Experiment Analytics
+
+Every time an experiment is created, all the user assignments are automatically sent to the Analytics Snap.
+The table `user_snap_experiments` will be created and populated with the experiment data. This table will be updated in real-time as the experiment progresses and will have the following schema:
+1. **experiment_name**: The unique name of the experiment.
+2. **variant_name**: The name of the variant.
+3. **user_id**: The unique identifier of the user.
+4. **session_id**: The session identifier of the user.
+5. **created_at**: The timestamp when the user was assigned to the experiment.
+
+### Business Intelligence Tool
+Additionally, the experiments Snap, will automatically create a experiment specific dashboard in the BI tool.
+The dashboard will have the following widgets:
+| Metric                                          | Category    |
+| ----------------------------------------------- | ----------- |
+| DAU (Daily Active Users)                        | Growth      |
+| WAU (Weekly Active Users)                       | Growth      |
+| MAU (Monthly Active Users)                      | Growth      |
+| Retention Rates (D1 - D90)                      | Retention   |
+| Conversion Rate                                 | Revenue     |
+| New User Conversion Rate                        | Revenue     |
+| ARPDAU (Average Revenue Per Daily Active User)  | Revenue     |
+| Payer DAU                                       | Revenue     |
+| Lifetime Payer DAU                              | Revenue     |
+| First Transaction                               | Revenue     |
+| Total Revenue                                   | Revenue     |
+| Total Transactions                              | Revenue     |
+
+Monitoring these metrics will help you understand the impact of your experiments on player behavior and revenue.
+All the graphs are grouped by the experiment variant which will help you compare the performance of different treatments.
+Based on the insights gained, you can make informed decisions to finalize your winning treatment or outright close the experiment.
+
+<Note>
+  Your Snapend needs to have the Analytics Snap. Additionally, Snapser BI tool is required to view the experiment dashboard.
+</Note>
+
+## APIs
+
+The `Experiments` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name           | HTTP Method | API Description                        |
+| ------------------ | ----------- | -------------------------------------- |
+| [ExperimentsGetUserExperiments](#experimentsgetuserexperiments-api) | GET         | Gets all user experiments for the user |
+| [ExperimentsGetUserExperiment](#experimentsgetuserexperiment-api)  | GET         | Gets the user experiment for the user  |
+</div>
+
+### Usage
+#### ExperimentsGetUserExperiments API
+<CodeGroup title="Gets all user experiments for the user" tag="GET" label="ExperimentsGetUserExperiments">
+```csharp
+/// <summary>
+/// User Experiments Gets all user experiments for the user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="includeInactiveExperiments">Whether to include inactive experiments (optional)</param>
+/// <returns>ExperimentsGetUserExperimentsResponse</returns>
+public ExperimentsGetUserExperimentsResponse ExperimentsGetUserExperiments(string userId, string token, bool? includeInactiveExperiments = default(bool?))
+{
+    Snapser.Client.ApiResponse<ExperimentsGetUserExperimentsResponse> localVarResponse = ExperimentsGetUserExperimentsWithHttpInfo(userId, token, includeInactiveExperiments);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ExperimentsGetUserExperimentsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="ExperimentsGetUserExperimentsResponse" /> class.
+/// </summary>
+/// <param name="userExperiments">userExperiments.</param>
+public ExperimentsGetUserExperimentsResponse(List<ExperimentsUserExperiment> userExperiments = default(List<ExperimentsUserExperiment>))
+{
+    this.UserExperiments = userExperiments;
+}
+
+/// Snapser.Model for ExperimentsUserExperiment
+/// <summary>
+/// Initializes a new instance of the <see cref="ExperimentsUserExperiment" /> class.
+/// </summary>
+/// <param name="assignedVariant">assignedVariant.</param>
+/// <param name="audienceEvaluated">audienceEvaluated.</param>
+/// <param name="excludedFor">excludedFor.</param>
+/// <param name="experimentName">experimentName.</param>
+/// <param name="inAudience">inAudience.</param>
+/// <param name="inRamp">inRamp.</param>
+/// <param name="isOverride">isOverride.</param>
+/// <param name="rampRoll">rampRoll.</param>
+/// <param name="state">state.</param>
+/// <param name="treatment">not actually persisted. Set when asked for..</param>
+/// <param name="userId">userId.</param>
+public ExperimentsUserExperiment(string assignedVariant = default(string), bool audienceEvaluated = default(bool), string excludedFor = default(string), string experimentName = default(string), bool inAudience = default(bool), bool inRamp = default(bool), bool isOverride = default(bool), int rampRoll = default(int), string state = default(string), string treatment = default(string), string userId = default(string))
+{
+    this.AssignedVariant = assignedVariant;
+    this.AudienceEvaluated = audienceEvaluated;
+    this.ExcludedFor = excludedFor;
+    this.ExperimentName = experimentName;
+    this.InAudience = inAudience;
+    this.InRamp = inRamp;
+    this.IsOverride = isOverride;
+    this.RampRoll = rampRoll;
+    this.State = state;
+    this.Treatment = treatment;
+    this.UserId = userId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserExperimentsServiceApi::ExperimentsGetUserExperimentsRequest : public Request
+{
+public:
+    virtual ~ExperimentsGetUserExperimentsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    /* Whether to include inactive experiments */
+    TOptional<bool> IncludeInactiveExperiments;
+};
+
+// Response
+class SNAPSER_API SnapserExperimentsServiceApi::ExperimentsGetUserExperimentsResponse : public Response
+{
+public:
+    virtual ~ExperimentsGetUserExperimentsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserExperimentsGetUserExperimentsResponse Content;
+};
+
+class SNAPSER_API SnapserExperimentsGetUserExperimentsResponse : public Model
+{
+public:
+    virtual ~SnapserExperimentsGetUserExperimentsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserExperimentsUserExperiment>> UserExperiments;
+};
+
+class SNAPSER_API SnapserExperimentsUserExperiment : public Model
+{
+public:
+    virtual ~SnapserExperimentsUserExperiment() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> AssignedVariant;
+    TOptional<bool> AudienceEvaluated;
+    TOptional<FString> ExcludedFor;
+    TOptional<FString> ExperimentName;
+    TOptional<bool> InAudience;
+    TOptional<bool> InRamp;
+    TOptional<bool> IsOverride;
+    TOptional<int32> RampRoll;
+    TOptional<FString> State;
+    /* not actually persisted. Set when asked for. */
+    TOptional<FString> Treatment;
+    TOptional<FString> UserId;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### ExperimentsGetUserExperiment API
+<CodeGroup title="Gets the user experiment for the user" tag="GET" label="ExperimentsGetUserExperiment">
+```csharp
+/// <summary>
+/// User Experiment Gets the user experiment for the user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="experimentName">Name of the experiment</param>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <returns>ExperimentsUserExperiment</returns>
+public ExperimentsUserExperiment ExperimentsGetUserExperiment(string experimentName, string userId, string token)
+{
+    Snapser.Client.ApiResponse<ExperimentsUserExperiment> localVarResponse = ExperimentsGetUserExperimentWithHttpInfo(experimentName, userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ExperimentsUserExperiment
+/// <summary>
+/// Initializes a new instance of the <see cref="ExperimentsUserExperiment" /> class.
+/// </summary>
+/// <param name="assignedVariant">assignedVariant.</param>
+/// <param name="audienceEvaluated">audienceEvaluated.</param>
+/// <param name="excludedFor">excludedFor.</param>
+/// <param name="experimentName">experimentName.</param>
+/// <param name="inAudience">inAudience.</param>
+/// <param name="inRamp">inRamp.</param>
+/// <param name="isOverride">isOverride.</param>
+/// <param name="rampRoll">rampRoll.</param>
+/// <param name="state">state.</param>
+/// <param name="treatment">not actually persisted. Set when asked for..</param>
+/// <param name="userId">userId.</param>
+public ExperimentsUserExperiment(string assignedVariant = default(string), bool audienceEvaluated = default(bool), string excludedFor = default(string), string experimentName = default(string), bool inAudience = default(bool), bool inRamp = default(bool), bool isOverride = default(bool), int rampRoll = default(int), string state = default(string), string treatment = default(string), string userId = default(string))
+{
+    this.AssignedVariant = assignedVariant;
+    this.AudienceEvaluated = audienceEvaluated;
+    this.ExcludedFor = excludedFor;
+    this.ExperimentName = experimentName;
+    this.InAudience = inAudience;
+    this.InRamp = inRamp;
+    this.IsOverride = isOverride;
+    this.RampRoll = rampRoll;
+    this.State = state;
+    this.Treatment = treatment;
+    this.UserId = userId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserExperimentsServiceApi::ExperimentsGetUserExperimentRequest : public Request
+{
+public:
+    virtual ~ExperimentsGetUserExperimentRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Name of the experiment */
+    FString ExperimentName;
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserExperimentsServiceApi::ExperimentsGetUserExperimentResponse : public Response
+{
+public:
+    virtual ~ExperimentsGetUserExperimentResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserExperimentsUserExperiment Content;
+};
+
+class SNAPSER_API SnapserExperimentsUserExperiment : public Model
+{
+public:
+    virtual ~SnapserExperimentsUserExperiment() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> AssignedVariant;
+    TOptional<bool> AudienceEvaluated;
+    TOptional<FString> ExcludedFor;
+    TOptional<FString> ExperimentName;
+    TOptional<bool> InAudience;
+    TOptional<bool> InRamp;
+    TOptional<bool> IsOverride;
+    TOptional<int32> RampRoll;
+    TOptional<FString> State;
+    /* not actually persisted. Set when asked for. */
+    TOptional<FString> Treatment;
+    TOptional<FString> UserId;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/experiments-api.png)
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code | Variable                    | Message                                 | HTTP | gRPC            |
+| ---- | --------------------------- | --------------------------------------- | ---- | --------------- |
+| 3000 | ErrInvalidStateChange       | invalid state change                    | 400  | InvalidArgument |
+| 3001 | ErrInvalidStateUpdateAction | invalid state update action             | 400  | InvalidArgument |
+| 3002 | ErrNoControlVariant         | invalid experiment: no control variant  | 400  | InvalidArgument |
+| 3003 | ErrNoTreatmentVariant       | invalid experiment: no treatment variant | 400 | InvalidArgument |
+</div>
+
+
+## Additional Details
+
+### Data Stores
+
+Couchbase and POSTGRES
+
+### Service Dependencies
+
+The experiments service does not depend on any other Snap.
+
+### Recommended Services
+
+The experiments service works best with the Authentication and Statistics &
+Segmentation services.
+
+### Upcoming enhancements
+
+None planned at the moment.

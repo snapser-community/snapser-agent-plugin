@@ -1,0 +1,48 @@
+# OS files
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Local Claude settings (keep shared settings.json, ignore per-user overrides)
+.claude/settings.local.json
+
+# Opencode
+opencode.json
+
+# Snapser generated artifacts
+.snapser/
+*.snapend.json
+byows_env_setup.sh
+byows_env_setup.ps1
+snapser-*-sdk/
+snapend-manifest*.json
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# Logs & temp
+*.log
+tmp/
+temp/
+
+# Helper scripts (local maintainer utilities, not part of the plugin)
+remove_meta_files.sh
+helper-scripts/

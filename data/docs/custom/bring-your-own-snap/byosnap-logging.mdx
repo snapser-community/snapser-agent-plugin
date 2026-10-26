@@ -1,0 +1,153 @@
+export const meta = {
+  author: 'Matt Monroe',
+}
+
+# BYOSnap: Logging & Request Correlation
+
+This guide covers how to emit logs from your BYOSnap so that Snapser can parse them, color them
+correctly in the Logs tool, and correlate every log line that belongs to one request.
+
+## Structured Logging
+
+Log to **stdout** in a structured JSON format. Every log line should include:
+
+- **`level`**: One of `debug`, `info`, `warn`, `error`. Snapser parses this field and shows the
+  line in the correct color in the Snapser Logs tool.
+- **`message`**: The human-readable log text.
+- **`timestamp`** (optional): ISO-8601 format. When present, Snapser uses it as the log timestamp.
+
+```json
+{"level": "info", "message": "profile updated", "timestamp": "2026-08-17T18:04:05Z"}
+```
+
+## Request Correlation
+
+Snapser services correlate all log lines of one request with a **`request-id`** JSON field. When
+your BYOSnap emits the same field, its logs join that correlation: one query surfaces every line
+a request produced across all Snaps, and platform log sampling keeps or drops a request's lines
+as a unit instead of leaving partial traces.
+
+### Where the Request Id Comes From
+
+Every request that reaches your BYOSnap carries a request id:
+
+- **HTTP**: the `X-Request-Id` header
+- **gRPC**: the `x-request-id` metadata key
+
+Read it at the start of your handler and attach it to every log line as the `request-id` field.
+Note the exact spelling: kebab-case `request-id`, not `request_id` or `requestId`.
+
+### Emitting the Request Id
+
+<CodeGroup title="Log with request-id" tag="byosnap">
+```python
+# Python (Flask)
+import json
+
+def log(level, message, request_id, **fields):
+    record = {'level': level, 'message': message, **fields}
+    if request_id:
+        record['request-id'] = request_id
+    print(json.dumps(record), flush=True)
+
+@app.route(f"{API_PREFIX}/users/<user_id>/profile", methods=["PUT"])
+def update_profile(user_id):
+    request_id = request.headers.get('X-Request-Id')
+    log('info', 'profile updated', request_id, user_id=user_id)
+    return make_response(jsonify({'message': 'ok'}), 200)
+```
+```go
+// Go (log/slog)
+var logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
+func updateProfile(w http.ResponseWriter, r *http.Request) {
+    requestID := r.Header.Get("X-Request-Id")
+    logger.Info("profile updated",
+        "level", "info",
+        "request-id", requestID,
+        "user_id", userID,
+    )
+}
+```
+```csharp
+// C# (Serilog with a JSON console sink)
+[HttpPut("users/{userId}/profile")]
+public ActionResult UpdateProfile([FromRoute] string userId)
+{
+    var requestId = Request.Headers["X-Request-Id"].FirstOrDefault();
+    Log.ForContext("request-id", requestId)
+       .Information("profile updated for {UserId}", userId);
+    return Ok();
+}
+```
+```typescript
+// Node/TypeScript (pino)
+const logger = pino(); // JSON to stdout by default
+
+app.put("/v1/byosnap-example/users/:userId/profile", (req, res) => {
+    const requestId = req.header("X-Request-Id");
+    logger.info({ "request-id": requestId, userId: req.params.userId },
+        "profile updated");
+    res.json({ message: "ok" });
+});
+```
+</CodeGroup>
+
+<Note>
+  Most logging libraries let you bind the field once per request (middleware, child logger, or
+  log context) so every line in the handler carries it automatically. Bind `request-id` at the
+  start of the request instead of passing it to each log call by hand.
+</Note>
+
+### Forwarding on Outbound Calls
+
+When your BYOSnap calls another Snap or an external service on behalf of a request, forward the
+header so the downstream logs correlate to the same request:
+
+<CodeGroup title="Forward X-Request-Id" tag="byosnap">
+```python
+# Python
+headers = {'X-Request-Id': request.headers.get('X-Request-Id', '')}
+response = requests.get(url, headers=headers)
+```
+```go
+// Go
+req, _ := http.NewRequest("GET", url, nil)
+req.Header.Set("X-Request-Id", r.Header.Get("X-Request-Id"))
+resp, err := http.DefaultClient.Do(req)
+```
+```csharp
+// C#
+var client = httpClientFactory.CreateClient();
+client.DefaultRequestHeaders.Add("X-Request-Id",
+    Request.Headers["X-Request-Id"].FirstOrDefault() ?? "");
+var response = await client.GetAsync(url);
+```
+```typescript
+// Node/TypeScript
+const response = await fetch(url, {
+    headers: { "X-Request-Id": req.header("X-Request-Id") ?? "" },
+});
+```
+</CodeGroup>
+
+## OpenTelemetry Users
+
+If your BYOSnap is instrumented with OpenTelemetry and already emits a W3C `traceId` field in
+its JSON logs, Snapser accepts `traceId` as a secondary correlation key. You do not need to
+emit both. Emitting `request-id` is still preferred: it correlates your logs with the first-party
+Snaps in your Snapend, which use `request-id` exclusively.
+
+## Why This Matters
+
+- **Complete request views**: A single query on the request id returns every log line the
+  request produced, across your BYOSnap and every Snap it touched.
+- **Deterministic log sampling**: Snapser samples logs per request, not per line. Lines that
+  carry a `request-id` (or `traceId`) are kept or dropped as a unit. Lines without either field
+  fall back to per-line sampling, so a sampled request can appear with only some of its lines.
+
+## See Also
+
+- [Authentication & SDK Categories](/docs/custom/bring-your-own-snap/byosnap-auth-and-sdk):
+  the headers Snapser injects into every request
+- [BYOSnap Overview](/docs/custom/bring-your-own-snap): monitoring and logging basics

@@ -1,0 +1,68 @@
+
+export const description = 'Marketplace'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Marketplace
+
+## Concept
+With the Snapser Marketplace we are bringing our decades of experience in building highly scalable backend systems to you. Snapser Marketplace is a place where you can find different backend services for your app. Presently, all the Snapser Marketplace features come for free with the platform and most have been built by the Snapser team. You will find a few partner Snaps in the marketplace as well.
+
+![Marketplace](/images/docs/marketplace.png)
+
+## Snaps
+
+- [Analytics](/docs/infra/snaps/analytics) - Offers customizable event setup and seamless data querying via an admin tool, supporting batch event uploads and providing exposed APIs for integration, making it essential for optimizing app performance and user experience.
+- [Auth](/docs/infra/snaps/auth) - Offers easy integration of authentication into apps, supporting anonymous, email, and third-party authentication like Steam, Xbox, Facebook, Apple, and Google.
+- [Chat](/docs/infra/snaps/chat) - Enables real-time communication with Direct Messages and Guild Chats. Users receive messages instantly, with customizable retention settings for message history.
+- [Client Logs](/docs/infra/snaps/client-logs) - Helps client developers debug issues exclusive to devices, enabling effective issue logging and tracking.
+- [Events](/docs/infra/snaps/events) - Enables developers to schedule and execute events within their apps, facilitating milestone-based actions like push notification blasts, remote config overrides, and quest management for enhanced user engagement.
+- [Experiments](/docs/infra/snaps/experiments) - Facilitates A/B testing in apps, enabling developers to run concurrent experiments for specific user segments, schedule tests, and create control and treatment variants to assess new features and content effectively.
+- [Game Server Fleets](/docs/infra/snaps/game-server-fleets) - Manages global server fleets for scalable and reliable game server solutions, supporting server scaling based on demand and offering multiple regions for deployment.
+- [GDPR - CCPA](/docs/infra/snaps/gdpr) - Facilitate adherence to data privacy regulations like GDPR and CCPA, enabling users to access and delete their data via APIs, regardless of their location.
+- [Guilds](/docs/infra/snaps/guilds) - Facilitates user group creation in apps, supporting public/private guilds. Admins manage memberships and data, while Leaderboards track scores for inter-guild competitions.
+- [In-app purchases](/docs/infra/snaps/iap) - Validates purchase receipts from Google Play and Apple App Store, and can automatically grant items upon successful transactions.
+- [Inventory](/docs/infra/snaps/inventory) - Facilitates catalog item setup, currency configuration, and drop table creation, streamlining player inventory and currency wallet management.
+- [Leaderboards](/docs/infra/snaps/leaderboards) - Enables easy integration of competitive elements into apps, supporting both global and tiered leaderboards. It offers flexibility with recurring and non-recurring leaderboards and provides admin tools for setup and management.
+- [Matchmaking](/docs/infra/snaps/matchmaking) - Pairs users based on customizable rules, integrating seamlessly with other services like Leaderboards. It simplifies grouping with Tickets, Match Profiles, and Rules, supporting various rule types for flexibility. Integration with Stratos/Titan ensures matches across regions, while latency rules optimize allocation.
+- [Notifications](/docs/infra/snaps/notifications) - Enables sending push notifications and emails to users, supporting bulk messaging, targeted campaigns, and dynamic content through templates.
+- [Parties](/docs/infra/snaps/parties) - Enables apps to create temporary user groups with public or private visibility. Party owners manage membership and settings, while users can join public parties.
+- [Profile - User](/docs/infra/snaps/profiles) - Simplifies user profile management for apps, offering customizable attributes and access control.
+- [Quests](/docs/infra/snaps/quests) - Allows for the integration of quests or missions into games and apps, with tasks that need to be completed to finish the quest. Quests can be recurring or one-time and offer rewards upon completion. Tasks can track inventory items, currency, or statistics. Setup involves defining quest details, tasks, and rewards via the Quest admin tool.
+- [Remote Config](/docs/infra/snaps/remote-config) - Provides dynamic app configurations with low latency, supporting base configurations and overrides for tailored user experiences. Developers can schedule, monitor, and validate overrides, accessing version history for changes. Additionally, a Playground tool allows previewing configuration effects.
+- [Relay](/docs/infra/snaps/relay) - Provides a global relay network for real-time multiplayer games, ensuring low latency and high availability. It supports multiple regions, automatic allocation, and latency-based matchmaking, streamlining game development and enhancing user experience.
+- [Scheduler](/docs/infra/snaps/scheduler) - Allows scheduling HTTP actions based on Cron or one-time events. Integrated with Snaps like Experiments and Notifications, it simplifies task scheduling and monitoring through the Admin Tool.
+- [Sequencer](/docs/infra/snaps/sequencer) - Streamlines app development by chaining multiple API calls into sequences, simplifying complex actions with just one API call. It supports up to 10 API calls per sequence, enables variable usage across calls, and offers enhanced error handling by stopping execution on the first failure.
+- [Social Graph](/docs/infra/snaps/social-graph) - Streamlines user relationship management in games and social apps, handling friend connections, followers, and blocks.
+- [Statistics and Segmentation](/docs/infra/snaps/statistics) - Enables real-time user statistics and segmentation for customized user experiences, facilitating easy setup and integration via admin tools and APIs.
+- [Storage](/docs/infra/snaps/storage) - Provides cloud storage for app data, supporting various blob types and access levels. It ensures scalability, redundancy, and concurrency control, simplifying integration and usage for developers.
+- [Trackables](/docs/infra/snaps/trackables) - Facilitates app/game progression tracking, XP level management, and energy setup, streamlining game development with customizable scopes and automatic level assignment based on XP scores.
+
+## Partner Snaps
+
+- [KWS](/docs/infra/snaps/kws) - Unlock the power of Epic Games, Kids Web Services to unlock Kid safety and COPPA compliance for your app.
+- [Photon](/docs/infra/snaps/photon) - Enables integrating Snapser authentication with third-party app backends like Photon.
+- [Quago](/docs/infra/snaps/quago) - Integrate with Quago to unlock cheat detection.
+
+<Note>
+  We continue to work with partners to bring their snaps over to our
+  marketplace. If you have anyone particular in mind, please reach out to your
+  Snapser support team.
+</Note>
+
+## FAQs
+
+### Can third parties publish their services to the Snapser Marketplace?
+
+Not at the moment! But hang tight! This is something we are going to open up to allow developers to build high quality backend services and make them available to other app makers. If you are interested in publishing a Snap, please reach out to us via Discord.
+
+### Can I bring my own Snaps?
+
+Yes, please check out our BYOSnap feature. You will find the documentation for this under **Customizations > Snaps**.
+
+### Are my snaps visible outside my organization?
+
+Your BYOSnaps are only visible to developers within your organization. No one else sees it!

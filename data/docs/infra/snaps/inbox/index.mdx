@@ -1,0 +1,971 @@
+export const description = 'Inbox'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Inbox
+
+The Inbox Snap allows developers to give every user their own message inbox. The Snap can be used to send
+user to user or game/app admin to user messages. The Snap also supports sending messages to a group of users.
+
+## Concept
+
+The Inbox snap is mainly responsible for the following:
+
+1. Sending user to user messages.
+2. Sending user to friends messages.
+3. Sending user to followers messages.
+4. Sending user to guild/clan messages.
+5. Sending admin to user messages.
+
+## Message Type
+Presently, this snap only supports text based messages.
+
+## APIs
+
+The `Inbox` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name                  | HTTP Method | API Description                          |
+| ------------------------- | ----------- | ---------------------------------------- |
+| [InboxSendInboxFollowersMessage](#inboxsendinboxfollowersmessage-api) | POST        | Send a message to all followers          |
+| [InboxSendInboxFriendsMessage](#inboxsendinboxfriendsmessage-api)   | POST        | Send a message to all friends            |
+| [InboxSendInboxGuildMessage](#inboxsendinboxguildmessage-api)     | POST        | Send a message to all members of a guild |
+| [InboxSendInboxUserMessage](#inboxsendinboxusermessage-api)      | POST        | Send a message to a user                 |
+| [InboxDeleteMessagesByIds](#inboxdeletemessagesbyids-api)       | DELETE      | Delete message from a inbox              |
+| [InboxGetMessages](#inboxgetmessages-api)               | GET         | Get messages from a inbox                |
+| [InboxReadMessagesByIds](#inboxreadmessagesbyids-api)         | PUT         | Read messages from a inbox               |
+| [InboxGetMessageById](#inboxgetmessagebyid-api)            | GET         | Get message from a inbox                 |
+</div>
+
+### Usage
+#### InboxSendInboxFollowersMessage API
+<CodeGroup title="Send a message to all followers" tag="POST" label="InboxSendInboxFollowersMessage">
+```csharp
+/// <summary>
+/// Send Follower Message Send a message to all followers
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>InboxSendMessageResponse</returns>
+public InboxSendMessageResponse InboxSendInboxFollowersMessage(string token, InboxSendFollowersMessageRequest body)
+{
+    Snapser.Client.ApiResponse<InboxSendMessageResponse> localVarResponse = InboxSendInboxFollowersMessageWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InboxSendFollowersMessageRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="InboxSendFollowersMessageRequest" /> class.
+/// </summary>
+/// <param name="content">Message to be sent (required).</param>
+/// <param name="senderId">UserID of the sender (required for user messages).</param>
+/// <param name="subject">Message subject (required).</param>
+public InboxSendFollowersMessageRequest(string content = default(string), string senderId = default(string), string subject = default(string))
+{
+    // to ensure "content" is required (not null)
+    if (content == null)
+    {
+        throw new ArgumentNullException("content is a required property for InboxSendFollowersMessageRequest and cannot be null");
+    }
+    this.Content = content;
+    // to ensure "subject" is required (not null)
+    if (subject == null)
+    {
+        throw new ArgumentNullException("subject is a required property for InboxSendFollowersMessageRequest and cannot be null");
+    }
+    this.Subject = subject;
+    this.SenderId = senderId;
+}
+
+/// Snapser.Model for InboxSendMessageResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InboxSendMessageResponse" /> class.
+/// </summary>
+/// <param name="messageId">Message ID (required).</param>
+public InboxSendMessageResponse(string messageId = default(string))
+{
+    // to ensure "messageId" is required (not null)
+    if (messageId == null)
+    {
+        throw new ArgumentNullException("messageId is a required property for InboxSendMessageResponse and cannot be null");
+    }
+    this.MessageId = messageId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInboxServiceApi::InboxSendInboxFollowersMessageRequest : public Request
+{
+public:
+    virtual ~InboxSendInboxFollowersMessageRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserInboxSendFollowersMessageRequest Body;
+};
+
+class SNAPSER_API SnapserInboxSendFollowersMessageRequest : public Model
+{
+public:
+    virtual ~SnapserInboxSendFollowersMessageRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Message to be sent */
+    FString Content;
+    /* UserID of the sender (required for user messages) */
+    TOptional<FString> SenderId;
+    /* Message subject */
+    FString Subject;
+};
+
+// Response
+class SNAPSER_API SnapserInboxServiceApi::InboxSendInboxFollowersMessageResponse : public Response
+{
+public:
+    virtual ~InboxSendInboxFollowersMessageResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInboxSendMessageResponse Content;
+};
+
+class SNAPSER_API SnapserInboxSendMessageResponse : public Model
+{
+public:
+    virtual ~SnapserInboxSendMessageResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Message ID */
+    FString MessageId;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InboxSendInboxFriendsMessage API
+<CodeGroup title="Send a message to all friends" tag="POST" label="InboxSendInboxFriendsMessage">
+```csharp
+/// <summary>
+/// Send Friends Message Send a message to all friends
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>InboxSendMessageResponse</returns>
+public InboxSendMessageResponse InboxSendInboxFriendsMessage(string token, InboxSendFriendsMessageRequest body)
+{
+    Snapser.Client.ApiResponse<InboxSendMessageResponse> localVarResponse = InboxSendInboxFriendsMessageWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InboxSendFriendsMessageRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="InboxSendFriendsMessageRequest" /> class.
+/// </summary>
+/// <param name="content">Message to be sent (required).</param>
+/// <param name="senderId">UserID of the sender (required for user messages).</param>
+/// <param name="subject">Message subject (required).</param>
+public InboxSendFriendsMessageRequest(string content = default(string), string senderId = default(string), string subject = default(string))
+{
+    // to ensure "content" is required (not null)
+    if (content == null)
+    {
+        throw new ArgumentNullException("content is a required property for InboxSendFriendsMessageRequest and cannot be null");
+    }
+    this.Content = content;
+    // to ensure "subject" is required (not null)
+    if (subject == null)
+    {
+        throw new ArgumentNullException("subject is a required property for InboxSendFriendsMessageRequest and cannot be null");
+    }
+    this.Subject = subject;
+    this.SenderId = senderId;
+}
+
+/// Snapser.Model for InboxSendMessageResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InboxSendMessageResponse" /> class.
+/// </summary>
+/// <param name="messageId">Message ID (required).</param>
+public InboxSendMessageResponse(string messageId = default(string))
+{
+    // to ensure "messageId" is required (not null)
+    if (messageId == null)
+    {
+        throw new ArgumentNullException("messageId is a required property for InboxSendMessageResponse and cannot be null");
+    }
+    this.MessageId = messageId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInboxServiceApi::InboxSendInboxFriendsMessageRequest : public Request
+{
+public:
+    virtual ~InboxSendInboxFriendsMessageRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserInboxSendFriendsMessageRequest Body;
+};
+
+class SNAPSER_API SnapserInboxSendFriendsMessageRequest : public Model
+{
+public:
+    virtual ~SnapserInboxSendFriendsMessageRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Message to be sent */
+    FString Content;
+    /* UserID of the sender (required for user messages) */
+    TOptional<FString> SenderId;
+    /* Message subject */
+    FString Subject;
+};
+
+// Response
+class SNAPSER_API SnapserInboxServiceApi::InboxSendInboxFriendsMessageResponse : public Response
+{
+public:
+    virtual ~InboxSendInboxFriendsMessageResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInboxSendMessageResponse Content;
+};
+
+class SNAPSER_API SnapserInboxSendMessageResponse : public Model
+{
+public:
+    virtual ~SnapserInboxSendMessageResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Message ID */
+    FString MessageId;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InboxSendInboxGuildMessage API
+<CodeGroup title="Send a message to all members of a guild" tag="POST" label="InboxSendInboxGuildMessage">
+```csharp
+/// <summary>
+/// Send Guild Message Send a message to all members of a guild
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>InboxSendMessageResponse</returns>
+public InboxSendMessageResponse InboxSendInboxGuildMessage(string token, InboxSendGuildMessageRequest body)
+{
+    Snapser.Client.ApiResponse<InboxSendMessageResponse> localVarResponse = InboxSendInboxGuildMessageWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InboxSendGuildMessageRequest
+/// <summary>
+/// Message category, should be either system or user
+/// </summary>
+/// <value>Message category, should be either system or user</value>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum CategoryEnum
+{
+    /// <summary>
+    /// Enum System for value: system
+    /// </summary>
+    [EnumMember(Value = "system")] System = 1,
+
+    /// <summary>
+    /// Enum User for value: user
+    /// </summary>
+    [EnumMember(Value = "user")] User = 2
+}
+
+/// <summary>
+/// Initializes a new instance of the <see cref="InboxSendGuildMessageRequest" /> class.
+/// </summary>
+/// <param name="category">Message category, should be either system or user (required).</param>
+/// <param name="content">Message to be sent (required).</param>
+/// <param name="guildId">Guild ID (required).</param>
+/// <param name="imageUrls">Image urls. Not allowed in user messages.</param>
+/// <param name="mimeType">Mime type. Not allowed in user messages.</param>
+/// <param name="senderId">UserID of the sender (required for user messages).</param>
+/// <param name="subject">Message subject (required).</param>
+public InboxSendGuildMessageRequest(CategoryEnum category = default(CategoryEnum), string content = default(string), string guildId = default(string), List<string> imageUrls = default(List<string>), string mimeType = default(string), string senderId = default(string), string subject = default(string))
+{
+    this.Category = category;
+    // to ensure "content" is required (not null)
+    if (content == null)
+    {
+        throw new ArgumentNullException("content is a required property for InboxSendGuildMessageRequest and cannot be null");
+    }
+    this.Content = content;
+    // to ensure "guildId" is required (not null)
+    if (guildId == null)
+    {
+        throw new ArgumentNullException("guildId is a required property for InboxSendGuildMessageRequest and cannot be null");
+    }
+    this.GuildId = guildId;
+    // to ensure "subject" is required (not null)
+    if (subject == null)
+    {
+        throw new ArgumentNullException("subject is a required property for InboxSendGuildMessageRequest and cannot be null");
+    }
+    this.Subject = subject;
+    this.ImageUrls = imageUrls;
+    this.MimeType = mimeType;
+    this.SenderId = senderId;
+}
+
+/// Snapser.Model for InboxSendMessageResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InboxSendMessageResponse" /> class.
+/// </summary>
+/// <param name="messageId">Message ID (required).</param>
+public InboxSendMessageResponse(string messageId = default(string))
+{
+    // to ensure "messageId" is required (not null)
+    if (messageId == null)
+    {
+        throw new ArgumentNullException("messageId is a required property for InboxSendMessageResponse and cannot be null");
+    }
+    this.MessageId = messageId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInboxServiceApi::InboxSendInboxGuildMessageRequest : public Request
+{
+public:
+    virtual ~InboxSendInboxGuildMessageRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserInboxSendGuildMessageRequest Body;
+};
+
+class SNAPSER_API SnapserInboxSendGuildMessageRequest : public Model
+{
+public:
+    virtual ~SnapserInboxSendGuildMessageRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class CategoryEnum
+    {
+        System,
+        User,
+    };
+
+    static FString EnumToString(const CategoryEnum& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, CategoryEnum& EnumValue);
+    /* Message category, should be either system or user */
+    CategoryEnum Category;
+    /* Message to be sent */
+    FString Content;
+    /* Guild ID */
+    FString GuildId;
+    /* Image urls. Not allowed in user messages */
+    TOptional<TArray<FString>> ImageUrls;
+    /* Mime type. Not allowed in user messages */
+    TOptional<FString> MimeType;
+    /* UserID of the sender (required for user messages) */
+    TOptional<FString> SenderId;
+    /* Message subject */
+    FString Subject;
+};
+
+// Response
+class SNAPSER_API SnapserInboxServiceApi::InboxSendInboxGuildMessageResponse : public Response
+{
+public:
+    virtual ~InboxSendInboxGuildMessageResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInboxSendMessageResponse Content;
+};
+
+class SNAPSER_API SnapserInboxSendMessageResponse : public Model
+{
+public:
+    virtual ~SnapserInboxSendMessageResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Message ID */
+    FString MessageId;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InboxSendInboxUserMessage API
+<CodeGroup title="Send a message to a user" tag="POST" label="InboxSendInboxUserMessage">
+```csharp
+/// <summary>
+/// Send User Message Send a message to a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>InboxSendMessageResponse</returns>
+public InboxSendMessageResponse InboxSendInboxUserMessage(string token, InboxSendUserMessageRequest body)
+{
+    Snapser.Client.ApiResponse<InboxSendMessageResponse> localVarResponse = InboxSendInboxUserMessageWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InboxSendUserMessageRequest
+/// <summary>
+/// Message category, should be either system or user
+/// </summary>
+/// <value>Message category, should be either system or user</value>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum CategoryEnum
+{
+    /// <summary>
+    /// Enum System for value: system
+    /// </summary>
+    [EnumMember(Value = "system")] System = 1,
+
+    /// <summary>
+    /// Enum User for value: user
+    /// </summary>
+    [EnumMember(Value = "user")] User = 2
+}
+
+/// <summary>
+/// Initializes a new instance of the <see cref="InboxSendUserMessageRequest" /> class.
+/// </summary>
+/// <param name="category">Message category, should be either system or user (required).</param>
+/// <param name="content">Message to be sent (required).</param>
+/// <param name="imageUrls">Image urls. Not allowed in user messages.</param>
+/// <param name="mimeType">Mime type. Not allowed in user messages.</param>
+/// <param name="receiverIds">UserID of the target user (required).</param>
+/// <param name="senderId">UserID of the sender (required for user messages).</param>
+/// <param name="subject">Message subject (required).</param>
+public InboxSendUserMessageRequest(CategoryEnum category = default(CategoryEnum), string content = default(string), List<string> imageUrls = default(List<string>), string mimeType = default(string), List<string> receiverIds = default(List<string>), string senderId = default(string), string subject = default(string))
+{
+    this.Category = category;
+    // to ensure "content" is required (not null)
+    if (content == null)
+    {
+        throw new ArgumentNullException("content is a required property for InboxSendUserMessageRequest and cannot be null");
+    }
+    this.Content = content;
+    // to ensure "receiverIds" is required (not null)
+    if (receiverIds == null)
+    {
+        throw new ArgumentNullException("receiverIds is a required property for InboxSendUserMessageRequest and cannot be null");
+    }
+    this.ReceiverIds = receiverIds;
+    // to ensure "subject" is required (not null)
+    if (subject == null)
+    {
+        throw new ArgumentNullException("subject is a required property for InboxSendUserMessageRequest and cannot be null");
+    }
+    this.Subject = subject;
+    this.ImageUrls = imageUrls;
+    this.MimeType = mimeType;
+    this.SenderId = senderId;
+}
+
+/// Snapser.Model for InboxSendMessageResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InboxSendMessageResponse" /> class.
+/// </summary>
+/// <param name="messageId">Message ID (required).</param>
+public InboxSendMessageResponse(string messageId = default(string))
+{
+    // to ensure "messageId" is required (not null)
+    if (messageId == null)
+    {
+        throw new ArgumentNullException("messageId is a required property for InboxSendMessageResponse and cannot be null");
+    }
+    this.MessageId = messageId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInboxServiceApi::InboxSendInboxUserMessageRequest : public Request
+{
+public:
+    virtual ~InboxSendInboxUserMessageRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserInboxSendUserMessageRequest Body;
+};
+
+class SNAPSER_API SnapserInboxSendUserMessageRequest : public Model
+{
+public:
+    virtual ~SnapserInboxSendUserMessageRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class CategoryEnum
+    {
+        System,
+        User,
+    };
+
+    static FString EnumToString(const CategoryEnum& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, CategoryEnum& EnumValue);
+    /* Message category, should be either system or user */
+    CategoryEnum Category;
+    /* Message to be sent */
+    FString Content;
+    /* Image urls. Not allowed in user messages */
+    TOptional<TArray<FString>> ImageUrls;
+    /* Mime type. Not allowed in user messages */
+    TOptional<FString> MimeType;
+    /* UserID of the target user */
+    TArray<FString> ReceiverIds;
+    /* UserID of the sender (required for user messages) */
+    TOptional<FString> SenderId;
+    /* Message subject */
+    FString Subject;
+};
+
+// Response
+class SNAPSER_API SnapserInboxServiceApi::InboxSendInboxUserMessageResponse : public Response
+{
+public:
+    virtual ~InboxSendInboxUserMessageResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInboxSendMessageResponse Content;
+};
+
+class SNAPSER_API SnapserInboxSendMessageResponse : public Model
+{
+public:
+    virtual ~SnapserInboxSendMessageResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Message ID */
+    FString MessageId;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InboxDeleteMessagesByIds API
+<CodeGroup title="Delete message from a inbox" tag="DELETE" label="InboxDeleteMessagesByIds">
+```csharp
+/// <summary>
+/// Message Get and Delete Delete message from a inbox
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">UserID of the user</param>
+/// <param name="messageIds">Comma separated list of message IDs</param>
+/// <param name="token">User session token</param>
+/// <returns>Object</returns>
+public Object InboxDeleteMessagesByIds(string userId, string messageIds, string token)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = InboxDeleteMessagesByIdsWithHttpInfo(userId, messageIds, token);
+    return localVarResponse.Data;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInboxServiceApi::InboxDeleteMessagesByIdsRequest : public Request
+{
+public:
+    virtual ~InboxDeleteMessagesByIdsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* UserID of the user */
+    FString UserId;
+    /* Comma separated list of message IDs */
+    FString MessageIds;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserInboxServiceApi::InboxDeleteMessagesByIdsResponse : public Response
+{
+public:
+    virtual ~InboxDeleteMessagesByIdsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InboxGetMessages API
+<CodeGroup title="Get messages from a inbox" tag="GET" label="InboxGetMessages">
+```csharp
+/// <summary>
+/// Get Messages Get messages from a inbox
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">UserID of the user</param>
+/// <param name="token">User session token</param>
+/// <returns>InboxGetMessagesResponse</returns>
+public InboxGetMessagesResponse InboxGetMessages(string userId, string token)
+{
+    Snapser.Client.ApiResponse<InboxGetMessagesResponse> localVarResponse = InboxGetMessagesWithHttpInfo(userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InboxGetMessagesResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InboxGetMessagesResponse" /> class.
+/// </summary>
+/// <param name="messages">messages.</param>
+public InboxGetMessagesResponse(List<InboxUserMessage> messages = default(List<InboxUserMessage>))
+{
+    this.Messages = messages;
+}
+
+/// Snapser.Model for InboxUserMessage
+/// <summary>
+/// Initializes a new instance of the <see cref="InboxUserMessage" /> class.
+/// </summary>
+/// <param name="category">category.</param>
+/// <param name="content">content.</param>
+/// <param name="imageUrls">imageUrls.</param>
+/// <param name="messageId">messageId.</param>
+/// <param name="mimeType">mimeType.</param>
+/// <param name="readStatus">readStatus.</param>
+/// <param name="receivedAt">receivedAt.</param>
+/// <param name="receiverType">receiverType.</param>
+/// <param name="senderId">senderId.</param>
+/// <param name="subject">subject.</param>
+/// <param name="updatedAt">updatedAt.</param>
+public InboxUserMessage(string category = default(string), string content = default(string), List<string> imageUrls = default(List<string>), string messageId = default(string), string mimeType = default(string), UserMessageReadStatus? readStatus = default(UserMessageReadStatus?), string receivedAt = default(string), InboxReceiverType? receiverType = default(InboxReceiverType?), string senderId = default(string), string subject = default(string), string updatedAt = default(string))
+{
+    this.Category = category;
+    this.Content = content;
+    this.ImageUrls = imageUrls;
+    this.MessageId = messageId;
+    this.MimeType = mimeType;
+    this.ReadStatus = readStatus;
+    this.ReceivedAt = receivedAt;
+    this.ReceiverType = receiverType;
+    this.SenderId = senderId;
+    this.Subject = subject;
+    this.UpdatedAt = updatedAt;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInboxServiceApi::InboxGetMessagesRequest : public Request
+{
+public:
+    virtual ~InboxGetMessagesRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* UserID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserInboxServiceApi::InboxGetMessagesResponse : public Response
+{
+public:
+    virtual ~InboxGetMessagesResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInboxGetMessagesResponse Content;
+};
+
+class SNAPSER_API SnapserInboxGetMessagesResponse : public Model
+{
+public:
+    virtual ~SnapserInboxGetMessagesResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserInboxUserMessage>> Messages;
+};
+
+class SNAPSER_API SnapserInboxUserMessage : public Model
+{
+public:
+    virtual ~SnapserInboxUserMessage() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Category;
+    TOptional<FString> Content;
+    TOptional<TArray<FString>> ImageUrls;
+    TOptional<FString> MessageId;
+    TOptional<FString> MimeType;
+    TOptional<SnapserUserMessageReadStatus> ReadStatus;
+    TOptional<FString> ReceivedAt;
+    TOptional<SnapserInboxReceiverType> ReceiverType;
+    TOptional<FString> SenderId;
+    TOptional<FString> Subject;
+    TOptional<FString> UpdatedAt;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InboxReadMessagesByIds API
+<CodeGroup title="Read messages from a inbox" tag="PUT" label="InboxReadMessagesByIds">
+```csharp
+/// <summary>
+/// Read Messages Read messages from a inbox
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">UserID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object InboxReadMessagesByIds(string userId, string token, ReadMessagesByIdsRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = InboxReadMessagesByIdsWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ReadMessagesByIdsRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="ReadMessagesByIdsRequest" /> class.
+/// </summary>
+/// <param name="messageIds">message id (required).</param>
+/// <param name="readStatus">readStatus (required).</param>
+public ReadMessagesByIdsRequest(List<string> messageIds = default(List<string>), UserMessageReadStatus readStatus = default(UserMessageReadStatus))
+{
+    // to ensure "messageIds" is required (not null)
+    if (messageIds == null)
+    {
+        throw new ArgumentNullException("messageIds is a required property for ReadMessagesByIdsRequest and cannot be null");
+    }
+    this.MessageIds = messageIds;
+    this.ReadStatus = readStatus;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInboxServiceApi::InboxReadMessagesByIdsRequest : public Request
+{
+public:
+    virtual ~InboxReadMessagesByIdsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* UserID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserReadMessagesByIdsRequest Body;
+};
+
+class SNAPSER_API SnapserReadMessagesByIdsRequest : public Model
+{
+public:
+    virtual ~SnapserReadMessagesByIdsRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* message id */
+    TArray<FString> MessageIds;
+    SnapserUserMessageReadStatus ReadStatus;
+};
+
+// Response
+class SNAPSER_API SnapserInboxServiceApi::InboxReadMessagesByIdsResponse : public Response
+{
+public:
+    virtual ~InboxReadMessagesByIdsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InboxGetMessageById API
+<CodeGroup title="Get message from a inbox" tag="GET" label="InboxGetMessageById">
+```csharp
+/// <summary>
+/// Get Message By ID Get message from a inbox
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">UserID of the user</param>
+/// <param name="messageId">message id</param>
+/// <param name="token">User session token</param>
+/// <returns>InboxUserMessage</returns>
+public InboxUserMessage InboxGetMessageById(string userId, string messageId, string token)
+{
+    Snapser.Client.ApiResponse<InboxUserMessage> localVarResponse = InboxGetMessageByIdWithHttpInfo(userId, messageId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InboxUserMessage
+/// <summary>
+/// Initializes a new instance of the <see cref="InboxUserMessage" /> class.
+/// </summary>
+/// <param name="category">category.</param>
+/// <param name="content">content.</param>
+/// <param name="imageUrls">imageUrls.</param>
+/// <param name="messageId">messageId.</param>
+/// <param name="mimeType">mimeType.</param>
+/// <param name="readStatus">readStatus.</param>
+/// <param name="receivedAt">receivedAt.</param>
+/// <param name="receiverType">receiverType.</param>
+/// <param name="senderId">senderId.</param>
+/// <param name="subject">subject.</param>
+/// <param name="updatedAt">updatedAt.</param>
+public InboxUserMessage(string category = default(string), string content = default(string), List<string> imageUrls = default(List<string>), string messageId = default(string), string mimeType = default(string), UserMessageReadStatus? readStatus = default(UserMessageReadStatus?), string receivedAt = default(string), InboxReceiverType? receiverType = default(InboxReceiverType?), string senderId = default(string), string subject = default(string), string updatedAt = default(string))
+{
+    this.Category = category;
+    this.Content = content;
+    this.ImageUrls = imageUrls;
+    this.MessageId = messageId;
+    this.MimeType = mimeType;
+    this.ReadStatus = readStatus;
+    this.ReceivedAt = receivedAt;
+    this.ReceiverType = receiverType;
+    this.SenderId = senderId;
+    this.Subject = subject;
+    this.UpdatedAt = updatedAt;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInboxServiceApi::InboxGetMessageByIdRequest : public Request
+{
+public:
+    virtual ~InboxGetMessageByIdRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* UserID of the user */
+    FString UserId;
+    /* message id */
+    FString MessageId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserInboxServiceApi::InboxGetMessageByIdResponse : public Response
+{
+public:
+    virtual ~InboxGetMessageByIdResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInboxUserMessage Content;
+};
+
+class SNAPSER_API SnapserInboxUserMessage : public Model
+{
+public:
+    virtual ~SnapserInboxUserMessage() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Category;
+    TOptional<FString> Content;
+    TOptional<TArray<FString>> ImageUrls;
+    TOptional<FString> MessageId;
+    TOptional<FString> MimeType;
+    TOptional<SnapserUserMessageReadStatus> ReadStatus;
+    TOptional<FString> ReceivedAt;
+    TOptional<SnapserInboxReceiverType> ReceiverType;
+    TOptional<FString> SenderId;
+    TOptional<FString> Subject;
+    TOptional<FString> UpdatedAt;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/inbox-api.png)
+
+### Error Codes returned by the service
+
+All error codes can be found in this document [generic errors](../generic-errors).
+
+
+## Additional Service Details
+
+### Data Stores
+
+Postgres, Couchbase
+
+### Service Dependencies
+
+No dependencies.
+
+### Recommended Services
+
+The Inbox service works best when paired with the Auth, social graph, guilds, and statistics & segmentation snaps.
+
+### Upcoming enhancements
+
+None planned so far.

@@ -1,0 +1,48 @@
+# Inventory Drop Tables
+This tool allows you to create, update, and delete drop tables. You can also view all the drop tables in the catalog.
+
+To get started:
+1. Click on Inventory > Drop Tables from the side Nav.
+2. Click on the Add a Drop Table button.
+
+## Drop Table Details
+- **Name**: The name of the drop table. This should be an alphanumeric string.
+
+## Drops
+The drops can be added as a combination of `AND and OR` rules. To set up each drop, you need to provide the following:
+- **Item** - The item to be dropped. Items can be non-container catalog items, virtual currencies, XP, energy, other drop tables (version 1.8+), or an empty drop that grants no reward (version 1.11+).
+- **Min** - The minimum number of items to be dropped.
+- **Max** - The maximum number of items to be dropped.
+- **Multiple** - The total quantity of items to be dropped at once.
+- **Weight** - The weight of the item. The drop rate of the item is calculated as the weight of the item divided by the sum of the weights of all items in the drop table.
+
+## Nested Drop Tables
+
+As of version 1.8, drops can reference other drop tables. This allows you to compose complex reward structures by nesting drop tables within drop tables.
+
+To nest a drop table:
+1. In the drop row, select **Drop Tables** as the item type.
+2. Choose an existing drop table from the dropdown.
+3. Configure the Min, Max, Multiple, and Weight values as you would for any other drop.
+
+When a container evaluates a drop table that contains nested drop tables, it recursively evaluates each nested table according to its own drop rates.
+
+<Note>
+  The maximum nesting depth is 10 levels. Circular references are not allowed — a drop table cannot reference itself, directly or indirectly.
+</Note>
+
+## Empty Drops
+
+As of version 1.11, a drop can be configured to grant no reward. This lets you add a weighted chance that the player receives nothing when the drop table is evaluated.
+
+To add an empty drop:
+1. In the drop row, select **Empty (No Reward)** as the item type.
+2. Configure the Weight value. The chance of receiving nothing is the empty drop's weight divided by the sum of the weights of all drops in the table.
+
+For example, a drop table with a gold drop of weight 60, a health potion drop of weight 35, and an empty drop of weight 5 gives the player a 5% chance of receiving nothing.
+
+<Note>
+  An empty drop cannot be combined with other rewards in the same drop, since it represents the absence of a reward. It can however sit alongside reward drops as one of the `OR` entries.
+</Note>
+
+![Drop Table](/images/docs/inventory-drop-table.png)

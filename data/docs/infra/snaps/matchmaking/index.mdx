@@ -1,0 +1,2326 @@
+export const description = 'Matchmaking'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Matchmaking
+
+The Matchmaking snap makes it easy to match users together based on an
+arbitrary set of rules. In addition to custom attributes, the service is also
+fully integrated with the Leaderboards Snap, and Statistics snap to provide
+a seamless experience for your users.
+
+## Components
+
+There are a few key concepts to understand when using the Matchmaking snap.
+
+### Setup Matchmaking
+This is where you can create Match Profiles and Rule Sets via the Matchmaking Configuration tool.
+1. **Base Settings**: These are matchmaking settings like min and max players size, match acceptance rules, team formation rules and backfilling rules. These settings determine the behavior of the matchmaker.
+2. **Allocation**: The Matchmaking snap has been integrated with the Snapser relay and game server fleet and lobbies snaps. You can decide if you want the match to be allocated to your relay, a specific game server fleet or a lobby.
+3. **Rule**: A rule is a specific condition that must be met for tickets to be matched. There are several types of rules. For example, a rule can be a custom tag rule, a custom string or number rule, a statistic rule, a leaderboard rule or a latency rule. The matchmaking snap will pull in data from the statistics and leaderboard snaps to match users based on these rules.
+4. **Rule set**: The rule set is a collection of rules that are used to match users together. A match profile can have multiple rule sets, and matches can be created for each rule set. All rules within a rule set are ANDed together.
+5. **Match Profile**: The match profile holds all the information you see above that needed to match users together. Typically, there will be a different match profile for each game mode in your game.
+
+### Use Matchmaking
+This is where a game client will create tickets to match users together via the Matchmaking API.
+1. **Ticket**: A ticket is a request to match a user. It may contain custom attributes or simply a user's id. When queuing for a match, it is expected that a single Ticket is created for each user/group. A game client can poll or use the Snapser Websocket to get updates on the status of their ticket.
+
+#### Profile-Specific Queuing
+
+When creating a ticket, you can optionally specify a `profile_name` to restrict that ticket to a specific Match Profile. This is useful when your game has multiple game modes and you want to ensure that a ticket is only evaluated against the rules of a particular mode.
+
+- **Hinted tickets**: Tickets created with a `profile_name` are placed into a dedicated queue for that profile. They will only ever be matched within that profile's rules.
+- **Unhinted tickets**: Tickets created without a `profile_name` are placed into a general queue and will be evaluated against all active Match Profiles.
+
+There is no overlap between the two queues -- a ticket is either hinted or unhinted.
+
+### Behavior
+
+The Matchmaking loop runs continuously, always checking if there are enough tickets that meet the criteria defined in the Match Profiles to form a match.
+
+At a high-level, the Matchmaking loop works as follows:
+
+1. Fetch all configured Match Profiles.
+2. For each Match Profile:
+   a. Fetch all tickets that are eligible for matching based on the profile's queue settings and the ticket's age.
+   b. Evaluate the tickets against the profile's rule sets to find groups of tickets that match together.
+3. If there are enough tickets that match the rule set, create a match and assign the tickets to the match.
+4. Repeat.
+
+#### Automatic Ticket Cleanup on Disconnect
+
+When [WebSockets](/docs/infra/snaps/hermes) are enabled on your snapend, the Matchmaking snap will automatically delete a user's ticket if the user disconnects from the WebSocket. This prevents stale tickets from occupying queue slots while the user is offline.
+
+## Base Settings
+
+Each Match Profile has a set of base settings that define the behavior of the matchmaker. These settings include
+
+### Match Size
+This setting controls the minimum and maximum number of players in a match. Eg: say your game has a 10v10 mode, then the min and max players would be 10.
+
+### Match Acceptance
+This setting tells the matchmaker, if a match should be created only if all players accept the match. If enabled, all players must accept the match before the timeout period. If not all players accept the match, the match will be cancelled.
+
+### Team Formation
+
+Sometimes, just putting the players into the same match is not enough. The Matchmaking Service also has the ability to create teams of the players in the match. Whether you're building a free-for-all, a 3v3 team battler, or a 16v16 large team battle, the Matchmaking Service can create your desired team for you automatically.
+
+Team Formation Settings are configured in the Match Profile. You can specify the number of teams to split players across and minimally how many players needed per team to start a match.
+
+By default, teams are randomly assigned to all players in the match. If queued as a party, the Matchmaking Service will attempt to keep all party members on the same team. If this is not important to your game, you may enable the setting `allow party separation` within the "Team Formation Settings" field.
+
+You can also specify how teams are assigned via the Team Formation's 'Strategy' and 'Strategy Argument'. For example, if you have an `elo` statistic rule, you can choose to fill out teams in an alternating fashion based on the `elo` statistic value, ensuring they are competitively balanced. You can use any "number" based rule (statistics, leaderboard tiers, or custom number) configured in the match profile as the strategy arg.
+
+![Matchmaking Team Formation Settings](/images/docs/matchmaking-team-formation-strategy.png)
+
+### Backfilling
+This setting tells the matchmaker if it should start a match the minute the min count has been reached. More players can join as long as the match is not full or the backfilling timeout has not been reached.
+<Note>
+  Presently, the backfilling rule does not work with **Relay** allocation.
+</Note>
+
+### Delay Partial Match
+
+The `delay_partial_match_seconds` setting on a Match Profile controls how long the matchmaker should wait before creating a partial match (a match where the player count is between `min_players` and `max_players`).
+
+When this setting is configured:
+- If enough tickets are found to completely fill a match (`max_players`), the match is created immediately regardless of this setting.
+- If the number of matching tickets is between `min_players` and `max_players`, the matchmaker will wait until the oldest ticket in the candidate set has been waiting for at least `delay_partial_match_seconds` before forming the match.
+- This gives the matchmaker additional time to find more players and create fuller matches, rather than immediately settling for the minimum player count.
+
+<Note>
+  If `delay_partial_match_seconds` is set to `0` or left unset, partial matches are created as soon as the minimum player count is reached.
+</Note>
+
+## Allocation
+
+The matchmaker snap has been integrated with the Snapser relay and game server fleet and lobbies snaps. While creating a match
+profile you can select if you want the match to be allocated to your relay, a specific game server fleet or a lobby.
+
+Additionally, you can also add metadata for your intended allocation destination. This metadata is a map of key-value pairs that you can use to pass additional arbitrary data to a lobby or fleet. For a Lobby, this
+data will be passed into the Lobby's `allocation_metadata` field. For a Fleet, this data will be passed into the GameServer's annotations field, accessible via the Agones SDK.
+
+### Snapser Relay
+
+Matchmaking can be integrated with [Relay](/docs/infra/snaps/relay) to directly create Matches on your relay servers in multiple geo-regions.
+
+![Titan Profile Allocation](/images/docs/matchmaking-titan-allocation.png)
+
+You can enable the regions that you want to allocate matches in by clicking **Relay** in the "Select Allocation" dropdown. Then, you can select the regions you want to allocate matches in the "Select geos" dropdown.
+
+<Note>You will need to have the **relay** snap in your snapend.</Note>
+
+### Snapser Fleet
+
+Matchmaking can be integrated with Snapser game server fleet to directly create Matches on your game server fleet.
+In the "Select Allocation" section pick **fleet** and then the fleet you want to allocate the match to.
+
+<Note>
+  You will need to have the **game server fleet** snap in your snapend.
+  Additionally, you will need to have a fleet created to allocate matches to a
+  fleet. See the [Game Server Fleet Snap](/docs/infra/snaps/game-server-fleets) for more
+  information.
+</Note>
+
+### Snapser Lobby
+
+Matchmaking can be integrated with Snapser lobby to directly create Matches on your lobby.
+In the "Select Allocation" section pick **lobby** to allocate the match to a lobby.
+
+<Note>You will need to have the lobby snap in your snapend.</Note>
+
+When allocating to a lobby, you can also specify a fleet and regions for the eventual match to be allocated to. The Matchmaker will pass along the necessary info to the Lobby that it creates for the match.
+The created Lobby can then be "started" and create the GameServer in the specified fleet and region from the match profile.
+
+![Allocation Metadata Lobbies](/images/docs/matchmaking_allocation_map.png)
+
+For example, the MatchProfile configuration above will create a lobby with the following `allocation_metadata`:
+
+```json
+  "allocation_metadata": {
+    "gamemode": "4v4",
+    "sample_key": "sample_value",
+    "snap_matchmaking_fleet_name": "sici",
+    "snap_matchmaking_region": "oregon"
+  },
+```
+
+<Note>
+  Key-value pairs in the allocation metadata are kept as is when passed to the
+  lobby or fleet. Other information that matchmaking passes along is prefixed
+  with "snap_matchmaking".
+</Note>
+
+<Note>
+  `snap_matchmaking_region` carries the fleet region id exactly as configured, suffix included.
+  A fleet running in a
+  [protected region](/docs/infra/snaps/game-server-fleets#protected-fleet-regions) reports
+  `oregon-ga`, not `oregon`.
+</Note>
+
+### Derived Metadata
+
+In addition to the static **Allocation Metadata** key-value pairs you configure on the profile, matchmaking can also forward **derived metadata** -- values that are not known at profile-creation time and are instead computed from the matched tickets when a match is formed.
+
+You opt a rule into derived metadata from the [Custom String Rule](#custom-string) in your rule set:
+
+1. Set Match Allocation to `fleet` or `lobby`.
+2. Add a Custom String rule and leave the `Absolute` toggle **unchecked** so the rule runs in [relative](#relative-vs-absolute-rules) mode.
+3. Check the **Append to metadata** checkbox on that rule.
+
+When you do this, the Allocation section will show a read-only "Derived Metadata" preview listing the keys that will be populated. At match time, for each opted-in rule, matchmaking collects the values present on the matched tickets for that key and forwards them in the assignment metadata alongside your regular Allocation Metadata. For a Lobby allocation these arrive in the Lobby's `allocation_metadata`; for a Fleet allocation they arrive on the GameServer's annotations.
+
+This is useful when the matched value cannot be hard-coded on the profile -- for example, the specific map a party requested, the language preference shared by everyone in the lobby, or the gamemode key that varied per ticket.
+
+<Note>
+  Append to metadata is only available on matchmaking snap version `1.10.0` and above, and only for relative Custom String rules when the allocation target is `fleet` or `lobby`.
+</Note>
+
+## Rules
+
+- **Custom Tag**: Matches tickets that have the same custom tag.
+- **Custom String**: Matches tickets that have the same custom string key and value pair.
+- **Custom Number**: Matches tickets that have the same custom number key within a defined range.
+- **Leaderboard**: Matches tickets that have the same leaderboard score within a defined range.
+- **Statistics**: Matches tickets that have the same statistic value within a defined range.
+- **Latency**: Matches tickets that have the same latency within a defined range (only applies to Titan allocation).
+
+<a id="relative-vs-absolute-rules" />
+
+<Note>
+  Many of the Rules above support both a "relative" and "absolute" mode. In
+  relative mode, the rule will be evaluated relative to the current ticket in
+  the queue. Conceptually, this is equivalent to "Match this ticket with others
+  of the same tier". In absolute mode, the rule will be evaluated based on the
+  defined value in the profile: "Match tickets with tier='silver". You can
+  toggle this behavior by clicking on the "Absolute" button in the rule.
+</Note>
+
+![Relative MM Pic](/images/docs/matchmaking-relative.png)
+
+### Auto Expansion vs Manual Expansion
+
+#### Auto Expansion
+
+When creating a Match Profile, you can choose to enable Auto Expansion, instead of the legacy Manual Expansion steps. This way, the configuration for expansion is done only once per rule, instead of having to define multiple expansion steps.
+
+When Auto Expansion is enabled, the matchmaker will automatically expand the search criteria over time. For Auto Expansion, the important fields to configure are:
+- **Initial Range**: This is the value that the auto expansion will start from. For relative rules, this is the initial range around the ticket being evaluated. For absolute rules, there is an initial start and end value configured on the rule itself.
+- **Spread Interval**: This is the rate at which the search criteria will be expanded, in seconds.
+- **Spread Amount**: This is the amount by which the search criteria will be expanded at each interval. For example, if you set this to 10, then every `Spread Interval` seconds, the matchmaker will expand the search criteria by 10 `elo`.
+- **Maximum Spread**: This is the maximum range for the rule.
+- **Spread Strategy**: This is the strategy that the matchmaker will use to expand the search criteria. The options are `balanced`, `right` and `left`. The `balanced` strategy will expand the search criteria equally on both sides. The `right` strategy will only expand the search criteria on the right side. The `left` strategy will only expand the search criteria on the left side.
+
+![Relative Auto Expansion](/images/docs/matchmaking-auto-expansion-relative.png)
+
+The example above shows a relative number rule with auto expansion enabled. 
+
+<Note>
+  A Spread amount with the Balanced spread strategy will result in half the spread being added to the end of the range and half the spread subtracted from the start of the range. 
+</Note>
+
+
+![Absolute Auto Expansion](/images/docs/matchmaking-auto-expansion-absolute.png)
+
+The example above shows an absolute rule with auto expansion enabled. Note the `initial_start` and `initial_end` values for the range. 
+
+#### Manual Expansion
+
+A common use case in Matchmaking is to allow users to expand their search criteria over time. For example, if a user is not 
+able to find a match within 10 seconds, you may want to expand the search criteria to include users that are +/- 10% 
+of the original search criteria. This is done by configuring the "expansion steps" for rules that support it.
+
+In the example below, for the first 30 seconds, we want the match to accept users that are within +/- 10 `elo` of the ticket being evaluated.
+Then, for the next 30 seconds, we want to expand the search criteria to include users that are within +/- 25 `elo` of the ticket being evaluated.
+Note that the `applies_after` and `applies_for` fields define the window of time that the rule set is applied. You are free to add as many
+expansion steps as you want. The matchmaker will evaluate the rules in the order they are defined in the rule set.
+
+![Example Expansion Steps](/images/docs/matchmaking-expansion-steps.png)
+
+The current set of rules that support expansion steps are:
+- Relative Leaderboard Rules
+- Relative Statistics Rules
+- Relative Custom Number Rules
+- Absolute Custom Number Rules
+- Latency Rules
+
+### Custom Tag
+
+This is a tag that the user can define when creating a ticket. The Matchmaking snap will match tickets that have the same tag.
+
+### Custom String
+
+This is a key-value pair that the user can define when creating a ticket. The Matchmaking snap will match tickets that have the same key-value pair.
+
+Custom String rules support both [relative and absolute](#relative-vs-absolute-rules) modes (matchmaking snap `1.7.0`+):
+
+- **Absolute**: only tickets whose value for the configured key exactly equals the value on the profile will match.
+- **Relative**: only tickets whose value for the configured key equals the value on the ticket being evaluated will match -- regardless of what that value is. Useful for "match me with others who picked the same thing" semantics (same map, same gamemode, same language preference, etc.) without enumerating every possibility on the profile.
+
+When the rule is **relative** and Match Allocation is set to `fleet` or `lobby`, you can also check **Append to metadata** on the rule (matchmaking snap `1.10.0`+). The rule's key will then be added to the assignment's derived metadata at match time, with its value dynamically populated from the matched tickets. See [Derived Metadata](#derived-metadata) for details on how the data is forwarded to the allocation destination.
+
+### Custom Number
+
+This is a key, from and to value that the user can define when creating a ticket.
+The Matchmaking snap will match tickets that have the same key and the value is within the defined range. This rule also
+supports both absolute and relative modes.
+
+### Leaderboards
+
+Snapser users can define this integration via the `Leaderboards` rule while creating a Match Profile.
+
+<Note>
+  Matchmaking currently only supports `tiered` Leaderboards. See ["What are the
+  different type of
+  leaderboards?"](leaderboards#what-are-the-different-type-of-leaderboards) for
+  more information.
+</Note>
+
+#### Pre-requisites
+
+1. Create a tiered Leaderboard in the Leaderboard Snaps Admin tool.
+
+#### Creating a Match Profile with a Leaderboard Rule
+
+In the Match Profile, add a Leaderboard rule on the Match Profile. You can choose the Leaderboard and the condition that needs to be true for the tickets to match. By default, the rule is a "[relative](#relative-vs-absolute-rules)" rule with the `Absolute` toggle unchecked.
+
+In the example image below, the rule is configured to match tickets that are in the `gold` tier of the `rank` leaderboard.
+
+![Example Leaderboard](/images/docs/matchmaking-lb.png)
+
+### Statistics
+
+Snapser users can define this integration via the `Statistics` rule while creating a Match Profile.
+
+The Statistics rule supports two stat types:
+- **Counter** (numeric): The stat value is treated as a number. Tickets are matched using range-based filters, and expansion steps / auto expansion can widen the acceptable range over time. The stat value is stored in the ticket's `double_args`.
+- **String**: The stat value is treated as a string literal. Tickets are matched using exact equality -- only tickets with the same string value will match. The stat value is stored in the ticket's `string_args`. Expansion does not apply to string-type statistics.
+
+#### Pre-requisites
+
+1. Create a Statistic in the Statistics Snap. See ["How do I add a Statistic"](statistics#how-do-i-add-a-statistic-to-my-game) for more information.
+
+![Example Stats](/images/docs/matchmaking-stats.png)
+
+#### Creating a Match Profile with a Statistics Rule
+
+<Note>
+  The Match Profile Admin tool will populate the Statistic dropdown with all
+  available statistics in the Statistics Snap.
+</Note>
+
+In the Match Profile, add a Statistics rule on the Match Profile. You can choose the Statistic and the condition that needs to be true for the tickets to match. By default, the rule is a "[relative](#relative-vs-absolute-rules)" rule with the `Absolute` toggle unchecked.
+
+In the example image below, the rule is configured to match tickets that have a `power` statistic +/-10 and an `elo` statistic +/- 100.
+
+![Example Stats Rule](/images/docs/matchmaking-stats-rules.png)
+
+#### Creating tickets with Statistics
+
+The benefit of the Statistics integration is that you don't need to pass the Statistic values when creating a ticket. For the example above, you only need to pass the `user_id` when calling `CreateTicket`. This is because the Matchmaking snap is smart enough to know which Statistics it has configured and will try to fetch those statistics for each Ticket created on behalf of a User. If the User has a value for that Statistic set in the Statistics Snap, those values will be automatically adding to the ticket.
+
+You can see this in the example image below. The `search_fields` parameter was omitted but the `elo` and `power` statistics were automatically added to the ticket because the User has those stats defined in the Statistics snap.
+
+![Example Stats Ticket Creating](/images/docs/matchmaking-stats-ticket.png)
+
+### Latency
+
+Matches are automatically allocated to the region based on the latency rule. The latency rule is a rule that specifies the acceptable latency for a match to be created. For example, if the latency rule is set to 100ms, then the match will be allocated in the region that has a sub-100ms latency for each player.
+
+You can specify the desired latency range at the rule set level. This means that you can have different acceptable latency ranges for different game modes, as well as gradual matching that increases the acceptable latency range over time.
+
+![Titan Latency Rule](/images/docs/matchmaking-latency-ruleset.png)
+
+#### Get the Latency to a Region
+In order to figure out the latency to a particular region, use the **GetPingUrls** endpoint to fetch the ping urls for each enabled region. You can use this endpoint to ping the region and get the latency.
+
+<Note>
+  The **GetPingUrls** endpoint (`/v1/matchmaking/pingUrls`) is the preferred way to fetch region ping URLs. The older **GetTitanUrls** endpoint (`/v1/matchmaking/titanUrls`) is maintained for backwards compatibility but GetPingUrls should be used for new integrations.
+</Note>
+
+<CodeGroup title="GetPingUrls API response" label="ping urls">
+```
+{
+  "ping_urls": {
+    "oregon": "https://relay-oregon-url.stratos.snapser.com/ping",
+    "oregon-ga": "https://relay-oregon-ga-url.stratos.snapser.com/ping",
+    "singapore": "https://relay-singapore-url.stratos.snapser.com/ping"
+  }
+}
+```
+</CodeGroup>
+
+You can then ping each url and get the latency to that region, and then pass that latency to the `latency_args` field in the `CreateTicket` endpoint.
+
+<Note>
+  Use the keys exactly as they come back from the endpoint. A Snapend with
+  [protected regions](/docs/infra/snaps/game-server-fleets#protected-fleet-regions) enabled
+  returns `-ga` suffixed keys alongside the standard ones, and those suffixed ids are what
+  `latency_args` expects. Do not strip the suffix.
+</Note>
+
+#### UDP Ping Endpoints
+
+Alternatively, you can measure latency using Snapser's dedicated UDP ping servers, available in all regions on port **50000**.
+
+| Region | Hostname | Port |
+| --- | --- | --- |
+| Oregon | `ping.oregon.stratos.snapser.com` | 50000 |
+| Oregon (Protected) | `ping.oregon-ga.stratos.snapser.com` | 50000 |
+| N. Virginia | `ping.nvirginia.stratos.snapser.com` | 50000 |
+| N. Virginia (Protected) | `ping.nvirginia-ga.stratos.snapser.com` | 50000 |
+| Frankfurt | `ping.frankfurt.stratos.snapser.com` | 50000 |
+| Frankfurt (Protected) | `ping.frankfurt-ga.stratos.snapser.com` | 50000 |
+| Sao Paulo | `ping.saopaulo.stratos.snapser.com` | 50000 |
+| Sao Paulo (Protected) | `ping.saopaulo-ga.stratos.snapser.com` | 50000 |
+| Singapore | `ping.singapore.stratos.snapser.com` | 50000 |
+| Singapore (Protected) | `ping.singapore-ga.stratos.snapser.com` | 50000 |
+
+<Note>
+  Ping the sibling your fleet actually runs in. A
+  [protected region](/docs/infra/snaps/game-server-fleets#protected-fleet-regions) reaches your
+  fleet over the edge network and a private backbone, so its RTT differs from the standard
+  region sitting in the same place. Measuring `frankfurt` and then allocating into
+  `frankfurt-ga` hands the matchmaker a latency it will not actually see in game.
+</Note>
+
+You can verify connectivity using `nping`:
+
+```
+sudo nping --udp -p 50000 ping.oregon.stratos.snapser.com
+```
+
+##### Protected Region Ping Endpoints
+
+Snapser protected (`-ga`) regions run behind Snapser's global accelerator and have their own UDP ping servers. Unlike the standard endpoints, each protected region listens on its own port, so make sure you send the probe to the port listed for that region.
+
+| Region | Hostname | Port |
+| --- | --- | --- |
+| Singapore | `ping-ga.singapore-ga.stratos.snapser.com` | 50001 |
+| Frankfurt | `ping-ga.frankfurt-ga.stratos.snapser.com` | 50002 |
+| Sao Paulo | `ping-ga.saopaulo-ga.stratos.snapser.com` | 50003 |
+| N. Virginia | `ping-ga.nvirginia-ga.stratos.snapser.com` | 50004 |
+
+```
+sudo nping --udp -p 50001 ping-ga.singapore-ga.stratos.snapser.com
+```
+
+#### Create a Ticket with Latency
+The Latency rule works in conjunction with a new field in the `CreateTicket` endpoint: the "latency_args". This field is specified during ticket creation and contains a map of each enabled region to that clients latency. Say most of your users are in North America and Asia, then the game client can pass a map of the latencies it has to the "Oregon" and "Singapore" regions. Say those are 50ms for Oregon and 100ms for Singapore. This will tell the matchmaking service that the client has a 50ms latency to the US region and a 100ms latency to the EU region. The CreateTicket payload will look something like this:
+
+<CodeGroup title="CreateTicket API payload" label="latency args">
+```
+{
+  "user_id": "123",
+  "search_fields": {
+    "latency_args": {
+      "oregon": 50,
+      "oregon-ga": 42,
+      "singapore": 100
+    },
+    "tags": ["ranked"]
+  }
+}
+```
+</CodeGroup>
+
+<Note>
+  The keys are region ids, so a
+  [protected region](/docs/infra/snaps/game-server-fleets#protected-fleet-regions) is keyed by
+  its suffixed id — `oregon-ga`, not `oregon`. A standard region and its protected sibling are
+  two separate entries with two separately measured latencies, and matchmaking will only
+  allocate into a region your client supplied a latency for.
+</Note>
+
+<Note>
+  We plan to simplify this process in the future by providing a built in sdk
+  call that will ping each region and return the correct formatted latency map
+  for you.
+</Note>
+
+## Rule Sets
+
+A rule set is a collection of rules that are used to match users together. A match profile can have multiple rule sets, and matches can be created for each rule set. All rules within a rule set are ANDed together.
+For each rule set, you can define its applicable **Duration**. This is relative to the ticket's creation time. For example, if you set the Duration to 60 seconds,
+then the rule set will only apply to tickets created within the last 60 seconds. This is useful for defining fallback rule sets. See the examples below:
+
+![Fuzzy Pic](/images/docs/matchmaking-fuzzy-1.png)
+![Fuzzy Pic](/images/docs/matchmaking-fuzzy-2.png)
+
+<Note>
+  Only one rule set is being evaluated at a time. If a ticket is created within
+  the last 10 seconds, then it will be evaluated against the first rule set.
+  Once the ticket is older than 10 seconds, it will be evaluated against the
+  second rule set. If the ticket is older than 30 seconds (10s from rule set 1 +
+  20s from rule set 2), then it will not be evaluated against any rule set.
+</Note>
+
+## Queue Settings 
+
+For certain match profiles, it may be desirable to limit the size of the parties that can create tickets. This is supported via the QueueSettings object in the Match Profile Settings. 
+
+![Queue Settings](/images/docs/matchmaking-queue-settings.png)
+
+## Host Selection Criterion
+
+The Matchmaking Snap allows you to add an optional criterion for selecting a host amongst all the
+matched users. The host selection criterion only works when you have at least one of the following rules
+in any rule set:
+1. Leaderboard rule
+2. Statistics rule
+3. Custom Number rule
+
+Once you have at least one of the rules, you will be able to pick any one of them, and tell the
+matchmaker if you want to pick the host who has the `min` or `max`:
+1. Leaderboard score
+2. Statistic value
+3. Custom Number value
+
+## Match Data
+
+Once a match has been formed, the Matchmaking snap creates a **MatchData** object that represents the live state of the match. Match participants can query and update this data via the [GetMatchData](#matchmakinggetmatchdata-api) and [UpdateMatchMetadata](#matchmakingupdatematchmetadata-api) APIs.
+
+The MatchData object contains the following fields:
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `match_id` | string | The unique identifier for the match |
+| `host_id` | string | The user ID of the host player |
+| `match_profile_id` | string | The Match Profile that was used to create this match |
+| `region` | string | The region the match was allocated to |
+| `statuses` | map&lt;string, Status&gt; | A map of user IDs to their readiness status (`UNKNOWN_STATUS`, `NOT_READY`, `READY`) |
+| `teams` | map&lt;int32, UserIdList&gt; | A map of team indices to the list of user IDs on each team |
+| `ticket_ids` | string[] | The ticket IDs that were matched |
+| `metadata` | map&lt;string, string&gt; | Arbitrary key-value metadata associated with the match |
+| `start_after_seconds` | int32 | Delay in seconds before the match should start |
+
+### Updating Match Metadata
+
+Any participant in a match can update the match's metadata using the [UpdateMatchMetadata](#matchmakingupdatematchmetadata-api) API. The new metadata keys are merged into the existing metadata. This is useful for coordinating match state between participants -- for example, tracking game settings, map selection, or other runtime configuration.
+
+<Note>
+  Only users who are participants in the match (present in the `statuses` map) can read or update the match data.
+</Note>
+
+## APIs
+
+The `Matchmaking` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name                                            | HTTP Method | API Description                                    |
+| --------------------------------------------------- | ----------- | -------------------------------------------------- |
+| [MatchmakingGetPingUrls](#matchmakinggetpingurls-api)                     | GET         | Fetch the region ping urls enabled for matchmaking |
+| [MatchmakingCreateBackfill](#matchmakingcreatebackfill-api)               | POST        | Create a backfill ticket for a match               |
+| [MatchmakingDeleteBackfill](#matchmakingdeletebackfill-api)               | DELETE      | Delete a backfill by its ID                        |
+| [MatchmakingGetTitanUrls](#matchmakinggettitanurls-api)                   | GET         | Fetch the titan urls enabled for matchmaking (legacy) |
+| [MatchmakingAcceptMatch](#matchmakingacceptmatch-api)                     | POST        | Accepts a match for a user                         |
+| [MatchmakingDeleteTicketsForParty](#matchmakingdeleteticketsforparty-api) | DELETE      | Deletes tickets for the users of a party           |
+| [MatchmakingCreateTicketsForParty](#matchmakingcreateticketsforparty-api) | POST        | Creates tickets for the users of a party           |
+| [MatchmakingCreateTicket](#matchmakingcreateticket-api)                   | POST        | Create a ticket for a user                         |
+| [MatchmakingDeleteTicket](#matchmakingdeleteticket-api)                   | DELETE      | Delete a user's ticket                             |
+| [MatchmakingGetTicket](#matchmakinggetticket-api)                         | GET         | Fetch a user's ticket                              |
+| [MatchmakingBatchGetTickets](#matchmakingbatchgettickets-api)             | GET         | Fetch multiple tickets by their IDs                |
+| [MatchmakingGetMatchData](#matchmakinggetmatchdata-api)                   | GET         | Get live match data for a match                    |
+| [MatchmakingUpdateMatchMetadata](#matchmakingupdatematchmetadata-api)     | PUT         | Update metadata for a match                        |
+| [MatchmakingGetQueues](#matchmakinggetqueues-api)                         | GET         | Get queue counts per match profile                 |
+</div>
+
+### Usage
+#### MatchmakingGetPingUrls API
+<CodeGroup title="Fetch the region ping urls enabled for matchmaking" tag="GET" label="MatchmakingGetPingUrls">
+```csharp
+/// <summary>
+/// Region APIs Fetch the region ping urls enabled for matchmaking
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <returns>MatchmakingGetPingUrlsResponse</returns>
+public MatchmakingGetPingUrlsResponse MatchmakingGetPingUrls(string token)
+{
+    Snapser.Client.ApiResponse<MatchmakingGetPingUrlsResponse> localVarResponse = MatchmakingGetPingUrlsWithHttpInfo(token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for MatchmakingGetPingUrlsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingGetPingUrlsResponse" /> class.
+/// </summary>
+/// <param name="pingUrls">pingUrls.</param>
+public MatchmakingGetPingUrlsResponse(Dictionary<string, string> pingUrls = default(Dictionary<string, string>))
+{
+    this.PingUrls = pingUrls;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingGetPingUrlsRequest : public Request
+{
+public:
+    virtual ~MatchmakingGetPingUrlsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingGetPingUrlsResponse : public Response
+{
+public:
+    virtual ~MatchmakingGetPingUrlsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserMatchmakingGetPingUrlsResponse Content;
+};
+
+class SNAPSER_API SnapserMatchmakingGetPingUrlsResponse : public Model
+{
+public:
+    virtual ~SnapserMatchmakingGetPingUrlsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TMap<FString, FString>> PingUrls;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### MatchmakingCreateBackfill API
+<CodeGroup title="Create a backfill ticket for a match" tag="POST" label="MatchmakingCreateBackfill">
+```csharp
+/// <summary>
+/// Create Backfill Create a backfill ticket for a match
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>MatchmakingCreateBackfillResponse</returns>
+public MatchmakingCreateBackfillResponse MatchmakingCreateBackfill(MatchmakingCreateBackfillRequest body)
+{
+    Snapser.Client.ApiResponse<MatchmakingCreateBackfillResponse> localVarResponse = MatchmakingCreateBackfillWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for MatchmakingCreateBackfillRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingCreateBackfillRequest" /> class.
+/// </summary>
+/// <param name="assignment">assignment (required).</param>
+/// <param name="matchId">The match ID to use for this backfill (required).</param>
+/// <param name="matchProfileId">The match profile ID to use for this backfill (required).</param>
+/// <param name="searchFields">searchFields.</param>
+public MatchmakingCreateBackfillRequest(MatchmakingAssignment assignment = default(MatchmakingAssignment), string matchId = default(string), string matchProfileId = default(string), MatchmakingSearchFields searchFields = default(MatchmakingSearchFields))
+{
+    // to ensure "assignment" is required (not null)
+    if (assignment == null)
+    {
+        throw new ArgumentNullException("assignment is a required property for MatchmakingCreateBackfillRequest and cannot be null");
+    }
+    this.Assignment = assignment;
+    // to ensure "matchId" is required (not null)
+    if (matchId == null)
+    {
+        throw new ArgumentNullException("matchId is a required property for MatchmakingCreateBackfillRequest and cannot be null");
+    }
+    this.MatchId = matchId;
+    // to ensure "matchProfileId" is required (not null)
+    if (matchProfileId == null)
+    {
+        throw new ArgumentNullException("matchProfileId is a required property for MatchmakingCreateBackfillRequest and cannot be null");
+    }
+    this.MatchProfileId = matchProfileId;
+    this.SearchFields = searchFields;
+}
+
+/// Snapser.Model for MatchmakingCreateBackfillResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingCreateBackfillResponse" /> class.
+/// </summary>
+/// <param name="backfill">backfill.</param>
+public MatchmakingCreateBackfillResponse(MatchmakingBackfill backfill = default(MatchmakingBackfill))
+{
+    this.Backfill = backfill;
+}
+
+/// Snapser.Model for MatchmakingBackfill
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingBackfill" /> class.
+/// </summary>
+/// <param name="assignment">assignment.</param>
+/// <param name="createdAt">createdAt.</param>
+/// <param name="id">id.</param>
+/// <param name="matchId">matchId.</param>
+/// <param name="region">region.</param>
+/// <param name="searchFields">searchFields.</param>
+public MatchmakingBackfill(MatchmakingAssignment assignment = default(MatchmakingAssignment), string createdAt = default(string), string id = default(string), string matchId = default(string), string region = default(string), MatchmakingSearchFields searchFields = default(MatchmakingSearchFields))
+{
+    this.Assignment = assignment;
+    this.CreatedAt = createdAt;
+    this.Id = id;
+    this.MatchId = matchId;
+    this.Region = region;
+    this.SearchFields = searchFields;
+}
+
+/// Snapser.Model for MatchmakingAssignment
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingAssignment" /> class.
+/// </summary>
+/// <param name="connectionString">connectionString.</param>
+/// <param name="error">error.</param>
+/// <param name="isAccepted">isAccepted.</param>
+/// <param name="isHost">isHost.</param>
+/// <param name="joinCode">joinCode.</param>
+/// <param name="lobbyId">lobbyId.</param>
+/// <param name="matchId">Connection information for this Assignment..</param>
+/// <param name="matchProfile">The match profile used to generate this match..</param>
+/// <param name="serverAllocation">serverAllocation.</param>
+/// <param name="team">team.</param>
+/// <param name="ticketIds">ticketIds.</param>
+/// <param name="userIds">userIds.</param>
+public MatchmakingAssignment(string connectionString = default(string), string error = default(string), bool isAccepted = default(bool), bool isHost = default(bool), string joinCode = default(string), string lobbyId = default(string), string matchId = default(string), string matchProfile = default(string), MatchmakingServerAllocation serverAllocation = default(MatchmakingServerAllocation), int team = default(int), List<string> ticketIds = default(List<string>), List<string> userIds = default(List<string>))
+{
+    this.ConnectionString = connectionString;
+    this.Error = error;
+    this.IsAccepted = isAccepted;
+    this.IsHost = isHost;
+    this.JoinCode = joinCode;
+    this.LobbyId = lobbyId;
+    this.MatchId = matchId;
+    this.MatchProfile = matchProfile;
+    this.ServerAllocation = serverAllocation;
+    this.Team = team;
+    this.TicketIds = ticketIds;
+    this.UserIds = userIds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingCreateBackfillRequest : public Request
+{
+public:
+    virtual ~MatchmakingCreateBackfillRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserMatchmakingCreateBackfillRequest Body;
+};
+
+class SNAPSER_API SnapserMatchmakingCreateBackfillRequest : public Model
+{
+public:
+    virtual ~SnapserMatchmakingCreateBackfillRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    SnapserMatchmakingAssignment Assignment;
+    /* The match ID to use for this backfill */
+    FString MatchId;
+    /* The match profile ID to use for this backfill */
+    FString MatchProfileId;
+    TOptional<SnapserMatchmakingSearchFields> SearchFields;
+};
+
+class SNAPSER_API SnapserMatchmakingAssignment : public Model
+{
+public:
+    virtual ~SnapserMatchmakingAssignment() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> ConnectionString;
+    TOptional<FString> Error;
+    TOptional<bool> IsAccepted;
+    TOptional<bool> IsHost;
+    TOptional<FString> JoinCode;
+    TOptional<FString> LobbyId;
+    /* Connection information for this Assignment. */
+    TOptional<FString> MatchId;
+    /* The match profile used to generate this match. */
+    TOptional<FString> MatchProfile;
+    TOptional<SnapserMatchmakingServerAllocation> ServerAllocation;
+    TOptional<int32> Team;
+    TOptional<TArray<FString>> TicketIds;
+    TOptional<TArray<FString>> UserIds;
+};
+
+class SNAPSER_API SnapserMatchmakingSearchFields : public Model
+{
+public:
+    virtual ~SnapserMatchmakingSearchFields() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* A map of double args and their values to be used by the matchmaker */
+    TOptional<TMap<FString, double>> DoubleArgs;
+    /* A map of string args of the region and the users ping to each region */
+    TOptional<TMap<FString, double>> LatencyArgs;
+    /* A map of string args and their values to be used by the matchmaker */
+    TOptional<TMap<FString, FString>> StringArgs;
+    /* An array of string tags to be used by the matchmaker */
+    TOptional<TArray<FString>> Tags;
+};
+
+class SNAPSER_API SnapserMatchmakingServerAllocation : public Model
+{
+public:
+    virtual ~SnapserMatchmakingServerAllocation() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Address;
+    TOptional<TArray<int32>> Ports;
+    TOptional<FString> ServerName;
+};
+
+// Response
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingCreateBackfillResponse : public Response
+{
+public:
+    virtual ~MatchmakingCreateBackfillResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserMatchmakingCreateBackfillResponse Content;
+};
+
+class SNAPSER_API SnapserMatchmakingCreateBackfillResponse : public Model
+{
+public:
+    virtual ~SnapserMatchmakingCreateBackfillResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserMatchmakingBackfill> Backfill;
+};
+
+class SNAPSER_API SnapserMatchmakingBackfill : public Model
+{
+public:
+    virtual ~SnapserMatchmakingBackfill() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserMatchmakingAssignment> Assignment;
+    TOptional<FString> CreatedAt;
+    TOptional<FString> Id;
+    TOptional<FString> MatchId;
+    TOptional<FString> Region;
+    TOptional<SnapserMatchmakingSearchFields> SearchFields;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### MatchmakingGetTitanUrls API
+<CodeGroup title="Fetch the titan urls enabled for matchmaking" tag="GET" label="MatchmakingGetTitanUrls">
+```csharp
+/// <summary>
+/// Titan APIs Fetch the titan urls enabled for matchmaking
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <returns>MatchmakingGetTitanUrlsResponse</returns>
+public MatchmakingGetTitanUrlsResponse MatchmakingGetTitanUrls(string token)
+{
+    Snapser.Client.ApiResponse<MatchmakingGetTitanUrlsResponse> localVarResponse = MatchmakingGetTitanUrlsWithHttpInfo(token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for MatchmakingGetTitanUrlsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingGetTitanUrlsResponse" /> class.
+/// </summary>
+/// <param name="titanUrls">titanUrls.</param>
+public MatchmakingGetTitanUrlsResponse(Dictionary<string, string> titanUrls = default(Dictionary<string, string>))
+{
+    this.TitanUrls = titanUrls;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingGetTitanUrlsRequest : public Request
+{
+public:
+    virtual ~MatchmakingGetTitanUrlsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingGetTitanUrlsResponse : public Response
+{
+public:
+    virtual ~MatchmakingGetTitanUrlsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserMatchmakingGetTitanUrlsResponse Content;
+};
+
+class SNAPSER_API SnapserMatchmakingGetTitanUrlsResponse : public Model
+{
+public:
+    virtual ~SnapserMatchmakingGetTitanUrlsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TMap<FString, FString>> TitanUrls;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### MatchmakingAcceptMatch API
+<CodeGroup title="Accepts a match for a user" tag="POST" label="MatchmakingAcceptMatch">
+```csharp
+/// <summary>
+/// Accept Match Accepts a match for a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID for the user in the match</param>
+/// <param name="matchId">The match ID to accept</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>MatchmakingAcceptMatchResponse</returns>
+public MatchmakingAcceptMatchResponse MatchmakingAcceptMatch(string userId, string matchId, string token, AcceptMatchRequest body)
+{
+    Snapser.Client.ApiResponse<MatchmakingAcceptMatchResponse> localVarResponse = MatchmakingAcceptMatchWithHttpInfo(userId, matchId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AcceptMatchRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AcceptMatchRequest" /> class.
+/// </summary>
+/// <param name="accept">Boolean indicating if the user accepts the match (required).</param>
+public AcceptMatchRequest(bool accept = default(bool))
+{
+    this.Accept = accept;
+}
+
+/// Snapser.Model for MatchmakingAcceptMatchResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingAcceptMatchResponse" /> class.
+/// </summary>
+/// <param name="success">success.</param>
+public MatchmakingAcceptMatchResponse(bool success = default(bool))
+{
+    this.Success = success;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingAcceptMatchRequest : public Request
+{
+public:
+    virtual ~MatchmakingAcceptMatchRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID for the user in the match */
+    FString UserId;
+    /* The match ID to accept */
+    FString MatchId;
+    /* User session token */
+    FString Token;
+    SnapserAcceptMatchRequest Body;
+};
+
+class SNAPSER_API SnapserAcceptMatchRequest : public Model
+{
+public:
+    virtual ~SnapserAcceptMatchRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Boolean indicating if the user accepts the match */
+    bool Accept = false;
+};
+
+// Response
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingAcceptMatchResponse : public Response
+{
+public:
+    virtual ~MatchmakingAcceptMatchResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserMatchmakingAcceptMatchResponse Content;
+};
+
+class SNAPSER_API SnapserMatchmakingAcceptMatchResponse : public Model
+{
+public:
+    virtual ~SnapserMatchmakingAcceptMatchResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<bool> Success;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### MatchmakingDeleteTicketsForParty API
+<CodeGroup title="Deletes tickets for the users of a party" tag="DELETE" label="MatchmakingDeleteTicketsForParty">
+```csharp
+/// <summary>
+/// Matchmaking Party APIs Deletes tickets for the users of a party
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID that is deleting the tickets, must be the owner of the party</param>
+/// <param name="partyId">Party ID for the party to be matched</param>
+/// <param name="token">User session token for the party owner</param>
+/// <returns>Object</returns>
+public Object MatchmakingDeleteTicketsForParty(string userId, string partyId, string token)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = MatchmakingDeleteTicketsForPartyWithHttpInfo(userId, partyId, token);
+    return localVarResponse.Data;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingDeleteTicketsForPartyRequest : public Request
+{
+public:
+    virtual ~MatchmakingDeleteTicketsForPartyRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID that is deleting the tickets, must be the owner of the party */
+    FString UserId;
+    /* Party ID for the party to be matched */
+    FString PartyId;
+    /* User session token for the party owner */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingDeleteTicketsForPartyResponse : public Response
+{
+public:
+    virtual ~MatchmakingDeleteTicketsForPartyResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### MatchmakingCreateTicketsForParty API
+<CodeGroup title="Creates tickets for the users of a party" tag="POST" label="MatchmakingCreateTicketsForParty">
+```csharp
+/// <summary>
+/// Matchmaking Party APIs Creates tickets for the users of a party
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID that is creating the tickets, must be the owner of the party</param>
+/// <param name="partyId">Party ID for the party to be matched</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>MatchmakingListTicketResponse</returns>
+public MatchmakingListTicketResponse MatchmakingCreateTicketsForParty(string userId, string partyId, string token, CreateTicketsForPartyRequest body)
+{
+    Snapser.Client.ApiResponse<MatchmakingListTicketResponse> localVarResponse = MatchmakingCreateTicketsForPartyWithHttpInfo(userId, partyId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for CreateTicketsForPartyRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="CreateTicketsForPartyRequest" /> class.
+/// </summary>
+/// <param name="metadata">Metadata associated with the ticket.</param>
+/// <param name="searchFields">searchFields.</param>
+public CreateTicketsForPartyRequest(Dictionary<string, string> metadata = default(Dictionary<string, string>), MatchmakingSearchFields searchFields = default(MatchmakingSearchFields))
+{
+    this.Metadata = metadata;
+    this.SearchFields = searchFields;
+}
+
+/// Snapser.Model for MatchmakingListTicketResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingListTicketResponse" /> class.
+/// </summary>
+/// <param name="tickets">tickets.</param>
+public MatchmakingListTicketResponse(List<MatchmakingTicket> tickets = default(List<MatchmakingTicket>))
+{
+    this.Tickets = tickets;
+}
+
+/// Snapser.Model for MatchmakingTicket
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingTicket" /> class.
+/// </summary>
+/// <param name="assignment">assignment.</param>
+/// <param name="createdAt">The time when the Ticket was created..</param>
+/// <param name="extensions">extensions.</param>
+/// <param name="firstMatchedAt">The time when the Ticket was first matched..</param>
+/// <param name="id">The ID of the ticket..</param>
+/// <param name="partyId">The id of the party that the user is in..</param>
+/// <param name="searchFields">searchFields.</param>
+/// <param name="userId">The ID of the user that created the ticket..</param>
+public MatchmakingTicket(MatchmakingAssignment assignment = default(MatchmakingAssignment), string createdAt = default(string), Dictionary<string, ProtobufAny> extensions = default(Dictionary<string, ProtobufAny>), string firstMatchedAt = default(string), string id = default(string), string partyId = default(string), MatchmakingSearchFields searchFields = default(MatchmakingSearchFields), string userId = default(string))
+{
+    this.Assignment = assignment;
+    this.CreatedAt = createdAt;
+    this.Extensions = extensions;
+    this.FirstMatchedAt = firstMatchedAt;
+    this.Id = id;
+    this.PartyId = partyId;
+    this.SearchFields = searchFields;
+    this.UserId = userId;
+}
+
+/// Snapser.Model for MatchmakingAssignment
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingAssignment" /> class.
+/// </summary>
+/// <param name="connectionString">connectionString.</param>
+/// <param name="error">error.</param>
+/// <param name="isAccepted">isAccepted.</param>
+/// <param name="isHost">isHost.</param>
+/// <param name="joinCode">joinCode.</param>
+/// <param name="lobbyId">lobbyId.</param>
+/// <param name="matchId">Connection information for this Assignment..</param>
+/// <param name="matchProfile">The match profile used to generate this match..</param>
+/// <param name="serverAllocation">serverAllocation.</param>
+/// <param name="team">team.</param>
+/// <param name="ticketIds">ticketIds.</param>
+/// <param name="userIds">userIds.</param>
+public MatchmakingAssignment(string connectionString = default(string), string error = default(string), bool isAccepted = default(bool), bool isHost = default(bool), string joinCode = default(string), string lobbyId = default(string), string matchId = default(string), string matchProfile = default(string), MatchmakingServerAllocation serverAllocation = default(MatchmakingServerAllocation), int team = default(int), List<string> ticketIds = default(List<string>), List<string> userIds = default(List<string>))
+{
+    this.ConnectionString = connectionString;
+    this.Error = error;
+    this.IsAccepted = isAccepted;
+    this.IsHost = isHost;
+    this.JoinCode = joinCode;
+    this.LobbyId = lobbyId;
+    this.MatchId = matchId;
+    this.MatchProfile = matchProfile;
+    this.ServerAllocation = serverAllocation;
+    this.Team = team;
+    this.TicketIds = ticketIds;
+    this.UserIds = userIds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingCreateTicketsForPartyRequest : public Request
+{
+public:
+    virtual ~MatchmakingCreateTicketsForPartyRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID that is creating the tickets, must be the owner of the party */
+    FString UserId;
+    /* Party ID for the party to be matched */
+    FString PartyId;
+    /* User session token */
+    FString Token;
+    SnapserCreateTicketsForPartyRequest Body;
+};
+
+class SNAPSER_API SnapserCreateTicketsForPartyRequest : public Model
+{
+public:
+    virtual ~SnapserCreateTicketsForPartyRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Metadata associated with the ticket */
+    TOptional<TMap<FString, FString>> Metadata;
+    TOptional<SnapserMatchmakingSearchFields> SearchFields;
+};
+
+class SNAPSER_API SnapserMatchmakingSearchFields : public Model
+{
+public:
+    virtual ~SnapserMatchmakingSearchFields() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* A map of double args and their values to be used by the matchmaker */
+    TOptional<TMap<FString, double>> DoubleArgs;
+    /* A map of string args of the region and the users ping to each region */
+    TOptional<TMap<FString, double>> LatencyArgs;
+    /* A map of string args and their values to be used by the matchmaker */
+    TOptional<TMap<FString, FString>> StringArgs;
+    /* An array of string tags to be used by the matchmaker */
+    TOptional<TArray<FString>> Tags;
+};
+
+// Response
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingCreateTicketsForPartyResponse : public Response
+{
+public:
+    virtual ~MatchmakingCreateTicketsForPartyResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserMatchmakingListTicketResponse Content;
+};
+
+class SNAPSER_API SnapserMatchmakingListTicketResponse : public Model
+{
+public:
+    virtual ~SnapserMatchmakingListTicketResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserMatchmakingTicket>> Tickets;
+};
+
+class SNAPSER_API SnapserMatchmakingTicket : public Model
+{
+public:
+    virtual ~SnapserMatchmakingTicket() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserMatchmakingAssignment> Assignment;
+    /* The time when the Ticket was created. */
+    TOptional<FString> CreatedAt;
+    TOptional<TMap<FString, SnapserProtobufAny>> Extensions;
+    /* The time when the Ticket was first matched. */
+    TOptional<FString> FirstMatchedAt;
+    /* The ID of the ticket. */
+    TOptional<FString> Id;
+    /* The id of the party that the user is in. */
+    TOptional<FString> PartyId;
+    TOptional<SnapserMatchmakingSearchFields> SearchFields;
+    /* The ID of the user that created the ticket. */
+    TOptional<FString> UserId;
+};
+
+class SNAPSER_API SnapserMatchmakingAssignment : public Model
+{
+public:
+    virtual ~SnapserMatchmakingAssignment() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> ConnectionString;
+    TOptional<FString> Error;
+    TOptional<bool> IsAccepted;
+    TOptional<bool> IsHost;
+    TOptional<FString> JoinCode;
+    TOptional<FString> LobbyId;
+    /* Connection information for this Assignment. */
+    TOptional<FString> MatchId;
+    /* The match profile used to generate this match. */
+    TOptional<FString> MatchProfile;
+    TOptional<SnapserMatchmakingServerAllocation> ServerAllocation;
+    TOptional<int32> Team;
+    TOptional<TArray<FString>> TicketIds;
+    TOptional<TArray<FString>> UserIds;
+};
+
+class SNAPSER_API SnapserMatchmakingSearchFields : public Model
+{
+public:
+    virtual ~SnapserMatchmakingSearchFields() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* A map of double args and their values to be used by the matchmaker */
+    TOptional<TMap<FString, double>> DoubleArgs;
+    /* A map of string args of the region and the users ping to each region */
+    TOptional<TMap<FString, double>> LatencyArgs;
+    /* A map of string args and their values to be used by the matchmaker */
+    TOptional<TMap<FString, FString>> StringArgs;
+    /* An array of string tags to be used by the matchmaker */
+    TOptional<TArray<FString>> Tags;
+};
+
+class SNAPSER_API SnapserMatchmakingServerAllocation : public Model
+{
+public:
+    virtual ~SnapserMatchmakingServerAllocation() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Address;
+    TOptional<TArray<int32>> Ports;
+    TOptional<FString> ServerName;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### MatchmakingCreateTicket API
+<CodeGroup title="Create a ticket for a user" tag="POST" label="MatchmakingCreateTicket">
+```csharp
+/// <summary>
+/// Create Ticket Create a ticket for a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID for the user to be matched</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>MatchmakingCreateTicketResponse</returns>
+public MatchmakingCreateTicketResponse MatchmakingCreateTicket(string userId, string token, CreateTicketsForPartyRequest body)
+{
+    Snapser.Client.ApiResponse<MatchmakingCreateTicketResponse> localVarResponse = MatchmakingCreateTicketWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for CreateTicketsForPartyRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="CreateTicketsForPartyRequest" /> class.
+/// </summary>
+/// <param name="metadata">Metadata associated with the ticket.</param>
+/// <param name="profileName">The match profile name to use for this ticket.</param>
+/// <param name="searchFields">searchFields.</param>
+public CreateTicketsForPartyRequest(Dictionary<string, string> metadata = default(Dictionary<string, string>), string profileName = default(string), MatchmakingSearchFields searchFields = default(MatchmakingSearchFields))
+{
+    this.Metadata = metadata;
+    this.ProfileName = profileName;
+    this.SearchFields = searchFields;
+}
+
+/// Snapser.Model for MatchmakingSearchFields
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingSearchFields" /> class.
+/// </summary>
+/// <param name="doubleArgs">A map of double args and their values to be used by the matchmaker.</param>
+/// <param name="latencyArgs">A map of string args of the region and the users ping to each region.</param>
+/// <param name="stringArgs">A map of string args and their values to be used by the matchmaker.</param>
+/// <param name="tags">An array of string tags to be used by the matchmaker.</param>
+public MatchmakingSearchFields(Dictionary<string, double> doubleArgs = default(Dictionary<string, double>), Dictionary<string, double> latencyArgs = default(Dictionary<string, double>), Dictionary<string, string> stringArgs = default(Dictionary<string, string>), List<string> tags = default(List<string>))
+{
+    this.DoubleArgs = doubleArgs;
+    this.LatencyArgs = latencyArgs;
+    this.StringArgs = stringArgs;
+    this.Tags = tags;
+}
+
+/// Snapser.Model for MatchmakingCreateTicketResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingCreateTicketResponse" /> class.
+/// </summary>
+/// <param name="ticket">ticket.</param>
+public MatchmakingCreateTicketResponse(MatchmakingTicket ticket = default(MatchmakingTicket))
+{
+    this.Ticket = ticket;
+}
+
+/// Snapser.Model for MatchmakingTicket
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingTicket" /> class.
+/// </summary>
+/// <param name="assignment">assignment.</param>
+/// <param name="createdAt">The time when the Ticket was created..</param>
+/// <param name="extensions">extensions.</param>
+/// <param name="firstMatchedAt">The time when the Ticket was first matched..</param>
+/// <param name="id">The ID of the ticket..</param>
+/// <param name="partyId">The id of the party that the user is in..</param>
+/// <param name="searchFields">searchFields.</param>
+/// <param name="userId">The ID of the user that created the ticket..</param>
+public MatchmakingTicket(MatchmakingAssignment assignment = default(MatchmakingAssignment), string createdAt = default(string), Dictionary<string, ProtobufAny> extensions = default(Dictionary<string, ProtobufAny>), string firstMatchedAt = default(string), string id = default(string), string partyId = default(string), MatchmakingSearchFields searchFields = default(MatchmakingSearchFields), string userId = default(string))
+{
+    this.Assignment = assignment;
+    this.CreatedAt = createdAt;
+    this.Extensions = extensions;
+    this.FirstMatchedAt = firstMatchedAt;
+    this.Id = id;
+    this.PartyId = partyId;
+    this.SearchFields = searchFields;
+    this.UserId = userId;
+}
+
+/// Snapser.Model for MatchmakingAssignment
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingAssignment" /> class.
+/// </summary>
+/// <param name="connectionString">connectionString.</param>
+/// <param name="error">error.</param>
+/// <param name="isAccepted">isAccepted.</param>
+/// <param name="isHost">isHost.</param>
+/// <param name="joinCode">joinCode.</param>
+/// <param name="lobbyId">lobbyId.</param>
+/// <param name="matchId">Connection information for this Assignment..</param>
+/// <param name="matchProfile">The match profile used to generate this match..</param>
+/// <param name="serverAllocation">serverAllocation.</param>
+/// <param name="team">team.</param>
+/// <param name="ticketIds">ticketIds.</param>
+/// <param name="userIds">userIds.</param>
+public MatchmakingAssignment(string connectionString = default(string), string error = default(string), bool isAccepted = default(bool), bool isHost = default(bool), string joinCode = default(string), string lobbyId = default(string), string matchId = default(string), string matchProfile = default(string), MatchmakingServerAllocation serverAllocation = default(MatchmakingServerAllocation), int team = default(int), List<string> ticketIds = default(List<string>), List<string> userIds = default(List<string>))
+{
+    this.ConnectionString = connectionString;
+    this.Error = error;
+    this.IsAccepted = isAccepted;
+    this.IsHost = isHost;
+    this.JoinCode = joinCode;
+    this.LobbyId = lobbyId;
+    this.MatchId = matchId;
+    this.MatchProfile = matchProfile;
+    this.ServerAllocation = serverAllocation;
+    this.Team = team;
+    this.TicketIds = ticketIds;
+    this.UserIds = userIds;
+}
+
+/// Snapser.Model for MatchmakingServerAllocation
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingServerAllocation" /> class.
+/// </summary>
+/// <param name="address">address.</param>
+/// <param name="ports">ports.</param>
+/// <param name="serverName">serverName.</param>
+public MatchmakingServerAllocation(string address = default(string), List<int> ports = default(List<int>), string serverName = default(string))
+{
+    this.Address = address;
+    this.Ports = ports;
+    this.ServerName = serverName;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingCreateTicketRequest : public Request
+{
+public:
+    virtual ~MatchmakingCreateTicketRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID for the user to be matched */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserCreateTicketsForPartyRequest Body;
+};
+
+class SNAPSER_API SnapserCreateTicketsForPartyRequest : public Model
+{
+public:
+    virtual ~SnapserCreateTicketsForPartyRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Metadata associated with the ticket */
+    TOptional<TMap<FString, FString>> Metadata;
+    /* The match profile name to use for this ticket */
+    TOptional<FString> ProfileName;
+    TOptional<SnapserMatchmakingSearchFields> SearchFields;
+};
+
+class SNAPSER_API SnapserMatchmakingSearchFields : public Model
+{
+public:
+    virtual ~SnapserMatchmakingSearchFields() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* A map of double args and their values to be used by the matchmaker */
+    TOptional<TMap<FString, double>> DoubleArgs;
+    /* A map of string args of the region and the users ping to each region */
+    TOptional<TMap<FString, double>> LatencyArgs;
+    /* A map of string args and their values to be used by the matchmaker */
+    TOptional<TMap<FString, FString>> StringArgs;
+    /* An array of string tags to be used by the matchmaker */
+    TOptional<TArray<FString>> Tags;
+};
+
+// Response
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingCreateTicketResponse : public Response
+{
+public:
+    virtual ~MatchmakingCreateTicketResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserMatchmakingCreateTicketResponse Content;
+};
+
+class SNAPSER_API SnapserMatchmakingCreateTicketResponse : public Model
+{
+public:
+    virtual ~SnapserMatchmakingCreateTicketResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserMatchmakingTicket> Ticket;
+};
+
+class SNAPSER_API SnapserMatchmakingTicket : public Model
+{
+public:
+    virtual ~SnapserMatchmakingTicket() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserMatchmakingAssignment> Assignment;
+    /* The time when the Ticket was created. */
+    TOptional<FString> CreatedAt;
+    TOptional<TMap<FString, SnapserProtobufAny>> Extensions;
+    /* The time when the Ticket was first matched. */
+    TOptional<FString> FirstMatchedAt;
+    /* The ID of the ticket. */
+    TOptional<FString> Id;
+    /* The id of the party that the user is in. */
+    TOptional<FString> PartyId;
+    TOptional<FString> ProfileName;
+    TOptional<SnapserMatchmakingSearchFields> SearchFields;
+    /* The ID of the user that created the ticket. */
+    TOptional<FString> UserId;
+};
+
+class SNAPSER_API SnapserMatchmakingAssignment : public Model
+{
+public:
+    virtual ~SnapserMatchmakingAssignment() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> ConnectionString;
+    TOptional<FString> Error;
+    TOptional<bool> IsAccepted;
+    TOptional<bool> IsHost;
+    TOptional<FString> JoinCode;
+    TOptional<FString> LobbyId;
+    /* Connection information for this Assignment. */
+    TOptional<FString> MatchId;
+    /* The match profile used to generate this match. */
+    TOptional<FString> MatchProfile;
+    TOptional<SnapserMatchmakingServerAllocation> ServerAllocation;
+    TOptional<int32> Team;
+    TOptional<TArray<FString>> TicketIds;
+    TOptional<TArray<FString>> UserIds;
+};
+
+class SNAPSER_API SnapserMatchmakingSearchFields : public Model
+{
+public:
+    virtual ~SnapserMatchmakingSearchFields() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* A map of double args and their values to be used by the matchmaker */
+    TOptional<TMap<FString, double>> DoubleArgs;
+    /* A map of string args of the region and the users ping to each region */
+    TOptional<TMap<FString, double>> LatencyArgs;
+    /* A map of string args and their values to be used by the matchmaker */
+    TOptional<TMap<FString, FString>> StringArgs;
+    /* An array of string tags to be used by the matchmaker */
+    TOptional<TArray<FString>> Tags;
+};
+
+class SNAPSER_API SnapserMatchmakingServerAllocation : public Model
+{
+public:
+    virtual ~SnapserMatchmakingServerAllocation() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Address;
+    TOptional<TArray<int32>> Ports;
+    TOptional<FString> ServerName;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### MatchmakingDeleteTicket API
+<CodeGroup title="Delete a user's ticket" tag="DELETE" label="MatchmakingDeleteTicket">
+```csharp
+/// <summary>
+/// Ticket APIs Delete a user&#39;s ticket
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID for the user to be matched</param>
+/// <param name="id">The ticket ID to be deleted</param>
+/// <param name="token">User session token</param>
+/// <returns>MatchmakingDeleteTicketResponse</returns>
+public MatchmakingDeleteTicketResponse MatchmakingDeleteTicket(string userId, string id, string token)
+{
+    Snapser.Client.ApiResponse<MatchmakingDeleteTicketResponse> localVarResponse = MatchmakingDeleteTicketWithHttpInfo(userId, id, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for MatchmakingDeleteTicketResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingDeleteTicketResponse" /> class.
+/// </summary>
+/// <param name="success">success.</param>
+public MatchmakingDeleteTicketResponse(bool success = default(bool))
+{
+    this.Success = success;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingDeleteTicketRequest : public Request
+{
+public:
+    virtual ~MatchmakingDeleteTicketRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID for the user to be matched */
+    FString UserId;
+    /* The ticket ID to be deleted */
+    FString Id;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingDeleteTicketResponse : public Response
+{
+public:
+    virtual ~MatchmakingDeleteTicketResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserMatchmakingDeleteTicketResponse Content;
+};
+
+class SNAPSER_API SnapserMatchmakingDeleteTicketResponse : public Model
+{
+public:
+    virtual ~SnapserMatchmakingDeleteTicketResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<bool> Success;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### MatchmakingGetTicket API
+<CodeGroup title="Fetch a user's ticket" tag="GET" label="MatchmakingGetTicket">
+```csharp
+/// <summary>
+/// Ticket APIs Fetch a user&#39;s ticket
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID for the user to be matched</param>
+/// <param name="id">The ticket ID to be fetched</param>
+/// <param name="token">User session token</param>
+/// <returns>MatchmakingGetTicketResponse</returns>
+public MatchmakingGetTicketResponse MatchmakingGetTicket(string userId, string id, string token)
+{
+    Snapser.Client.ApiResponse<MatchmakingGetTicketResponse> localVarResponse = MatchmakingGetTicketWithHttpInfo(userId, id, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for MatchmakingGetTicketResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingGetTicketResponse" /> class.
+/// </summary>
+/// <param name="ticket">ticket.</param>
+public MatchmakingGetTicketResponse(MatchmakingTicket ticket = default(MatchmakingTicket))
+{
+    this.Ticket = ticket;
+}
+
+/// Snapser.Model for MatchmakingTicket
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingTicket" /> class.
+/// </summary>
+/// <param name="assignment">assignment.</param>
+/// <param name="createdAt">The time when the Ticket was created..</param>
+/// <param name="extensions">extensions.</param>
+/// <param name="firstMatchedAt">The time when the Ticket was first matched..</param>
+/// <param name="id">The ID of the ticket..</param>
+/// <param name="partyId">The id of the party that the user is in..</param>
+/// <param name="searchFields">searchFields.</param>
+/// <param name="userId">The ID of the user that created the ticket..</param>
+public MatchmakingTicket(MatchmakingAssignment assignment = default(MatchmakingAssignment), string createdAt = default(string), Dictionary<string, ProtobufAny> extensions = default(Dictionary<string, ProtobufAny>), string firstMatchedAt = default(string), string id = default(string), string partyId = default(string), MatchmakingSearchFields searchFields = default(MatchmakingSearchFields), string userId = default(string))
+{
+    this.Assignment = assignment;
+    this.CreatedAt = createdAt;
+    this.Extensions = extensions;
+    this.FirstMatchedAt = firstMatchedAt;
+    this.Id = id;
+    this.PartyId = partyId;
+    this.SearchFields = searchFields;
+    this.UserId = userId;
+}
+
+/// Snapser.Model for MatchmakingAssignment
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingAssignment" /> class.
+/// </summary>
+/// <param name="connectionString">connectionString.</param>
+/// <param name="error">error.</param>
+/// <param name="isAccepted">isAccepted.</param>
+/// <param name="isHost">isHost.</param>
+/// <param name="joinCode">joinCode.</param>
+/// <param name="lobbyId">lobbyId.</param>
+/// <param name="matchId">Connection information for this Assignment..</param>
+/// <param name="matchProfile">The match profile used to generate this match..</param>
+/// <param name="serverAllocation">serverAllocation.</param>
+/// <param name="team">team.</param>
+/// <param name="ticketIds">ticketIds.</param>
+/// <param name="userIds">userIds.</param>
+public MatchmakingAssignment(string connectionString = default(string), string error = default(string), bool isAccepted = default(bool), bool isHost = default(bool), string joinCode = default(string), string lobbyId = default(string), string matchId = default(string), string matchProfile = default(string), MatchmakingServerAllocation serverAllocation = default(MatchmakingServerAllocation), int team = default(int), List<string> ticketIds = default(List<string>), List<string> userIds = default(List<string>))
+{
+    this.ConnectionString = connectionString;
+    this.Error = error;
+    this.IsAccepted = isAccepted;
+    this.IsHost = isHost;
+    this.JoinCode = joinCode;
+    this.LobbyId = lobbyId;
+    this.MatchId = matchId;
+    this.MatchProfile = matchProfile;
+    this.ServerAllocation = serverAllocation;
+    this.Team = team;
+    this.TicketIds = ticketIds;
+    this.UserIds = userIds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingGetTicketRequest : public Request
+{
+public:
+    virtual ~MatchmakingGetTicketRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID for the user to be matched */
+    FString UserId;
+    /* The ticket ID to be fetched */
+    FString Id;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingGetTicketResponse : public Response
+{
+public:
+    virtual ~MatchmakingGetTicketResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserMatchmakingGetTicketResponse Content;
+};
+
+class SNAPSER_API SnapserMatchmakingGetTicketResponse : public Model
+{
+public:
+    virtual ~SnapserMatchmakingGetTicketResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserMatchmakingTicket> Ticket;
+};
+
+class SNAPSER_API SnapserMatchmakingTicket : public Model
+{
+public:
+    virtual ~SnapserMatchmakingTicket() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserMatchmakingAssignment> Assignment;
+    /* The time when the Ticket was created. */
+    TOptional<FString> CreatedAt;
+    TOptional<TMap<FString, SnapserProtobufAny>> Extensions;
+    /* The time when the Ticket was first matched. */
+    TOptional<FString> FirstMatchedAt;
+    /* The ID of the ticket. */
+    TOptional<FString> Id;
+    /* The id of the party that the user is in. */
+    TOptional<FString> PartyId;
+    TOptional<SnapserMatchmakingSearchFields> SearchFields;
+    /* The ID of the user that created the ticket. */
+    TOptional<FString> UserId;
+};
+
+class SNAPSER_API SnapserMatchmakingAssignment : public Model
+{
+public:
+    virtual ~SnapserMatchmakingAssignment() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> ConnectionString;
+    TOptional<FString> Error;
+    TOptional<bool> IsAccepted;
+    TOptional<bool> IsHost;
+    TOptional<FString> JoinCode;
+    TOptional<FString> LobbyId;
+    /* Connection information for this Assignment. */
+    TOptional<FString> MatchId;
+    /* The match profile used to generate this match. */
+    TOptional<FString> MatchProfile;
+    TOptional<SnapserMatchmakingServerAllocation> ServerAllocation;
+    TOptional<int32> Team;
+    TOptional<TArray<FString>> TicketIds;
+    TOptional<TArray<FString>> UserIds;
+};
+
+class SNAPSER_API SnapserMatchmakingSearchFields : public Model
+{
+public:
+    virtual ~SnapserMatchmakingSearchFields() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* A map of double args and their values to be used by the matchmaker */
+    TOptional<TMap<FString, double>> DoubleArgs;
+    /* A map of string args of the region and the users ping to each region */
+    TOptional<TMap<FString, double>> LatencyArgs;
+    /* A map of string args and their values to be used by the matchmaker */
+    TOptional<TMap<FString, FString>> StringArgs;
+    /* An array of string tags to be used by the matchmaker */
+    TOptional<TArray<FString>> Tags;
+};
+
+class SNAPSER_API SnapserMatchmakingServerAllocation : public Model
+{
+public:
+    virtual ~SnapserMatchmakingServerAllocation() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Address;
+    TOptional<TArray<int32>> Ports;
+    TOptional<FString> ServerName;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### MatchmakingBatchGetTickets API
+<CodeGroup title="Fetch multiple tickets by their IDs" tag="GET" label="MatchmakingBatchGetTickets">
+```csharp
+/// <summary>
+/// Ticket APIs Fetch a list of tickets by their IDs
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ticketIds">The ticket IDs to be fetched. Maximum 100 ticket IDs per request.</param>
+/// <param name="token">User session token</param>
+/// <returns>MatchmakingBatchGetTicketsResponse</returns>
+public MatchmakingBatchGetTicketsResponse MatchmakingBatchGetTickets(List<string> ticketIds, string token)
+{
+    Snapser.Client.ApiResponse<MatchmakingBatchGetTicketsResponse> localVarResponse = MatchmakingBatchGetTicketsWithHttpInfo(ticketIds, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for MatchmakingBatchGetTicketsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingBatchGetTicketsResponse" /> class.
+/// </summary>
+/// <param name="responses">responses.</param>
+public MatchmakingBatchGetTicketsResponse(List<MatchmakingBatchGetTicketsSingleResponse> responses = default(List<MatchmakingBatchGetTicketsSingleResponse>))
+{
+    this.Responses = responses;
+}
+
+/// Snapser.Model for MatchmakingBatchGetTicketsSingleResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingBatchGetTicketsSingleResponse" /> class.
+/// </summary>
+/// <param name="ticketId">ticketId.</param>
+/// <param name="ticket">ticket.</param>
+public MatchmakingBatchGetTicketsSingleResponse(string ticketId = default(string), MatchmakingTicket ticket = default(MatchmakingTicket))
+{
+    this.TicketId = ticketId;
+    this.Ticket = ticket;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingBatchGetTicketsRequest : public Request
+{
+public:
+    virtual ~MatchmakingBatchGetTicketsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* The ticket IDs to be fetched. Maximum 100 ticket IDs per request. */
+    TArray<FString> TicketIds;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingBatchGetTicketsResponse : public Response
+{
+public:
+    virtual ~MatchmakingBatchGetTicketsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserMatchmakingBatchGetTicketsResponse Content;
+};
+
+class SNAPSER_API SnapserMatchmakingBatchGetTicketsResponse : public Model
+{
+public:
+    virtual ~SnapserMatchmakingBatchGetTicketsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserMatchmakingBatchGetTicketsSingleResponse>> Responses;
+};
+
+class SNAPSER_API SnapserMatchmakingBatchGetTicketsSingleResponse : public Model
+{
+public:
+    virtual ~SnapserMatchmakingBatchGetTicketsSingleResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> TicketId;
+    TOptional<SnapserMatchmakingTicket> Ticket;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+<Note>
+  The BatchGetTickets API requires `api-key` or `internal` authentication. It is intended for server-to-server use and is not accessible with user-level authentication.
+</Note>
+#### MatchmakingGetMatchData API
+<CodeGroup title="Get live match data for a match" tag="GET" label="MatchmakingGetMatchData">
+```csharp
+/// <summary>
+/// Match APIs Gets the latest match data for a match. User must be a participant in the match.
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="matchId">The ID of the match</param>
+/// <param name="userId">User ID of the requesting user. Must be a participant in the match.</param>
+/// <param name="token">User session token</param>
+/// <returns>MatchmakingGetMatchDataResponse</returns>
+public MatchmakingGetMatchDataResponse MatchmakingGetMatchData(string matchId, string userId, string token)
+{
+    Snapser.Client.ApiResponse<MatchmakingGetMatchDataResponse> localVarResponse = MatchmakingGetMatchDataWithHttpInfo(matchId, userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for MatchmakingGetMatchDataResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingGetMatchDataResponse" /> class.
+/// </summary>
+/// <param name="matchData">matchData.</param>
+public MatchmakingGetMatchDataResponse(MatchmakingMatchData matchData = default(MatchmakingMatchData))
+{
+    this.MatchData = matchData;
+}
+
+/// Snapser.Model for MatchmakingMatchData
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingMatchData" /> class.
+/// </summary>
+/// <param name="matchId">The ID of the match.</param>
+/// <param name="hostId">The userID of the host user.</param>
+/// <param name="statuses">Map of user IDs to their readiness status.</param>
+/// <param name="matchProfileId">matchProfileId.</param>
+/// <param name="region">region.</param>
+/// <param name="ticketIds">ticketIds.</param>
+/// <param name="teams">Map of team indices to user ID lists.</param>
+/// <param name="metadata">Arbitrary key-value metadata.</param>
+/// <param name="startAfterSeconds">Delay before match starts.</param>
+public MatchmakingMatchData(string matchId = default(string), string hostId = default(string), Dictionary<string, MatchmakingMatchDataStatus> statuses = default(Dictionary<string, MatchmakingMatchDataStatus>), string matchProfileId = default(string), string region = default(string), List<string> ticketIds = default(List<string>), Dictionary<int, MatchmakingUserIdList> teams = default(Dictionary<int, MatchmakingUserIdList>), Dictionary<string, string> metadata = default(Dictionary<string, string>), int startAfterSeconds = default(int))
+{
+    this.MatchId = matchId;
+    this.HostId = hostId;
+    this.Statuses = statuses;
+    this.MatchProfileId = matchProfileId;
+    this.Region = region;
+    this.TicketIds = ticketIds;
+    this.Teams = teams;
+    this.Metadata = metadata;
+    this.StartAfterSeconds = startAfterSeconds;
+}
+
+/// Snapser.Model for MatchmakingUserIdList
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingUserIdList" /> class.
+/// </summary>
+/// <param name="userIds">userIds.</param>
+public MatchmakingUserIdList(List<string> userIds = default(List<string>))
+{
+    this.UserIds = userIds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingGetMatchDataRequest : public Request
+{
+public:
+    virtual ~MatchmakingGetMatchDataRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* The ID of the match */
+    FString MatchId;
+    /* User ID of the requesting user. Must be a participant in the match. */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingGetMatchDataResponse : public Response
+{
+public:
+    virtual ~MatchmakingGetMatchDataResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserMatchmakingGetMatchDataResponse Content;
+};
+
+class SNAPSER_API SnapserMatchmakingGetMatchDataResponse : public Model
+{
+public:
+    virtual ~SnapserMatchmakingGetMatchDataResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserMatchmakingMatchData> MatchData;
+};
+
+class SNAPSER_API SnapserMatchmakingMatchData : public Model
+{
+public:
+    virtual ~SnapserMatchmakingMatchData() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> MatchId;
+    /* The userID of the host user */
+    TOptional<FString> HostId;
+    TOptional<TMap<FString, FString>> Statuses;
+    TOptional<FString> MatchProfileId;
+    TOptional<FString> Region;
+    TOptional<TArray<FString>> TicketIds;
+    TOptional<TMap<FString, SnapserMatchmakingUserIdList>> Teams;
+    TOptional<TMap<FString, FString>> Metadata;
+    TOptional<int32> StartAfterSeconds;
+};
+
+class SNAPSER_API SnapserMatchmakingUserIdList : public Model
+{
+public:
+    virtual ~SnapserMatchmakingUserIdList() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<FString>> UserIds;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### MatchmakingUpdateMatchMetadata API
+<CodeGroup title="Update metadata for a match" tag="PUT" label="MatchmakingUpdateMatchMetadata">
+```csharp
+/// <summary>
+/// Match APIs Updates the metadata for a match. User must be a participant in the match.
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="matchId">The ID of the match to update</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>MatchmakingUpdateMatchMetadataResponse</returns>
+public MatchmakingUpdateMatchMetadataResponse MatchmakingUpdateMatchMetadata(string matchId, string token, UpdateMatchMetadataRequest body)
+{
+    Snapser.Client.ApiResponse<MatchmakingUpdateMatchMetadataResponse> localVarResponse = MatchmakingUpdateMatchMetadataWithHttpInfo(matchId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for UpdateMatchMetadataRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="UpdateMatchMetadataRequest" /> class.
+/// </summary>
+/// <param name="userId">User ID of the user updating the metadata. Must be a participant in the match.</param>
+/// <param name="metadata">The new metadata to set for the match. This replaces all existing metadata.</param>
+public UpdateMatchMetadataRequest(string userId = default(string), Dictionary<string, string> metadata = default(Dictionary<string, string>))
+{
+    this.UserId = userId;
+    this.Metadata = metadata;
+}
+
+/// Snapser.Model for MatchmakingUpdateMatchMetadataResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingUpdateMatchMetadataResponse" /> class.
+/// </summary>
+/// <param name="matchData">matchData.</param>
+public MatchmakingUpdateMatchMetadataResponse(MatchmakingMatchData matchData = default(MatchmakingMatchData))
+{
+    this.MatchData = matchData;
+}
+```
+```cpp
+// Coming soon
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### MatchmakingGetQueues API
+<CodeGroup title="Get queue counts per match profile" tag="GET" label="MatchmakingGetQueues">
+```csharp
+/// <summary>
+/// Queue APIs Returns the number of tickets and backfills being processed in each matchmaking queue
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the requesting user</param>
+/// <param name="token">User session token</param>
+/// <returns>MatchmakingGetQueuesResponse</returns>
+public MatchmakingGetQueuesResponse MatchmakingGetQueues(string userId, string token)
+{
+    Snapser.Client.ApiResponse<MatchmakingGetQueuesResponse> localVarResponse = MatchmakingGetQueuesWithHttpInfo(userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for MatchmakingGetQueuesResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingGetQueuesResponse" /> class.
+/// </summary>
+/// <param name="queues">The list of queue counts per match profile.</param>
+public MatchmakingGetQueuesResponse(List<MatchmakingQueueInfo> queues = default(List<MatchmakingQueueInfo>))
+{
+    this.Queues = queues;
+}
+
+/// Snapser.Model for MatchmakingQueueInfo
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingQueueInfo" /> class.
+/// </summary>
+/// <param name="profileName">The name of the match profile.</param>
+/// <param name="ticketCount">The number of tickets in this queue.</param>
+/// <param name="backfillCount">The number of backfills in this queue.</param>
+public MatchmakingQueueInfo(string profileName = default(string), int ticketCount = default(int), int backfillCount = default(int))
+{
+    this.ProfileName = profileName;
+    this.TicketCount = ticketCount;
+    this.BackfillCount = backfillCount;
+}
+```
+```cpp
+// Coming soon
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### MatchmakingDeleteBackfill API
+<CodeGroup title="Delete a backfill by its ID" tag="DELETE" label="MatchmakingDeleteBackfill">
+```csharp
+/// <summary>
+/// Backfill APIs Delete a backfill by its ID
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="id">The backfill ID to be deleted</param>
+/// <param name="token">User session token</param>
+/// <returns>MatchmakingDeleteBackfillResponse</returns>
+public MatchmakingDeleteBackfillResponse MatchmakingDeleteBackfill(string id, string token)
+{
+    Snapser.Client.ApiResponse<MatchmakingDeleteBackfillResponse> localVarResponse = MatchmakingDeleteBackfillWithHttpInfo(id, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for MatchmakingDeleteBackfillResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="MatchmakingDeleteBackfillResponse" /> class.
+/// </summary>
+/// <param name="success">success.</param>
+public MatchmakingDeleteBackfillResponse(bool success = default(bool))
+{
+    this.Success = success;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingDeleteBackfillRequest : public Request
+{
+public:
+    virtual ~MatchmakingDeleteBackfillRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* The backfill ID to be deleted */
+    FString Id;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserMatchmakingServiceApi::MatchmakingDeleteBackfillResponse : public Response
+{
+public:
+    virtual ~MatchmakingDeleteBackfillResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserMatchmakingDeleteBackfillResponse Content;
+};
+
+class SNAPSER_API SnapserMatchmakingDeleteBackfillResponse : public Model
+{
+public:
+    virtual ~SnapserMatchmakingDeleteBackfillResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<bool> Success;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/matchmaking-api.png)
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code  | Variable                       | Message                              | HTTP | gRPC             |
+| ----- | ------------------------------ | ------------------------------------ | ---- | ---------------- |
+| 12001 | ErrMatchProfileAlreadyExists   | MatchProfile already exists          | 409  | AlreadyExists    |
+| 12002 | ErrTicketNotFound              | Ticket not found                     | 404  | NotFound         |
+| 12002 | ErrMatchProfileNotFound        | MatchProfile not found               | 404  | NotFound         |
+| 12003 | ErrNotEnoughTicketsToMatch     | Not enough tickets to create a match | 404  | NotFound         |
+| 12004 | ErrMatchNotFound               | Match not found                      | 404  | NotFound         |
+| 12006 | ErrSettingsReadFailure         | Failed to read settings              | 500  | Internal         |
+| 12007 | ErrBackfillNotFound            | Backfill not found                   | 404  | NotFound         |
+| 12008 | ErrUserNotInMatch              | User not in requested match          | 400  | InvalidArgument  |
+| 12009 | ErrTitanNotEnabled             | Titan not enabled                    | 400  | InvalidArgument  |
+| 12009 | ErrUnknownTitanGeo             | Unknown titan geo                    | 400  | InvalidArgument  |
+| 12010 | ErrTitanCreateMatch            | Error creating match via titan       | 500  | Internal         |
+| 12011 | ErrUserAlreadyAcceptedMatch    | User already accepted match          | 400  | InvalidArgument  |
+| 12011 | ErrTitanTagNotFound            | Tag not found                        | 404  | NotFound         |
+| 12012 | ErrMatchAcceptanceNotEnabled   | Match acceptance not enabled         | 400  | InvalidArgument  |
+| 12013 | ErrSettingsUpdateFailure       | Failed to update settings            | 500  | Internal         |
+</div>
+
+### Websocket Events emitted by snap
+
+When [Web sockets](/docs/infra/snaps/hermes) are enabled on your snapends gateway, this snap can broadcast specific events related to matchmaking state changes directly to the game clients.
+These events are targeted to the appropriate user. Each event is uniquely identified by an enum, and the event payload is a well-structured protobuf message.
+These protobuf messages can be downloaded from the Downloads page.
+
+| Event Id | Event Name                       | Description                                            | Payload Message                     |
+| -------- | -------------------------------- | ------------------------------------------------------ | ----------------------------------- |
+| 1        | MATCHMAKING_QUEUED               | Published when a matchmaking ticket is queued          | EventMatchmakingQueued              |
+| 2        | MATCHMAKING_DEQUEUED             | Published when a matchmaking ticket is dequeued        | EventMatchmakingDequeued            |
+| 3        | MATCHMAKING_MATCH_FOUND          | Published when a match is found                        | EventMatchmakingMatchFound          |
+| 4        | MATCHMAKING_MATCH_CREATED        | Published when a match is created                      | EventMatchmakingMatchCreated        |
+| 5        | MATCHMAKING_MATCH_CANCELLED      | Published when a match is cancelled                    | EventMatchmakingMatchCancelled      |
+| 6        | MATCHMAKING_NO_RULES_APPLY       | Published when no rules apply to a ticket              | EventMatchmakingNoRulesApply        |
+| 7        | MATCHMAKING_MATCH_CREATE_ERROR   | Published when match server allocation fails           | EventMatchmakingMatchCreateError    |
+| 8        | MATCHMAKING_MATCH_ACCEPTED       | Published when a user accepts a match (sent to all participants) | EventMatchmakingMatchAccepted |
+| 9        | MATCHMAKING_MATCH_REJECTED       | Published when a user rejects a match (sent to all participants) | EventMatchmakingMatchRejected |
+
+## FAQs
+### How many Match Profiles and rule sets should I have?
+
+This depends on your game. Typically, you will have a different Match Profile for each **game mode** in your game. For example, if you have a 1v1 game mode and a 2v2 game mode, then you will have two Match Profiles. For example, the 1v1 Match Profile will have "1" for the `min_players` and `max_players` and might use [FIFO](#how-can-i-define-a-fifo-matchmaking-queue) matching, whereas the 2v2 Match Profile will have "2" for the `min_players` and `max_players` and may have a rule set that matches tickets based on the user's rank.
+
+The amount of rule sets is also dependent on your game's requirements. However, it is important to understand how the rule sets influence the matching:
+
+- Tickets need to satisfy all rules of a rule set in order to be eligible for a match.
+- Tickets do NOT need to satisfy all rule sets in a profile to be eligible for a match. As long as the ticket satisfies one of the rule sets, it will be eligible for a match.
+
+Conceptually, the rules within a rule set are "AND"ed together, whereas the rule sets within a profile are "OR"ed together.
+
+### What order are tickets matched in?
+
+Match Profiles by default will match tickets in a FIFO manner. If there are no other rule sets existing on a Match Profile, then the tickets will be matched in the order they were created.
+
+### Okay, I have a Match Profile. Now what?
+
+Now that you have a Match Profile, you can start creating tickets. A ticket is a request to match a user. It may contain custom attributes or simply a user's id,
+depending on your match profile setup. To create a ticket, you can use the Matchmaking API or the Matchmaking SDK. Each ticket created will be continuously evaluated against the rule sets in the Match Profile.
+If there are enough tickets that match the rule set, then a Match object will be created. Each ticket will be updated with the match id and the match object.
+
+## Additional Details
+
+### Data Stores
+
+Redis, Postgres
+
+### Service Dependencies
+
+The Matchmaking service can be used without any other service dependencies to
+support custom attributes matching. However, to support the Leaderboards &
+Statistics rules, the Matchmaking service needs to be paired with the
+corresponding service, as well as the Auth service.
+
+### Recommended Services
+
+The Matchmaking service works best when paired with the Auth, Leaderboards,
+and Statistics service.
+
+### Upcoming enhancements
+
+Lots to come. Stay tuned!

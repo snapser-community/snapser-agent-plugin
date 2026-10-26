@@ -1,0 +1,32 @@
+# beta-0.42.0
+##### November 19, 2024
+
+## Breaking Changes
+1. **GDPR** – The `DeleteUserData` API endpoint has been renamed to `DeleteUser`. If you update the GDPR Snap to version 0.42, and after downloading and integrating the Snapend SDK, you will need to rename the method in your code.
+2. **Emitters** – Once all Snaps are updated to version 0.42, the admin tools for emitters, previously available in various Snap tools, have been consolidated under the Event Bus.
+
+## Update Recommendations
+1. Update all relevant Snaps to version 0.42 to enable the User Data Reset tool. Without this update, you will encounter an error when attempting to reset user data.
+
+## Snaps
+### Event Bus
+- We are introducing a brand-new Snap called Event Bus, which completely replaces the old event system. This new system is more robust, scalable, and distributed. The Event Bus Snap allows you to publish and subscribe to events across your Snapser backend. It is designed to be highly available, fault-tolerant, and can be used to build a wide range of event-driven games. BYOSnaps can also listen for events, allowing your custom code to integrate seamlessly with the Snapser event system.
+
+### Batch APIs
+- Added batch APIs for Trackables and Profiles.
+
+## Web App
+- **User Manager Tool**: The user manager tool has received a complete upgrade. It now supports new tools for almost every Snap.
+- **User Reset**: The updated user manager tool allows you to reset user data for all Snaps except Auth. Additionally, it supports full data deletion across all Snaps.
+
+## Snapctl
+- A `validate` endpoint has been added to `snapctl` to validate Snap configurations.
+
+## Bug Fixes
+- Storage counter blobs now support negative values.
+- The `SetScore` method via the SDK no longer requires a metadata field.
+- The User tool now works correctly for customers using Snapser in app-only Auth mode.
+- Fixed a crash occurring in the Infrastructure Monitor tab.
+
+## Documentation
+- Minor updates to documentation.

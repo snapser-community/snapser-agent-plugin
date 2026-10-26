@@ -1,0 +1,42 @@
+# beta-0.50.0
+##### June 16, 2025
+
+## Spotlight
+### Social Presence
+The Social graph snap now supports a new feature called Social Presence. This feature allows you to see the online status of your friends and followers in real-time. You can also see when they were last online, and if they are currently playing a game.
+
+### BYOSnap multi platform support
+We have added support for multi-platform BYOSnaps. You can now override the platform with each publish and sync. Allowing multiple developers within the same team having lap tops that support different architectures (e.g. x86_64, arm64) to work on the same BYOSnap without having to change the parent snap configuration.
+
+---
+
+## Snaps
+### Matchmaking & Parties
+The Matchmaking and Parties snaps got some major fixes and improvements. We highly encourage you to upgrade your Matchmaking snap to the latest version.
+
+### KWS (Kids Web Services)
+We integrated all the latest web hooks from KWS. Additionally, all events are also now forwarded to the Eventbus snap to get realtime updates to game clients.
+
+### GDPR
+The GDPR snap now supports BYOSnaps. If your BYOSnap implements the Get User and Delete User hooks, you can now use the GDPR snap to manage user data in compliance with GDPR regulations.
+
+### Auth
+Suspend, ban and unban endpoints have now been added to the Api Key and Internal SDKs.
+
+---
+
+## Bug Fixes
+### Auth
+The Auth snap now enforces emails to be lowercase. This means that when a user signs up or logs in, their email will be converted to lowercase before being stored in the database. This helps to prevent duplicate accounts with different email cases.
+
+### Leaderboards
+The Leaderboards snap now only updates the metadata if the score is actually updated successfully.
+
+---
+
+## Web App
+### Logs
+The Logs tool now shows errors in Agones game server logs, snap configuration sync failures and role access errors. This will help you to debug issues with your game servers and snaps more easily.
+
+### UI UX Improvements
+Some improvements were made to the UI/UX of the web app.

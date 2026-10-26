@@ -1,0 +1,111 @@
+
+
+export const description = 'Scheduler'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Scheduler
+
+The Scheduler Snap enables executing a HTTP call on your behalf, based on a schedule.
+With Scheduler you can automate repetitive tasks. You can use scheduled tasks to
+send notifications, update remote configs, and perform other actions at specific times.
+
+<Note>
+  Plenty of Snapser snaps use the Scheduler under the hood to automate tasks eg: Notifications, Quests
+</Note>
+
+## Scheduler Types
+
+The Scheduler snap supports the following type of schedules:
+
+1. **One time** - Single execution at a specific time.
+2. **Cron** - Cron strings are used to configure schedules.
+  <Note>If you want a recurring action you should use the Cron schedule.</Note>
+
+## Action
+
+Scheduler triggers a HTTP action. Presently, using the scheduler you can only invoke special private
+endpoints exposed by certain Snaps. However, you can invoke any BYOSnap API that you have written.
+
+## Snaps Integration
+
+Currently, there are three Snaps that have exposed a set of APIs to the
+Scheduler Snap:
+
+1. Experiments
+2. Notifications
+3. Remote Config
+
+### Experiments Integration
+The Experiments Snap exposes the following APIs to the Scheduler Snap:
+1. **AssignVariantToUser** - Assigns a variant to a user.
+2. **UpdateExperimentState** - Pause, resume or ramp an experiment.
+
+### Notifications Integration
+The Notifications Snap exposes the following APIs to the Scheduler Snap:
+1. **SendEmailToAll** - Send an email to all users.
+2. **SendEmailToSegment** - Send an email to a segment of users.
+3. **SendPushNotificationToAll** - Send a push notification to all users.
+4. **SendPushNotificationToSegment** - Send a push notification to a segment of users.
+5. **SendRobloxNotificationToAll** - Send a Roblox notification to all users.
+6. **SendRobloxNotificationToSegment** - Send a Roblox notification to a segment of users.
+
+### Remote Config Integration
+The Remote Config Snap exposes the following APIs to the Scheduler Snap:
+1. **RampOverride** - Sets the ramp percentage for the override with the given name
+
+<Note>
+  If there is a Snap API that you would like to see on this list, please reach out to us.
+</Note>
+
+### BYOSnap Integration
+
+Scheduler can invoke any API that you have written in your BYOSnap, as long as you have uploaded a
+swagger 3.x file for your Snap. You can then select the API from the drop down during configuration.
+
+<Note>
+If there is an action that you want to schedule and you do not see that
+exposed in the Admin Tool, please reach out to us. We will work with you to
+get that action exposed.
+</Note>
+
+## APIs
+
+Scheduler does not support any externally available APIs at the moment. It is
+only meant for internal use.
+
+![Action Pic](/images/docs/scheduler-action.png)
+
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code  | Variable            | Message            | HTTP | gRPC     |
+| ----- | ------------------- | ------------------ | ---- | -------- |
+| 17000 | ErrNoTasksAvailable | No tasks available | 404  | NotFound |
+| 17001 | ErrTaskNotFound     | Task not found     | 404  | NotFound |
+</div>
+
+
+## Additional Details
+
+### Data Stores
+
+Postgres
+
+### Service Dependencies
+
+No dependencies.
+
+### Recommended Services
+
+The Snap service works best when paired with the Experiments, Notifications
+and Remote config services.
+
+### Upcoming enhancements
+
+None planned at the moment.

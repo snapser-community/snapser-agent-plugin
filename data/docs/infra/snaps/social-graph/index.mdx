@@ -1,0 +1,1680 @@
+
+
+export const description = 'Social Graph'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Social Graph
+
+Most games or social apps rely heavily on social aspects to drive engagement and retention.
+User relationships within a game in particular are a key pillar of the social experience.
+However, managing these relationships can be a complex task. The Social Graph
+snap completely handles the management of user relationships, allowing you to
+focus on building the best social experience for your game.
+
+## Supported Relationships
+
+The Social graph snap supports the following relationship types:
+
+1. **Friends**: A mutual relationship between two users. Both users have to accept the friend request for the relationship to be established.
+2. **Followers**: A one-way relationship between two users. The user who is being followed does not have to accept the follow request for the relationship to be established.
+3. **Blocks**: A one-way relationship between two users. The user who is being blocked does not have to accept the block request for the relationship to be established.
+
+## Concept
+
+Two concepts are key to understanding how the Social graph snap manages user
+relationships viz. Objects and Associations.
+
+### Objects
+
+Objects are entities that have associations to each other. They have one or
+more associations and those associations may also have a bilateral sister
+association. Objects represent a repeatable pillar of data, for example, a
+user. Each object can have JSON metadata attached to it, which can be used to
+record extra information about the object such as a "nickname" or the
+"birth date" of a user.
+
+### Associations
+
+These are the actions that objects take on other objects, for example,
+following, sending a friend request, or blocking. Associations often come in
+pairs to provide bidirectional relationships that can be easily queried from
+both objects. For example a User can “follow” another user; and that other
+user was “followed by” the first user. Each association can have JSON metadata
+attached to it, which can be used to record extra information about the
+association such as a "friendship level", or the "reason" for a block.
+
+#### Association Depth
+
+Presently, you are able to view friends of friends.
+
+## Friend Codes
+
+Friend codes are a way to establish a relationship between two users via a
+mechanism that does not require the users to be friends on the platform where
+the game is hosted. Friend codes are also easy to share and can be used to establish a relationship
+between two users quickly.
+
+The social graph snap supports the following friend codes:
+1. Digit code
+2. Alphanumeric code
+3. Alphabetic code
+
+These codes need to be 5-9 characters long.
+
+<Note>
+When the user enters the friend code, the social graph snap will establish a
+"friend request" relationship between the two users. The target user
+will have to accept the friend request for the relationship to be established.
+</Note>
+
+## User Presence
+
+If the snapend is configured with websockets, the Social Graph snap will automatically propagate user presence 
+information to the friends of a user. On websocket connection, the snap will send a message to all friends of 
+the user indicating that the user is online. When the websocket connection is closed, the snap will send a message 
+to all friends of the user indicating that the user is offline.
+
+Users can also send presence updates to via the `Message_UserPresenceRequest` websocket message. This can be used to 
+set a current status message, toggle do-not-disturb, or to indicate that the user is currently playing a game. This 
+information will be propagated to all other guild members of the user.
+
+## APIs
+
+The `Social Graph` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name            | HTTP Method | API Description                                                                                    |
+| ------------------- | ----------- | -------------------------------------------------------------------------------------------------- |
+| [SocialGraphisConnected](#socialgraphisconnected-api)   | GET        | Checks if a user is connected to the target user                                      |
+| [SocialGraphFriendCode](#socialgraphfriendcode-api)          | POST        | Returns the user's friend code, creates one if it doesn't exist                                    |
+| [SocialGraphUpdateUserMetadata](#socialgraphupdateusermetadata-api)  | PUT         | Updates a user object's metadata                                                                   |
+| [SocialGraphGetBlockedUsers](#socialgraphgetblockedusers-api)     | GET         | Returns users blocked by the user                                                                  |
+| [SocialGraphBlock](#socialgraphblock-api)               | POST        | Creates a block association with the target user                                                   |
+| [SocialGraphUnblock](#socialgraphunblock-api)             | DELETE      | Removes a block association with the target user if it exists                                      |
+| [SocialGraphGetFollows](#socialgraphgetfollows-api)          | GET         | Returns user objects that are followers of the user or the user objects that the user is following |
+| [SocialGraphFollow](#socialgraphfollow-api)              | POST        | Creates a follow association with the target user                                                  |
+| [SocialGraphUnfollow](#socialgraphunfollow-api)            | DELETE      | Removes a follow association with the target user if it exists                                     |
+| [SocialGraphGetFriendRequests](#socialgraphgetfriendrequests-api)   | GET         | Returns friend requests sent or received by the user                                               |
+| [SocialGraphSendFriendRequest](#socialgraphsendfriendrequest-api)   | POST        | Creates a sent_friend_request association with the target user                                     |
+| [SocialGraphDeleteFriendRequest](#socialgraphdeletefriendrequest-api) | DELETE      | Removes a friend request that was sent to or received from the target user if it exists            |
+| [SocialGraphGetFriends](#socialgraphgetfriends-api)          | GET         | Returns friends of the user                                                                        |
+| [SocialGraphAddFriend](#socialgraphaddfriend-api)           | POST        | Creates a friend association with the target user                                                  |
+| [SocialGraphRemoveFriend](#socialgraphremovefriend-api)        | DELETE      | Removes a friend association with the target user if it exists                                     |
+| [SocialGraphGetUserSettings](#socialgraphgetusersettings-api)     | GET         | Returns the user's settings                                                                        |
+| [SocialGraphUpdateUserSettings](#socialgraphupdateusersettings-api)  | PUT         | Sets the user's settings                                                                           |
+| [SocialGraphGetFriendsCount](#socialgraphgetfriendscount-api) | GET | Returns the count of friends for a user |
+| [SocialGraphGetFollowsCount](#socialgraphgetfollowscount-api) | GET | Returns the count of followers or following for a user |
+</div>
+
+### Usage
+#### SocialGraphIsConnected API
+<CodeGroup title="Checks if a user is connected to the target user" tag="GET" label="SocialGraphIsConnected">
+```csharp
+/// <summary>
+/// Associations Checks if a user is connected to the target user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="connectionType">Type of connection to check (friend, followed_by, following)</param>
+/// <param name="targetUserId">User ID of the target user</param>
+/// <param name="token">User session token</param>
+/// <returns>SocialGraphIsConnectedResponse</returns>
+public SocialGraphIsConnectedResponse SocialGraphIsConnected(string userId, string connectionType, string targetUserId, string token)
+{
+    Snapser.Client.ApiResponse<SocialGraphIsConnectedResponse> localVarResponse = SocialGraphIsConnectedWithHttpInfo(userId, connectionType, targetUserId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SocialGraphIsConnectedResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphIsConnectedResponse" /> class.
+/// </summary>
+/// <param name="connected">connected.</param>
+public SocialGraphIsConnectedResponse(bool connected = default(bool))
+{
+    this.Connected = connected;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphIsConnectedRequest : public Request
+{
+public:
+    virtual ~SocialGraphIsConnectedRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* Type of connection to check (friend, followed_by, following) */
+    FString ConnectionType;
+    /* User ID of the target user */
+    FString TargetUserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphIsConnectedResponse : public Response
+{
+public:
+    virtual ~SocialGraphIsConnectedResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserSocialGraphIsConnectedResponse Content;
+};
+
+class SNAPSER_API SnapserSocialGraphIsConnectedResponse : public Model
+{
+public:
+    virtual ~SnapserSocialGraphIsConnectedResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<bool> Connected;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SocialGraphFriendCode API
+<CodeGroup title="Returns the user's friend code, creates one if it doesn't exist" tag="POST" label="SocialGraphFriendCode">
+```csharp
+/// <summary>
+/// Friend Code Returns the user&#39;s friend code, creates one if it doesn&#39;t exist
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="invalidatePrevious">If the previous friend code should be invalidated (optional)</param>
+/// <returns>SocialGraphFriendCodeResponse</returns>
+public SocialGraphFriendCodeResponse SocialGraphFriendCode(string userId, string token, bool? invalidatePrevious = default(bool?))
+{
+    Snapser.Client.ApiResponse<SocialGraphFriendCodeResponse> localVarResponse = SocialGraphFriendCodeWithHttpInfo(userId, token, invalidatePrevious);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SocialGraphFriendCodeResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphFriendCodeResponse" /> class.
+/// </summary>
+/// <param name="friendCode">friendCode.</param>
+public SocialGraphFriendCodeResponse(string friendCode = default(string))
+{
+    this.FriendCode = friendCode;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphFriendCodeRequest : public Request
+{
+public:
+    virtual ~SocialGraphFriendCodeRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    /* If the previous friend code should be invalidated */
+    TOptional<bool> InvalidatePrevious;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphFriendCodeResponse : public Response
+{
+public:
+    virtual ~SocialGraphFriendCodeResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserSocialGraphFriendCodeResponse Content;
+};
+
+class SNAPSER_API SnapserSocialGraphFriendCodeResponse : public Model
+{
+public:
+    virtual ~SnapserSocialGraphFriendCodeResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> FriendCode;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SocialGraphUpdateUserMetadata API
+<CodeGroup title="Updates a user object's metadata" tag="PUT" label="SocialGraphUpdateUserMetadata">
+```csharp
+/// <summary>
+/// Metadata Updates a user object&#39;s metadata
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object SocialGraphUpdateUserMetadata(string userId, string token, SocialGraphServiceUpdateUserMetadataBody body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = SocialGraphUpdateUserMetadataWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SocialGraphServiceUpdateUserMetadataBody
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphServiceUpdateUserMetadataBody" /> class.
+/// </summary>
+/// <param name="metadata">Metadata for the user (required).</param>
+public SocialGraphServiceUpdateUserMetadataBody(Object metadata = default(Object))
+{
+    // to ensure "metadata" is required (not null)
+    if (metadata == null)
+    {
+        throw new ArgumentNullException("metadata is a required property for SocialGraphServiceUpdateUserMetadataBody and cannot be null");
+    }
+    this.Metadata = metadata;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphUpdateUserMetadataRequest : public Request
+{
+public:
+    virtual ~SocialGraphUpdateUserMetadataRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserSocialGraphServiceUpdateUserMetadataBody Body;
+};
+
+class SNAPSER_API SnapserSocialGraphServiceUpdateUserMetadataBody : public Model
+{
+public:
+    virtual ~SnapserSocialGraphServiceUpdateUserMetadataBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Metadata for the user */
+    TSharedPtr<FJsonObject> Metadata;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphUpdateUserMetadataResponse : public Response
+{
+public:
+    virtual ~SocialGraphUpdateUserMetadataResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SocialGraphGetBlockedUsers API
+<CodeGroup title="Returns users blocked by the user" tag="GET" label="SocialGraphGetBlockedUsers">
+```csharp
+/// <summary>
+/// Blocks Returns users blocked by the user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="limit">Number of results returned. The maximum allowed is 50, defaults to 10 if not provided. (optional)</param>
+/// <param name="offset">Number of results to skip from the start of the result set (optional)</param>
+/// <returns>SocialGraphGetBlockedUsersResponse</returns>
+public SocialGraphGetBlockedUsersResponse SocialGraphGetBlockedUsers(string userId, string token, long? limit = default(long?), long? offset = default(long?))
+{
+    Snapser.Client.ApiResponse<SocialGraphGetBlockedUsersResponse> localVarResponse = SocialGraphGetBlockedUsersWithHttpInfo(userId, token, limit, offset);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SocialGraphGetBlockedUsersResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphGetBlockedUsersResponse" /> class.
+/// </summary>
+/// <param name="blocked">blocked.</param>
+/// <param name="total">total.</param>
+public SocialGraphGetBlockedUsersResponse(List<SocialGraphAssociationObject> blocked = default(List<SocialGraphAssociationObject>), string total = default(string))
+{
+    this.Blocked = blocked;
+    this.Total = total;
+}
+
+/// Snapser.Model for SocialGraphAssociationObject
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphAssociationObject" /> class.
+/// </summary>
+/// <param name="associationMetadata">associationMetadata.</param>
+/// <param name="id">id.</param>
+/// <param name="objectMetadata">objectMetadata.</param>
+/// <param name="timestamp">timestamp.</param>
+/// <param name="type">type.</param>
+public SocialGraphAssociationObject(Object associationMetadata = default(Object), string id = default(string), Object objectMetadata = default(Object), string timestamp = default(string), string type = default(string))
+{
+    this.AssociationMetadata = associationMetadata;
+    this.Id = id;
+    this.ObjectMetadata = objectMetadata;
+    this.Timestamp = timestamp;
+    this.Type = type;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphGetBlockedUsersRequest : public Request
+{
+public:
+    virtual ~SocialGraphGetBlockedUsersRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    /* Number of results returned. The maximum allowed is 50, defaults to 10 if not provided. */
+    TOptional<int64> Limit;
+    /* Number of results to skip from the start of the result set */
+    TOptional<int64> Offset;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphGetBlockedUsersResponse : public Response
+{
+public:
+    virtual ~SocialGraphGetBlockedUsersResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserSocialGraphGetBlockedUsersResponse Content;
+};
+
+class SNAPSER_API SnapserSocialGraphGetBlockedUsersResponse : public Model
+{
+public:
+    virtual ~SnapserSocialGraphGetBlockedUsersResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserSocialGraphAssociationObject>> Blocked;
+    TOptional<FString> Total;
+};
+
+class SNAPSER_API SnapserSocialGraphAssociationObject : public Model
+{
+public:
+    virtual ~SnapserSocialGraphAssociationObject() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TSharedPtr<FJsonObject>> AssociationMetadata;
+    TOptional<FString> Id;
+    TOptional<TSharedPtr<FJsonObject>> ObjectMetadata;
+    TOptional<FString> Timestamp;
+    TOptional<FString> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SocialGraphBlock API
+<CodeGroup title="Creates a block association with the target user" tag="POST" label="SocialGraphBlock">
+```csharp
+/// <summary>
+/// Blocks Creates a block association with the target user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object SocialGraphBlock(string userId, string token, SocialGraphServiceBlockBody body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = SocialGraphBlockWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SocialGraphServiceBlockBody
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphServiceBlockBody" /> class.
+/// </summary>
+/// <param name="metadata">JSON metadata for the follow association.</param>
+/// <param name="targetUserId">User ID of the target user (required).</param>
+public SocialGraphServiceBlockBody(Object metadata = default(Object), string targetUserId = default(string))
+{
+    // to ensure "targetUserId" is required (not null)
+    if (targetUserId == null)
+    {
+        throw new ArgumentNullException("targetUserId is a required property for SocialGraphServiceBlockBody and cannot be null");
+    }
+    this.TargetUserId = targetUserId;
+    this.Metadata = metadata;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphBlockRequest : public Request
+{
+public:
+    virtual ~SocialGraphBlockRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserSocialGraphServiceBlockBody Body;
+};
+
+class SNAPSER_API SnapserSocialGraphServiceBlockBody : public Model
+{
+public:
+    virtual ~SnapserSocialGraphServiceBlockBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* JSON metadata for the follow association */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* User ID of the target user */
+    FString TargetUserId;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphBlockResponse : public Response
+{
+public:
+    virtual ~SocialGraphBlockResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SocialGraphUnblock API
+<CodeGroup title="Removes a block association with the target user if it exists" tag="DELETE" label="SocialGraphUnblock">
+```csharp
+/// <summary>
+/// Unblock Removes a block association with the target user if it exists
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="targetUserId">User ID of the target user</param>
+/// <param name="token">User session token</param>
+/// <returns>Object</returns>
+public Object SocialGraphUnblock(string userId, string targetUserId, string token)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = SocialGraphUnblockWithHttpInfo(userId, targetUserId, token);
+    return localVarResponse.Data;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphUnblockRequest : public Request
+{
+public:
+    virtual ~SocialGraphUnblockRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User ID of the target user */
+    FString TargetUserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphUnblockResponse : public Response
+{
+public:
+    virtual ~SocialGraphUnblockResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SocialGraphGetFollows API
+<CodeGroup title="Returns user objects that are followers of the user or the user objects that the user is following" tag="GET" label="SocialGraphGetFollows">
+```csharp
+/// <summary>
+/// Follows Returns user objects that are followers of the user or the user objects that the user is following
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="type">Type of follows (following, followers)</param>
+/// <param name="token">User session token</param>
+/// <param name="limit">Number of results returned. The maximum allowed is 50, defaults to 10 if not provided. (optional)</param>
+/// <param name="offset">Number of results to skip from the start of the result set (optional)</param>
+/// <returns>SocialGraphGetFollowsResponse</returns>
+public SocialGraphGetFollowsResponse SocialGraphGetFollows(string userId, string type, string token, long? limit = default(long?), long? offset = default(long?))
+{
+    Snapser.Client.ApiResponse<SocialGraphGetFollowsResponse> localVarResponse = SocialGraphGetFollowsWithHttpInfo(userId, type, token, limit, offset);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SocialGraphGetFollowsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphGetFollowsResponse" /> class.
+/// </summary>
+/// <param name="follows">follows.</param>
+/// <param name="total">total.</param>
+public SocialGraphGetFollowsResponse(List<SocialGraphAssociationObject> follows = default(List<SocialGraphAssociationObject>), string total = default(string))
+{
+    this.Follows = follows;
+    this.Total = total;
+}
+
+/// Snapser.Model for SocialGraphAssociationObject
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphAssociationObject" /> class.
+/// </summary>
+/// <param name="associationMetadata">associationMetadata.</param>
+/// <param name="id">id.</param>
+/// <param name="objectMetadata">objectMetadata.</param>
+/// <param name="timestamp">timestamp.</param>
+/// <param name="type">type.</param>
+public SocialGraphAssociationObject(Object associationMetadata = default(Object), string id = default(string), Object objectMetadata = default(Object), string timestamp = default(string), string type = default(string))
+{
+    this.AssociationMetadata = associationMetadata;
+    this.Id = id;
+    this.ObjectMetadata = objectMetadata;
+    this.Timestamp = timestamp;
+    this.Type = type;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphGetFollowsRequest : public Request
+{
+public:
+    virtual ~SocialGraphGetFollowsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* Type of follows (following, followers) */
+    FString Type;
+    /* User session token */
+    FString Token;
+    /* Number of results returned. The maximum allowed is 50, defaults to 10 if not provided. */
+    TOptional<int64> Limit;
+    /* Number of results to skip from the start of the result set */
+    TOptional<int64> Offset;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphGetFollowsResponse : public Response
+{
+public:
+    virtual ~SocialGraphGetFollowsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserSocialGraphGetFollowsResponse Content;
+};
+
+class SNAPSER_API SnapserSocialGraphGetFollowsResponse : public Model
+{
+public:
+    virtual ~SnapserSocialGraphGetFollowsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserSocialGraphAssociationObject>> Follows;
+    TOptional<FString> Total;
+};
+
+class SNAPSER_API SnapserSocialGraphAssociationObject : public Model
+{
+public:
+    virtual ~SnapserSocialGraphAssociationObject() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TSharedPtr<FJsonObject>> AssociationMetadata;
+    TOptional<FString> Id;
+    TOptional<TSharedPtr<FJsonObject>> ObjectMetadata;
+    TOptional<FString> Timestamp;
+    TOptional<FString> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SocialGraphFollow API
+<CodeGroup title="Creates a follow association with the target user" tag="POST" label="SocialGraphFollow">
+```csharp
+/// <summary>
+/// Follows Creates a follow association with the target user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object SocialGraphFollow(string userId, string token, SocialGraphServiceFollowBody body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = SocialGraphFollowWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SocialGraphServiceFollowBody
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphServiceFollowBody" /> class.
+/// </summary>
+/// <param name="metadata">JSON metadata for the follow association.</param>
+/// <param name="targetFriendCode">Friend code of the target user.</param>
+/// <param name="targetUserId">User ID of the target user.</param>
+public SocialGraphServiceFollowBody(Object metadata = default(Object), string targetFriendCode = default(string), string targetUserId = default(string))
+{
+    this.Metadata = metadata;
+    this.TargetFriendCode = targetFriendCode;
+    this.TargetUserId = targetUserId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphFollowRequest : public Request
+{
+public:
+    virtual ~SocialGraphFollowRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserSocialGraphServiceFollowBody Body;
+};
+
+class SNAPSER_API SnapserSocialGraphServiceFollowBody : public Model
+{
+public:
+    virtual ~SnapserSocialGraphServiceFollowBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* JSON metadata for the follow association */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* Friend code of the target user */
+    TOptional<FString> TargetFriendCode;
+    /* User ID of the target user */
+    TOptional<FString> TargetUserId;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphFollowResponse : public Response
+{
+public:
+    virtual ~SocialGraphFollowResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SocialGraphUnfollow API
+<CodeGroup title="Removes a follow association with the target user if it exists" tag="DELETE" label="SocialGraphUnfollow">
+```csharp
+/// <summary>
+/// Unfollow Removes a follow association with the target user if it exists
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="targetUserId">User ID of the target user</param>
+/// <param name="token">User session token</param>
+/// <returns>Object</returns>
+public Object SocialGraphUnfollow(string userId, string targetUserId, string token)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = SocialGraphUnfollowWithHttpInfo(userId, targetUserId, token);
+    return localVarResponse.Data;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphUnfollowRequest : public Request
+{
+public:
+    virtual ~SocialGraphUnfollowRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User ID of the target user */
+    FString TargetUserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphUnfollowResponse : public Response
+{
+public:
+    virtual ~SocialGraphUnfollowResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SocialGraphGetFriendRequests API
+<CodeGroup title="Returns friend requests sent or received by the user" tag="GET" label="SocialGraphGetFriendRequests">
+```csharp
+/// <summary>
+/// Friend Requests Returns friend requests sent or received by the user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="type">Type of friend requests (sent, received)</param>
+/// <param name="token">User session token</param>
+/// <param name="limit">Number of results returned. The maximum allowed is 50, defaults to 10 if not provided. (optional)</param>
+/// <param name="offset">Number of results to skip from the start of the result set (optional)</param>
+/// <returns>SocialGraphGetFriendRequestsResponse</returns>
+public SocialGraphGetFriendRequestsResponse SocialGraphGetFriendRequests(string userId, string type, string token, long? limit = default(long?), long? offset = default(long?))
+{
+    Snapser.Client.ApiResponse<SocialGraphGetFriendRequestsResponse> localVarResponse = SocialGraphGetFriendRequestsWithHttpInfo(userId, type, token, limit, offset);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SocialGraphGetFriendRequestsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphGetFriendRequestsResponse" /> class.
+/// </summary>
+/// <param name="friendRequests">friendRequests.</param>
+/// <param name="total">total.</param>
+public SocialGraphGetFriendRequestsResponse(List<SocialGraphAssociationObject> friendRequests = default(List<SocialGraphAssociationObject>), string total = default(string))
+{
+    this.FriendRequests = friendRequests;
+    this.Total = total;
+}
+
+/// Snapser.Model for SocialGraphAssociationObject
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphAssociationObject" /> class.
+/// </summary>
+/// <param name="associationMetadata">associationMetadata.</param>
+/// <param name="id">id.</param>
+/// <param name="objectMetadata">objectMetadata.</param>
+/// <param name="timestamp">timestamp.</param>
+/// <param name="type">type.</param>
+public SocialGraphAssociationObject(Object associationMetadata = default(Object), string id = default(string), Object objectMetadata = default(Object), string timestamp = default(string), string type = default(string))
+{
+    this.AssociationMetadata = associationMetadata;
+    this.Id = id;
+    this.ObjectMetadata = objectMetadata;
+    this.Timestamp = timestamp;
+    this.Type = type;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphGetFriendRequestsRequest : public Request
+{
+public:
+    virtual ~SocialGraphGetFriendRequestsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* Type of friend requests (sent, received) */
+    FString Type;
+    /* User session token */
+    FString Token;
+    /* Number of results returned. The maximum allowed is 50, defaults to 10 if not provided. */
+    TOptional<int64> Limit;
+    /* Number of results to skip from the start of the result set */
+    TOptional<int64> Offset;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphGetFriendRequestsResponse : public Response
+{
+public:
+    virtual ~SocialGraphGetFriendRequestsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserSocialGraphGetFriendRequestsResponse Content;
+};
+
+class SNAPSER_API SnapserSocialGraphGetFriendRequestsResponse : public Model
+{
+public:
+    virtual ~SnapserSocialGraphGetFriendRequestsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserSocialGraphAssociationObject>> FriendRequests;
+    TOptional<FString> Total;
+};
+
+class SNAPSER_API SnapserSocialGraphAssociationObject : public Model
+{
+public:
+    virtual ~SnapserSocialGraphAssociationObject() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TSharedPtr<FJsonObject>> AssociationMetadata;
+    TOptional<FString> Id;
+    TOptional<TSharedPtr<FJsonObject>> ObjectMetadata;
+    TOptional<FString> Timestamp;
+    TOptional<FString> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SocialGraphSendFriendRequest API
+<CodeGroup title="Creates a sent_friend_request association with the target user" tag="POST" label="SocialGraphSendFriendRequest">
+```csharp
+/// <summary>
+/// Friend Requests Creates a sent_friend_request association with the target user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object SocialGraphSendFriendRequest(string userId, string token, SocialGraphServiceSendFriendRequestBody body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = SocialGraphSendFriendRequestWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SocialGraphServiceSendFriendRequestBody
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphServiceSendFriendRequestBody" /> class.
+/// </summary>
+/// <param name="metadata">JSON metadata for the follow association.</param>
+/// <param name="targetFriendCode">Friend code of the target user.</param>
+/// <param name="targetUserId">User ID of the target user.</param>
+public SocialGraphServiceSendFriendRequestBody(Object metadata = default(Object), string targetFriendCode = default(string), string targetUserId = default(string))
+{
+    this.Metadata = metadata;
+    this.TargetFriendCode = targetFriendCode;
+    this.TargetUserId = targetUserId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphSendFriendRequestRequest : public Request
+{
+public:
+    virtual ~SocialGraphSendFriendRequestRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserSocialGraphServiceSendFriendRequestBody Body;
+};
+
+class SNAPSER_API SnapserSocialGraphServiceSendFriendRequestBody : public Model
+{
+public:
+    virtual ~SnapserSocialGraphServiceSendFriendRequestBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* JSON metadata for the follow association */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* Friend code of the target user */
+    TOptional<FString> TargetFriendCode;
+    /* User ID of the target user */
+    TOptional<FString> TargetUserId;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphSendFriendRequestResponse : public Response
+{
+public:
+    virtual ~SocialGraphSendFriendRequestResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SocialGraphDeleteFriendRequest API
+<CodeGroup title="Removes a friend request that was sent to or received from the target user if it exists" tag="DELETE" label="SocialGraphDeleteFriendRequest">
+```csharp
+/// <summary>
+/// Delete Friend Request Removes a friend request that was sent to or received from the target user if it exists
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="targetUserId">User ID of the target user</param>
+/// <param name="token">User session token</param>
+/// <returns>Object</returns>
+public Object SocialGraphDeleteFriendRequest(string userId, string targetUserId, string token)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = SocialGraphDeleteFriendRequestWithHttpInfo(userId, targetUserId, token);
+    return localVarResponse.Data;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphDeleteFriendRequestRequest : public Request
+{
+public:
+    virtual ~SocialGraphDeleteFriendRequestRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User ID of the target user */
+    FString TargetUserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphDeleteFriendRequestResponse : public Response
+{
+public:
+    virtual ~SocialGraphDeleteFriendRequestResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SocialGraphGetFriends API
+<CodeGroup title="Returns friends of the user" tag="GET" label="SocialGraphGetFriends">
+```csharp
+/// <summary>
+/// Friends Returns friends of the user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="limit">Number of results returned. The maximum allowed is 50, defaults to 10 if not provided. (optional)</param>
+/// <param name="offset">Number of results to skip from the start of the result set (optional)</param>
+/// <param name="includePresence">Whether to include presence information for friends (optional)</param>
+/// <returns>SocialGraphGetFriendsResponse</returns>
+public SocialGraphGetFriendsResponse SocialGraphGetFriends(string userId, string token, long? limit = default(long?), long? offset = default(long?), bool? includePresence = default(bool?))
+{
+    Snapser.Client.ApiResponse<SocialGraphGetFriendsResponse> localVarResponse = SocialGraphGetFriendsWithHttpInfo(userId, token, limit, offset, includePresence);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SocialGraphGetFriendsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphGetFriendsResponse" /> class.
+/// </summary>
+/// <param name="friends">friends.</param>
+/// <param name="presences">presences.</param>
+/// <param name="total">total.</param>
+public SocialGraphGetFriendsResponse(List<SocialGraphAssociationObject> friends = default(List<SocialGraphAssociationObject>), Dictionary<string, SocialGraphUserPresence> presences = default(Dictionary<string, SocialGraphUserPresence>), string total = default(string))
+{
+    this.Friends = friends;
+    this.Presences = presences;
+    this.Total = total;
+}
+
+/// Snapser.Model for SocialGraphAssociationObject
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphAssociationObject" /> class.
+/// </summary>
+/// <param name="associationMetadata">associationMetadata.</param>
+/// <param name="id">id.</param>
+/// <param name="objectMetadata">objectMetadata.</param>
+/// <param name="timestamp">timestamp.</param>
+/// <param name="type">type.</param>
+public SocialGraphAssociationObject(Object associationMetadata = default(Object), string id = default(string), Object objectMetadata = default(Object), string timestamp = default(string), string type = default(string))
+{
+    this.AssociationMetadata = associationMetadata;
+    this.Id = id;
+    this.ObjectMetadata = objectMetadata;
+    this.Timestamp = timestamp;
+    this.Type = type;
+}
+
+/// Snapser.Model for SocialGraphUserPresence
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphUserPresence" /> class.
+/// </summary>
+/// <param name="doNotDisturb">doNotDisturb.</param>
+/// <param name="inGameStatus">inGameStatus.</param>
+/// <param name="online">online.</param>
+/// <param name="userId">userId.</param>
+public SocialGraphUserPresence(bool doNotDisturb = default(bool), string inGameStatus = default(string), bool online = default(bool), string userId = default(string))
+{
+    this.DoNotDisturb = doNotDisturb;
+    this.InGameStatus = inGameStatus;
+    this.Online = online;
+    this.UserId = userId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphGetFriendsRequest : public Request
+{
+public:
+    virtual ~SocialGraphGetFriendsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    /* Number of results returned. The maximum allowed is 50, defaults to 10 if not provided. */
+    TOptional<int64> Limit;
+    /* Number of results to skip from the start of the result set */
+    TOptional<int64> Offset;
+    /* Whether to include presence information for friends */
+    TOptional<bool> IncludePresence;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphGetFriendsResponse : public Response
+{
+public:
+    virtual ~SocialGraphGetFriendsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserSocialGraphGetFriendsResponse Content;
+};
+
+class SNAPSER_API SnapserSocialGraphGetFriendsResponse : public Model
+{
+public:
+    virtual ~SnapserSocialGraphGetFriendsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserSocialGraphAssociationObject>> Friends;
+    TOptional<TMap<FString, SnapserSocialGraphUserPresence>> Presences;
+    TOptional<FString> Total;
+};
+
+class SNAPSER_API SnapserSocialGraphAssociationObject : public Model
+{
+public:
+    virtual ~SnapserSocialGraphAssociationObject() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TSharedPtr<FJsonObject>> AssociationMetadata;
+    TOptional<FString> Id;
+    TOptional<TSharedPtr<FJsonObject>> ObjectMetadata;
+    TOptional<FString> Timestamp;
+    TOptional<FString> Type;
+};
+
+class SNAPSER_API SnapserSocialGraphUserPresence : public Model
+{
+public:
+    virtual ~SnapserSocialGraphUserPresence() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<bool> DoNotDisturb;
+    TOptional<FString> InGameStatus;
+    TOptional<bool> Online;
+    TOptional<FString> UserId;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SocialGraphAddFriend API
+<CodeGroup title="Creates a friend association with the target user" tag="POST" label="SocialGraphAddFriend">
+```csharp
+/// <summary>
+/// Friends Creates a friend association with the target user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object SocialGraphAddFriend(string userId, string token, SocialGraphServiceAddFriendBody body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = SocialGraphAddFriendWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SocialGraphServiceAddFriendBody
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphServiceAddFriendBody" /> class.
+/// </summary>
+/// <param name="metadata">JSON metadata for the friend association.</param>
+/// <param name="targetUserId">User ID of the target user (required).</param>
+public SocialGraphServiceAddFriendBody(Object metadata = default(Object), string targetUserId = default(string))
+{
+    // to ensure "targetUserId" is required (not null)
+    if (targetUserId == null)
+    {
+        throw new ArgumentNullException("targetUserId is a required property for SocialGraphServiceAddFriendBody and cannot be null");
+    }
+    this.TargetUserId = targetUserId;
+    this.Metadata = metadata;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphAddFriendRequest : public Request
+{
+public:
+    virtual ~SocialGraphAddFriendRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserSocialGraphServiceAddFriendBody Body;
+};
+
+class SNAPSER_API SnapserSocialGraphServiceAddFriendBody : public Model
+{
+public:
+    virtual ~SnapserSocialGraphServiceAddFriendBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* JSON metadata for the friend association */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* User ID of the target user */
+    FString TargetUserId;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphAddFriendResponse : public Response
+{
+public:
+    virtual ~SocialGraphAddFriendResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SocialGraphRemoveFriend API
+<CodeGroup title="Removes a friend association with the target user if it exists" tag="DELETE" label="SocialGraphRemoveFriend">
+```csharp
+/// <summary>
+/// Remove Friend Removes a friend association with the target user if it exists
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="targetUserId">User ID of the target user</param>
+/// <param name="token">User session token</param>
+/// <returns>Object</returns>
+public Object SocialGraphRemoveFriend(string userId, string targetUserId, string token)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = SocialGraphRemoveFriendWithHttpInfo(userId, targetUserId, token);
+    return localVarResponse.Data;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphRemoveFriendRequest : public Request
+{
+public:
+    virtual ~SocialGraphRemoveFriendRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User ID of the target user */
+    FString TargetUserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphRemoveFriendResponse : public Response
+{
+public:
+    virtual ~SocialGraphRemoveFriendResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SocialGraphGetUserSettings API
+<CodeGroup title="Returns the user's settings" tag="GET" label="SocialGraphGetUserSettings">
+```csharp
+/// <summary>
+/// Settings Returns the user&#39;s settings
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID for the user whose data is being returned</param>
+/// <param name="token">User session token</param>
+/// <returns>SocialGraphUserSettings</returns>
+public SocialGraphUserSettings SocialGraphGetUserSettings(string userId, string token)
+{
+    Snapser.Client.ApiResponse<SocialGraphUserSettings> localVarResponse = SocialGraphGetUserSettingsWithHttpInfo(userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SocialGraphUserSettings
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphUserSettings" /> class.
+/// </summary>
+/// <param name="friendCode">friendCode.</param>
+/// <param name="friendsCanViewFriends">friendsCanViewFriends.</param>
+public SocialGraphUserSettings(string friendCode = default(string), bool friendsCanViewFriends = default(bool))
+{
+    this.FriendCode = friendCode;
+    this.FriendsCanViewFriends = friendsCanViewFriends;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphGetUserSettingsRequest : public Request
+{
+public:
+    virtual ~SocialGraphGetUserSettingsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID for the user whose data is being returned */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphGetUserSettingsResponse : public Response
+{
+public:
+    virtual ~SocialGraphGetUserSettingsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserSocialGraphUserSettings Content;
+};
+
+class SNAPSER_API SnapserSocialGraphUserSettings : public Model
+{
+public:
+    virtual ~SnapserSocialGraphUserSettings() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> FriendCode;
+    TOptional<bool> FriendsCanViewFriends;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SocialGraphUpdateUserSettings API
+<CodeGroup title="Sets the user's settings" tag="PUT" label="SocialGraphUpdateUserSettings">
+```csharp
+/// <summary>
+/// Settings Sets the user&#39;s settings
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID for the user whose data is being returned</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object SocialGraphUpdateUserSettings(string userId, string token, SocialGraphServiceUpdateUserSettingsBody body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = SocialGraphUpdateUserSettingsWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SocialGraphServiceUpdateUserSettingsBody
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphServiceUpdateUserSettingsBody" /> class.
+/// </summary>
+/// <param name="friendsCanViewFriends">If the user&#39;s friends can view their other friends (required).</param>
+public SocialGraphServiceUpdateUserSettingsBody(bool friendsCanViewFriends = default(bool))
+{
+    this.FriendsCanViewFriends = friendsCanViewFriends;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphUpdateUserSettingsRequest : public Request
+{
+public:
+    virtual ~SocialGraphUpdateUserSettingsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID for the user whose data is being returned */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserSocialGraphServiceUpdateUserSettingsBody Body;
+};
+
+class SNAPSER_API SnapserSocialGraphServiceUpdateUserSettingsBody : public Model
+{
+public:
+    virtual ~SnapserSocialGraphServiceUpdateUserSettingsBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* If the user's friends can view their other friends */
+    bool FriendsCanViewFriends = false;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphUpdateUserSettingsResponse : public Response
+{
+public:
+    virtual ~SocialGraphUpdateUserSettingsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### SocialGraphGetFriendsCount API
+<CodeGroup>
+```csharp
+/// <summary>
+/// Friends Returns the count of friends for a user. Can view other users&#39; friend counts if public visibility is enabled.
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the requesting user</param>
+/// <param name="targetUserId">User ID of the target user whose friends count to retrieve</param>
+/// <param name="token">User session token</param>
+/// <returns>SocialGraphGetFriendsCountResponse</returns>
+public SocialGraphGetFriendsCountResponse SocialGraphGetFriendsCount(string userId, string targetUserId, string token)
+{
+    Snapser.Client.ApiResponse<SocialGraphGetFriendsCountResponse> localVarResponse = SocialGraphGetFriendsCountWithHttpInfo(userId, targetUserId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SocialGraphGetFriendsCountResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphGetFriendsCountResponse" /> class.
+/// </summary>
+/// <param name="count">count.</param>
+public SocialGraphGetFriendsCountResponse(string count = default(string))
+{
+    this.Count = count;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphGetFriendsCountRequest : public Request
+{
+public:
+    virtual ~SocialGraphGetFriendsCountRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the requesting user */
+    FString UserId;
+    /* User ID of the target user whose friends count to retrieve */
+    FString TargetUserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphGetFriendsCountResponse : public Response
+{
+public:
+    virtual ~SocialGraphGetFriendsCountResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserSocialGraphGetFriendsCountResponse Content;
+};
+
+class SNAPSER_API SnapserSocialGraphGetFriendsCountResponse : public Model
+{
+public:
+    virtual ~SnapserSocialGraphGetFriendsCountResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Count;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### SocialGraphGetFollowsCount API
+<CodeGroup>
+```csharp
+/// <summary>
+/// Followers Returns the count of followers or following for a user. Can view other users&#39; follow counts if public visibility is enabled.
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the requesting user</param>
+/// <param name="targetUserId">User ID of the target user whose follows count to retrieve</param>
+/// <param name="type">Type of follows (following, followers)</param>
+/// <param name="token">User session token</param>
+/// <returns>SocialGraphGetFollowsCountResponse</returns>
+public SocialGraphGetFollowsCountResponse SocialGraphGetFollowsCount(string userId, string targetUserId, string type, string token)
+{
+    Snapser.Client.ApiResponse<SocialGraphGetFollowsCountResponse> localVarResponse = SocialGraphGetFollowsCountWithHttpInfo(userId, targetUserId, type, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SocialGraphGetFollowsCountResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="SocialGraphGetFollowsCountResponse" /> class.
+/// </summary>
+/// <param name="count">count.</param>
+public SocialGraphGetFollowsCountResponse(string count = default(string))
+{
+    this.Count = count;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphGetFollowsCountRequest : public Request
+{
+public:
+    virtual ~SocialGraphGetFollowsCountRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the requesting user */
+    FString UserId;
+    /* User ID of the target user whose follows count to retrieve */
+    FString TargetUserId;
+    /* Type of follows (following, followers) */
+    FString Type;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserSocialGraphServiceApi::SocialGraphGetFollowsCountResponse : public Response
+{
+public:
+    virtual ~SocialGraphGetFollowsCountResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserSocialGraphGetFollowsCountResponse Content;
+};
+
+class SNAPSER_API SnapserSocialGraphGetFollowsCountResponse : public Model
+{
+public:
+    virtual ~SnapserSocialGraphGetFollowsCountResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Count;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/social-graph-admin-api.png)
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code   | Variable                      | Message                       | HTTP | gRPC            |
+| ------ | ----------------------------- | ----------------------------- | ---- | --------------- |
+| 220001 | ErrFriendCodeGenerationFailed | friend code generation failed | 500  | Internal        |
+| 220002 | ErrTargetUserNotSpecified     | target user not specified     | 400  | InvalidArgument |
+| 220003 | ErrFriendCodeNotFound         | friend code not found         | 404  | NotFound        |
+| 220004 | ErrFriendCodeReadFailed       | friend code read failed       | 500  | Internal        |
+| 220005 | ErrFriendCodeNotEnabled       | friend code not enabled       | 400  | InvalidArgument |
+| 220006 | ErrNoFriendRequest            | no friend request             | 404  | NotFound        |
+</div>
+
+## Additional Details
+
+### Data Stores
+
+Couchbase and POSTGRES
+
+### Service Dependencies
+
+The social graph service does not depend on any other Snap.
+
+### Recommended Services
+
+The social graph service works best with the Auth service.
+
+### Upcoming enhancements
+
+None planned at the moment.

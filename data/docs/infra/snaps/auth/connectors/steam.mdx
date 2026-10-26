@@ -1,0 +1,953 @@
+export const description = 'Auth'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Steam Login
+
+Click here to view all Auth Snap [connectors](/docs/infra/snaps/auth/connectors).
+
+## Overview
+
+Steam Login is a connector that allows users to log into your application using their Steam account.
+This connector leverages the [SteamWorks SDK](https://partner.steamgames.com/doc/home) to ensure a smooth and secure login experience.
+
+## Setup Requirements
+### Step 1: Create a Steam Partner Account
+- Apply for a Steam Partner Account: Go to the Steam Partner Portal and apply for a Steam Partner account. This is required for using Steamworks and integrating Steam features into your game.
+- Wait for Approval: Valve will review your application. Once approved, you'll receive access to the Steam Partner Portal.
+
+### Step 2: Create a Steam App ID
+- Create a New App: Log in to the Steam Partner Portal and create a new app. You'll need to provide details about your game, including its name, description, and screenshots.
+- Get Your App ID: Once your app is created, you'll receive a unique App ID. This ID is crucial for integrating Steam features into your game.
+
+## Steam Nomenclature
+Steam has two concepts that are essential for integrating Steam features into your game:
+1. Steam Session Ticket: A session ticket is a unique identifier that proves a user is authenticated with Steam. It's used for authentication and validation.
+2. Steam Web API: The Steam Web API allows you to interact with Steam services programmatically. You can use it to validate session tickets, retrieve user information, and more.
+
+<Note>
+    Game makers should be using the Steam Session Ticket method for integrating with Steam. The Steam Web API method is only for those who are not building a game for Steam but still want to have Steam authentication in their game.
+</Note>
+
+## How it works
+
+To implement Steam Login, game studios must configure the connector via the Auth Configuration, Connector tool.
+Details on setting this up are available below in the "Configuration Tool" section.
+
+After configuration, the studio should integrate the Steamworks SDK for the relevant platform into the game client.
+The SDK, upon successful authentication, returns a token which should then be sent to the backend server. The
+Auth Snap receives this token, verifies its authenticity with Steam's servers, and if valid, issues a user
+ID and session token back to the game client. This enables user authentication within the game.
+
+Let's dive into both these steps in detail below.
+
+## Configuration Tool
+
+There are two ways to integrate with Steam connect. Steam Session Ticket or the Steam Web API.
+You should use "Steam Web API" method when you are not building a game for Steam but still want to have
+Steam authentication in your game. In the form you will see both options but you only need one of the two.
+
+The Steam Connector configuration tool needs the following details:
+
+##### Session Ticket Credentials
+You will find the following details by going to the Steam developer portal.
+1. <u>Web API Publisher Authentication Key</u> - Your unique game API key
+2. <u>App Id</u> - Your games application identifier.
+
+##### Web API Credentials
+1. <u>Web API Key</u> - Your unique Web API / Open ID login key
+
+## Integrating the Steamworks SDK
+To integrate Steam Connect into your Unity or Unreal Engine game, you can follow these steps.
+
+#### Unity Integration
+1. Install Steamworks.NET: Use a library like [Steamworks.NET](https://github.com/rlabrecque/Steamworks.NET) to interact with the Steam API in Unity. You can find it on GitHub or through the Unity Asset Store.
+2. Get Steam Session Ticket: Use the **SteamUser.GetAuthSessionTicket** method to obtain a Steam Session Ticket. This ticket is proof that the client is a valid Steam user.
+3. Convert the ticket to a hex-encoded string without hyphens and in lowercase to send to the Snapser backend.
+```csharp
+private async Task<bool> AuthenticationSteamLoginAsync()
+{
+    if (!SteamManager.Initialized)
+        return false;
+
+    try
+    {
+        // Ask Steam to generate an authentication ticket tied to _webApiIdentity
+        var hAuthTicket = SteamUser.GetAuthTicketForWebApi(_webApiIdentity);
+        if (hAuthTicket == HAuthTicket.Invalid)
+            return false;
+
+        var validationTcs = new TaskCompletionSource<GetTicketForWebApiResponse_t>();
+        var validationCallback = Callback<GetTicketForWebApiResponse_t>.Create((response) =>
+                                                                               {
+                                                                                   validationTcs.TrySetResult(response);
+                                                                               });
+
+        var timeoutTask = Task.Delay(TimeSpan.FromSeconds(30));
+        var validationTask = validationTcs.Task;
+
+        while (!validationTask.IsCompleted && !timeoutTask.IsCompleted)
+        {
+            SteamAPI.RunCallbacks();
+            await Task.Delay(100);
+        }
+
+        if (timeoutTask.IsCompleted)
+            return false;
+
+        // Wait for Steam's validation response
+        var response = await validationTask;
+        if (response.m_eResult != EResult.k_EResultOK)
+            return false;
+
+        // IMPORTANT: Convert the raw ticket bytes (m_rgubTicket) to a hex string without hyphens, and in lowercase.
+        var sessionTicketHex = BitConverter.ToString(response.m_rgubTicket, 0, response.m_rgubTicket.Length)
+                                   .Replace("-", string.Empty)
+                                   .ToLowerInvariant();
+
+        // Send the session ticket to the Snapser backend for authentication
+        var loginRequest = new AuthSteamSessionTicketLoginRequest(
+            createUser: true,
+            identity: _webApiIdentity,
+            sessionTicket: sessionTicketHex);
+
+        var snapserResponse = await _authService.SteamSessionTicketLoginAsync(loginRequest);
+        return snapserResponse?.User != null;
+    }
+    catch
+    {
+        return false;
+    }
+}
+```
+
+#### Unreal Engine Integration
+1. Enable Steam Subsystem: In Unreal Engine, enable the Online Subsystem Steam plugin. This plugin provides integration with Steam features.
+2. Configure your project settings to use the Steam subsystem by setting **DefaultPlatformService=Steam** in **DefaultEngine.ini**.
+```text
+[OnlineSubsystem]
+DefaultPlatformService=Steam
+
+[OnlineSubsystemSteam]
+bEnabled=true
+SteamDevAppId=480
+```
+    <Note>
+        Use SteamDevAppId=480 for testing purposes. Replace it with your actual Steam App ID when deploying.
+    </Note>
+3. Get Steam Session Ticket: Use `GetLinkedAccountAuthToken` with the **WebAPI** token type to obtain a session ticket. This is the recommended approach as it correctly waits for the Steam callback before returning the token, matching the behavior of `GetAuthTicketForWebApi` in the Unity example above. The identity string passed to `GetLinkedAccountAuthToken` (the part after `WebAPI:`) should match the `_webApiIdentity` used in the Unity example.
+
+<Note>
+**Important:** Do **not** use `GetAuthToken` (which internally calls `GetAuthSessionTicket`). Epic's implementation of `GetAuthSessionTicket` does not properly wait for the `GetAuthSessionTicketResponse_t` Steam callback before returning the token — it uses a 0.1 second sleep as a workaround, which can result in intermittent `"Invalid ticket"` errors (Steam error code 101) when the token is used before Steam has finished validating it. `GetLinkedAccountAuthToken` with the `WebAPI` token type implements the WebAPI token flow correctly and waits for the Steam callback before returning.
+</Note>
+
+```cpp
+// FOnlineContextCache is just a wrapper around the Unreal OnlineSubsystem and the IdentityInterface,
+// and this assumes you are using the Steam Subsystem
+bool UTyrOnlineSubsystem::BackendServiceLogin(FOnlineContextCache* System, TSharedRef<FUserLoginRequest> Request, FPlatformUserId PlatformUser)
+{
+    bool bDisableSteamAuthFromCommandLine = FParse::Param(FCommandLine::Get(), TEXT("nosteamauth"));
+    if (UTyrGameplayFunctionLibrary::IsSteamBuild() && !bDisableSteamAuthFromCommandLine)
+    {
+        // Use GetLinkedAccountAuthToken with WebAPI token type.
+        // The string after "WebAPI:" is your identity string (same as _webApiIdentity in the Unity example).
+        // This correctly waits for the Steam callback before returning the token.
+        FString AuthToken;
+        System->IdentityInterface->GetLinkedAccountAuthToken(GetPlatformUserIndexForId(PlatformUser), TEXT("WebAPI:YourIdentity"),
+                                                             IOnlineIdentity::FOnGetLinkedAccountAuthTokenCompleteDelegate::CreateUObject(this, &ThisClass::HandleGetLinkedAccountAuthTokenComplete, Request));
+        return true;
+    }
+    else
+    {
+        auto& Snasper = USnapserAuthenticationSubsystem::Get(GetGameInstance()->GetWorld());
+        const auto Settings = GetDefault<UTyrEditorUserSettings>();
+        auto LoginName = Request->UserInfo->GetDisplayName();
+        if (!Settings->AnonLoginName.IsEmpty())
+            LoginName = Settings->AnonLoginName;
+
+        return Snasper.AnonLogin(LoginName,
+                                 Snapser::SnapserAuthServiceApi::FAnonLoginDelegate::CreateUObject(this, &ThisClass::HandleBackendAnonAuthLogin, Request->CurrentContext));
+    }
+
+    return false;
+}
+
+// Callback for GetLinkedAccountAuthToken — fires once Steam has validated the token
+void UTyrOnlineSubsystem::HandleGetLinkedAccountAuthTokenComplete(int32 LocalUserNum, bool bWasSuccessful, const FExternalAuthToken& AuthToken, TSharedRef<FUserLoginRequest> Request)
+{
+    if (bWasSuccessful && AuthToken.HasTokenString())
+    {
+        auto& Snasper = USnapserAuthenticationSubsystem::Get(GetGameInstance()->GetWorld());
+        Snasper.SteamSessionLogin(AuthToken.TokenString, WebApiIdentity,
+                                  Snapser::SnapserAuthServiceApi::FSteamSessionTicketLoginDelegate::CreateUObject(this, &ThisClass::HandleBackendSteamSessionLogin, Request->CurrentContext));
+    }
+    else
+    {
+        UE_LOG(LogTyrOnlineServices, Error, TEXT("Failed to get linked account auth token from Steam"));
+        // Handle error — fall back or notify the user
+    }
+}
+
+// Code for SteamSessionLogin
+bool USnapserAuthenticationSubsystem::SteamSessionLogin(FString SteamSessionToken, FString Identity, const Snapser::SnapserAuthServiceApi::FSteamSessionTicketLoginDelegate& delegate)
+{
+    Snapser::SnapserAuthServiceApi::SteamSessionTicketLoginRequest Request;
+    Request.Body.SessionTicket = SteamSessionToken;
+    Request.Body.Identity = Identity;
+    Request.Body.CreateUser = true;
+
+    check(AuthServiceApi)
+        UE_LOG(LogSnapserAuth, Log, TEXT("Logging in with Steam Auth using token %s"), *SteamSessionToken) auto R = AuthServiceApi->SteamSessionTicketLogin(Request, std::move(delegate));
+
+    return true;
+}
+
+// Callback
+void UTyrOnlineSubsystem::HandleBackendSteamSessionLogin(const Snapser::SnapserAuthServiceApi::SteamSessionTicketLoginResponse& SteamSessionTicketLoginResponse, ETyrUserOnlineContext Context)
+{
+    TArray<TSharedRef<FUserLoginRequest>> RequestsCopy = ActiveLoginRequests;
+    for (TSharedRef<FUserLoginRequest>& Request : RequestsCopy)
+    {
+        UTyrOnlineUserInfo* UserInfo = Request->UserInfo.Get();
+
+        if (!UserInfo)
+        {
+            ActiveLoginRequests.Remove(Request);
+
+            continue;
+        }
+
+        if (Request->CurrentContext == Context && Request->BackEndServiceLoginState == ETyrOnlineUserAsyncTaskState::InProgress)
+        {
+            if (SteamSessionTicketLoginResponse.IsSuccessful() && SteamSessionTicketLoginResponse.Content.User.IsSet())
+            {
+
+                UE_LOG(LogTyrOnlineServices, Log, TEXT("User Info:"))
+                UE_LOG(LogTyrOnlineServices, Log, TEXT("ID: %s"), *SteamSessionTicketLoginResponse.Content.User->Id.GetValue())
+                UE_LOG(LogTyrOnlineServices, Log, TEXT("SessionToken: %s"), *SteamSessionTicketLoginResponse.Content.User->SessionToken.GetValue())
+                UE_LOG(LogTyrOnlineServices, Log, TEXT("IsValid: %hhd"), SteamSessionTicketLoginResponse.Content.User->IsVerified.GetValue())
+
+                UserInfo->BackendSessionId = SteamSessionTicketLoginResponse.Content.User->SessionToken.GetValue();
+                UserInfo->BackendUserId = SteamSessionTicketLoginResponse.Content.User->Id.GetValue();
+
+                // This is kind of a hacky place to put this?
+                USnapserAuthenticationSubsystem::SessionTokenUpdateDelegate.Broadcast(UserInfo->BackendSessionId);
+                USnapserHermesSubsystem::HermesConnectedDelegate.AddUObject(this, &UTyrOnlineSubsystem::HandleHermesConnected, Context);
+
+                // We are done with the login process
+                // initialize hermes
+                auto& Hermes = USnapserHermesSubsystem::Get(GetGameInstance()->GetWorld());
+                Hermes.InitializeHermes(UserInfo->BackendSessionId);
+            }
+            else
+            {
+                Request->BackEndServiceLoginState = ETyrOnlineUserAsyncTaskState::Failed;
+                Request->Error = FOnlineErrorType(TEXT("Failed to login to backend service"));
+
+                ProcessLoginRequest(Request);
+            }
+        }
+    }
+}
+```
+
+## Usage
+
+Game studios have the option to start user sessions with an Anonymous login and later upgrade to a secure
+Steam login, or they can begin directly with an Steam login. If opting for the latter, simply store and
+utilize the user ID and session token returned by the Auth Snap to interact with other APIs on your Snapend.
+For upgrading from an Anonymous to an Steam login, follow the example below.
+
+### Example
+
+1. Assume a game client initiates an AnonLogin request using the device's unique identifier as the username.
+2. The Auth Snap generates a new user profile with `user_id=395d9b91-72fd-40f2-a3cd-cf5a1e7a604f` and `session_token=9a052312-48f6-4710-a072-230ddd046a2d`.
+3. The game client prompts the user to secure their account via Epic Game Services Login, displaying the UI recommended by Epic Games.
+4. The client integrates with the SteamWorks SDK to authenticate the user and receives a **token**.
+5. Next, the client submits an **SteamLogin** request with the **token** and sets **create_user=true**.
+6. The client receives a new **user_id** and **session_token** linked to the Epic Online Services account.
+7. To merge these accounts, the client utilizes the **AssociateLogins** API, specifying which account to retain and which to discard.
+8. The Auth Snap finalizes the association, discarding the unwanted user ID and token, preserving the necessary ones.
+
+This procedure ensures the account remains secure, as access cannot be gained merely through knowing the username used in the AnonLogin API.
+
+## APIs
+
+Here are the relevant APIs
+
+<div className="apisTable">
+| API Name                | HTTP Method | API Description                                                                         |
+| ----------------------- | ----------- | --------------------------------------------------------------------------------------- |
+| [AssociateLogins](#associatelogins-api)         | PUT         | Associates two logins based on their session tokens                                     |
+| [AnonLogin](#anonlogin-api)               | PUT         | Logs in the user with an arbitrary identifier specified and returns a session           |
+| [SteamLogin](#steamlogin-api)              | PUT         | Logs in the user based on the steam token specified and returns a session               |
+| [SteamOpenIdLogin](#steamopenidlogin-api)        | PUT         | Logs in the user based on the steam open ID token specified and returns a session       |
+| [SteamSessionTicketLogin](#steamsessionticketlogin-api) | PUT         | Logs in the user based on the steam session ticket specified and returns a session      |
+</div>
+
+#### AssociateLogins API
+<CodeGroup title="Associates two logins based on their session tokens" tag="PUT" label="AssociateLogins">
+```csharp
+/// <summary>
+/// Associate Multiple Logins Associates two logins based on their session tokens
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object AssociateLogins(AuthAssociateLoginsRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = AssociateLoginsWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthAssociateLoginsRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAssociateLoginsRequest" /> class.
+/// </summary>
+/// <param name="discardUserToken">Token of the user to discard (required).</param>
+/// <param name="keepUserToken">Token of the user to keep (required).</param>
+public AuthAssociateLoginsRequest(string discardUserToken = default(string), string keepUserToken = default(string))
+{
+    // to ensure "discardUserToken" is required (not null)
+    if (discardUserToken == null)
+    {
+        throw new ArgumentNullException("discardUserToken is a required property for AuthAssociateLoginsRequest and cannot be null");
+    }
+    this.DiscardUserToken = discardUserToken;
+    // to ensure "keepUserToken" is required (not null)
+    if (keepUserToken == null)
+    {
+        throw new ArgumentNullException("keepUserToken is a required property for AuthAssociateLoginsRequest and cannot be null");
+    }
+    this.KeepUserToken = keepUserToken;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AssociateLoginsRequest : public Request
+{
+public:
+    virtual ~AssociateLoginsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthAssociateLoginsRequest Body;
+};
+
+class SNAPSER_API SnapserAuthAssociateLoginsRequest : public Model
+{
+public:
+    virtual ~SnapserAuthAssociateLoginsRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Token of the user to discard */
+    FString DiscardUserToken;
+    /* Token of the user to keep */
+    FString KeepUserToken;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AssociateLoginsResponse : public Response
+{
+public:
+    virtual ~AssociateLoginsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AnonLogin API
+<CodeGroup title="Logs in the user with an arbitrary identifier specified and returns a session" tag="PUT" label="AnonLogin">
+```csharp
+/// <summary>
+/// Anonymous Login Logs in the user with an arbitrary identifier specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthAnonLoginResponse</returns>
+public AuthAnonLoginResponse AnonLogin(AuthAnonLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthAnonLoginResponse> localVarResponse = AnonLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthAnonLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAnonLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="username">User&#39;s login ID (required).</param>
+public AuthAnonLoginRequest(bool createUser = default(bool), string username = default(string))
+{
+    // to ensure "username" is required (not null)
+    if (username == null)
+    {
+        throw new ArgumentNullException("username is a required property for AuthAnonLoginRequest and cannot be null");
+    }
+    this.Username = username;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthAnonLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAnonLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthAnonLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AnonLoginRequest : public Request
+{
+public:
+    virtual ~AnonLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthAnonLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthAnonLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthAnonLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* User's login ID */
+    FString Username;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AnonLoginResponse : public Response
+{
+public:
+    virtual ~AnonLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthAnonLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthAnonLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthAnonLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SteamLogin API
+<CodeGroup title="Logs in the user based on the steam token specified and returns a session" tag="PUT" label="SteamLogin">
+```csharp
+/// <summary>
+/// Steam Login Logs in the user based on the steam token specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthSteamLoginResponse</returns>
+public AuthSteamLoginResponse SteamLogin(AuthSteamLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthSteamLoginResponse> localVarResponse = SteamLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthSteamLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthSteamLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="openidParameters">Key value pairs of the openid parameters (required).</param>
+public AuthSteamLoginRequest(bool createUser = default(bool), Dictionary<string, string> openidParameters = default(Dictionary<string, string>))
+{
+    // to ensure "openidParameters" is required (not null)
+    if (openidParameters == null)
+    {
+        throw new ArgumentNullException("openidParameters is a required property for AuthSteamLoginRequest and cannot be null");
+    }
+    this.OpenidParameters = openidParameters;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthSteamLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthSteamLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthSteamLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Coming soon
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SteamOpenIdLogin API
+<CodeGroup title="Logs in the user based on the steam open ID token specified and returns a session" tag="PUT" label="SteamOpenIdLogin">
+```csharp
+/// <summary>
+/// Steam Open ID Login Logs in the user based on the steam open ID token specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthSteamLoginResponse</returns>
+public AuthSteamLoginResponse SteamOpenIdLogin(AuthSteamOpenIdLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthSteamLoginResponse> localVarResponse = SteamOpenIdLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthSteamOpenIdLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthSteamOpenIdLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="openidParameters">Key value pairs of the openid parameters (required).</param>
+public AuthSteamOpenIdLoginRequest(bool createUser = default(bool), Dictionary<string, string> openidParameters = default(Dictionary<string, string>))
+{
+    // to ensure "openidParameters" is required (not null)
+    if (openidParameters == null)
+    {
+        throw new ArgumentNullException("openidParameters is a required property for AuthSteamOpenIdLoginRequest and cannot be null");
+    }
+    this.OpenidParameters = openidParameters;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthSteamLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthSteamLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthSteamLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::SteamLoginRequest : public Request
+{
+public:
+    virtual ~SteamLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthSteamLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthSteamLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthSteamLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* Key value pairs of the openid parameters */
+    TMap<FString, FString> OpenidParameters;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::SteamLoginResponse : public Response
+{
+public:
+    virtual ~SteamLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthSteamLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthSteamLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthSteamLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### SteamSessionTicketLogin API
+<CodeGroup title="Logs in the user based on the steam session ticket specified and returns a session" tag="PUT" label="SteamSessionTicketLogin">
+```csharp
+/// <summary>
+/// Steam Session Ticket Login Logs in the user based on the steam session ticket specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthSteamLoginResponse</returns>
+public AuthSteamLoginResponse SteamSessionTicketLogin(AuthSteamSessionTicketLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthSteamLoginResponse> localVarResponse = SteamSessionTicketLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthSteamSessionTicketLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthSteamSessionTicketLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="identity">Identity string used to generate session ticket (if applicable).</param>
+/// <param name="sessionTicket">Session ticket generated on the client (required).</param>
+public AuthSteamSessionTicketLoginRequest(bool createUser = default(bool), string identity = default(string), string sessionTicket = default(string))
+{
+    // to ensure "sessionTicket" is required (not null)
+    if (sessionTicket == null)
+    {
+        throw new ArgumentNullException("sessionTicket is a required property for AuthSteamSessionTicketLoginRequest and cannot be null");
+    }
+    this.SessionTicket = sessionTicket;
+    this.CreateUser = createUser;
+    this.Identity = identity;
+}
+
+/// Snapser.Model for AuthSteamLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthSteamLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthSteamLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::SteamSessionTicketLoginRequest : public Request
+{
+public:
+    virtual ~SteamSessionTicketLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthSteamSessionTicketLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthSteamSessionTicketLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthSteamSessionTicketLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* Identity string used to generate session ticket (if applicable) */
+    TOptional<FString> Identity;
+    /* Session ticket generated on the client */
+    FString SessionTicket;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::SteamSessionTicketLoginResponse : public Response
+{
+public:
+    virtual ~SteamSessionTicketLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthSteamLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthSteamLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthSteamLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+

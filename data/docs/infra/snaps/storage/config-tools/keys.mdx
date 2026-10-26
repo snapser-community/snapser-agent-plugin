@@ -1,0 +1,48 @@
+# Blob Keys
+This tool allows you to setup and manage the blobs you want to expose to your game.
+
+To get started:
+1. Click on `Blob Keys` from the side Nav.
+2. Click on the `Add a Blob` button.
+3. You will then see a form where you can add or update your blob.
+
+<Note>
+  If you look at the Storage Snap API. The blob is a namespace in the URL. To
+  protect your game and bad actors from adding random blobs to your storage data
+  plane, we only allow blobs to be added/updated if they match the names you
+  have setup.
+</Note>
+
+## Blob Category
+1. **Type** - The type of blob. This can be a blob, append blob, counter or JSON blob.
+
+<Note>
+  If you pick a JSON blob you can also enter a Schema. The Storage snap ensures
+  that every blob save adheres to the schemas, including sub-document updates.
+</Note>
+
+## Blob Key Names
+1. **Names** - Comma separated list of blob names. The names should be alphanumeric without spaces.
+   <Note>
+     It should be noted that the setup will apply to all the blobs in this list.
+   </Note>
+
+## Dynamic Blob Key
+If you need to create dynamic blob keys, you can enable the `Prefix Key` option. This allows you to create a blob key that acts as a prefix for other keys. For example, if you have a blob key `battle_`, you can create dynamic keys like `battle_userA_userH` or `battle_userD_userR` under the same prefix.
+
+<Warning>
+  For your safety, new dynamic keys can only be created via `api-key` or `internal` auth. For example, from a BYOSnap making an **internal** call to storage or via a secure external server making an **api-key** call to storage. Without this protection, a bad actor can flood your entire database with dynamic keys and cause you to incur high costs.
+
+  However, once the dynamic key is created, the application client is able to read and delete it using user authentication. All write operations (insert, replace, update, increment) must go through the batch API.
+</Warning>
+
+## Blob Access
+1. **Type** - The access type of the blob. This can be public, protected, or private.
+2. **Scope** - The scope of the blob. This can be external or internal. External blobs can be updated by the client, over app auth. Internal blobs can only be updated by other snaps within your cluster or using app auth.
+
+<Note>
+  Most game studios chose to use the protected blob type. Use the support
+  channel if you want to discuss this topic further.
+</Note>
+
+![Admin Pic](/images/docs/storage-admin.png)

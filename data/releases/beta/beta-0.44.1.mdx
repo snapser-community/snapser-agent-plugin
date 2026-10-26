@@ -1,0 +1,23 @@
+# beta-0.44.1
+##### January 8, 2025
+
+## Features
+- **BYOSnap**:
+  - BYOSnap now allows you to configure multiple internal ports, allowing one BYOSnap to talk to the other.
+
+## Snapctl
+- **BYOSnap**:
+  - You can now configure multiple internal ports for a BYOSnap. You will need to generate a new BYOSnap profile using the `snapctl generate` command.
+
+## Snaps
+- **Eventbus**:
+  - The Event bus snap now supports import and export of configuration.
+
+- **Game Server Fleet**:
+  - You can now pass arbitrary metadata to the game server fleet allocate payload.
+  - Renamed the existing `metadata` to `allocation_metadata` to avoid confusion.
+  - Added a new field: `game_server_state_metadata` which is populated via the Update API from the customers GameServer.
+
+## Bug Fixes
+- **IAP**: Increased the string limit for the IAP bundle name field.
+- **Asset**: Fixed an issue with the filter regex for asset names.

@@ -1,0 +1,697 @@
+
+export const description =
+  'This guide will help you set up a Web app with Snapser.'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Mobile App - E-Commerce
+This guide will help you set up a Mobile app built using expo and Snapser as the backend. We will build a simple E-commerce app that allows users to sign up, view a product catalog, add items to their cart, and manage their profile. This basic app demonstrates how to use Snapser's Authentication system, Inventory snap for product catalog, Storage snap for storing user carts, and Profiles snap for managing user profiles.
+
+## Prerequisites
+<div className="parent">
+  <div className="servicesBox">
+    # Install Node and NPM
+
+    Make sure you have installed Node and NPM from [npm website](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
+
+    <div>
+      <DocsButton href={'https://docs.npmjs.com/downloading-and-installing-node-js-and-npm'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Download Node & NPM</DocsButton>
+    </div>
+  </div>
+  <div className="servicesBox">
+    # iOS Simulator
+
+    Install Xcode from the App Store. After installing Xcode, open it and go to Preferences > Components and install a simulator of your choice.
+
+    <div>
+      <DocsButton href={'https://apps.apple.com/us/app/xcode/id497799835?mt=12'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Install XCode</DocsButton>
+    </div>
+  </div>
+</div>
+<div className="parent">
+  <div className="servicesBox">
+    # Android Simulator
+
+    Install Android Studio from the [Android Studio website](https://developer.android.com/studio). After installing Android Studio, open it and go to AVD Manager and create a new virtual device.
+
+    <div>
+      <DocsButton href={'https://developer.android.com/studio'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Install Android Studio</DocsButton>
+    </div>
+  </div>
+</div>
+
+<Checkpoint step={0}>
+  You are now ready to begin the tutorial.
+</Checkpoint>
+
+## Step 1: Set up your app
+
+To integrate Snapser features into your app, you need to create an account and add your app to it. This section demonstrates how to do that.
+
+<Note>
+  If you have already created an app in Snapser, you can skip this step and proceed to the next one.
+</Note>
+
+1. **Log in to your Snapser account** at https://snapser.com/login.
+2. Navigate to the **Apps dashboard** and click on the **New App** button located in the upper right corner.
+3. **Enter the name of your app** in the designated field. It's advisable to use a name that closely matches your applications title to avoid confusion among your team members. Click **Add** when done.
+    ![Add new game name](/images/docs/tutorials/create-snapend-add-game.png)
+    <Note>
+    Avoid adding prefixes like "dev", "staging", or "prod". Snapser supports multiple environments for each app, allowing you to create a separate custom backend for each stage of your development.
+    </Note>
+
+<Checkpoint step={1}>
+  Shortly after, your app will appear in the Apps dashboard, ready for you to build your first custom backend.
+</Checkpoint>
+
+
+## Step 2: Create a Snapend
+
+1. In the **Apps dashboard**, click on the app you have added. This action brings up a view that shows the development, staging, and production environments. Since there are currently no Snapends, let's add one.
+![GameClick](/images/docs/tutorials/create-snapend-game.png)
+1. In the Development environment, click on **Create a Snapend**.
+![GameClick](/images/docs/tutorials/create-snapend-game-home.png)
+1. **Enter the name of your Snapend** in the **Name your Snapend** field and click **Continue**.
+    ![Name your Snapend](/images/docs/quick-start/name-your-snapend.png)
+1. On the next page, select the following snaps:
+   1. Authentication
+   2. Storage
+   3. Profiles
+   4. Inventory
+    ![Cluster](/images/docs/tutorials/commerce-app-create-snapend.png)
+1. Click **Customize** to continue to the next step. In this tutorial, we are not doing any customization and so click the **Review** button to go to the final step.
+1. At the final step you can review your Snapend details. Next, click the **Snap It** button. A pop-up window will appear showing you the state of creating your cluster, which takes a moment or two to complete.
+1. As Snapser finishes setting up the Snapser cluster in Kubernetes (which includes infrastructure, configuration of Snaps, network and security, and generating your Snapend), click the **App** button to wait for your Snapend to be operational.
+1. Once the Snapend is ready, you will see a green dot mark on the Snapend widget. This indicates that your Snapend is ready to use.
+![Snap Dashboard](/images/docs/tutorials/social-todo-app-view.png)
+1. Click on the Snapend widget to go to the Snapend dashboard.
+![Snapend Dashboard](/images/docs/tutorials/commerce-app-snapend-home.png)
+
+<Checkpoint step={2}>
+  You now have a backend setup. We can now proceed toward downloading our custom SDK, configuring our snaps for our app and then putting it altogether.
+</Checkpoint>
+
+## Step 3: Configure Snaps
+On your Snapend homepage look for Quick links. Click the **Snaps Configuration** button under **Quick Links** to go to the Snaps configuration home page. Now, lets configure the Snaps one by one.
+
+### A. Authentication Configuration
+<Note>
+    In our Web app, we want the user to start using the app using username and password as a means to authenticate. This is why we are going to add the `Username password` connector. To add the connector, please follow the instructions below.
+</Note>
+
+1. Click on the **Authentication** widget to open the Auth snaps configuration page.
+1. Select the `Authentication > Connectors` tool from the tool navigation and then click on the **Add a connector** button. You will see quite a few connectors in the menu but lets select **Username Password** and press Save.
+![Add Username Password Authentication](/images/docs/tutorials/commerce-app-auth.png)
+1. Click `Any Characters` for the password policy and then set the `Min` to `1` and `Max` to `64`.
+    <Note>
+      In real world applications, you should set a strong password policy. Here we are keeping it simple for demo purposes.
+    </Note>
+1. Click Save.
+1. Then click the back button to go back to the configuration home page.
+
+
+### B. Storage Configuration
+<Note>
+    Storage snap allows you to store any non-structured or structured data for your app. In our case we want to store the users cart data.
+</Note>
+1. Click on the **Storage** widget to open the Storage snaps configuration page.
+1. Select the `Blob Keys` tool from the tool navigation and then click on the **+ Blob Key** button. This will open up a form, where you can add the blob key.
+1. Lets a blob key to store the users cart.
+   1. `Blob Keys` - `cart`
+   1. `Type` - `json`
+   ![Storage Key](/images/docs/tutorials/commerce-app-storage-one.png)
+   1. `Access Scope` - `external`
+   1. `Access Type` - `private`
+   ![Storage Access](/images/docs/tutorials/commerce-app-storage-two.png)
+   1. Click Save.
+
+### C. Inventory Configuration
+#### Automatic Inventory Import
+1. In the `/data` folder of the [repo](https://github.com/snapser-community/snapser-demo-mobile-ecommerce-app/tree/main/data), you will find a file called `inventory.csv`. This file contains a list of products that we will import into our Inventory snap.
+2. Click on the **Inventory** widget to open the Inventory snaps configuration page.
+3. Select the `Inventory > Import` tool from the tool navigation and then click on the **Import Inventory** button. This will open up a form.
+4. Click on the **Choose File** button and select the `inventory.csv` file from your local machine.
+![Inventory Import](/images/docs/tutorials/commerce-app-inventory-import.png)
+
+#### Manual Inventory
+1. Alternatively, you can also add products manually. To do that, select the `Inventory > Items` tool from the tool navigation and then click on the **+ Item** button. This will open up a form where you can add a manual catalog item.
+![Inventory Import](/images/docs/tutorials/commerce-app-inventory-one.png)
+![Inventory Import](/images/docs/tutorials/commerce-app-inventory-two.png)
+
+<Warning>
+  You can use the CSV file as a guide to add more products manually. However, for the sake of time, we recommend you to use the CSV file to import the products.
+</Warning>
+
+### D. Profiles Configuration
+1. Click on the **Profiles** widget to open the Profiles snaps configuration page.
+1. Select the `Profiles > Attributes` tool from the tool navigation and then click on the **+ Profile Attribute** button. This will open up a form where you can add a profile field.
+1. Lets add a profile attribute to store the users first name, last name and shipping address.
+#### First Name
+   1. `Attribute Name` - `first_name`
+   1. `Category` - `Regular`
+   1. `Type` - `text`
+   1. `Regex` - `Any Characters`, `Min` - `1`, `Max` - `100`
+   1. `Presence` - `Required`
+   1.  `Access` - `private`
+   ![Profile Attribute](/images/docs/tutorials/commerce-app-profile-one.png)
+   1. Click Save.
+
+#### Last Name
+   1. `Attribute Name` - `last_name`
+   1. `Category` - `Regular`
+   1. `Type` - `text`
+   1. `Regex` - `Any Characters`, `Min` - `1`, `Max` - `100`
+   1. `Presence` - `Required`
+   1.  `Access` - `private`
+   ![Profile Attribute](/images/docs/tutorials/commerce-app-profile-two.png)
+   1. Click Save.
+
+#### Address
+   1. `Attribute Name` - `address`
+   1. `Category` - `Regular`
+   1. `Type` - `text`
+   1. `Regex` - `Any Characters`, `Min` - `1`, `Max` - `100`
+   1. `Presence` - `Required`
+   1.  `Access` - `private`
+   ![Profile Attribute](/images/docs/tutorials/commerce-app-profile-three.png)
+   ![Profile Attribute](/images/docs/tutorials/commerce-app-profile-four.png)
+   1. Click Save.
+
+
+<Checkpoint step={3}>
+  We have configured the Authentication, Storage, Inventory and Profiles snaps. Our Snapend is now ready to integrate with our app.
+</Checkpoint>
+
+## Step 4: Download the Snapser SDK
+1. On the Snapend home page scroll down to the SDK download widget called **Game Client SDKs**.
+    - Select **Web - Typescript** for the platform
+    - Select **Fetch** for the HTTP library
+    - Click Generate
+![Web SDK](/images/docs/tutorials/web-game-sdk.png)
+1. In a few minutes you will see a pop up of a Zip file. Download the zip file and extract it.
+1. You will see a folder structure like this:
+```bash
+  ├── sdk-typescript-fetch-web/ (👈 You will copy the contents of this folder)
+    │   ├── api/
+    │   ├── index.ts
+    │   ├── models/
+    │   ├── runtime.ts
+    │       └── Snapser/
+    │       └── link.xml
+    │       └── Snapser.asmdef
+```
+
+<Checkpoint step={4}>
+  You now have a SDK that is going to be integrated into your Web project. Lets move on to the next step.
+</Checkpoint>
+
+## Step 5: Download the Mobile App
+1. Talk to Snapser support to get access to this [repo](https://github.com/snapser-community/snapser-demo-mobile-ecommerce-app).
+2. Clone or download this example project.
+
+## Step 6: Install Dependencies
+<Note>
+    The Web project comes with a `package.json` file. We need to install the dependencies using npm. To do that, open a terminal and navigate to the root of the project and run the following command:
+    ```bash
+    cd snapser-demo-mobile-ecommerce-app
+    npm install
+    ```
+</Note>
+{/* Reached till here */}
+
+## Step 7: Understand the Code
+1. To understand the usage, you should look at `/src/services/SnapserManager.cs`. This class acts as the link between the app logic and the Snapser sdk.
+1. Here you will see stub methods for the following functionalities:
+   1. User authentication
+   2. Creating public and private todo lists
+   3. Updating the Todo list
+   4. Deleting the Todo list
+```typescript
+import { AuthLogoutRequest, AuthServiceApi, AuthUsernamePasswordLoginOperationRequest, AuthUsernamePasswordLoginRequest, AuthUsernamePasswordLoginResponse, InventoryCatalogItem, InventoryGetItemsRequest, InventoryGetItemsResponse, InventoryServiceApi, ProfilesGetProfileRequest, ProfilesGetProfileResponse, ProfilesServiceApi, ProfilesUpsertProfileRequest, ReplaceJsonBlobRequest, StorageGetJsonBlobRequest, StorageGetJsonBlobRequestAccessTypeEnum, StorageGetJsonBlobResponse, StorageReplaceJsonBlobRequest, StorageReplaceJsonBlobResponse, StorageServiceApi, UpsertProfileRequest } from "@/snapser-sdk";
+
+export type Item = InventoryCatalogItem;
+
+export type Cart = {
+  items: Item[];
+};
+
+export type Profile = {
+  last_name: string;
+  first_name: string;
+  address: string;
+  phone: string;
+}
+
+export class SnapserManager {
+  private static authApi = new AuthServiceApi();
+  private static inventoryApi =  new InventoryServiceApi();
+  private static profilesApi = new ProfilesServiceApi();
+  private static storageApi = new StorageServiceApi();
+
+  private static currentUserId: string | null = null;
+  private static sessionToken: string | null = null;
+  private static currentUserName: string | null = null;
+  // TODO: wire to real backend auth later
+  static async login(username: string, password: string): Promise<{ userId: string } | null> {
+    //TODO: Implement
+    throw new Error("Not implemented");
+  }
+
+  static async signup(username: string, password: string): Promise<{ userId: string } | null> {
+    //TODO: Implement
+    throw new Error("Not implemented");
+  }
+
+  static getCurrentUserId(): string | null {
+    //TODO: Implement
+    throw new Error("Not implemented");
+  }
+
+  static getCurrentUser(): { id: string | null; username: string | null } {
+    //TODO: Implement
+    throw new Error("Not implemented");
+  }
+
+  static async logout(): Promise<boolean> {
+    //TODO: Implement
+    throw new Error("Not implemented");
+  }
+
+  // JSON blob getters (later will fetch from backend)
+  static async getItems(): Promise<Item[]> {
+    //TODO: Implement
+    throw new Error("Not implemented");
+  }
+
+  static async getCart(): Promise<Cart> {
+    //TODO: Implement
+    throw new Error("Not implemented");
+  }
+
+  static async addToCart(item: Item): Promise<boolean> {
+    //TODO: Implement
+    throw new Error("Not implemented");
+  }
+
+  static async removeFromCart(item: Item): Promise<boolean> {
+    //TODO: Implement
+    throw new Error("Not implemented");
+  }
+
+  static async resetCart(): Promise<boolean> {
+    //TODO: Implement
+    throw new Error("Not implemented");
+  }
+
+  static async getUserProfile(): Promise<Profile | null> {
+    //TODO: Implement
+    throw new Error("Not implemented");
+  }
+
+  static async updateUserProfile(profile: Profile): Promise<boolean> {
+    //TODO: Implement
+    throw new Error("Not implemented");
+  }
+}
+```
+
+We will be implementing these methods in the next step.
+
+## Step 8: Update the Code
+- Copy the downloaded SDK contents into the `src/snapser-sdk` folder. If there is an existing folder in the repo, you can delete it and replace it with the new SDK code.
+```bash
+  ├── sdk-typescript-fetch-web/ (👈 You will copy the contents of this folder)
+    │   ├── api/
+    │   ├── index.ts
+    │   ├── models/
+    │   ├── runtime.ts
+    │       └── Snapser/
+    │       └── link.xml
+    │       └── Snapser.asmdef
+```
+
+<Note>
+You will be copying the contents `sdk-typescript-fetch-web` folder into your Web projects `src/snapser-sdk`folder. You will have to create the `snapser-sdk` folder if it does not exist.
+</Note>
+
+- Open **SnapserManager.ts** in the `src/services/` folder and update its contents with the following.
+```typescript
+import { AuthLogoutRequest, AuthServiceApi, AuthUsernamePasswordLoginOperationRequest, AuthUsernamePasswordLoginRequest, AuthUsernamePasswordLoginResponse, InventoryCatalogItem, InventoryGetItemsRequest, InventoryGetItemsResponse, InventoryServiceApi, ProfilesGetProfileRequest, ProfilesGetProfileResponse, ProfilesServiceApi, ProfilesUpsertProfileRequest, ReplaceJsonBlobRequest, StorageGetJsonBlobRequest, StorageGetJsonBlobRequestAccessTypeEnum, StorageGetJsonBlobResponse, StorageReplaceJsonBlobRequest, StorageReplaceJsonBlobResponse, StorageServiceApi, UpsertProfileRequest } from "@/snapser-sdk";
+
+export type Item = InventoryCatalogItem;
+
+export type Cart = {
+  items: Item[];
+};
+
+export type Profile = {
+  last_name: string;
+  first_name: string;
+  address: string;
+  phone: string;
+}
+
+export class SnapserManager {
+  private static authApi = new AuthServiceApi();
+  private static inventoryApi =  new InventoryServiceApi();
+  private static profilesApi = new ProfilesServiceApi();
+  private static storageApi = new StorageServiceApi();
+
+  private static currentUserId: string | null = null;
+  private static sessionToken: string | null = null;
+  private static currentUserName: string | null = null;
+  // TODO: wire to real backend auth later
+  static async login(username: string, password: string): Promise<{ userId: string } | null> {
+    try {
+      const loginBody: AuthUsernamePasswordLoginRequest = {
+        username: username,
+        password: password,
+        createUser: false,
+      };
+
+      const request: AuthUsernamePasswordLoginOperationRequest = {
+        body: loginBody
+      };
+
+      const response: AuthUsernamePasswordLoginResponse = await this.authApi.authUsernamePasswordLogin(request);
+
+      if (response.user) {
+        //Save to local storage or memory
+        localStorage.setItem('sessionToken', response.user.sessionToken || '');
+        localStorage.setItem('currentUserId', response.user.id || '');
+        localStorage.setItem('currentUserName', username);
+        this.sessionToken = response.user.sessionToken || null;
+        this.currentUserId = response.user.id || null;
+        this.currentUserName = username;
+        return {
+          userId: response.user.id || '',
+        };
+      }
+      throw new Error("Invalid credentials");
+    } catch (error) {
+      console.error('Login failed:', error);
+      return null;
+    }
+  }
+
+  static async signup(username: string, password: string): Promise<{ userId: string } | null> {
+    try {
+      const loginBody: AuthUsernamePasswordLoginRequest = {
+        username: username,
+        password: password,
+        createUser: true,
+      };
+
+      const request: AuthUsernamePasswordLoginOperationRequest = {
+        body: loginBody
+      };
+
+      const response: AuthUsernamePasswordLoginResponse = await this.authApi.authUsernamePasswordLogin(request);
+
+      if (response.user) {
+        localStorage.setItem('sessionToken', response.user.sessionToken || '');
+        localStorage.setItem('currentUserId', response.user.id || '');
+        localStorage.setItem('currentUserName', username);
+        this.currentUserId = response.user.id || null;
+        this.sessionToken = response.user.sessionToken || null;
+        this.currentUserName = username;
+        return {
+          userId: response.user.id || '',
+        };
+      }
+      throw new Error("Invalid credentials");
+    } catch (error) {
+      console.error('Login failed:', error);
+      return null;
+    }
+  }
+
+  static getCurrentUserId(): string | null {
+    if (!this.currentUserId) {
+      this.currentUserId = localStorage.getItem('currentUserId');
+    }
+    if (!this.sessionToken) {
+      this.sessionToken = localStorage.getItem('sessionToken');
+    }
+    if (!this.currentUserName) {
+      this.currentUserName = localStorage.getItem('currentUserName');
+    }
+    return this.currentUserId;
+  }
+
+  static getCurrentUser(): { id: string | null; username: string | null } {
+    if (!this.currentUserId) {
+      this.currentUserId = localStorage.getItem('currentUserId');
+    }
+    if (!this.sessionToken) {
+      this.sessionToken = localStorage.getItem('sessionToken');
+    }
+    if (!this.currentUserName) {
+      this.currentUserName = localStorage.getItem('currentUserName');
+    }
+    return {
+      id: this.currentUserId,
+      username: this.currentUserName,
+    };
+  }
+
+  static async logout(): Promise<boolean> {
+    const authLogoutRequestData: AuthLogoutRequest = {
+      token: this.sessionToken || '',
+      token2: this.sessionToken || '',
+    };
+    await this.authApi.authLogout(authLogoutRequestData);
+    this.sessionToken = null;
+    this.currentUserId = null;
+    this.currentUserName = null;
+    localStorage.removeItem('sessionToken');
+    localStorage.removeItem('currentUserId');
+    localStorage.removeItem('currentUserName');
+    return true
+  }
+
+  // JSON blob getters (later will fetch from backend)
+  static async getItems(): Promise<Item[]> {
+    if(!this.sessionToken || !this.currentUserId) {
+      return []
+    }
+    const getItemsRequest: InventoryGetItemsRequest = {
+      token: this.sessionToken || '',
+      limit: 50,
+      offset: 0,
+    }
+    const itemsResponse: InventoryGetItemsResponse = await this.inventoryApi.inventoryGetItems(getItemsRequest);
+    return itemsResponse.items || [];
+  }
+
+  static async getCart(): Promise<Cart> {
+    if(!this.sessionToken || !this.currentUserId) {
+      return { items: [] };
+    }
+    try{
+      const getStorageBlobRequest: StorageGetJsonBlobRequest = {
+        ownerId: this.currentUserId || '',
+        token: this.sessionToken || '',
+        jsonBlobKey: 'cart',
+        accessType: StorageGetJsonBlobRequestAccessTypeEnum.Private,
+      }
+
+      const getBlobResponse: StorageGetJsonBlobResponse = await this.storageApi.storageGetJsonBlob(getStorageBlobRequest)
+      // TODO implement
+      await new Promise(resolve => setTimeout(resolve, 500));
+      let finalItems: Item[] = [];
+      if (getBlobResponse.value && 'items' in getBlobResponse.value) {
+        finalItems = getBlobResponse.value.items as Item[];
+      }
+      return { items: finalItems || [] };
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+      return { items: [] };
+    }
+  }
+
+  static async addToCart(item: Item): Promise<boolean> {
+    if(!this.sessionToken || !this.currentUserId) {
+      return false;
+    }
+    try {
+      const cart = await SnapserManager.getCart();
+      cart.items.push(item);
+
+      const newCart: ReplaceJsonBlobRequest = {
+        create: true,
+        value: {
+          items: cart.items
+        },
+      }
+      const replaceBlobRequest: StorageReplaceJsonBlobRequest = {
+        ownerId: this.currentUserId || '',
+        token: this.sessionToken || '',
+        jsonBlobKey: 'cart',
+        accessType: StorageGetJsonBlobRequestAccessTypeEnum.Private,
+        body: newCart,
+      }
+      await this.storageApi.storageReplaceJsonBlob(replaceBlobRequest)
+      return true;
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      return false;
+    }
+  }
+
+  static async removeFromCart(item: Item): Promise<boolean> {
+    if(!this.sessionToken || !this.currentUserId) {
+      return false;
+    }
+    try {
+      const cart = await SnapserManager.getCart();
+      cart.items = cart.items.filter(i => i.name !== item.name);
+      const newCart: ReplaceJsonBlobRequest = {
+        create: true,
+        value: {
+          items: cart.items
+        },
+      }
+      const replaceBlobRequest: StorageReplaceJsonBlobRequest = {
+        ownerId: this.currentUserId || '',
+        token: this.sessionToken || '',
+        jsonBlobKey: 'cart',
+        accessType: StorageGetJsonBlobRequestAccessTypeEnum.Private,
+        body: newCart,
+      }
+      await this.storageApi.storageReplaceJsonBlob(replaceBlobRequest)
+      return true;
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+      return false;
+    }
+  }
+
+  static async resetCart(): Promise<boolean> {
+    if(!this.sessionToken || !this.currentUserId) {
+      return false;
+    }
+    try {
+      const newCart: ReplaceJsonBlobRequest = {
+        create: true,
+        value: {
+          items: []
+        },
+      }
+      const replaceBlobRequest: StorageReplaceJsonBlobRequest = {
+        ownerId: this.currentUserId || '',
+        token: this.sessionToken || '',
+        jsonBlobKey: 'cart',
+        accessType: StorageGetJsonBlobRequestAccessTypeEnum.Private,
+        body: newCart,
+      }
+      await this.storageApi.storageReplaceJsonBlob(replaceBlobRequest)
+      return true;
+    } catch (error) {
+      console.error('Error resetting cart:', error);
+      return false;
+    }
+  }
+
+  static async getUserProfile(): Promise<Profile | null> {
+    if(!this.sessionToken || !this.currentUserId) {
+      return null;
+    }
+    try {
+      const getProfileRequest: ProfilesGetProfileRequest = {
+        token: this.sessionToken || '',
+        userId: this.currentUserId || '',
+      }
+      const currentProfile: ProfilesGetProfileResponse = await this.profilesApi.profilesGetProfile(getProfileRequest)
+      let userProfile: Profile = {
+        first_name: '',
+        last_name: '',
+        address: '',
+        phone: ''
+      };
+      if (currentProfile.profile) {
+        userProfile = {
+          first_name: 'first_name' in currentProfile.profile ? currentProfile.profile.first_name as string || '' : '',
+          last_name: 'last_name' in currentProfile.profile ? currentProfile.profile.last_name as string || '' : '',
+          address: 'address' in currentProfile.profile ? currentProfile.profile.address as string || '' : '',
+          phone: 'phone' in currentProfile.profile ? currentProfile.profile.phone as string || '' : ''
+        }
+      }
+      // TODO implement
+      return userProfile
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      return {
+        first_name: '',
+        last_name: '',
+        address: '',
+        phone: ''
+      };
+    }
+  }
+
+  static async updateUserProfile(profile: Profile): Promise<boolean> {
+    if(!this.sessionToken || !this.currentUserId) {
+      return false;
+    }
+    try {
+      const upsertProfileRequestData: UpsertProfileRequest = {
+        profile: profile
+      }
+      const upsertProfileRequest: ProfilesUpsertProfileRequest = {
+        token: this.sessionToken || '',
+        userId: this.currentUserId || '',
+        body: upsertProfileRequestData
+      }
+      await this.profilesApi.profilesUpsertProfile(upsertProfileRequest)
+      return true;
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      return false;
+    }
+  }
+}
+```
+
+<Note>
+  We have added a commented out version of the code above in a file called `TODO_Update_SnapserManager.ts` in the same folder. You can copy the contents of that file and replace the contents of `SnapserManager.ts` file with it.
+  Additionally, we highly recommend you to go through the code and understand how the Snapser SDK is being used.
+</Note>
+
+<Checkpoint step={8}>
+  At this point, try compiling the app and it should work without any errors. If you see any errors, please check the console and make sure you have installed the dependencies correctly.
+</Checkpoint>
+
+## Step 9: Run the app
+1. Go to the root of your web code and run.
+    ```bash
+    npx expo start
+    ```
+1. This will show you a terminal output like this:
+    ![alt_text](/images/docs/tutorials/expo-output.png)
+1. From here you can run the app on an iOS simulator, Android simulator or on your physical device using the Expo Go app. You can also run it in the web browser for testing by pressing the `w` key.
+1. Go to the browser and open `http://localhost:8081`. You should see the app running.
+![alt_text](/images/docs/tutorials/commerce-app.png)
+    <Note>
+      Since we have enabled username and password authentication, you can enter any username and password to get into the app.
+    </Note>
+
+1. Update your profile with your first name, last name and shipping address.
+1. View the product catalog, add items to the cart and view the cart.
+1. View your cart and checkout.
+
+
+<Checkpoint step={9}>
+  You should now have a working e-commerce app.
+</Checkpoint>
+
+## Step 10: Validate the data in Snapser
+- You can go to your Snapend home page, under quick links click on the `User Manager Tool`.
+- Enter the username you used to login to the app and click search.
+- You should see the user you just created and see their details.
+
+<Checkpoint step={10}>
+  Congratulations! You should have a fully working e-commerce mobile app that is integrated with the backend we just created.
+</Checkpoint>

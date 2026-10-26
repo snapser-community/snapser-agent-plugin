@@ -1,0 +1,66 @@
+# beta-0.43.0
+##### December 6, 2024
+
+## Breaking Changes
+- **Batch API Response Consistency**:
+  We have made changes to ensure that the Batch API responses across the following Snaps are now consistent. Please refer to the updated Batch API documentation for more details.
+  - Analytics
+  - Leaderboards
+  - Profile
+  - Storage
+  - Trackables
+
+## Update Recommendations
+- **Swagger Documentation Updates**:
+  All Snaps have been updated with improved Swagger documentation, offering a much better API documentation experience. We recommend updating all Snaps to the latest version. Be sure to check that the changes to Batch API responses will not impact your live environment.
+
+## Snaps
+- **Assets**:
+  We are excited to release the new **Assets** Snap, which allows you to upload, manage, and organize all your user-generated assets—images, audio, and other files—all in one place.
+
+- **Matchmaking**:
+  - The **Matchmaking** Snap has been enhanced to provide more granular control over latency settings. You can now define cascading latency settings within a single rule set.
+  - A new WebSocket event has been added to notify users in candidate matches when someone accepts or declines a match.
+
+- **Notifications**:
+  We have integrated the **Roblox Notifications** system with the Snapser Campaigns technology. This allows you to now schedule notifications for your Roblox users directly from the **Campaigns** tool under the **Notifications** Snap.
+
+- **Remote Config**:
+  The **Remote Config** UI has received a significant upgrade. You can now easily add or remove keys and values directly from the UI, making it simpler to modify both App and User configurations without manually editing large JSON files.
+
+## Web App
+- **API Explorer**:
+  A major update to the **API Explorer** has been implemented. APIs are now better grouped and displayed in a more organized, sorted order for an improved browsing experience.
+
+- **Image Manager**:
+  **Image Manager** now displays the size of your uploaded images, giving you more insight into your BYOSnaps and BYOGs.
+
+- **Snapctl Helper**:
+  A new **Snapctl** helper widget has been added to all relevant pages in the Web App. It will now show you the **Snapctl** command specific to the page you’re on, streamlining your workflow.
+
+- **User Manager Tool**:
+  The **User Manager** tools for **Storage**, **Leaderboards**, and **Quests** have been upgraded. They now include clear indicators showing whether a user is missing any required resources.
+
+## Snapctl
+- **BYOSnap Command**:
+  A new **BYOSnap create/update** command `snapctl byosnap publish` has been added. This command simplifies the process, eliminating the need for the three-step process of creating, updating, and then publishing a BYOSnap.
+
+- **Snapctl Sync Command**:
+  The **`snapctl sync`** command no longer requires the `tag` parameter. You now only need to specify the `version`.
+
+## Bug Fixes
+- **Trackables**:
+  Fixed a bug where the **SetXP** function was not working as expected.
+
+- **Inventory**:
+  Added better default limits to the **GetItems** API in **Inventory**, improving its functionality.
+
+## Documentation
+- **Syntax Highlighter**:
+  All code snippets within the documentation are now enhanced with a syntax highlighter for better readability.
+
+- **API Examples**:
+  Code examples for **Unity** and **Unreal Engine** have been added for all Snaps, making integration even easier.
+
+- **Snapshot UI Updates**:
+  All Snapshots have been updated to reflect the latest UI changes, ensuring consistency across your Snapser environment.

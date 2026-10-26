@@ -1,0 +1,502 @@
+
+export const description =
+  'This guide will help you set up a Unity project with Snapser.'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Unity Realtime Multiplayer Game
+This guide will help you set up a Unity game with Snapser. This is a realtime multiplayer - Red light green light from Squidgames, that uses Snapser’s authentication, hermes (websocket), eventbus, matchmaker, and Mirror Networking. This example is to showcase how to use Snapser in Unity and is not a production ready game.
+
+<Warning>
+    This tutorial requires the `Eventbus` snap which is only available to the Premium Tier customers.
+</Warning>
+
+## Prerequisites
+<div className="parent">
+  <div className="servicesBox">
+    # Install Unity
+
+    Make sure you have Unity installed on your computer. You can download the latest version of Unity from the [Unity website](https://unity.com/products/unity-personal).
+
+    <div>
+      <DocsButton href={'https://unity.com/products/unity-personal'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Download Unity</DocsButton>
+    </div>
+  </div>
+</div>
+
+<Checkpoint step={0}>
+  You are now ready to begin the tutorial.
+</Checkpoint>
+
+## Step 1: Set up your game
+
+To integrate Snapser features into your game, you need to create an account and add your game to it. This section demonstrates how to do that.
+
+<Note>
+  If you have already created a game in Snapser, you can skip this step and proceed to the next one.
+</Note>
+
+1. **Log in to your Snapser account** at https://snapser.com/login.
+2. Navigate to the **Apps dashboard** and click on the **New Game** button located in the upper right corner.
+3. **Enter the name of your game** in the designated field. It's advisable to use a name that closely matches your game's title to avoid confusion among your team members. Click **Add** when done.
+    ![Add new game name](/images/docs/tutorials/create-snapend-add-game.png)
+    <Note>
+    Avoid adding prefixes like "dev", "staging", or "prod". Snapser supports multiple environments for each game, allowing you to create a separate custom backend for each stage of your game development.
+    </Note>
+
+<Checkpoint step={1}>
+  Shortly after, your game will appear in the Apps dashboard, ready for you to build your first custom backend.
+</Checkpoint>
+
+
+## Step 2: Create a Snapend
+
+<Note>
+  If you just completed the Unity single player tutorial, you can use the same Snapend you spun up and just add Matchmaking and Relay snaps, and then enable websockets on the Gateway. If you are following this tutorial without the single player tutorial, please follow the instructions below.
+</Note>
+
+1. In the **Apps dashboard**, click on the game you have added. This action brings up a view that shows the development, staging, and production environments. Since there are currently no Snapends, let's add one.
+![GameClick](/images/docs/tutorials/create-snapend-game.png)
+1. In the Development environment, click on **Create a Snapend**.
+![GameClick](/images/docs/tutorials/create-snapend-game-home.png)
+1. **Enter the name of your Snapend** in the **Name your Snapend** field and click **Continue**.
+    ![Name your Snapend](/images/docs/quick-start/name-your-snapend.png)
+1. On the next page, select the following snaps and then click next:
+   1. Authentication
+   2. Eventbus
+   3. Leaderboards
+   4. Matchmaking
+   5. Parties
+   6. Profiles
+   7. Relay
+   8. Statistics
+   9. Storage
+   ![Cluster](/images/docs/tutorials/unity-rt-snaps.png)
+1. In the **Customize** step, click on the **Gateway** button and toggle **Websockets** to **ON**. This will enable websockets on the Gateway.
+    ![Cluster](/images/docs/tutorials/unity-rt-hermes.png)
+1. Keep clicking **Continue** and then on the Review page click the **Snap It** button. A pop-up window will appear showing you the state of creating your cluster, which takes a moment or two to complete.
+1. As Snapser finishes setting up the Snapser cluster in Kubernetes (which includes infrastructure, configuration of Snaps, network and security, and generating your Snapend), click the **App** button to wait for your Snapend to be operational.
+1. Once the Snapend is ready, you will see a green dot mark on the Snapend widget. This indicates that your Snapend is ready to use.
+![Snap Dashboard](/images/docs/tutorials/create-snapend-cluster-ready.png)
+1. Click on the Snapend widget to go to the Snapend dashboard.
+![Snapend Dashboard](/images/docs/tutorials/unity-rt-snapend-dashboard.png)
+1. **IMPORTANT**: On this page, copy the **Snapend ID**. You will need to replace this in the Unity codebase.
+
+<Checkpoint step={2}>
+  You now have a backend setup. We can now proceed toward downloading our custom SDK, configuring our snaps for our game and then putting it altogether in Unity.
+</Checkpoint>
+
+## Step 3: Configure Snaps
+On your Snapend homepage look for Quick links. Click the **Snaps Configuration** button under **Quick Links** to go to the Snaps configuration home page. Now, lets configure the Snaps one by one.
+
+### A. Authentication Configuration
+<Note>
+    In our Unity game, we want the user to start playing the game without any login friction. This is why we are going to add the anonymous connector. To add the anonymous connector, please follow the instructions below.
+</Note>
+
+1. Click on the **Snaps Configuration** button.
+1. Select the `Authentication > Connectors` tool from the tool navigation and then click on the **Add a connector** button. You will see quite a few connectors in the menu but lets select **Anonymous** and press Save.
+![Add Anonymous Authentication](/images/docs/tutorials/snapend-create-admin-auth-anon.png)
+1. Then click the back button to go back to the configuration home page.
+
+### B. Matchmaking Configuration
+<Note>
+    In our Unity game, we want to setup a Matchmaking profile so that user can be matched with other players. To add the matchmaking profile, please follow the instructions below.
+</Note>
+1. Click on the **Snaps Configuration** button.
+1. Select the `Matchmaking > Match Profiles` tool from the tool navigation.
+1. Here we are going to create one matchmaking profile. Matchmaking profile is what tells the snap the criterion it should look at to match players. Click on the **+ Add Matchmaking profile** button and you will see a pop up form.
+1. Enter the following details in the form:
+    - **Name**: `my_profile`
+    - **Description**: `Unity RT Demo Profile`
+    - **Min Players**: `2`
+    - **Max Players**: `4`
+    - **Match Allocation**: Pick `relay` from the dropdown.
+![Snapend Dashboard](/images/docs/tutorials/unity-rt-matchmaking.png)
+
+### C. Eventbus Configuration
+1. Click on the **Snaps Configuration** button.
+1. Select the `Eventbus > Websocket` tool from the tool navigation.
+1. Toggle all the Events for Matchmaking to `enabled`.
+
+<Note>
+    Why did we add all other snaps when we are only configuring Auth and Matchmaking? The reason is that we will be expanding this tutorial to include more features like Leaderboards, Statistics, and Profiles. So we are adding all the snaps now so that you can follow along in the future.
+</Note>
+
+## Step 4: Download the Snapser SDK
+1. On the Snapend home page scroll down to the SDK download widget called **Game Client SDKs**.
+    - Select **Unity - C#** for the platform
+    - Select **HTTP Client** for the HTTP library
+    - Click Generate
+    ![Unity SDK](/images/docs/tutorials/unity-rt-sdk.png)
+    <Warning>
+        This tutorial uses the HTTP client instead of the UnityWebRequest client because we use sync methods in the Unity game. UnityWebRequest client only supports async methods.
+    </Warning>
+1. In a few minutes you will see a pop up of a Zip file. Download the zip file and extract it.
+1. You will see a folder structure like this:
+```bash
+  ├── sdk-csharp-httpclient-unity/
+    │   ├── api/
+    │   ├── src/
+    │       └── Snapser/ (👈 This is the folder that you are going to need)
+    │       └── link.xml
+    │       └── Snapser.asmdef
+```
+
+<Note>
+You will be copying this `sdk-csharp-httpclient-unity/src/Snapser` folder into your Unity projects `Assets/Packages`folder.
+</Note>
+
+<Checkpoint step={4}>
+  You now have a SDK that is going to be integrated into your Unity project. Lets move on to the next step.
+</Checkpoint>
+
+## Step 5: Download the Unity Project
+1. Talk to Snapser support to get access to this [repo](https://github.com/snapser-community/snapser-demo-unity-rt).
+2. Clone or download this example project and open it in Unity.
+3. After downloading the project you may have a bunch of errors in the console. This is due to the missing Snapser sdk and its dependencies.
+![Unity Project](/images/docs/tutorials/unity-rt-unity-project.png)
+
+## Step 6: Install Dependencies
+<Note>
+    The Unity project comes with all dependencies installed. We still recommend you going through this section.
+</Note>
+In Unity, for the Snapser SDK to work, we need to install a few dependencies. A convenient way to install the dependencies is to use **NuGetForUnity**. This is a convenient nuget interface from within Unity but you can choose to install these dependencies from the Terminal if you wish. Follow these [instructions](https://github.com/GlitchEnzo/NuGetForUnity) to install NuGetForUnity
+
+### Install NuGet packages
+From **Manage NuGet Packages**, Install the following three dependencies -
+    1. Newtonsoft.Json
+    1. Polly
+    1. Microsoft.AspNetCore.Mvc.DataAnnotations
+<Note>
+You may need to restart Unity to access the Nuget via the Unity Toolbar
+These packages will be installed under Assets/Packages in your Unity Project. Also sometimes NuGet installs a different version of DataAnnotations. If it does that please uninstall it from the UI.
+</Note>
+![alt_text](/images/docs/unity/unity-nuget.png)
+
+### Install other dependencies
+Since we want to build a realtime multiplayer game, we need to install the following dependencies as well.
+<Note>
+  The dependencies are already included in the project but if you want to add them by hand, please follow the instructions below:
+</Note>
+- [Mirror](https://github.com/MirrorNetworking/Mirror)
+- [Native Websockets](https://github.com/endel/NativeWebSocket)
+- [ParrelSync](https://github.com/VeriorPies/ParrelSync) (If you want to test the game in multiple instances)
+
+## Step 7: Update the Code
+- Copy the downloaded SDK into the **Assets/Packages** folder. If there is an existing folder in the repo, you can delete it and replace it with the new SDK code.
+```bash
+  ├── sdk-csharp-httpclient-unity/
+    │   ├── api/
+    │   ├── src/
+    │       └── Snapser/ (👈 Copy this folders contents to Assets/Packages/Snapser)
+    │       └── link.xml
+    │       └── Snapser.asmdef
+```
+- Open **GameConstants.cs** in the **Assets/Scripts/Utilities** folder and update the `SNAPEND_ID` variable with your Snapend ID.
+Additionally, make sure that the **Configuration.cs** in the **Assets/Packages/Snapser/Client** also uses your Snapend Id. 
+```csharp
+public static readonly string DefaultClusterURL = "https://gateway.snapser.com/$YOUR_SNAPEND_ID";
+```
+- Update the `SNAPEND_ID` in the **SnapserNetworkManager** Game Objects `Snapser Settings > Snapend URL`.
+  <Note>
+    You will see a URL like this `https://gateway-accel.snapser.com/mm3mebua`. You just need to update the `mm3mebua` part with your Snapend ID.
+  </Note>
+  ![Unity RT NetworkManager](/images/docs/tutorials/unity-rt-network-manager.png)
+
+## Step 8: Understand the Code
+1. Understand how Mirror works. You can check the Mirror documentation [here](https://mirror-networking.gitbook.io/docs).
+1. You should look at **SnapserManager.cs**. This class acts as the link between the game logic and the Snapser sdk.
+1. For the realtime code, to understand how data packets are transferred between peers and the host, open **HermesTransport.cs** in the example project. It is a child class of **Transport.cs** which Mirror uses for data exchange.
+1. Next, understand the **WebsocketConnectionManager.cs** It it mainly responsible for the following:
+    - Create the websocket connection with `Connect(string address)`
+    - Handle connection events such as `OnClose`, `OnOpen`, `OnError` and so on.
+    - Automatically reconnect when the connection drops, like during a Snapend upgrade.
+    - Dispatch message queue in `**FixedUpdate()**`.
+    - Receive and relay incoming messages from the websocket to the corresponding message handlers in **RegisterMessageHandlers**
+```csharp
+public class WebsocketConnectionManager : MonoBehaviour
+{
+    private WebSocket conn;
+
+    private string lastAddress;
+    private bool intentionalClose;
+    private bool migrating;
+    private int reconnectAttempts;
+    private const int MaxReconnectAttempts = 8;
+
+    public static event UnityAction OnConnectionOpened;
+    public static event UnityAction OnConnectionClosed;
+    public static event UnityAction OnConnectionError;
+
+    private void Awake()
+    {
+        enabled = false;
+        DontDestroyOnLoad(this);
+    }
+
+    private void OnDestroy()
+    {
+        enabled = false;
+        intentionalClose = true;
+        conn.Close();
+    }
+
+    private void OnApplicationQuit()
+    {
+        enabled = false;
+        intentionalClose = true;
+        conn.Close();
+    }
+
+    private void FixedUpdate()
+    {
+        if (conn.State == WebSocketState.Open)
+            conn.DispatchMessageQueue();
+    }
+
+    public void Connect(string address)
+    {
+        Debug.Log($"Connecting to {address}...");
+        lastAddress = address;
+        intentionalClose = false;
+        conn = new WebSocket(address);
+
+        // Ride that monobehavior update loop baby
+        // WebsocketUpdater.Initialize(conn);
+        enabled = true;
+
+        RegisterDefaultHandlers();
+        RegisterMessageHandlers();
+
+        conn.Connect();
+    }
+
+    public bool IsConnected()
+    {
+        return conn is { State : WebSocketState.Open };
+    }
+
+    public void Disconnect()
+    {
+        intentionalClose = true;
+        conn.Close();
+    }
+
+    private IEnumerator Reconnect(bool immediate)
+    {
+        if (reconnectAttempts >= MaxReconnectAttempts)
+        {
+            Debug.LogError("WebSocket reconnect attempts exhausted.");
+            OnConnectionError?.Invoke();
+            yield break;
+        }
+        reconnectAttempts++;
+
+        if (!immediate)
+        {
+            // Exponential backoff with jitter, capped at 30 seconds
+            float backoff = Mathf.Min(Mathf.Pow(2f, reconnectAttempts), 30f);
+            yield return new WaitForSeconds(backoff + Random.Range(0f, backoff * 0.5f));
+        }
+
+        Connect(lastAddress);
+    }
+
+    private void RegisterDefaultHandlers()
+    {
+        conn.OnOpen += () =>
+        {
+            // Listeners on OnConnectionOpened should re-establish session-scoped
+            // state (presence, event expectations) in case this is a reconnect.
+            reconnectAttempts = 0;
+            migrating = false; // clear the drain guard so a future drain is handled
+            OnConnectionOpened?.Invoke();
+            Debug.Log("Connection opened!");
+        };
+
+        conn.OnClose += e =>
+        {
+            OnConnectionClosed?.Invoke();
+
+            if (intentionalClose)
+            {
+                Debug.Log("WebSocket closed by client.");
+                return;
+            }
+
+            // 1001 (going away) and 1006 (service restart) mean Hermes is being
+            // upgraded or restarted. A replacement instance is already serving
+            // traffic, so reconnect immediately - this is routine, not an error.
+            var code = (int)e;
+            bool serverMaintenance = code == 1001 || code == 1006;
+            Debug.Log($"WebSocket closed (code {code}). Reconnecting...");
+            StartCoroutine(Reconnect(serverMaintenance));
+        };
+
+        conn.OnError += e =>
+        {
+            OnConnectionError?.Invoke();
+            Debug.LogError("WebSocket error! " + e.ToString());
+        };
+
+        Handlers.MatchHandler.Instance.SetSendClientMessage(async message =>
+                                                            {
+                                                                // Debug.Log("Sending match client message to server ...");
+                                                                if (conn.State == WebSocketState.Open)
+                                                                    await conn.Send(message);
+                                                            });
+
+        Handlers.MatchmakingHandler.Instance.SetSendClientMessage(async message =>
+                                                                  {
+                                                                      Debug.Log("Sending matchmaking client message to server ...");
+                                                                      if (conn.State == WebSocketState.Open)
+                                                                          await conn.Send(message);
+                                                                  });
+
+        Handlers.ErrorHandler.Instance.OnError += (_, args) =>
+        {
+            Debug.LogError("Error received from server! " + args.Error.Message + " " + args.Error.Code);
+        };
+    }
+
+    private void RegisterMessageHandlers()
+    {
+        conn.OnMessage += message =>
+        {
+            var serverMessage = ServerMessage.Parser.ParseFrom(message);
+            switch (serverMessage.MessageType)
+            {
+            case MessageType.GoingAway:
+                // Hermes is draining this instance for an upgrade or restart. Migrate to a
+                // healthy instance now instead of waiting for the force-close at the end of the
+                // grace window. Hermes re-sends this message as the deadline nears, so the
+                // `migrating` guard ensures we only start one reconnect.
+                var goingAway = serverMessage.GoingAway;
+                Debug.Log($"Hermes going away in {goingAway.SecondsUntilForceClose}s ({goingAway.Reason}). Migrating...");
+                if (!migrating)
+                {
+                    migrating = true;
+                    StartCoroutine(Reconnect(true));
+                }
+                break;
+            case MessageType.Error:
+                Handlers.ErrorHandler.Instance.HandleServerMessage(serverMessage);
+                break;
+            case MessageType.Chat:
+                break;
+            case MessageType.Match:
+                Handlers.MatchHandler.Instance.HandleServerMessage(serverMessage);
+                break;
+            case MessageType.Matchmaking:
+                Handlers.MatchmakingHandler.Instance.HandleServerMessage(serverMessage);
+                break;
+            case MessageType.Party:
+                break;
+            default:
+                Debug.LogWarning("Unknown message type! " + serverMessage.MessageType);
+                break;
+            }
+        };
+    }
+}
+```
+<Note>
+  Hermes closes connections with code 1001 or 1006 whenever your Snapend is upgraded, so clients
+  must reconnect automatically. See the
+  [Hermes Connection Lifecycle](/docs/infra/snaps/hermes#connection-lifecycle) for the full
+  reconnect contract.
+</Note>
+
+Lastly, understand **SnapshipNetworkManager.cs** which handles the multiplayer gameplay affecting events on the Mirror side of things.
+```csharp
+public class SpaceshipNetworkManager : NetworkManager
+{
+    public new static SpaceshipNetworkManager singleton { get; private set; }
+
+    [SerializeField, Required] Transform playerSpawnPoint, lightControllerSpawnPoint;
+    [SerializeField, Required]
+    private List<Color> spaceshipColors;
+
+    private GameObject lightController;
+    HermesTransport hermesTransport;
+
+    public HermesTransport HermesTransport => hermesTransport;
+
+    private SnapserManager snapserManager;
+    public SnapserManager SnapserManager => snapserManager;
+    private List<GameObject> players = new List<GameObject>();
+
+    public override void Awake()
+    {
+        base.Awake();
+        singleton = this;
+        hermesTransport = GetComponent<HermesTransport>();
+        snapserManager = new SnapserManager(networkAddress);
+    }
+
+    public override void OnServerAddPlayer(NetworkConnectionToClient conn)
+    {
+        // Add players on all clients after the client is started and add to the server
+        int playerToBeCreatedCount = numPlayers + 1;
+        Vector3 startPosition = new Vector3(playerSpawnPoint.position.x, playerSpawnPoint.position.y - (playerToBeCreatedCount - 1) * 8, playerSpawnPoint.position.z);
+        GameObject player = Instantiate(playerPrefab, startPosition, playerSpawnPoint.rotation);
+        players.Add(player);
+        // Spaceship spaceship = player.GetComponent<Spaceship>();
+        // spaceship.InitializeSpaceship(spaceshipColors[numPlayers]);
+        NetworkServer.AddPlayerForConnection(conn, player);
+        Debug.Log("Player " + numPlayers + " of " + hermesTransport.RelayConnectionsCount + " created at location " + player.transform.position);
+
+        // When all players have been instantiated, instantiated the game light controller for all clients
+        if (numPlayers == hermesTransport.RelayConnectionsCount)
+        {
+            Debug.Log("Creating the game light after " + numPlayers + " of " + hermesTransport.RelayConnectionsCount + " joined and were created.");
+            lightController = Instantiate(spawnPrefabs.Find(prefab => prefab.name == "GameLightController"));
+            Vector3 lightControllerPosition = lightController.transform.position;
+            lightController.transform.position = new Vector3(lightControllerSpawnPoint.position.x,
+                                                             lightControllerPosition.y, lightControllerPosition.z);
+            NetworkServer.Spawn(lightController);
+        }
+    }
+
+    public override void OnServerDisconnect(NetworkConnectionToClient conn)
+    {
+        // Destroy the game light controller when server disconnects
+        if (lightController != null)
+            NetworkServer.Destroy(lightController);
+
+        // Call base functionality (actually destroys the player)
+        base.OnServerDisconnect(conn);
+    }
+
+    public Color GetSpaceshipColor(GameObject player)
+    {
+        if (players.Contains(player))
+        {
+            int playerIndex = players.IndexOf(player) % spaceshipColors.Count;
+            return spaceshipColors[playerIndex];
+        }
+
+        Debug.LogWarning("Game object not found in the player game object lists ");
+        return Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
+    }
+}
+```
+
+## Step 9: Run the game
+1. Run the **Interstellar** scene which can be found in the Project window under Assets/Scenes. Click the play button to start the game.
+1. First you will have to enter any username and click submit.
+1. The game will connect with your backends websocket server and show you a **Join Match** button.
+1. Click on the Join match button and you will get placed into the Matchmaker. At this point, if even one more person is running the game you two will be put into the `Reg light green light` game.
+![alt_text](/images/docs/tutorials/unity-rt-game-1.png)
+![alt_text](/images/docs/tutorials/unity-rt-game-2.png)
+![alt_text](/images/docs/tutorials/unity-rt-game.png)
+
+<Checkpoint step={9}>
+  Congratulations! You should have a fully working game in Unity that is integrated with the backend we just created.
+</Checkpoint>
+
+## Next Steps
+- At the root of the Unity repo you will find a snapser-snapend-manifest.json file. This file is the representation of your Snapend architecture and the configuration. You can essentially just import it in Snapser and skip Steps 2 and 3.

@@ -1,0 +1,59 @@
+# Streaks
+This tool allows you to setup and manage Streaks you want to expose to your game or app. Streaks track consecutive activity windows (e.g. daily logins, weekly check-ins) and grant rewards when the user reaches configured positions.
+
+To get started:
+1. Click on `Streaks` from the side Nav.
+2. Click on the `Add a Streak` button.
+3. You will then see a form where you can add or update your Streak.
+
+## Streak Details
+1. **Name**: Name of the Streak. This is a unique identifier for the Streak. This should be an alphanumeric string without spaces. Once created, the name cannot be changed.
+2. **Metadata**: Optional JSON object that lets you attach UI hints, asset references, or any other data your client may need.
+
+## Length
+1. **Max Length**: Maximum streak position a user can reach. Set to `0` for no maximum. If non-zero, all reward positions must be less than or equal to this value.
+
+## Streak Access
+1. **Scope**: The scope of the Streak. This can be `external` or `internal`. External Streaks can be updated by the client, over app auth. Internal Streaks can only be updated by other snaps within your cluster or using app auth. Both scopes can be read from the client.
+
+## Streak Type
+Streak Type controls how period windows behave. Once a streak has been created, the type cannot be changed — pick the right one up front.
+
+1. **Fixed**: Period windows are anchored to a global schedule. Each window starts at the configured `Offset (seconds)` from UTC midnight (or at UTC midnight if no offset is given) and rolls over when the period duration ends. `Cooldown Duration` does **not** apply to Fixed streaks.
+2. **Rolling Window**: Period windows are tracked per user. As long as the user increments before `Period Duration` (interpreted in the configured Time Unit) elapses, their streak continues. After incrementing, a `Cooldown Duration (seconds)` must elapse before the next increment is allowed.
+
+## Streak Schedule
+1. **Time Unit**: The unit used to interpret Period Duration. Supported values are `seconds`, `minutes`, `hours`, `weeks`, and `months`. Use `months` for long-running monthly streaks. **Rolling Window streaks are locked to `seconds`** — the dropdown disables itself and the field auto-snaps to `seconds` when you select that type, because longer units don't make sense for a per-user rolling window.
+2. **Period Duration**: The length of one window expressed in the selected Time Unit. For a 1-minute streak set Time Unit to `minutes` and Period Duration to `1`. For a monthly streak set Time Unit to `months` and Period Duration to `1`. Required and must be a positive integer for both Fixed and Rolling Window streaks.
+3. **Offset (seconds)**: *(Fixed only)* The offset from UTC midnight at which each window starts. **Always expressed in seconds**, regardless of the Time Unit chosen for Period Duration. Optional — defaults to `0` (UTC midnight).
+4. **Cooldown Duration (seconds)**: *(Rolling Window only)* The time that must pass after an increment before the next increment is allowed. **Always expressed in seconds**, regardless of the Time Unit chosen for Period Duration. Defaults to `0` (no cooldown).
+
+## Rewards
+Streak rewards are **optional** — you can save a streak with no rewards at all (useful for tracking-only streaks).
+
+1. **Add Reward**: Add a reward entry to the Streak. Each entry targets a single streak position and grants its rewards when the user reaches that position.
+2. Each reward position must be **unique**.
+3. Each reward entry **must contain at least one reward item**. An entry with no items is not allowed — either add an item or remove the entry.
+
+## Reward Details
+1. **Name**: Name of the reward entry. This can be a number or a string value such as `daily_5`, `week_2`, `30_in_a_row`.
+2. **At Streak (position)**: The streak position at which this reward is granted. Must be a positive integer. If Max Length is set, must be less than or equal to it.
+3. **Metadata**: Optional JSON object for per-entry UI hints.
+
+## Reward Items
+1. **Reward Type**: Type of the reward. This can be an Inventory Item, Currency, Drop Table, Energy, or XP. Streak rewards **cannot** reference another Streak.
+2. **Reward Name**: Select the reward name from the drop down. The names are automatically populated from the Inventory Snap (Items, Currencies, Drop Tables), from Trackables Energy, and from Trackables XP.
+3. **Sub Inventory Name**: For Item type rewards, you can specify a sub-inventory name where the rewarded item will be stored.
+4. **Quantity**: Quantity of the reward. This should be a positive integer.
+
+## Streak Behavior
+1. **Loop on Complete**: When enabled, the streak restarts from position 1 after the final reward is reached.
+2. **Repeatable Rewards**: When enabled, rewards are re-granted on every loop instead of only the first time. This setting only has an effect when Loop on Complete is enabled.
+
+## Editing a Streak
+The Update operation is a **destructive replace** — the rewards in your payload entirely replace the rewards on the server. The form will warn you if you add, remove, or move a reward entry while editing. Review the diff carefully before saving.
+
+Editing of a streak is allowed but you **cannot change the type** — Fixed and Rolling Window streaks have fundamentally different semantics, and changing one to the other on the fly would break user progress. All other fields (period, offset, cooldown, max length, rewards, behavior toggles, metadata, scope) can be edited.
+
+## Deleting a Streak
+Deleting a Streak permanently removes the configuration and user state associated with it. This action cannot be undone.

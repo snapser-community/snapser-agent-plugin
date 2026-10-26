@@ -1,0 +1,864 @@
+
+export const description =
+  'This guide will help you set up a Web app with Snapser.'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Web App - Social Todo
+This guide will help you set up a Web app with Snapser. This app allows users to create an account, add tasks to their todo list, make todos public so as to share them with other users, and view other users public todo lists.
+
+## Prerequisites
+<div className="parent">
+  <div className="servicesBox">
+    # Install Node and NPM
+
+    Make sure you have installed Node and NPM from [npm website](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
+
+    <div>
+      <DocsButton href={'https://docs.npmjs.com/downloading-and-installing-node-js-and-npm'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Download Node & NPM</DocsButton>
+    </div>
+  </div>
+</div>
+
+<Checkpoint step={0}>
+  You are now ready to begin the tutorial.
+</Checkpoint>
+
+## Step 1: Set up your app
+
+To integrate Snapser features into your app, you need to create an account and add your app to it. This section demonstrates how to do that.
+
+<Note>
+  If you have already created an app in Snapser, you can skip this step and proceed to the next one.
+</Note>
+
+1. **Log in to your Snapser account** at https://snapser.com/login.
+2. Navigate to the **Apps dashboard** and click on the **New App** button located in the upper right corner.
+3. **Enter the name of your app** in the designated field. It's advisable to use a name that closely matches your applications title to avoid confusion among your team members. Click **Add** when done.
+    ![Add new game name](/images/docs/tutorials/create-snapend-add-game.png)
+    <Note>
+    Avoid adding prefixes like "dev", "staging", or "prod". Snapser supports multiple environments for each app, allowing you to create a separate custom backend for each stage of your development.
+    </Note>
+
+<Checkpoint step={1}>
+  Shortly after, your app will appear in the Apps dashboard, ready for you to build your first custom backend.
+</Checkpoint>
+
+
+## Step 2: Create a Snapend
+
+1. In the **Apps dashboard**, click on the app you have added. This action brings up a view that shows the development, staging, and production environments. Since there are currently no Snapends, let's add one.
+![GameClick](/images/docs/tutorials/create-snapend-game.png)
+1. In the Development environment, click on **Create a Snapend**.
+![GameClick](/images/docs/tutorials/create-snapend-game-home.png)
+1. **Enter the name of your Snapend** in the **Name your Snapend** field and click **Continue**.
+    ![Name your Snapend](/images/docs/quick-start/name-your-snapend.png)
+1. On the next page, select the following snaps:
+   1. Authentication
+   2. Storage
+    ![Cluster](/images/docs/tutorials/social-todo-create-snapend.png)
+1. Click **Customize** to continue to the next step. In this tutorial, we are not doing any customization and so click the **Review** button to go to the final step.
+1. At the final step you can review your Snapend details. Next, click the **Snap It** button. A pop-up window will appear showing you the state of creating your cluster, which takes a moment or two to complete.
+1. As Snapser finishes setting up the Snapser cluster in Kubernetes (which includes infrastructure, configuration of Snaps, network and security, and generating your Snapend), click the **App** button to wait for your Snapend to be operational.
+1. Once the Snapend is ready, you will see a green dot mark on the Snapend widget. This indicates that your Snapend is ready to use.
+![Snap Dashboard](/images/docs/tutorials/social-todo-app-view.png)
+1. Click on the Snapend widget to go to the Snapend dashboard.
+![Snapend Dashboard](/images/docs/tutorials/social-todo-snapend-home.png)
+
+<Checkpoint step={2}>
+  You now have a backend setup. We can now proceed toward downloading our custom SDK, configuring our snaps for our app and then putting it altogether.
+</Checkpoint>
+
+## Step 3: Configure Snaps
+On your Snapend homepage look for Quick links. Click the **Snaps Configuration** button under **Quick Links** to go to the Snaps configuration home page. Now, lets configure the Snaps one by one.
+
+### A. Authentication Configuration
+<Note>
+    In our Web app, we want the user to start using the app using username and password as a means to authenticate. This is why we are going to add the `Username password` connector. To add the connector, please follow the instructions below.
+</Note>
+
+1. Click on the **Authentication** widget to open the Auth snaps configuration page.
+1. Select the `Authentication > Connectors` tool from the tool navigation and then click on the **Add a connector** button. You will see quite a few connectors in the menu but lets select **Username Password** and press Save.
+![Add Username Password Authentication](/images/docs/tutorials/social-todo-user-pass-setup.png)
+1. Click `Any Characters` for the password policy and then set the `Min` to `1` and `Max` to `64`.
+    <Note>
+      In real world applications, you should set a strong password policy. Here we are keeping it simple for demo purposes.
+    </Note>
+1. Click Save.
+1. Then click the back button to go back to the configuration home page.
+
+
+### B. Storage Configuration
+<Note>
+    Storage snap allows you to store any non-structured or structured data for your app. In our case we want to store the a blob for storing users private and public todo lists.
+</Note>
+1. Click on the **Storage** widget to open the Storage snaps configuration page.
+1. Select the `Blob Keys` tool from the tool navigation and then click on the **+ Blob Key** button. This will open up a form, where you can add the new blob key.
+1. Lets add the private todo list blob key first.
+   1. `Blob Keys` - `todo_private`
+   1. `Type` - `json`
+   1. `Access Scope` - `external`
+   1. `Access Type` - `private`
+   1. Click Save.
+   ![Storage Private Config](/images/docs/tutorials/social-todo-storage-private.png)
+1. Now lets add the public todo list blob key.
+    1. `Blob Keys` - `todo_public`
+    1. `Type` - `json`
+   1. `Access Scope` - `external`
+   1. `Access Type` - `public`
+    1. Click Save.
+    ![Storage Public Config](/images/docs/tutorials/social-todo-storage-public.png)
+
+<Checkpoint step={3}>
+  We have configured the Authentication, and Storage snaps. Our Snapend is now ready to integrate with our app.
+</Checkpoint>
+
+## Step 4: Download the Snapser SDK
+1. On the Snapend home page scroll down to the SDK download widget called **Game Client SDKs**.
+    - Select **Web - Typescript** for the platform
+    - Select **Fetch** for the HTTP library
+    - Click Generate
+![Web SDK](/images/docs/tutorials/web-game-sdk.png)
+1. In a few minutes you will see a pop up of a Zip file. Download the zip file and extract it.
+1. You will see a folder structure like this:
+```bash
+  ├── sdk-typescript-fetch-web/ (👈 You will copy the contents of this folder)
+    │   ├── api/
+    │   ├── index.ts
+    │   ├── models/
+    │   ├── runtime.ts
+    │       └── Snapser/
+    │       └── link.xml
+    │       └── Snapser.asmdef
+```
+
+<Checkpoint step={4}>
+  You now have a SDK that is going to be integrated into your Web project. Lets move on to the next step.
+</Checkpoint>
+
+## Step 5: Download the Web App
+1. Talk to Snapser support to get access to this [repo](https://github.com/snapser-community/snapser-demo-web-todo-app).
+2. Clone or download this example project.
+
+## Step 6: Install Dependencies
+<Note>
+    The Web project comes with a `package.json` file. We need to install the dependencies using npm. To do that, open a terminal and navigate to the root of the project and run the following command:
+    ```bash
+    cd snapser-demo-web-todo-app
+    npm install
+    ```
+</Note>
+{/* Reached till here */}
+
+## Step 7: Understand the Code
+1. To understand the usage, you should look at `/src/services/SnapserManager.cs`. This class acts as the link between the app logic and the Snapser sdk.
+1. Here you will see stub methods for the following functionalities:
+   1. User authentication
+   2. Creating public and private todo lists
+   3. Updating the Todo list
+   4. Deleting the Todo list
+```typescript
+export type TodoItem = {
+  id: string;
+  text: string;
+  done: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TodoList = {
+  id: string;
+  slug: string;
+  title: string;
+  description?: string;
+  items: TodoItem[];
+  updatedAt: string;
+};
+
+export type SavedList = {
+  todos: TodoList[];
+}
+
+export class SnapserManager {
+  private static currentUserId: string | null = null;
+  private static sessionToken: string | null = null;
+
+  static async login(username: string, password: string): Promise<{ userId: string }> {
+    // TODO: Implement user login with backend authentication
+    console.log('TODO: Implement login for', username);
+
+    // Temporary stub - return a mock user for demo purposes
+    this.currentUserId = `user_${Date.now()}`;
+    localStorage.setItem('currentUserId', this.currentUserId);
+    return {
+      userId: this.currentUserId
+    };
+  }
+
+  static async signup(username: string, password: string): Promise<{ userId: string }> {
+    // TODO: Implement user signup with backend authentication
+    console.log('TODO: Implement signup for', username);
+
+    // Temporary stub - return a mock user for demo purposes
+    this.currentUserId = `user_${Date.now()}`;
+    localStorage.setItem('currentUserId', this.currentUserId);
+    return {
+      userId: this.currentUserId
+    };
+  }
+
+  static getCurrentUserId(): string | null {
+    return this.currentUserId;
+  }
+
+  static async logout(): Promise<boolean> {
+    this.sessionToken = null;
+    this.currentUserId = null;
+    localStorage.removeItem('sessionToken');
+    localStorage.removeItem('currentUserId');
+    return true
+  }
+
+  // JSON blob getters (later will fetch from backend)
+  static async getPublicLists(userId: string): Promise<TodoList[]> {
+    // TODO: Implement get public lists from backend
+    return [];
+  }
+
+  static async getPrivateLists(): Promise<TodoList[]> {
+    // TODO: Implement get private lists from backend
+    return [];
+  }
+
+  static async saveList(visibility: "public" | "private", newList: TodoList[]): Promise<void> {
+    // TODO: Implement save lists from backend
+  }
+
+  static async getList(
+    userId: string,
+    visibility: "public" | "private",
+    slug: string,
+    asUserId?: string
+  ): Promise<TodoList | null> {
+    // TODO: Implement get list with slug from backend
+    return null
+  }
+
+  // CRUD for lists (later persist to backend)
+  static async createList(
+    visibility: "public" | "private",
+    data: { title: string; description?: string; items?: { text: string }[] }
+  ): Promise<TodoList | null> {
+    // TODO: Implement create and save list
+    const slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const newListItem: TodoList = {
+      id: `${visibility}_${Date.now()}`,
+      slug,
+      title: data.title,
+      description: data.description,
+      updatedAt: new Date().toISOString(),
+      items: (data.items || []).map((item, index) => ({
+        id: `todo_${Date.now()}_${index}`,
+        text: item.text,
+        done: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })),
+    };
+    let newList: TodoList[] = []
+    if (visibility === "public") {
+      newList = await this.getPublicLists(this.currentUserId);
+      newList.push(newListItem);
+    } else {
+      newList = await this.getPrivateLists();
+      newList.push(newListItem);
+    }
+    //TODO: Save list to backend
+    return newListItem;
+  }
+
+  static async updateList(
+    visibility: "public" | "private",
+    listId: string,
+    patch: Partial<Pick<TodoList, "title" | "description" | "items">>
+  ): Promise<TodoList> {
+    const lists = visibility === "public"
+      ? await this.getPublicLists(this.currentUserId)
+      : await this.getPrivateLists();
+
+    // const lists = visibility === "public" ? user.publicLists : user.privateLists;
+    const listIndex = lists.findIndex(list => list.id === listId);
+
+    if (listIndex === -1) throw new Error("List not found");
+
+    const updatedList = {
+      ...lists[listIndex],
+      ...patch,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Update slug if title changed
+    if (patch.title) {
+      updatedList.slug = patch.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    lists[listIndex] = updatedList;
+    //Save to the backend
+    return updatedList;
+  }
+
+  static async deleteList(
+    visibility: "public" | "private",
+    listId: string
+  ): Promise<{ success: true }> {
+    const lists = visibility === "public"
+      ? await this.getPublicLists(this.currentUserId)
+      : await this.getPrivateLists();
+    const listIndex = lists.findIndex(list => list.id === listId);
+
+    if (listIndex === -1) throw new Error("List not found");
+
+    lists.splice(listIndex, 1);
+    //Save to the backend
+    return { success: true };
+  }
+
+  // Helper methods for todo items
+  static async addTodoItem(
+    userId: string,
+    visibility: "public" | "private",
+    listId: string,
+    text: string
+  ): Promise<TodoItem> {
+    const lists = visibility === "public"
+      ? await this.getPublicLists(this.currentUserId)
+      : await this.getPrivateLists();
+    const list = lists.find(l => l.id === listId);
+
+    if (!list) throw new Error("List not found");
+
+    const newItem: TodoItem = {
+      id: `todo_${Date.now()}`,
+      text,
+      done: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    list.items.push(newItem);
+    list.updatedAt = new Date().toISOString();
+    //Save to the backend
+    return newItem;
+  }
+
+  static async updateTodoItem(
+    visibility: "public" | "private",
+    listId: string,
+    itemId: string,
+    patch: Partial<Pick<TodoItem, "text" | "done">>
+  ): Promise<TodoItem> {
+    const lists = visibility === "public"
+      ? await this.getPublicLists(this.currentUserId)
+      : await this.getPrivateLists();
+    const list = lists.find(l => l.id === listId);
+
+    if (!list) throw new Error("List not found");
+
+    const itemIndex = list.items.findIndex(item => item.id === itemId);
+    if (itemIndex === -1) throw new Error("Item not found");
+
+    const updatedItem = {
+      ...list.items[itemIndex],
+      ...patch,
+      updatedAt: new Date().toISOString(),
+    };
+
+    list.items[itemIndex] = updatedItem;
+    list.updatedAt = new Date().toISOString();
+    //Save to the backend
+    return updatedItem;
+  }
+
+  static async deleteTodoItem(
+    userId: string,
+    visibility: "public" | "private",
+    listId: string,
+    itemId: string
+  ): Promise<{ success: true }> {
+    const lists = visibility === "public"
+      ? await this.getPublicLists(this.currentUserId)
+      : await this.getPrivateLists();
+    const list = lists.find(l => l.id === listId);
+
+    if (!list) throw new Error("List not found");
+
+    const itemIndex = list.items.findIndex(item => item.id === itemId);
+    if (itemIndex === -1) throw new Error("Item not found");
+
+    list.items.splice(itemIndex, 1);
+    list.updatedAt = new Date().toISOString();
+    //Save to the backend
+    return { success: true };
+  }
+}
+
+```
+We will be implementing these methods in the next step.
+
+## Step 8: Update the Code
+- Copy the downloaded SDK contents into the `src/snapser-sdk` folder. If there is an existing folder in the repo, you can delete it and replace it with the new SDK code.
+```bash
+  ├── sdk-typescript-fetch-web/ (👈 You will copy the contents of this folder)
+    │   ├── api/
+    │   ├── index.ts
+    │   ├── models/
+    │   ├── runtime.ts
+    │       └── Snapser/
+    │       └── link.xml
+    │       └── Snapser.asmdef
+```
+
+<Note>
+You will be copying the contents `sdk-typescript-fetch-web` folder into your Web projects `src/snapser-sdk`folder. You will have to create the `snapser-sdk` folder if it does not exist.
+</Note>
+
+- Open **SnapserManager.ts** in the `src/services/` folder and update its contents with the following.
+```typescript
+import { AuthLogoutRequest, AuthServiceApi, AuthUsernamePasswordLoginOperationRequest, AuthUsernamePasswordLoginRequest, AuthUsernamePasswordLoginResponse, ReplaceJsonBlobRequest, StorageGetJsonBlobRequest, StorageGetJsonBlobRequestAccessTypeEnum, StorageGetJsonBlobResponse, StorageReplaceJsonBlobRequest, StorageReplaceJsonBlobRequestAccessTypeEnum, StorageServiceApi } from "@/snapser-sdk";
+
+// src/services/SnapserManager.ts
+export type TodoItem = {
+  id: string;
+  text: string;
+  done: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TodoList = {
+  id: string;
+  slug: string;
+  title: string;
+  description?: string;
+  items: TodoItem[];
+  updatedAt: string;
+};
+
+export type SavedList = {
+  todos: TodoList[];
+}
+
+export class SnapserManager {
+  private static authApi = new AuthServiceApi();
+  private static storageApi = new StorageServiceApi();
+  private static currentUserId: string | null = null;
+  private static sessionToken: string | null = null;
+
+  static async login(username: string, password: string): Promise<{ userId: string }> {
+    try {
+      const loginBody: AuthUsernamePasswordLoginRequest = {
+        username: username,
+        password: password,
+        createUser: false,
+      };
+
+      const request: AuthUsernamePasswordLoginOperationRequest = {
+        body: loginBody
+      };
+
+      const response: AuthUsernamePasswordLoginResponse = await this.authApi.authUsernamePasswordLogin(request);
+
+      if (response.user) {
+        //Save to local storage or memory
+        localStorage.setItem('sessionToken', response.user.sessionToken || '');
+        localStorage.setItem('currentUserId', response.user.id || '');
+        this.sessionToken = response.user.sessionToken || null;
+        this.currentUserId = response.user.id || null;
+        return {
+          userId: response.user.id || '',
+        };
+      }
+      throw new Error("Invalid credentials");
+    } catch (error) {
+      console.error('Login failed:', error);
+      return null;
+    }
+  }
+
+  static async signup(username: string, password: string): Promise<{ userId: string }> {
+    try {
+      const loginBody: AuthUsernamePasswordLoginRequest = {
+        username: username,
+        password: password,
+        createUser: true,
+      };
+
+      const request: AuthUsernamePasswordLoginOperationRequest = {
+        body: loginBody
+      };
+
+      const response: AuthUsernamePasswordLoginResponse = await this.authApi.authUsernamePasswordLogin(request);
+
+      if (response.user) {
+        localStorage.setItem('sessionToken', response.user.sessionToken || '');
+        localStorage.setItem('currentUserId', response.user.id || '');
+        this.currentUserId = response.user.id || null;
+        this.sessionToken = response.user.sessionToken || null;
+        return {
+          userId: response.user.id || '',
+        };
+      }
+      throw new Error("Invalid credentials");
+    } catch (error) {
+      console.error('Login failed:', error);
+      return null;
+    }
+  }
+
+  static getCurrentUserId(): string | null {
+    if (!this.currentUserId) {
+      this.currentUserId = localStorage.getItem('currentUserId');
+    }
+    if (!this.sessionToken) {
+      this.sessionToken = localStorage.getItem('sessionToken');
+    }
+    return this.currentUserId;
+  }
+
+  static async logout(): Promise<boolean> {
+    const authLogoutRequestData: AuthLogoutRequest = {
+      token: this.sessionToken || undefined,
+      token2: this.sessionToken || undefined,
+    };
+    await this.authApi.authLogout(authLogoutRequestData);
+    this.sessionToken = null;
+    this.currentUserId = null;
+    localStorage.removeItem('sessionToken');
+    localStorage.removeItem('currentUserId');
+    return true
+  }
+
+  // JSON blob getters (later will fetch from backend)
+  static async getPublicLists(userId: string): Promise<TodoList[]> {
+    if (!this.sessionToken) {
+      console.error('No session token available');
+      return [];
+    }
+
+    try {
+      const request: StorageGetJsonBlobRequest = {
+        ownerId: userId,
+        accessType: StorageGetJsonBlobRequestAccessTypeEnum.Protected,
+        jsonBlobKey: 'todo_public',
+        token: this.sessionToken
+      };
+
+      const response: StorageGetJsonBlobResponse = await this.storageApi.storageGetJsonBlob(request);
+
+      const todosResponse = (response.value as SavedList) || { todos: [] };
+      return (todosResponse.todos as TodoList[]) || [];
+    } catch (error) {
+      console.error('Failed to get user data:', error);
+      return [];
+    }
+  }
+
+  static async getPrivateLists(): Promise<TodoList[]> {
+    if (!this.sessionToken || !this.currentUserId) {
+      console.error('No session token available');
+      return [];
+    }
+
+    try {
+      const request: StorageGetJsonBlobRequest = {
+        ownerId: this.currentUserId,
+        accessType: StorageGetJsonBlobRequestAccessTypeEnum.Private,
+        jsonBlobKey: 'todo_private',
+        token: this.sessionToken
+      };
+
+      const response: StorageGetJsonBlobResponse = await this.storageApi.storageGetJsonBlob(request);
+      const todosResponse = (response.value as SavedList) || { todos: [] };
+      return (todosResponse.todos as TodoList[]) || [];
+    } catch (error) {
+      console.error('Failed to get user data:', error);
+      return [];
+    }
+  }
+
+  static async saveList(visibility: "public" | "private", newList: TodoList[]): Promise<void> {
+    if (!this.sessionToken || !this.currentUserId) {
+      console.error('No session token available');
+      return;
+    }
+
+    try {
+      const newSavedList: SavedList = {
+        todos: newList
+      }
+      // Save to backend
+      const replaceBody: ReplaceJsonBlobRequest = {
+        value: newSavedList,
+        create: true
+      };
+
+      const request: StorageReplaceJsonBlobRequest = {
+        ownerId: this.currentUserId,
+        accessType: visibility === 'public' ? StorageReplaceJsonBlobRequestAccessTypeEnum.Protected : StorageReplaceJsonBlobRequestAccessTypeEnum.Private,
+        jsonBlobKey: visibility === 'public' ? 'todo_public' : 'todo_private',
+        token: this.sessionToken,
+        body: replaceBody
+      };
+
+      await this.storageApi.storageReplaceJsonBlob(request);
+    } catch (error) {
+      console.error('Failed to save fastest time:', error);
+    }
+  }
+
+  static async getList(
+    userId: string,
+    visibility: "public" | "private",
+    slug: string,
+    asUserId?: string
+  ): Promise<TodoList | null> {
+    if (visibility === "private" && asUserId !== userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const lists = visibility === "public"
+      ? await this.getPublicLists(userId)
+      : await this.getPrivateLists();
+
+    return lists.find(list => list.slug === slug) || null;
+  }
+
+  // CRUD for lists (later persist to backend)
+  static async createList(
+    visibility: "public" | "private",
+    data: { title: string; description?: string; items?: { text: string }[] }
+  ): Promise<TodoList | null> {
+    if (!this.sessionToken || !this.currentUserId) {
+      console.error('No session token available');
+      return null;
+    }
+
+    const slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const newListItem: TodoList = {
+      id: `${visibility}_${Date.now()}`,
+      slug,
+      title: data.title,
+      description: data.description,
+      updatedAt: new Date().toISOString(),
+      items: (data.items || []).map((item, index) => ({
+        id: `todo_${Date.now()}_${index}`,
+        text: item.text,
+        done: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })),
+    };
+    let newList: TodoList[] = []
+    if (visibility === "public") {
+      newList = await this.getPublicLists(this.currentUserId);
+      newList.push(newListItem);
+    } else {
+      newList = await this.getPrivateLists();
+      newList.push(newListItem);
+    }
+    await this.saveList(visibility, newList);
+    return newListItem;
+  }
+
+  static async updateList(
+    visibility: "public" | "private",
+    listId: string,
+    patch: Partial<Pick<TodoList, "title" | "description" | "items">>
+  ): Promise<TodoList> {
+    if(!this.sessionToken || !this.currentUserId) {
+      console.error('No session token available');
+      throw new Error("Unauthorized");
+    }
+
+    const lists = visibility === "public"
+      ? await this.getPublicLists(this.currentUserId)
+      : await this.getPrivateLists();
+
+    // const lists = visibility === "public" ? user.publicLists : user.privateLists;
+    const listIndex = lists.findIndex(list => list.id === listId);
+
+    if (listIndex === -1) throw new Error("List not found");
+
+    const updatedList = {
+      ...lists[listIndex],
+      ...patch,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Update slug if title changed
+    if (patch.title) {
+      updatedList.slug = patch.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    lists[listIndex] = updatedList;
+    await this.saveList(visibility, lists);
+
+    return updatedList;
+  }
+
+  static async deleteList(
+    visibility: "public" | "private",
+    listId: string
+  ): Promise<{ success: true }> {
+    if (!this.sessionToken || !this.currentUserId) {
+      console.error('No session token available');
+      throw new Error("Unauthorized");
+    }
+
+    const lists = visibility === "public"
+      ? await this.getPublicLists(this.currentUserId)
+      : await this.getPrivateLists();
+    const listIndex = lists.findIndex(list => list.id === listId);
+
+    if (listIndex === -1) throw new Error("List not found");
+
+    lists.splice(listIndex, 1);
+    await this.saveList(visibility, lists);
+    return { success: true };
+  }
+
+  // Helper methods for todo items
+  static async addTodoItem(
+    userId: string,
+    visibility: "public" | "private",
+    listId: string,
+    text: string
+  ): Promise<TodoItem> {
+    if(!this.sessionToken || !this.currentUserId) {
+      console.error('No session token available');
+      throw new Error("Unauthorized");
+    }
+
+    const lists = visibility === "public"
+      ? await this.getPublicLists(this.currentUserId)
+      : await this.getPrivateLists();
+    const list = lists.find(l => l.id === listId);
+
+    if (!list) throw new Error("List not found");
+
+    const newItem: TodoItem = {
+      id: `todo_${Date.now()}`,
+      text,
+      done: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    list.items.push(newItem);
+    list.updatedAt = new Date().toISOString();
+    await this.saveList(visibility, lists);
+
+    return newItem;
+  }
+
+  static async updateTodoItem(
+    visibility: "public" | "private",
+    listId: string,
+    itemId: string,
+    patch: Partial<Pick<TodoItem, "text" | "done">>
+  ): Promise<TodoItem> {
+    if(!this.sessionToken || !this.currentUserId) {
+      console.error('No session token available');
+      throw new Error("Unauthorized");
+    }
+
+    const lists = visibility === "public"
+      ? await this.getPublicLists(this.currentUserId)
+      : await this.getPrivateLists();
+    const list = lists.find(l => l.id === listId);
+
+    if (!list) throw new Error("List not found");
+
+    const itemIndex = list.items.findIndex(item => item.id === itemId);
+    if (itemIndex === -1) throw new Error("Item not found");
+
+    const updatedItem = {
+      ...list.items[itemIndex],
+      ...patch,
+      updatedAt: new Date().toISOString(),
+    };
+
+    list.items[itemIndex] = updatedItem;
+    list.updatedAt = new Date().toISOString();
+    await this.saveList(visibility, lists);
+    return updatedItem;
+  }
+
+  static async deleteTodoItem(
+    userId: string,
+    visibility: "public" | "private",
+    listId: string,
+    itemId: string
+  ): Promise<{ success: true }> {
+    if(!this.sessionToken || !this.currentUserId) {
+      console.error('No session token available');
+      throw new Error("Unauthorized");
+    }
+
+    const lists = visibility === "public"
+      ? await this.getPublicLists(this.currentUserId)
+      : await this.getPrivateLists();
+    const list = lists.find(l => l.id === listId);
+
+    if (!list) throw new Error("List not found");
+
+    const itemIndex = list.items.findIndex(item => item.id === itemId);
+    if (itemIndex === -1) throw new Error("Item not found");
+
+    list.items.splice(itemIndex, 1);
+    list.updatedAt = new Date().toISOString();
+    await this.saveList(visibility, lists);
+    return { success: true };
+  }
+}
+```
+
+<Note>
+  We have added a commented out version of the code above in a file called `TODO_Update_SnapserManager.ts` in the same folder. You can copy the contents of that file and replace the contents of `SnapserManager.ts` file with it.
+  Additionally, we highly recommend you to go through the code and understand how the Snapser SDK is being used.
+</Note>
+
+<Checkpoint step={8}>
+  At this point, try compiling the app and it should work without any errors. If you see any errors, please check the console and make sure you have installed the dependencies correctly.
+</Checkpoint>
+
+## Step 9: Run the app
+1. Go to the root of your web code and run.
+    ```bash
+    npm run dev
+    ```
+
+2. Go to the browser and open `http://localhost:8080`. You should see the app running.
+![alt_text](/images/docs/tutorials/social-todo-app.png)
+    <Note>
+      Since we have enabled username and password authentication, you can enter any username and password to get into the app.
+    </Note>
+
+3. Create a few private and public todo lists and see how the data is being saved in the backend. Take note of the users sharable link for their public todo lists.
+4. Create an account with a different username and hit the URL of the public todo list created by the first user. You should be able to see the public todo list of the first user.
+
+
+<Checkpoint step={9}>
+  You should now have a working education app.
+</Checkpoint>
+
+## Step 10: Validate the data in Snapser
+- You can go to your Snapend home page, under quick links click on the `User Manager Tool`.
+- Enter the username you used to login to the app and click search.
+- You should see the user you just created and see their details.
+
+<Checkpoint step={10}>
+  Congratulations! You should have a fully working web app that is integrated with the backend we just created.
+</Checkpoint>

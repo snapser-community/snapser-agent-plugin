@@ -1,0 +1,47 @@
+# 1.15.0
+##### September 25, 2026
+
+## Spotlight
+1. **Protected fleet regions** — every game server fleet region now has a protected sibling. A fleet in a protected region runs behind Snapser's global edge network instead of sitting on the public internet. You get always-on DDoS protection and a private backbone path to your servers, with no code changes.
+2. **Multi-tab Web App** — the Web App keeps a separate context in every browser tab. Open one Snapend in one tab and a different Snapend in another. Neither tab moves the other any more.
+
+---
+
+## Snaps
+
+### Game Server Fleets
+1. **Protected regions** — `oregon-ga`, `nvirginia-ga`, `frankfurt-ga`, `saopaulo-ga` and `singapore-ga` join the Regions list. You pick them per environment. Keep a standard region for Development and protect Production. See [Protected Fleet Regions](/docs/infra/snaps/game-server-fleets#protected-fleet-regions).
+   <Note>
+   A protected region adds data transfer out (DTO) charges for edge traffic, on top of your fleet's compute cost. The rate is per region.
+   </Note>
+2. **Fixed ports in protected regions** — a fleet with at least one protected region uses port `7777` for ingress and port `7778` for debug. The edge network forwards traffic on those two ports only. Ports are a fleet-level setting, so one protected region fixes the ports for every environment.
+3. **Ping endpoints for protected regions** — each protected region has its own UDP ping host on port `50000`. The hostname follows the existing pattern, such as `ping.frankfurt-ga.stratos.snapser.com`. Measure the sibling your fleet runs in.
+
+### Matchmaking
+1. **Protected regions in latency matching** — `GetPingUrls` returns a ping url for each protected region. The `latency_args` map keys them by their suffixed region Id. A standard region and its protected sibling are two entries with two separate latencies.
+
+---
+
+## Web App
+
+### Game Server Fleets
+1. **Server Ports moved to the bottom of the fleet form** — the section sits below the Configuration tabs. What you can enter depends on the regions you pick there. Selecting a protected region fills in `7777` and `7778` and locks both fields.
+2. **Globe shows protected regions** — the Snapend globe marks protected fleet regions apart from standard ones. It also marks your game services region and your relay regions. A region and its protected sibling share one marker.
+
+### Snap Tools
+1. **Environment tabs open collapsed** — a Snap Tool opens on the environment of the Snapend you are in, with the other environment tabs hidden. A link reveals them when you want to pre-configure another environment. A Production Snapend never configures other environments, so it drops the tabs entirely.
+2. **BYOSnap Snap Tools for non-engineering view modes** — the Designer, Product, QA and Producer view modes now see BYOSnap Snap Tools in the Snapend navigation.
+
+### Bug Fixes
+1. **User Manager statistics** — the Statistics section of User Manager did not load. Fixed.
+
+---
+
+## Snapctl
+
+### Commands
+#### BYOGS
+1. **Tag length limit** — `snapctl byogs publish` and `snapctl byogs sync` accepted tags longer than Snapser can deploy. `--tag` is now limited to 46 characters on both commands. A longer tag fails before the Docker build starts.
+<Note>
+Kubernetes caps the full pushed tag at 63 characters. `publish` pushes `byogs.<tag>` and `sync` pushes `byogs.<tag>-<timestamp>`. One limit covers both commands, so the same tag works with either.
+</Note>

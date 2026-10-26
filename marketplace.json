@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "snapser-plugins",
+  "owner": {
+    "name": "Snapser",
+    "email": "aj@snapser.com"
+  },
+  "metadata": {
+    "description": "Snapser plugin marketplace for Claude Code",
+    "version": "1.16.0"
+  },
+  "plugins": [
+    {
+      "name": "snapser",
+      "source": "./",
+      "description": "Build and manage game backends with Snapser \u2014 create Snapends, publish BYOSnaps, sync game servers and download SDKs directly from Claude Code.",
+      "version": "1.16.0"
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+# Add a Queue
+
+This tool allows you to add a new message queue to your game or app and manage
+its dead-letter queue. Creating a queue provisions its underlying streams
+atomically.
+
+To get started:
+
+1. Click on `Queues` from the side Nav.
+2. Click on the `Queue` button.
+
+<Note>
+  Each snapend can have a **maximum of 3 queues**. The tool shows your current
+  count, and the `Queue` button is disabled once you reach the limit. Delete a
+  queue to free up a slot.
+</Note>
+
+## Summary
+
+1. **Name**: The name of the queue. This should start with an alphanumeric
+   character and contain only letters, numbers, dashes, or underscores (max 80
+   characters). It is **immutable** after creation.
+2. **Type**: The type of the queue. It is **immutable** after creation.
+   - **Standard** - Best-effort ordering with high throughput.
+   - **FIFO** - Strictly ordered (one in-flight at a time) and dedups on enqueue.
+
+<Note>
+  Because name and type are immutable, change them by deleting and recreating the
+  queue.
+</Note>
+
+## Action
+
+1. **Action type**: How a dequeued message is delivered.
+   - **Pull** - Consumers long-poll the queue and acknowledge messages themselves.
+   - **Deliver** - The snap performs an HTTP `POST` to a target BYOSnap.
+   - **Emit** - The message is published onto the EventBus.
+2. **Target BYOSnap** (deliver only): The target BYOSnap id, e.g. `byosnap-rewards`.
+   The snap dials the in-cluster service `service-<byosnap>`.
+3. **Path** (deliver only): The HTTP path POSTed to on the target BYOSnap, e.g.
+   `/v1/byosnap-rewards/grant`. It must start with `/`.
+4. **Max attempts** (deliver only): Number of delivery attempts (0..100, default
+   5) before a message is dead-lettered.
+5. **Auto-ack**: At-most-once delivery. Only available for pull and deliver
+   queues. On pull it acks on dequeue; on deliver it is fire-and-forget (no retry
+   or dead-lettering).
+
+## Retention (TTL)
+
+1. **Queue retention**: Stream retention. Enter a number and pick a unit
+   (minutes, hours, or days); the tool converts it to seconds for you. Ranges
+   from 1 minute up to 14 days and defaults to 4 days.
+2. **Message TTL**: Per-message TTL, entered with the same minutes/hours/days
+   selector. Set it to `0` to disable it; it must be less than or equal to the
+   queue retention.
+
+## Dequeue Rate
+
+1. **Unlimited**: When checked, no rate limit is applied.
+2. **Rate (messages / second)**: Messages dequeued per second. Must be greater
+   than 0 when not unlimited.
+3. **Burst**: Burst allowance on top of the rate.
+
+## Back-pressure
+
+1. **Backlog high-water mark**: The depth at which enqueues are rejected with
+   back-pressure (HTTP `429`). Set to `0` for unlimited.
+
+## The queues table
+
+Each row shows the queue's current **depth** (live message count, from the
+queue's stats). If a queue has any dead-lettered messages, its name is flagged
+with a ⚠️ warning icon and the **Dead Letters** action shows the count — a cue to
+open the drawer and triage them. Use the refresh button in the header to pull
+fresh depths.
+
+## Dead Letters
+
+Each queue row has a `Dead Letters` action that opens the dead-letter drawer.
+From there you can:
+
+1. **Inspect** dead-lettered messages along with the DLQ depth, size, and the age
+   of the oldest message.
+2. **Requeue selected** or **Requeue all** to move messages back onto the main
+   queue. Requeued messages get a fresh hop count and TTL.
+3. **Delete selected** to permanently remove specific messages without requeuing.
+4. **Clear DLQ** to purge the entire dead-letter stream.
+
+<Note>
+  Deleting a queue tears down its streams and discards all in-flight and
+  backlogged messages, including its dead letters.
+</Note>

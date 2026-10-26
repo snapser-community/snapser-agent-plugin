@@ -1,0 +1,98 @@
+export const description = 'API Explorer'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# API Explorer
+
+## About
+Each Snap in Snapser exposes a set of APIs that can be used to interact with the Snap.
+These APIs can be used to perform various operations such as creating, updating,
+deleting, and retrieving data from the Snap. Snapser provides an API tool called API Explorer that allows you to make API calls to your backend services. This tool allows you to interact with your backend services without having to write any code. It is
+designed to be easy to use and provides a simple interface for making API calls.
+
+## BYOSnaps
+
+If you have an OpenAPI 3.X swagger.json at the root of your Private snap code folder or
+in the path your provided via the `--resources-path` input, when you
+publish the Snap using our CLI, you will get the API explorer functionality
+out of the box.
+
+<Note>
+  It should be noted that the API Explorer runs in a browser, so ensure that your APIs are CORS enabled.
+  Without this, you will see the APIs in the explorer but will not be able to make calls.
+</Note>
+
+## Accessing the API Explorer
+- To access the API Explorer go to your Snapend home page and click on the **API Explorer** button under the **Quick Links** section.
+      ![Snapend Dashboard](/images/docs/tutorials/create-snapend-snapend-dashboard.png)
+- Clicking on the **API Explorer** button will take you to the API explorer home page. Here you will see a list of all the Snaps that are part of your Snapend.
+      ![Snapend Pic](/images/docs/tutorials/snapend-tools-api-home.png)
+- Click on the Snap you want to explore. This will take you to the API explorer page for that Snap.
+
+## Usage
+The API explorer is divided into three sections:
+1. **API List**: This is where you will find all the APIs exposed by the snap.
+   You can click on any API to load the API explorer widget with the API details.
+2. **API Widget**: This is where you can enter the required parameters and make
+   the API call.
+3. **API Documentation**: This is where you will find the API documentation. Here you will find the description of the API and information about the expected request and response parameters. Additionally, you will also see an example payload for certain requests along with the request and response schema.
+![Snapend Pic](/images/docs/tutorials/snapend-tools-api-auth.png)
+
+## Explorer Tools
+The API Explorer also comes with four handy tools. Click on the icons on the right side of the API explorer widget to toggle these tools.
+   ![API Explorer](/images/docs/tutorials/snapend-tools-api-sub-tools.png)
+
+
+1. **Stream Tool** - If you have **Web sockets** enabled on your gateway and have the **Event bus snap** in your Snapend, this tool allows you to view events that are getting emitted for the user.
+   ![Streaming Tool](/images/docs/api-explorer-streaming-tool.png)
+   <Note>
+      Do not forget to toggle the events you want to listen to in the Event bus configuration tool. By default, all events are toggled off.
+   </Note>
+1. **API History Tool** - This tool is extremely handy if you are using testing multiple APIs in the API Explore. This tool has 3 main tabs and a setting tab.
+   - **Users Tab**: Automatically detects any users that are create when you use the Authentication Snaps Login APIs. It also provides copy buttons for the user Id and token.
+   - **API Calls Tab**: All calls made via the API explorer are tracked here. You will see the HTTP method, the response code as well as all of the call details.
+   - **Variables Tab**: This tab shows you all the variables that are available in the API explorer. Variables are added with the dot notation `{{.user_one_id}}` and are available in the API explorer. You can use these variables in your API calls to make them dynamic.
+   ![History Tool](/images/docs/api-explorer-history-tool.png)
+3. **Curl tool** - This tool shows the CURL command for the request you are making. This is a great way to see how the API call is being made under the hood. You can also copy the CURL command and use it in your terminal.
+   ![Code Widget](/images/docs/api-explorer-curl-tool.png)
+1. **Cache Tool toggle** - If turned on, Snapser will cache your requests inputs, allowing you to quickly make the same request again without having to re-enter all the parameters.
+
+<Note>
+   IMPORTANT: All these three tools, store their data in local storage. It is not something that is stored remotely on the Snapser servers.
+</Note>
+
+## Response Details
+On making a request, the API explorer will display:
+- The HTTP Response Code
+- Response time in milliseconds
+- The payload size
+- Actual received payload
+
+![Explorer Pic](/images/docs/api-explorer-response.png)
+<Note>
+The API Explorer runs in the browser. If you are using the API Explorer for your BYOSnap APIs, please make sure your BYOSnaps have CORS enabled. Else you will not be able to make API calls via the explorer. Although calls from the SDK should still work.
+</Note>
+
+## API Explorer Variables
+The API explorer allows you to store and use variables in your API calls. This is useful when you are testing multiple APIs and want to use the same values in different API calls. The variables are stored in the API explorer and can be accessed using the dot notation.
+
+### Saving Variables
+To save a variable you have two options:
+1. Hover over the variable from the response of an API call. This will show a pop up with the option to save the variable. Here you have to give your variable a name.
+   ![SaveVariable](/images/docs/api-explorer-variables.png)
+1. Manually add a variable using the API Explorer Recorder tool.
+   ![ManualVariable](/images/docs/api-explorer-variables-manual.png)
+
+### Using Variables
+To use a variable in your API call, you can use the dot notation. For example, if you have a variable called `user_id_a`, you can access it using `{{.user_id_a}}`. This will replace the variable with the actual value when making the API call.
+   ![VariableUse](/images/docs/api-explorer-variables-use.png)
+<Warning>
+   Snapser keeps your API explorer variables in local storage. This means that if you clear your browser cache, you will lose all your variables. So be careful when using this feature.
+</Warning>
+
+## FAQs
+### Can I use the API Explorer to talk to any server outside Snapser?
+
+At the moment, we enforce that you can only use the API explorer to talk to services that are published on Snapser. We do this to ensure that we can provide you with the best experience possible. In the future we may end up splitting for this to be its own standalone tool. But we have no immediate plans for this.

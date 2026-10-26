@@ -1,0 +1,30 @@
+# Experiments Exclusion Groups
+Use exclusion groups to keep experiments from overlapping on the same players. When experiments are in the same group, a player who qualifies for multiple experiments is enrolled in only one of them (and stays there for the group’s duration). This avoids conflicting treatments, cross-contamination, and double counting—so attribution stays clean and comparisons are fair.
+
+<Note>
+Exclusion groups reduce interaction bias, but they do **not** guarantee statistical significance. Because traffic is split across experiments in a group, each experiment may need more time (or higher traffic) to reach significance.
+</Note>
+
+## When to use
+- You have multiple experiments that could target the same players.
+- You want to prevent interaction effects between experiments.
+- You need clean attribution for uplift without cross-experiment bleed.
+
+## How it works
+- Add two or more experiments to the same exclusion group.
+- If a player qualifies for more than one, they’re assigned to exactly one experiment in that group.
+- That assignment is sticky for the lifetime of the group (or the experiment, depending on your project settings).
+
+## To get started:
+1. Click on  experiments from the left hand nav and then click on the **Add an exclusion group** button
+2. This will open up a form where you can add a new experiment.
+
+## Exclusion Group Details
+An exclusion group contains a name and description for easy housekeeping.
+
+- **Name** - Give your exclusion group a unique name. This can be an alphanumeric string and is a mandatory field.
+- **Description** - Give your exclusion group an optional description.
+
+<Note>
+After creating an exclusion group, you will be able to select it in the experiment exclusion settings.
+</Note>

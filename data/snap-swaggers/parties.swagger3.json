@@ -1,0 +1,1721 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "A service for managing ephemeral groups of players",
+    "title" : "Parties",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "PartiesService"
+  } ],
+  "paths" : {
+    "/v1/parties/invites/{invite_id}/accept" : {
+      "post" : {
+        "description" : "Accepts a party invite",
+        "operationId" : "AcceptInvite",
+        "parameters" : [ {
+          "description" : "ID of the invite",
+          "explode" : false,
+          "in" : "path",
+          "name" : "invite_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AcceptInvite_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesAcceptInviteResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party Member",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ],
+        "x-snapser-exclude-from-legacy-sdk" : true
+      }
+    },
+    "/v1/parties/invites/{invite_id}/accept-party" : {
+      "post" : {
+        "description" : "Accepts a party invite",
+        "operationId" : "AcceptPartyInvite",
+        "parameters" : [ {
+          "description" : "ID of the invite",
+          "explode" : false,
+          "in" : "path",
+          "name" : "invite_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AcceptInvite_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesAcceptInviteResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party Member",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ],
+        "x-snapser-exclude-from-non-legacy-sdk" : true
+      }
+    },
+    "/v1/parties/invites/{invite_id}/decline" : {
+      "post" : {
+        "description" : "Declines a party invite",
+        "operationId" : "DeclineInvite",
+        "parameters" : [ {
+          "description" : "ID of the invite",
+          "explode" : false,
+          "in" : "path",
+          "name" : "invite_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DeclineInvite_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesDeclineInviteResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party Member",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ],
+        "x-snapser-exclude-from-legacy-sdk" : true
+      }
+    },
+    "/v1/parties/invites/{invite_id}/decline-party" : {
+      "post" : {
+        "description" : "Declines a party invite",
+        "operationId" : "DeclinePartyInvite",
+        "parameters" : [ {
+          "description" : "ID of the invite",
+          "explode" : false,
+          "in" : "path",
+          "name" : "invite_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DeclineInvite_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesDeclineInviteResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party Member",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ],
+        "x-snapser-exclude-from-non-legacy-sdk" : true
+      }
+    },
+    "/v1/parties/list" : {
+      "post" : {
+        "description" : "Returns a list of public parties. Api-key and internal calls return all parties, including private ones.",
+        "operationId" : "ListParties",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/partiesListPartiesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesListPartiesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Parties",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/parties/parties" : {
+      "post" : {
+        "description" : "Creates a party",
+        "operationId" : "CreateParty",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/partiesCreatePartyRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesCreatePartyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/parties/parties/{party_id}" : {
+      "delete" : {
+        "description" : "Deletes a party. Only the party owner can delete the party.",
+        "operationId" : "DeleteParty",
+        "parameters" : [ {
+          "description" : "ID of the party",
+          "explode" : false,
+          "in" : "path",
+          "name" : "party_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "ID of the owner of the party. If using auth, this must match the user_id in the auth token",
+          "explode" : true,
+          "in" : "query",
+          "name" : "owner_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesDeletePartyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party",
+        "tags" : [ "PartiesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "get" : {
+        "description" : "Get details about a party",
+        "operationId" : "GetParty",
+        "parameters" : [ {
+          "explode" : false,
+          "in" : "path",
+          "name" : "party_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesGetPartyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party",
+        "tags" : [ "PartiesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Updates party details",
+        "operationId" : "UpdateParty",
+        "parameters" : [ {
+          "description" : "ID of the party",
+          "explode" : false,
+          "in" : "path",
+          "name" : "party_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateParty_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesUpdatePartyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/parties/parties/{party_id}/ban" : {
+      "post" : {
+        "description" : "Bans a user from a party. Only the party owner can ban users.",
+        "operationId" : "BanUser",
+        "parameters" : [ {
+          "description" : "ID of the party",
+          "explode" : false,
+          "in" : "path",
+          "name" : "party_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BanUser_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesBanUserResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party Member",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/parties/parties/{party_id}/invite-party" : {
+      "post" : {
+        "description" : "Invites a user to a party",
+        "operationId" : "InvitePartyUser",
+        "parameters" : [ {
+          "description" : "ID of the party",
+          "explode" : false,
+          "in" : "path",
+          "name" : "party_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InvitePartyUser_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesInviteUserResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party Member",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ],
+        "x-snapser-exclude-from-non-legacy-sdk" : true
+      }
+    },
+    "/v1/parties/parties/{party_id}/invites" : {
+      "get" : {
+        "description" : "Lists party invites",
+        "operationId" : "ListPartyInvites",
+        "parameters" : [ {
+          "description" : "ID of the party",
+          "explode" : false,
+          "in" : "path",
+          "name" : "party_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "ID of the user making the request. The user must be in the party to list invites of the party. If using auth, this must match the user_id in the auth token",
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesListPartyInvitesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party Member",
+        "tags" : [ "PartiesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "post" : {
+        "description" : "Invites a user to a party",
+        "operationId" : "InviteUser",
+        "parameters" : [ {
+          "description" : "ID of the party",
+          "explode" : false,
+          "in" : "path",
+          "name" : "party_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InvitePartyUser_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesInviteUserResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party Member",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ],
+        "x-snapser-exclude-from-legacy-sdk" : true
+      }
+    },
+    "/v1/parties/parties/{party_id}/join" : {
+      "post" : {
+        "description" : "Joins a party",
+        "operationId" : "JoinParty",
+        "parameters" : [ {
+          "description" : "ID of the party",
+          "explode" : false,
+          "in" : "path",
+          "name" : "party_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/JoinParty_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesJoinPartyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/parties/parties/{party_id}/kick" : {
+      "post" : {
+        "description" : "Kicks a user from a party. Only the party owner can kick users",
+        "operationId" : "KickUser",
+        "parameters" : [ {
+          "description" : "ID of the party",
+          "explode" : false,
+          "in" : "path",
+          "name" : "party_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/KickUser_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesKickUserResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party Member",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/parties/parties/{party_id}/leave" : {
+      "post" : {
+        "description" : "Leaves a party. If the party owner leaves, the party ownership is transferred to another party member.",
+        "operationId" : "LeaveParty",
+        "parameters" : [ {
+          "description" : "ID of the party",
+          "explode" : false,
+          "in" : "path",
+          "name" : "party_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LeaveParty_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesLeavePartyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/parties/parties/{party_id}/players/{user_id}/metadata" : {
+      "post" : {
+        "description" : "Updates a player's metadata in a party",
+        "operationId" : "UpdatePartyPlayerMetadata",
+        "parameters" : [ {
+          "description" : "ID of the party",
+          "explode" : false,
+          "in" : "path",
+          "name" : "party_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdatePartyPlayerMetadata_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesUpdatePartyPlayerMetadataResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party Member",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/parties/parties/{party_id}/requests" : {
+      "get" : {
+        "description" : "Lists party requests",
+        "operationId" : "ListPartyRequests",
+        "parameters" : [ {
+          "description" : "ID of the party",
+          "explode" : false,
+          "in" : "path",
+          "name" : "party_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "ID of the user making the request. The user must be in the party to list requests of the party. If using auth, this must match the user_id in the auth token",
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesListPartyRequestsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party Member",
+        "tags" : [ "PartiesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "post" : {
+        "description" : "Requests to join a party",
+        "operationId" : "RequestToJoinParty",
+        "parameters" : [ {
+          "description" : "ID of the party",
+          "explode" : false,
+          "in" : "path",
+          "name" : "party_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/JoinParty_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesRequestToJoinPartyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party Member",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/parties/parties/{party_id}/transfer-party/{new_owner}" : {
+      "post" : {
+        "description" : "Transfers ownership of a party to another member. Only the current owner can transfer ownership.",
+        "operationId" : "TransferPartyOwnership",
+        "parameters" : [ {
+          "description" : "Unique identifier of the party",
+          "explode" : false,
+          "in" : "path",
+          "name" : "party_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User id of the user to be the new owner",
+          "explode" : false,
+          "in" : "path",
+          "name" : "new_owner",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TransferPartyOwnership_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesTransferOwnershipResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ],
+        "x-snapser-exclude-from-non-legacy-sdk" : true
+      }
+    },
+    "/v1/parties/parties/{party_id}/transfer/{new_owner}" : {
+      "post" : {
+        "description" : "Transfers ownership of a party to another member. Only the current owner can transfer ownership.",
+        "operationId" : "TransferOwnership",
+        "parameters" : [ {
+          "description" : "Unique identifier of the party",
+          "explode" : false,
+          "in" : "path",
+          "name" : "party_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User id of the user to be the new owner",
+          "explode" : false,
+          "in" : "path",
+          "name" : "new_owner",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TransferPartyOwnership_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesTransferOwnershipResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ],
+        "x-snapser-exclude-from-legacy-sdk" : true
+      }
+    },
+    "/v1/parties/parties/{party_id}/unban" : {
+      "post" : {
+        "description" : "Unbans a user from a party. Only the party owner can unban users",
+        "operationId" : "UnbanUser",
+        "parameters" : [ {
+          "description" : "ID of the party",
+          "explode" : false,
+          "in" : "path",
+          "name" : "party_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UnbanUser_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesUnbanUserResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party Member",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/parties/requests/{request_id}/approve" : {
+      "post" : {
+        "description" : "Approves a party request. Only the party owner can approve requests.",
+        "operationId" : "ApprovePartyRequest",
+        "parameters" : [ {
+          "description" : "ID of the request",
+          "explode" : false,
+          "in" : "path",
+          "name" : "request_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AcceptInvite_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesApprovePartyRequestResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Party Member",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/parties/search" : {
+      "post" : {
+        "description" : "Searches for parties",
+        "operationId" : "SearchParties",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/partiesSearchPartiesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesSearchPartiesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Parties",
+        "tags" : [ "PartiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/parties/search/user/{user_id}" : {
+      "get" : {
+        "description" : "Lists all parties a user is a part of",
+        "operationId" : "ListPartiesForUser",
+        "parameters" : [ {
+          "description" : "ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/partiesListPartiesForUserResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Parties",
+        "tags" : [ "PartiesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "AcceptInvite_request" : {
+        "properties" : {
+          "user_id" : {
+            "description" : "ID of the user approving the request. The user must be the owner to approve. If using auth, this must match the user_id in the auth token",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "AnyValue" : {
+        "description" : "Can be of any type",
+        "nullable" : true,
+        "oneOf" : [ {
+          "type" : "string"
+        }, {
+          "type" : "number"
+        }, {
+          "type" : "boolean"
+        }, {
+          "type" : "integer"
+        }, {
+          "type" : "object"
+        }, {
+          "items" : {
+            "type" : "object"
+          },
+          "type" : "array"
+        } ]
+      },
+      "BanUser_request" : {
+        "properties" : {
+          "metadata" : {
+            "description" : "A Json document of metadata to be stored with the banned player",
+            "type" : "object"
+          },
+          "owner_id" : {
+            "description" : "ID of the owner of the party. If using auth, this must match the user_id in the auth token",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "ID of the user to ban",
+            "type" : "string"
+          }
+        },
+        "required" : [ "user_id" ],
+        "type" : "object"
+      },
+      "DeclineInvite_request" : {
+        "properties" : {
+          "user_id" : {
+            "description" : "ID of the user declining the request. The user must be the owner to decline. If using auth, this must match the user_id in the auth token",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "InvitePartyUser_request" : {
+        "properties" : {
+          "invitee_id" : {
+            "description" : "ID of the user to invite",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "ID of the user in the party creating the invite. If using auth, this must match the user_id in the auth token",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "JoinParty_request" : {
+        "properties" : {
+          "metadata" : {
+            "description" : "A Json document of metadata to be stored with player",
+            "type" : "object"
+          },
+          "user_id" : {
+            "description" : "ID of the user joining the party. If using auth, this must match the user_id in the auth token",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "KickUser_request" : {
+        "properties" : {
+          "owner_id" : {
+            "description" : "ID of the owner of the party. If using auth, this must match the user_id in the auth token",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "ID of the user to kick",
+            "type" : "string"
+          }
+        },
+        "required" : [ "user_id" ],
+        "type" : "object"
+      },
+      "LeaveParty_request" : {
+        "properties" : {
+          "user_id" : {
+            "description" : "ID of the user leaving the party. If using auth, this must match the user_id in the auth token",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "TransferPartyOwnership_request" : {
+        "properties" : {
+          "current_owner" : {
+            "description" : "User id of the current owner",
+            "type" : "string"
+          }
+        },
+        "required" : [ "current_owner" ],
+        "type" : "object"
+      },
+      "UnbanUser_request" : {
+        "properties" : {
+          "owner_id" : {
+            "description" : "ID of the owner of the party. If using auth, this must match the user_id in the auth token",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "ID of the user to ban",
+            "type" : "string"
+          }
+        },
+        "required" : [ "user_id" ],
+        "type" : "object"
+      },
+      "UpdatePartyPlayerMetadata_request" : {
+        "properties" : {
+          "metadata" : {
+            "description" : "A Json document of metadata to be stored with the player",
+            "type" : "object"
+          }
+        },
+        "required" : [ "metadata" ],
+        "type" : "object"
+      },
+      "UpdateParty_request" : {
+        "properties" : {
+          "max_players" : {
+            "description" : "The max number of players to allow in the party",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "metadata" : {
+            "description" : "A Json document of metadata to be stored with the party",
+            "type" : "object"
+          },
+          "owner_id" : {
+            "description" : "The owner of the party. If using auth, this must match the user_id in the auth token",
+            "type" : "string"
+          },
+          "party_name" : {
+            "description" : "Name of the party",
+            "type" : "string"
+          },
+          "search_properties" : {
+            "description" : "A Json document that will be indexed for full text searching",
+            "type" : "object"
+          },
+          "settings" : {
+            "$ref" : "#/components/schemas/partiesPartySettings"
+          },
+          "status" : {
+            "description" : "The status of the party. Defaults to open. Valid names: PARTY_STATUS_OPEN, PARTY_STATUS_FULL, PARTY_STATUS_IN_GAME",
+            "type" : "string"
+          },
+          "visibility" : {
+            "description" : "The visibility of the party. Defaults to private. Valid names: PARTY_VISIBILITY_PUBLIC, PARTY_VISIBILITY_PRIVATE, PARTY_VISIBILITY_INVITE_ONLY, PARTY_VISIBILITY_FRIENDS_ONLY",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesAcceptInviteResponse" : {
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesApprovePartyRequestResponse" : {
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesBanUserResponse" : {
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesCreatePartyRequest" : {
+        "properties" : {
+          "max_players" : {
+            "description" : "The max number of players to allow in the party",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "metadata" : {
+            "description" : "A Json document of metadata to be stored with the party",
+            "type" : "object"
+          },
+          "owner_id" : {
+            "description" : "The owner of the party. If using auth, this must match the user_id in the auth token",
+            "type" : "string"
+          },
+          "owner_metadata" : {
+            "description" : "A Json document of metadata to be stored with the player that created the party",
+            "type" : "object"
+          },
+          "party_name" : {
+            "description" : "Name of the party",
+            "type" : "string"
+          },
+          "search_properties" : {
+            "description" : "A Json document that will be indexed for full text searching",
+            "type" : "object"
+          },
+          "settings" : {
+            "$ref" : "#/components/schemas/partiesPartySettings"
+          },
+          "status" : {
+            "description" : "The status of the party. Defaults to open. Valid names: PARTY_STATUS_OPEN, PARTY_STATUS_FULL, PARTY_STATUS_IN_GAME",
+            "type" : "string"
+          },
+          "visibility" : {
+            "description" : "The visibility of the party. Defaults to private. Valid names: PARTY_VISIBILITY_PUBLIC, PARTY_VISIBILITY_PRIVATE, PARTY_VISIBILITY_INVITE_ONLY, PARTY_VISIBILITY_FRIENDS_ONLY",
+            "type" : "string"
+          }
+        },
+        "title" : "Service Requests & Responses",
+        "type" : "object"
+      },
+      "partiesCreatePartyResponse" : {
+        "properties" : {
+          "party" : {
+            "$ref" : "#/components/schemas/partiesParty"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesDeclineInviteResponse" : {
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesDeletePartyResponse" : {
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesGetPartyResponse" : {
+        "properties" : {
+          "party" : {
+            "$ref" : "#/components/schemas/partiesParty"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesInviteUserResponse" : {
+        "properties" : {
+          "invite" : {
+            "$ref" : "#/components/schemas/partiesRequest"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesJoinPartyResponse" : {
+        "properties" : {
+          "party" : {
+            "$ref" : "#/components/schemas/partiesParty"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesKickUserResponse" : {
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesLeavePartyResponse" : {
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesListPartiesForUserResponse" : {
+        "properties" : {
+          "parties" : {
+            "items" : {
+              "$ref" : "#/components/schemas/partiesParty"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesListPartiesRequest" : {
+        "properties" : {
+          "limit" : {
+            "description" : "Number of results returned. The maximum allowed is 50, defaults to 10 if not provided.",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "offset" : {
+            "description" : "Number of results to skip from the start of the result set",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "sort" : {
+            "description" : "Orders by party name. Valid values - asc, desc",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesListPartiesResponse" : {
+        "properties" : {
+          "parties" : {
+            "items" : {
+              "$ref" : "#/components/schemas/partiesParty"
+            },
+            "type" : "array"
+          },
+          "total_count" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesListPartyInvitesResponse" : {
+        "properties" : {
+          "invites" : {
+            "items" : {
+              "$ref" : "#/components/schemas/partiesRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesListPartyRequestsResponse" : {
+        "properties" : {
+          "requests" : {
+            "items" : {
+              "$ref" : "#/components/schemas/partiesRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesMetadataFilter" : {
+        "properties" : {
+          "bool_value" : {
+            "description" : "Strongly typed boolean value for comparison, use instead of value for type safety",
+            "nullable" : true,
+            "type" : "boolean"
+          },
+          "double_value" : {
+            "description" : "Strongly typed double value for comparison, use instead of value for type safety",
+            "format" : "double",
+            "nullable" : true,
+            "type" : "number"
+          },
+          "int_value" : {
+            "description" : "Strongly typed integer value for comparison, use instead of value for type safety",
+            "format" : "int64",
+            "nullable" : true,
+            "type" : "integer"
+          },
+          "key" : {
+            "description" : "Field inside metadata to be filtered on",
+            "type" : "string"
+          },
+          "op" : {
+            "description" : "Operator for the comparison. Valid values - LIKE, =, >, <",
+            "type" : "string"
+          },
+          "string_value" : {
+            "description" : "Strongly typed string value for comparison, use instead of value for type safety",
+            "nullable" : true,
+            "type" : "string"
+          },
+          "value" : {
+            "$ref" : "#/components/schemas/AnyValue"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesParty" : {
+        "properties" : {
+          "banned_players" : {
+            "additionalProperties" : {
+              "type" : "object"
+            },
+            "type" : "object"
+          },
+          "connection_string" : {
+            "type" : "string"
+          },
+          "created_at" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "max_players" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "metadata" : {
+            "type" : "object"
+          },
+          "owner" : {
+            "type" : "string"
+          },
+          "party_name" : {
+            "type" : "string"
+          },
+          "players" : {
+            "additionalProperties" : {
+              "type" : "object"
+            },
+            "type" : "object"
+          },
+          "search_properties" : {
+            "type" : "object"
+          },
+          "settings" : {
+            "$ref" : "#/components/schemas/partiesPartySettings"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/partiesPartyStatus"
+          },
+          "type" : {
+            "type" : "string"
+          },
+          "updated_at" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "visibility" : {
+            "$ref" : "#/components/schemas/partiesPartyVisibility"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesPartySettings" : {
+        "description" : "PartySettings represents the configurable settings of a party.",
+        "properties" : {
+          "allow_member_join_in_game" : {
+            "description" : "AllowMemberJoinInGame indicates if party members can join the party while the party is in a game.",
+            "type" : "boolean"
+          },
+          "allow_member_matchmaking" : {
+            "description" : "AllowMemberMatchmaking indicates if party members can queue/dequeue on behalf of the party.",
+            "type" : "boolean"
+          },
+          "allow_party_updates_in_game" : {
+            "description" : "AllowPartyUpdatesInGame indicates if the party can be updated while the party is in a game.",
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesPartyStatus" : {
+        "default" : "PARTY_STATUS_UNKNOWN",
+        "description" : "PartyStatus represents the status of a party.\n\n - PARTY_STATUS_UNKNOWN: PARTY_STATUS_UNKNOWN indicates an unknown status.\n - PARTY_STATUS_OPEN: PARTY_STATUS_OPEN indicates the party is open for anyone to join.\n - PARTY_STATUS_FULL: PARTY_STATUS_FULL indicates the party is full and cannot accept new members.\n - PARTY_STATUS_IN_GAME: PARTY_STATUS_IN_GAME indicates the party is currently in a game.",
+        "enum" : [ "PARTY_STATUS_UNKNOWN", "PARTY_STATUS_OPEN", "PARTY_STATUS_FULL", "PARTY_STATUS_IN_GAME" ],
+        "type" : "string"
+      },
+      "partiesPartyVisibility" : {
+        "default" : "PARTY_VISIBILITY_UNKNOWN",
+        "description" : "PartyVisibility represents the visibility level of a party.\n\n - PARTY_VISIBILITY_UNKNOWN: PARTY_VISIBILITY_UNKNOWN indicates an unknown visibility.\n - PARTY_VISIBILITY_PUBLIC: PARTY_VISIBILITY_PUBLIC indicates the party is visible to everyone.\n - PARTY_VISIBILITY_PRIVATE: PARTY_VISIBILITY_PRIVATE indicates the party is private.\n - PARTY_VISIBILITY_INVITE_ONLY: PARTY_VISIBILITY_INVITE_ONLY indicates the party is visible by invite only.\n - PARTY_VISIBILITY_FRIENDS_ONLY: PARTY_VISIBILITY_FRIENDS_ONLY indicates the party is only visible to friends.",
+        "enum" : [ "PARTY_VISIBILITY_UNKNOWN", "PARTY_VISIBILITY_PUBLIC", "PARTY_VISIBILITY_PRIVATE", "PARTY_VISIBILITY_INVITE_ONLY", "PARTY_VISIBILITY_FRIENDS_ONLY" ],
+        "type" : "string"
+      },
+      "partiesRequest" : {
+        "properties" : {
+          "channel" : {
+            "$ref" : "#/components/schemas/partiesRequestChannel"
+          },
+          "created_at" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "invitee_id" : {
+            "type" : "string"
+          },
+          "metadata" : {
+            "type" : "object"
+          },
+          "party_id" : {
+            "type" : "string"
+          },
+          "requester_id" : {
+            "type" : "string"
+          },
+          "sender_id" : {
+            "type" : "string"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/partiesRequestStatus"
+          },
+          "type" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesRequestChannel" : {
+        "default" : "REQUEST_CHANNEL_UNKNOWN",
+        "enum" : [ "REQUEST_CHANNEL_UNKNOWN" ],
+        "type" : "string"
+      },
+      "partiesRequestStatus" : {
+        "default" : "REQUEST_STATUS_UNKNOWN",
+        "enum" : [ "REQUEST_STATUS_UNKNOWN", "REQUEST_STATUS_PENDING", "REQUEST_STATUS_ACCEPTED", "REQUEST_STATUS_DECLINED" ],
+        "type" : "string"
+      },
+      "partiesRequestToJoinPartyResponse" : {
+        "properties" : {
+          "request" : {
+            "$ref" : "#/components/schemas/partiesRequest"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesSearchPartiesRequest" : {
+        "properties" : {
+          "limit" : {
+            "description" : "Number of results returned. The maximum allowed is 50, defaults to 10 if not provided.",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "metadata_filters" : {
+            "description" : "Metadata filters. IMPORTANT: Only populate value or a single strongly typed value field (bool_value, int_value, double_value, string_value) inside each filter to ensure correct behavior.",
+            "items" : {
+              "$ref" : "#/components/schemas/partiesMetadataFilter"
+            },
+            "type" : "array"
+          },
+          "offset" : {
+            "description" : "Number of results to skip from the start of the result set",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/partiesSortParams"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesSearchPartiesResponse" : {
+        "properties" : {
+          "parties" : {
+            "items" : {
+              "$ref" : "#/components/schemas/partiesParty"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesSortParams" : {
+        "properties" : {
+          "field" : {
+            "description" : "Field on which the results are to be sorted",
+            "type" : "string"
+          },
+          "order" : {
+            "description" : "Order of sorting. Valid values - asc, desc",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesTransferOwnershipResponse" : {
+        "properties" : {
+          "party" : {
+            "$ref" : "#/components/schemas/partiesParty"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesUnbanUserResponse" : {
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesUpdatePartyPlayerMetadataResponse" : {
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "partiesUpdatePartyResponse" : {
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "protobufNullValue" : {
+        "default" : "NULL_VALUE",
+        "description" : "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value.",
+        "enum" : [ "NULL_VALUE" ],
+        "type" : "string"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

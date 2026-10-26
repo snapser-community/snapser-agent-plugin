@@ -1,0 +1,94 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Schedule one-time chain of actions",
+    "title" : "Sequencer",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "SequencerService"
+  } ],
+  "paths" : {
+    "/v1/sequencer/execute/{sequence_name}" : {
+      "post" : {
+        "description" : "Execute the automation sequence",
+        "operationId" : "ExecuteSequence",
+        "parameters" : [ {
+          "explode" : false,
+          "in" : "path",
+          "name" : "sequence_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ExecuteSequence_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/sequencerExecuteSequenceResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Sequence",
+        "tags" : [ "SequencerService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "ExecuteSequence_request" : {
+        "properties" : {
+          "parameters" : {
+            "description" : "JSON representation of parameters",
+            "type" : "object"
+          }
+        },
+        "required" : [ "parameters" ],
+        "type" : "object"
+      },
+      "protobufNullValue" : {
+        "default" : "NULL_VALUE",
+        "description" : "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value.",
+        "enum" : [ "NULL_VALUE" ],
+        "type" : "string"
+      },
+      "sequencerExecuteSequenceResponse" : {
+        "properties" : {
+          "result" : {
+            "items" : {
+              "type" : "object"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

@@ -1,0 +1,85 @@
+# 1.14.0
+##### September 8, 2026
+
+## Breaking Changes
+All SDK changes this release are **source-breaking but recoverable**. They break only C# callers that construct models with **positional** arguments. Callers using **named** arguments are unaffected. Wire values and runtime behavior do not change. There are no hard breaks: no deleted or renamed models, no removed params, no type changes.
+
+### Admin SDK
+1. **Matchmaking squad formation shifts a C# constructor**
+   - **Feature:** [Matchmaking squad formation](#matchmaking) adds an optional `squadFormation` field to `MatchmakingTeamFormationSettings`.
+   - **Affected:** C# — `MatchmakingTeamFormationSettings.cs`.
+   - **Change:** The C# generator orders optional constructor params alphabetically, so `squadFormation` lands at position 5 and shifts `strategy` and `strategyArg`. Positional callers bind the wrong params or fail to compile. Switch to named constructor arguments.
+
+### Client SDK
+1. **Storage CAS shifts C# constructors**
+   - **Feature:** [Storage sub-document CAS support](#storage) adds an optional `cas` field to several C# models.
+   - **Affected:** C# 
+   - **Change:** Alphabetical ordering inserts `cas` mid-list and shifts later params. Positional callers bind the wrong params or fail to compile. For example, `AppendArrSubDocumentRequest(updates)` becomes `(cas, updates)`, binding a `List<StorageJsonFragment>` to `cas`. Switch to named constructor arguments.
+   <Note>
+   Affected request models: `AppendArrSubDocumentRequest`, `PrependArrSubDocumentRequest`, and `UpsertSubDocumentRequest` (`(updates)` → `(cas, updates)`), plus their `Storage`-prefixed forms (`cas` inserted after `accessType`). The `StorageGetSubDocumentResponse` response model changes from `(value)` to `(cas, value)`.
+   </Note>
+
+---
+
+## Spotlight
+1. **Parties Snap Tool** — a new Snap Tool for finding and moderating parties across a Snapend. Look up members, invites, join requests, and bans for any party, then act on them.
+2. **Matchmaking squad formation** — new team formation controls let large squads match only other large squads within a size band that widens over time. A separate cap limits how many large squads can land on one team.
+3. **Feedback** — send feature requests, bug reports, and UX notes to the Snapser team from inside the Web App. Open it from the account menu in the top navigation bar.
+
+---
+
+## Snaps
+
+### Matchmaking
+1. **Squad formation rules** — set a squad-size band so large squads only match other large squads within a spread that widens over time. A composition cap limits how many large squads land on one team. Config lives under `TeamFormationSettings.squad_formation`.
+
+### Parties
+1. **`ListParties` supports all party visibilities** — `ListParties` now returns parties of every visibility, including private, on internal and API-key calls.
+
+### Storage
+1. **Sub-document CAS support** — `UpsertSubDocument`, `AppendArrSubDocument`, and `PrependArrSubDocument` take an optional `cas` field for optimistic concurrency control. `DeleteSubDocument` now enforces `cas` instead of silently ignoring it. `GetSubDocument` and `BatchGetSubDocuments` return the document's current `cas` value.
+
+### Chat
+1. **Logging pass** — a logging pass across the snap improves observability and debugging.
+
+### Quests
+1. **Admin SDK support** — the Quests snap now supports the Admin SDK for programmatic configuration.
+
+### Inventory
+1. **`PurchaseItem` refunds on failed grant** — `PurchaseItem` deducted the currency but could fail to grant the item. This left the user charged with nothing. It now refunds the currency when the grant fails.
+2. **Transaction logging** — APIs that grant or consume several items in one transaction now log each step. This helps trace a multi-item transaction that fails partway through.
+
+---
+
+## Web App
+
+### New Tools
+1. **Parties** — under Snap Tools, find and moderate parties. Look up a party by user Id, party Id, listing, or metadata search. Inspect members, invites, join requests, and bans, then add, kick, ban, transfer ownership, edit, or delete. Finding parties needs a `cluster-service-*` role with Parties access; editing needs `cluster-service-edit`, deleting needs `cluster-service-admin`.
+2. **Feedback** — under the account menu in the top navigation bar. Pick a type of `Feature`, `Bug`, or `UX`, then write a title and a description. The page you came from fills in automatically and stays editable. Paste a screenshot or a screen recording into the description to attach it, or use **Attach**. Each submission takes up to 3 files of 50 MB each.
+   <Warning>
+   Feedback is available on the Premium and Enterprise tiers.
+   </Warning>
+
+### Matchmaking Simulator
+1. **Squad formation reporting** — new stat cards show squad matches, cap violations, and solo vs. squad wait times. New charts show party size per team and cross-team size spread. Scenarios can generate parties with a configurable size distribution.
+
+### Bug Fixes
+1. **Accounts & Roles pagination** — changing rows-per-page on the Accounts & Roles table undercounted rows by one for non-Snapser accounts. Fixed.
+2. **Infra Logs — Context** — context log calls omitted pod and container details, sending only level and group. Fixed.
+3. **Game Server Fleet Monitoring** — the log-level filter used a hardcoded list. It now populates from the Logs service.
+4. **User Manager** — the left navigation showed before a user was selected. It now stays hidden until you pick one.
+5. **Admin SDK page** — layout and alignment cleanup.
+6. **Admin Tools and IAP Bundle** — snap select boxes were swapped for a sorted autocomplete component.
+7. **BYOSnap edit** — the platform field is now read-only once set at creation. It can no longer be changed from the edit screen.
+8. **IAP** — fixed issues affecting DLC purchases.
+9. **Guilds — GDPR data handling** — a GDPR review found data-handling bugs in guild membership. Fixed.
+10. **Parties — GDPR data handling** — GDPR erasure could delete parties the user was only a member of, and left party invites behind. Erasure now removes only the erased user's data.
+11. **Matchmaking — party split race condition** — a race condition could occur when a party split during match formation. Fixed.
+12. **Infra Monitor** - Some graphs were showing the previous interval value instead of showing the actual gap in data. This has now been fixed.
+13. **BYOSnap diff cards** — two BYOSnaps with the same name but different Ids collapsed into a single card. This affected the Snapend update flow's Review step, **Promote to Prod**, the Diff and Compare tools, and **Rollback**. Every BYOSnap now gets its own card, with its Id shown under the name.
+
+---
+
+## Documentation
+1. **BYOSnap secrets and profile** — a BYOSnap profile is only a base, used at initial publish. Once a Snapend exists, its manifest controls what gets rolled out, including secrets.
+2. **Apple Web login URL** — corrected the documented Sign in with Apple web login URL to `/v1/auth/apple/web/login`.

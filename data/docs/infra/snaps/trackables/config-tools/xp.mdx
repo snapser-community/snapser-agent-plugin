@@ -1,0 +1,46 @@
+# XP
+This tool allows you to setup and manage the XP you want to expose to your game.
+
+To get started:
+1. Click on `XP` from the side Nav.
+2. Click on the `Add XP` button.
+3. You will then see a form where you can add or update your XP ladder.
+
+## XP Details
+1. **Name**: Name of the XP. This is a unique identifier for the XP. This should be an alphanumeric string without spaces.
+
+## XP Requirement
+1. **Requirement XP**: Optionally select a XP name as a requirement for this XP.
+2. **Requirement value**: Select a value that a user has to reach on the `Requirement XP`, before being able to start this ladder.
+
+## XP Access
+1. **Scope**: The scope of the XP. This can be external or internal. External XP can be updated by the client, over app auth. Internal XP can only be updated by other snaps within your cluster or using app auth.
+
+## XP Auto Reset
+1. **Auto Reset**: When enabled, once all levels have been completed, the user's XP will be reset to 0.
+
+## XP Levels
+1. **Add Level**: Add a level to the XP. You can add multiple levels to the XP. Each level has a start and end value.
+2. **Add Cap Level**: This adds a final level to the ladder that represents the maximum level a player can achieve. This level will not contain any rewards and will have the same start and end value.
+
+## XP Level Details
+1. **Name**: Name of the level. This can be a number or a string value.
+2. **Start Value**: The start value of the level. If you have more than one level, the start value of a level should be exactly one more than the end value of the previous level.
+3. **End Value**: The end value of the level.  
+
+## Rewards
+1. **Reward Type**: Type of the reward. This can be an Inventory Item, Currency, Energy, or XP.
+2. **Reward Name**: Select the reward name from the drop down. The names are automatically populated from the Inventory Snap (Items, Currencies, Drop Tables), from Trackables Energy, and from the other XPs configured under Trackables. You can even reward the same XP that is being configured, which is useful for compounding or boosting progression on the current ladder.
+3. **Sub Inventory Name**: For Item type rewards, you can specify a sub-inventory name where the rewarded item will be stored. 
+4. **Quantity**: Quantity of the reward. This should be a positive integer.
+
+### Level Completion Rewards Criteria
+These rewards are awarded to the user when they reach the end value of the current level
+
+### Level Up Rewards Criteria
+These rewards are awarded to the user when they reach the start value of the next level.
+
+## XP Default
+1. **Default Level**: The default level of the XP that a user will have when they start the game.
+
+![Admin Pic](/images/docs/trackables-admin.png)

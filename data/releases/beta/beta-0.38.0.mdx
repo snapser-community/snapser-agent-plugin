@@ -1,0 +1,36 @@
+# beta-0.38.0
+##### September 24, 2024
+
+## Snaps
+### Leaderboards
+- Introducing a new API to bulk update or increment player scores for a leaderboard. This API is available only with app authentication.
+
+### Lobbies
+- When allocating a game server from a lobby, the Lobby Snap will now automatically retry certain allocation attempts. This accounts for game servers that are spinning up but not yet ready to accept new connections.
+
+### Trackables
+- When updating XP at the last level, any overflow count, if present, is returned to the client. This allows game teams to decide how to handle the overflow.
+- Trackable now emits a new event, `TRACKABLES_XP_PLAYER_LEVELED_UP`, when a player levels up in XP.
+
+### Notifications
+- Notification campaign results are now forwarded to the analytics Snap, enabling real-time analysis of campaign data in the Snapser BI tool.
+
+### Custom Code - BYOSnaps
+- You can now configure a readiness health check endpoint and a delay before the Snap is considered ready to accept traffic. This feature is useful for game teams that need to perform some initialization before the Snap is ready.
+- You can now set up minimum replicas for your BYOSnap, ensuring that more than one replica can run at all times.
+
+## Web App
+- The Web App now features a sophisticated new tool for viewing Snap and game server logs. This tool supports labeling, filtering, searching, and exporting logs. Additionally, you can view logs for a specific time range or watch them live in real time.
+
+## Snapctl - CLI Tool
+- Snapctl now issues a warning if it detects an architecture mismatch between the build machine and the architecture specified in your Dockerfile. This is applicable for both BYOSnap and BYOGame Server uploads.
+- Snapctl allows you to configure the readiness health check endpoint and delay for your BYOSnap in the new `publish-version` command. Additionally, you can now add `min-replicas` to the BYOSnap profile JSON while executing the command.
+
+## Bug Fixes
+- **Business Intelligence**: Fixed bug where updating a snapend could create duplicate charts in existing dashboards.
+- **Remote Config**: Fixed a bug where app config in memory might be stale after a remote config update.
+- **Game Server Fleet**: Fixed a bug when importing GSF settings during a clone.
+- **Inventory**: Fixed regression that disallowed consuming user currency.
+- **Inventory**: Fixed regression that caused wrong currency grant and consume values to be published to events.
+- **Quests**: Added the fields to display gained XP and energy to the event emitted upon claiming quest rewards.
+- **Quests**: Fixed a bug where editing a quest would not allow deleting tasks.

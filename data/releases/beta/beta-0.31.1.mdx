@@ -1,0 +1,19 @@
+# beta-0.31.1
+##### May 30, 2024
+
+## Enhancements
+
+1. [Geo Fleet V0.5]: We have released the early foundations of geo fleets with this release. BYOGS uploads have now been simplified and are now directly tied with fleets. This release only allows you to start a fleet in Oregon but in a subsequent release you will be able to pick any stratos location.
+2. [Lobbies Snap]: We have release a new snap called Lobbies. This snap allows you to create lobbies for your game and invite users to join them. The snap can then directly talk to the new game server fleet control plane to allocate a game server for the lobby.
+3. [Configuration Sync V2]: Further enhancement was made to the previous release. Certain snaps like Auth, IAP, Notifications now support multi-environment settings. This allows for further control when syncing, cloning or promoting snapends.
+4. [Minor Enhancements]: The Storage snap now supports a new endpoint to fetch the CAS value of the blob. Notifications snap now exposes better return codes. The web apps Preview mode has been updated.
+5. [CLI]: The Snapctl tool now supports a new command to publish a game server image.
+
+
+## Bug Fixes
+1. [Parties Search]: Fixed a minor issue with Parties search.
+
+
+## Documentation
+1. New BYOGS publish route for creating fleets.
+2. Notification connector setup documentation has been updated.

@@ -1,0 +1,262 @@
+export const description = 'Decorators'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Decorators
+
+The Snapser Decorators service enhances API responses by automatically injecting user-specific metadata — such as attributes from the **Profiles** or **Statistics** snaps — into the results of supported APIs. This allows clients to avoid chaining multiple API calls to fetch profile or stat data for users referenced in leaderboard entries, friends lists, lobbies, and more.
+
+<Warning>
+  Decorators is a Premium snap. You will need to be on a Premium plan to use it.
+</Warning>
+
+## Why Use Decorators?
+
+When fetching data like leaderboard scores, friends, or lobbies, it's common to also need user attributes like `gamer_tag`, `country`, or `wins`. Normally, you'd fetch that data separately. With Decorators, Snapser will automatically enrich your response with that metadata — server-side.
+
+<Note>
+This improves client performance and reduces both API call count and response latency.
+</Note>
+
+## Supported APIs
+
+Currently, the following Snapser APIs can be decorated:
+
+| API Path | Request Type |
+| -------- | ------------- |
+| `/guilds.GuildsService/GetGuild` | `guilds.GetGuildRequest` |
+| `/guilds.GuildsService/GetGuildForUserId` | `guilds.GetGuildForUserIdRequest` |
+| `/leaderboards.LeaderboardsService/GetScores` | `leaderboards.GetScoresRequest` |
+| `/lobbies.LobbiesService/GetLobby` | `lobbies.GetLobbyRequest` |
+| `/parties.PartiesService/GetParty` | `parties.GetPartyRequest` |
+| `/social_graph.SocialGraphService/GetFriends` | `social_graph.GetFriendsRequest` |
+| `/social_graph.SocialGraphService/GetFollows` | `social_graph.GetFollowsRequest` |
+| `/social_graph.SocialGraphService/GetFriendRequests` | `social_graph.GetFriendRequestsRequest` |
+
+## Making a Request
+
+To use decorators, make a call to the `Decorators` snap and include:
+
+- `rpc`: the full RPC path of the Snapser API you want to decorate.
+- `request`: a base64-encoded payload of the original request message.
+- `decorators`: an object specifying which attributes to pull from `profiles` and/or `statistics`.
+
+### Example Request Payload
+
+```json
+{
+  "decorators": {
+    "statistics": [
+      "wins"
+    ],
+    "profiles": [
+      "gamer_tag"
+    ]
+  },
+  "rpc": "/leaderboards.LeaderboardsService/GetScores",
+  "request": "CgZnbG9iYWwSJDMzYTk5MWNkLTBhZTctNDkxNy1hZjA5LWQ1NjM3MmRkYWM2ZRoDdG9wIAooADAA"
+}
+```
+In this example:
+- The rpc points to the GetScores leaderboard API.
+- The request is a base64-encoded protobuf message.
+- Snapser will decorate each user in the response with gamer_tag (from Profiles) and wins (from Statistics).
+
+## APIs
+
+The `Decorators` Snap supports the following APIs:
+<div className="apisTable">
+| API Name                                           | HTTP Method | API Description                                                    |
+| -------------------------------------------------- | ----------- | ------------------------------------------------------------------ |
+| [DecoratorsDecorateRpc](#decoratorsdecoraterpc-api)| POST        | Decorate APIs with additional information
+</div>
+
+<Note>
+We have added a Decorator payload helper. Allowing you to use to to create and decode Decorator requests and responses.
+</Note>
+
+### Usage
+#### DecoratorsDecorateRpc API
+<CodeGroup title="Decorate RPC Decorate APIs with additional information" tag="POST" label="DecoratorsDecorateRpc">
+```csharp
+/// <summary>
+/// Decorate RPC Decorate APIs with additional information
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>DecoratorsDecorateRpcResponse</returns>
+public DecoratorsDecorateRpcResponse DecoratorsDecorateRpc(string token, DecoratorsDecorateRpcRequest body)
+{
+    Snapser.Client.ApiResponse<DecoratorsDecorateRpcResponse> localVarResponse = DecoratorsDecorateRpcWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for DecoratorsDecorateRpcRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="DecoratorsDecorateRpcRequest" /> class.
+/// </summary>
+/// <param name="decorators">decorators.</param>
+/// <param name="request">request.</param>
+/// <param name="rpc">rpc.</param>
+public DecoratorsDecorateRpcRequest(DecoratorsDecorators decorators = default(DecoratorsDecorators), byte[] request = default(byte[]), string rpc = default(string))
+{
+    this.Decorators = decorators;
+    this.Request = request;
+    this.Rpc = rpc;
+}
+
+/// Snapser.Model for DecoratorsDecorators
+/// <summary>
+/// Initializes a new instance of the <see cref="DecoratorsDecorators" /> class.
+/// </summary>
+/// <param name="profiles">profiles.</param>
+/// <param name="statistics">statistics.</param>
+public DecoratorsDecorators(List<string> profiles = default(List<string>), List<string> statistics = default(List<string>))
+{
+    this.Profiles = profiles;
+    this.Statistics = statistics;
+}
+
+/// Snapser.Model for DecoratorsDecorateRpcResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="DecoratorsDecorateRpcResponse" /> class.
+/// </summary>
+/// <param name="decorations">decorations.</param>
+/// <param name="response">response.</param>
+public DecoratorsDecorateRpcResponse(DecoratorsDecorations decorations = default(DecoratorsDecorations), byte[] response = default(byte[]))
+{
+    this.Decorations = decorations;
+    this.Response = response;
+}
+
+/// Snapser.Model for DecoratorsDecorations
+/// <summary>
+/// Initializes a new instance of the <see cref="DecoratorsDecorations" /> class.
+/// </summary>
+/// <param name="users">users.</param>
+public DecoratorsDecorations(Dictionary<string, DecoratorsUserDecoration> users = default(Dictionary<string, DecoratorsUserDecoration>))
+{
+    this.Users = users;
+}
+
+/// Snapser.Model for DecoratorsUserDecoration
+/// <summary>
+/// Initializes a new instance of the <see cref="DecoratorsUserDecoration" /> class.
+/// </summary>
+/// <param name="profile">profile.</param>
+/// <param name="statistics">statistics.</param>
+public DecoratorsUserDecoration(Object profile = default(Object), Dictionary<string, string> statistics = default(Dictionary<string, string>))
+{
+    this.Profile = profile;
+    this.Statistics = statistics;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserDecoratorsServiceApi::DecoratorsDecorateRpcRequest : public Request
+{
+public:
+    virtual ~DecoratorsDecorateRpcRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserDecoratorsDecorateRpcRequest Body;
+};
+
+class SNAPSER_API SnapserDecoratorsDecorateRpcRequest : public Model
+{
+public:
+    virtual ~SnapserDecoratorsDecorateRpcRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserDecoratorsDecorators> Decorators;
+    TOptional<TArray<uint8>> Request;
+    TOptional<FString> Rpc;
+};
+
+class SNAPSER_API SnapserDecoratorsDecorators : public Model
+{
+public:
+    virtual ~SnapserDecoratorsDecorators() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<FString>> Profiles;
+    TOptional<TArray<FString>> Statistics;
+};
+
+// Response
+class SNAPSER_API SnapserDecoratorsServiceApi::DecoratorsDecorateRpcResponse : public Response
+{
+public:
+    virtual ~DecoratorsDecorateRpcResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserDecoratorsDecorateRpcResponse Content;
+};
+
+class SNAPSER_API SnapserDecoratorsDecorateRpcResponse : public Model
+{
+public:
+    virtual ~SnapserDecoratorsDecorateRpcResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserDecoratorsDecorations> Decorations;
+    TOptional<TArray<uint8>> Response;
+};
+
+class SNAPSER_API SnapserDecoratorsDecorations : public Model
+{
+public:
+    virtual ~SnapserDecoratorsDecorations() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TMap<FString, SnapserDecoratorsUserDecoration>> Users;
+};
+
+class SNAPSER_API SnapserDecoratorsUserDecoration : public Model
+{
+public:
+    virtual ~SnapserDecoratorsUserDecoration() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TSharedPtr<FJsonObject>> Profile;
+    TOptional<TMap<FString, FString>> Statistics;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+
+## Additional Details
+Data Stores
+None
+
+## Service Dependencies
+- Profiles (optional)
+- Statistics (optional)
+
+## Recommended Services
+- Profiles Snap
+- Statistics Snap
+- Leaderboards Snap
+- Social Graph Snap
+- Lobbies Snap
+
+# Upcoming enhancements
+We will continue adding support for more APIs and attributes in the future. Stay tuned for updates!

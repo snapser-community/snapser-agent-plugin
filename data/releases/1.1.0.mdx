@@ -1,0 +1,69 @@
+# 1.1.0
+##### October 14, 2025
+
+## Breaking Changes
+1. The Snapser MCP has been updated to use `application-id` instead of `game-id` for consistency with the web app.
+2. Profile search API now uses an OR filter instead of an AND filter.
+3. Get Profile API now does not send back the profile for the authenticated user.
+4. Clone and Import options have been removed from the Snapend update flow. These options are now only available in the Snapend create flow.
+
+## Snaps
+
+### Assets
+- DeleteAssets now supports an optional `skip_invalidation` parameter which would make the CDN keep serving the old file for sometime to avoid cache misses.
+
+### In-App Purchases
+- New API `GetBundles` has been added. This API is now available via `user-auth`.
+
+### Leaderboards
+- Leaderboards Snap will now support adding new tiers to an existing tiered leaderboard.
+- The snap will also support single bucket tiered leaderboards.
+
+### Trackables
+- Trackables now supports XP ladders that can auto-reset on completion.
+
+## Bug Fixes
+### Assets
+- If multiple assets are updated within the same unix second only the first of those was actually invalidating cdn, the next few would not receive the invalidation and CDN would keep serving the old file.
+- Fixed memory leak in the assets snap when uploading assets > 5mb
+
+
+### In-App Purchases
+- IAP Snap now supports bundle names to include `.`.
+
+### Leaderboards
+- Csharp SDK couldn’t handle the `GetBatchScores` response. This has now been fixed.
+
+### Live Ops
+- Fixed an issue where creation and updates to Live Ops configurations were not being saved correctly.
+
+### Profiles
+- Fixed a bug with the profile search API which was using an AND filter instead of an OR filter.
+- Get Profile API now does not send back the profile for the current user.
+
+## Web App
+- You can now access the Snapend home page, logs, infra monitor even when the snapend is in an updating state, enabling faster debugging. Note, some of the Snapend tools that interfere with the update process, will be in a disabled state till the update is complete. viz. Snaps configuration, User manager tool, Sync tool etc.
+- Fixed the subtitle for Infra Monitor graphs to show correct units.
+- Cloning a Snapend is now not permitted if the source Snapend is not in LIVE state.
+
+## Snapctl CLI Tool
+### Breaking Changes
+1. The `Snapend` command now accepts `--application-id` for consistency with the web app. The `--game-id` parameter is still supported but will be removed in future releases.
+2. The `Game` command has been renamed to `Application`. The old command is still supported but will be removed in future releases. Please use `snapctl application` instead of `snapctl game`.
+
+### New Features
+#### Snapend command
+- Added a new `snapend create` command to create a new Snapend instance using a manifest file.
+
+#### Snaps command
+- Added a new `snaps enumerate` command to get a list of all available snaps for your organization, including all the metadata and dependencies.
+
+#### Snapend Manifest commands
+- We have added a new command `snapend-manifest` that enables you to create CI/CD pipelines for your Snapend manifests. The command supports the following subcommands:
+  - `create`: Allows you to create a brand new manifest file by telling the command which snaps you want to include.
+  - `update`: Tells the snapctl to update your manifest file with a set of snaps and features. These are synced with the manifest file you pass.
+  - `upgrade`: Tells snapctl to upgrade all the snaps in the manifest or selected snaps to their latest versions.
+
+## Snapser MCP
+- Updated the Snapser MCP to use `application-id` instead of `game-id`.
+- Updated the getting started documentation.

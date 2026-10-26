@@ -1,0 +1,1669 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "A service to manage ephemeral groupings",
+    "title" : "Lobbies",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "LobbiesService"
+  } ],
+  "paths" : {
+    "/v1/lobbies/invites/{invite_id}/accept" : {
+      "post" : {
+        "description" : "Accepts a lobby invite",
+        "operationId" : "AcceptLobbyInvite",
+        "parameters" : [ {
+          "description" : "ID of the invite",
+          "explode" : false,
+          "in" : "path",
+          "name" : "invite_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AcceptLobbyInvite_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesAcceptLobbyInviteResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Invite",
+        "tags" : [ "LobbiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/lobbies/list" : {
+      "post" : {
+        "description" : "Returns a list of lobbies",
+        "operationId" : "ListLobbies",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/lobbiesListLobbiesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesListLobbiesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Lobbies",
+        "tags" : [ "LobbiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/lobbies/list/members/{user_id}" : {
+      "get" : {
+        "description" : "Lists all lobbies a member is a part of",
+        "operationId" : "ListLobbiesForMember",
+        "parameters" : [ {
+          "description" : "ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesListLobbiesForMemberResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Member",
+        "tags" : [ "LobbiesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/lobbies/lobbies" : {
+      "post" : {
+        "description" : "Creates a lobby",
+        "operationId" : "CreateLobby",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/lobbiesCreateLobbyRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesCreateLobbyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Lobby",
+        "tags" : [ "LobbiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/lobbies/lobbies/{lobby_id}" : {
+      "delete" : {
+        "description" : "Deletes a lobby",
+        "operationId" : "DeleteLobby",
+        "parameters" : [ {
+          "description" : "Unique identifier of the lobby",
+          "explode" : false,
+          "in" : "path",
+          "name" : "lobby_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "The user id of the lobby owner",
+          "explode" : true,
+          "in" : "query",
+          "name" : "owner",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesDeleteLobbyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Lobby",
+        "tags" : [ "LobbiesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "get" : {
+        "description" : "Get lobby details",
+        "operationId" : "GetLobby",
+        "parameters" : [ {
+          "description" : "Unique identifier of the lobby",
+          "explode" : false,
+          "in" : "path",
+          "name" : "lobby_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesGetLobbyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Lobby",
+        "tags" : [ "LobbiesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Modifies a lobby",
+        "operationId" : "ModifyLobby",
+        "parameters" : [ {
+          "description" : "ID of the lobby",
+          "explode" : false,
+          "in" : "path",
+          "name" : "lobby_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ModifyLobby_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesModifyLobbyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Lobby",
+        "tags" : [ "LobbiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/lobbies/lobbies/{lobby_id}/invite/{invitee_id}" : {
+      "post" : {
+        "description" : "Invites a member to a lobby.",
+        "operationId" : "InviteLobbyMember",
+        "parameters" : [ {
+          "description" : "Unique identifier of the lobby",
+          "explode" : false,
+          "in" : "path",
+          "name" : "lobby_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User id of the user to be invited to the lobby",
+          "explode" : false,
+          "in" : "path",
+          "name" : "invitee_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InviteLobbyMember_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesInviteLobbyMemberResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Member",
+        "tags" : [ "LobbiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/lobbies/lobbies/{lobby_id}/invites" : {
+      "get" : {
+        "description" : "Lists lobby invites",
+        "operationId" : "ListLobbyInvites",
+        "parameters" : [ {
+          "description" : "Id of the lobby to list invites for",
+          "explode" : false,
+          "in" : "path",
+          "name" : "lobby_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User id of the owner of the lobby",
+          "explode" : true,
+          "in" : "query",
+          "name" : "owner",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesListLobbyInvitesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Invite",
+        "tags" : [ "LobbiesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/lobbies/lobbies/{lobby_id}/join" : {
+      "post" : {
+        "description" : "Joins a lobby.",
+        "operationId" : "JoinLobby",
+        "parameters" : [ {
+          "description" : "Unique identifier of the lobby",
+          "explode" : false,
+          "in" : "path",
+          "name" : "lobby_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/JoinLobby_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesJoinLobbyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Lobby",
+        "tags" : [ "LobbiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/lobbies/lobbies/{lobby_id}/leave/{user_id}" : {
+      "delete" : {
+        "description" : "Leaves a lobby.",
+        "operationId" : "LeaveLobby",
+        "parameters" : [ {
+          "description" : "Unique identifier of the lobby",
+          "explode" : false,
+          "in" : "path",
+          "name" : "lobby_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User id of the user leaving the lobby",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesLeaveLobbyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Lobby",
+        "tags" : [ "LobbiesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/lobbies/lobbies/{lobby_id}/members/{user_id}" : {
+      "delete" : {
+        "description" : "Removes a member from a lobby.",
+        "operationId" : "RemoveLobbyMember",
+        "parameters" : [ {
+          "description" : "Unique identifier of the lobby",
+          "explode" : false,
+          "in" : "path",
+          "name" : "lobby_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User id of the user to be removed from the lobby",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User id of the user removing the member from the lobby",
+          "explode" : true,
+          "in" : "query",
+          "name" : "requester_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesRemoveLobbyMemberResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Member",
+        "tags" : [ "LobbiesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "post" : {
+        "description" : "Adds a member to a lobby.",
+        "operationId" : "AddLobbyMember",
+        "parameters" : [ {
+          "description" : "Unique identifier of the lobby",
+          "explode" : false,
+          "in" : "path",
+          "name" : "lobby_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User id of the user to be added to the lobby",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AddLobbyMember_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesAddLobbyMemberResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Member",
+        "tags" : [ "LobbiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/lobbies/lobbies/{lobby_id}/members/{user_id}/metadata" : {
+      "post" : {
+        "description" : "Updates the player metadata blob.",
+        "operationId" : "UpdateLobbyMemberMetadata",
+        "parameters" : [ {
+          "description" : "Unique identifier of the lobby",
+          "explode" : false,
+          "in" : "path",
+          "name" : "lobby_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User id of the user to update metadata for",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateLobbyMemberMetadata_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesUpdateLobbyMemberMetadataResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Member",
+        "tags" : [ "LobbiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/lobbies/lobbies/{lobby_id}/members/{user_id}/placement" : {
+      "post" : {
+        "description" : "Updates the member placement.",
+        "operationId" : "UpdateLobbyMemberPlacement",
+        "parameters" : [ {
+          "description" : "Unique identifier of the lobby",
+          "explode" : false,
+          "in" : "path",
+          "name" : "lobby_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User id of the user to update metadata for",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateLobbyMemberPlacement_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesUpdateLobbyMemberPlacementResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Member",
+        "tags" : [ "LobbiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/lobbies/lobbies/{lobby_id}/members/{user_id}/ready" : {
+      "post" : {
+        "description" : "Sets a member as ready.",
+        "operationId" : "ReadyMember",
+        "parameters" : [ {
+          "description" : "Unique identifier of the lobby",
+          "explode" : false,
+          "in" : "path",
+          "name" : "lobby_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User id of the user to be marked as ready",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReadyMember_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesReadyMemberResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Member",
+        "tags" : [ "LobbiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/lobbies/lobbies/{lobby_id}/start" : {
+      "post" : {
+        "description" : "Starts a match in a lobby.",
+        "operationId" : "StartMatch",
+        "parameters" : [ {
+          "description" : "Unique identifier of the lobby",
+          "explode" : false,
+          "in" : "path",
+          "name" : "lobby_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/StartMatch_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesStartMatchResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Match",
+        "tags" : [ "LobbiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/lobbies/lobbies/{lobby_id}/transfer-lobby/{new_owner}" : {
+      "post" : {
+        "description" : "Transfers ownership of a lobby.",
+        "operationId" : "TransferLobbyOwnership",
+        "parameters" : [ {
+          "description" : "Unique identifier of the lobby",
+          "explode" : false,
+          "in" : "path",
+          "name" : "lobby_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User id of the user to be the new owner",
+          "explode" : false,
+          "in" : "path",
+          "name" : "new_owner",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TransferLobbyOwnership_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesTransferOwnershipResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Lobby",
+        "tags" : [ "LobbiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ],
+        "x-snapser-exclude-from-non-legacy-sdk" : true
+      }
+    },
+    "/v1/lobbies/lobbies/{lobby_id}/transfer/{new_owner}" : {
+      "post" : {
+        "description" : "Transfers ownership of a lobby.",
+        "operationId" : "TransferOwnership",
+        "parameters" : [ {
+          "description" : "Unique identifier of the lobby",
+          "explode" : false,
+          "in" : "path",
+          "name" : "lobby_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User id of the user to be the new owner",
+          "explode" : false,
+          "in" : "path",
+          "name" : "new_owner",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TransferLobbyOwnership_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesTransferOwnershipResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Lobby",
+        "tags" : [ "LobbiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ],
+        "x-snapser-exclude-from-legacy-sdk" : true
+      }
+    },
+    "/v1/lobbies/member/{user_id}/invites" : {
+      "get" : {
+        "description" : "Lists lobby invites for a user",
+        "operationId" : "ListLobbyMemberInvites",
+        "parameters" : [ {
+          "description" : "Id of the user to list invites for",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesListLobbyMemberInvitesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Invite",
+        "tags" : [ "LobbiesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/lobbies/search" : {
+      "post" : {
+        "description" : "Searches for lobbies based on criteria",
+        "operationId" : "SearchLobbies",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/lobbiesSearchLobbiesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/lobbiesSearchLobbiesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Lobby Search",
+        "tags" : [ "LobbiesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "AcceptLobbyInvite_request" : {
+        "properties" : {
+          "metadata" : {
+            "description" : "Metadata of the user accepting the invite",
+            "type" : "object"
+          },
+          "user_id" : {
+            "description" : "ID of the user accepting the invite. This must match the invitee_id of the invite",
+            "type" : "string"
+          }
+        },
+        "required" : [ "user_id" ],
+        "type" : "object"
+      },
+      "AddLobbyMember_request" : {
+        "properties" : {
+          "metadata" : {
+            "description" : "Metadata of the user to be added to the lobby",
+            "type" : "object"
+          },
+          "requester_id" : {
+            "description" : "User id of the user adding the member to the lobby",
+            "type" : "string"
+          }
+        },
+        "required" : [ "requester_id" ],
+        "type" : "object"
+      },
+      "AnyValue" : {
+        "description" : "Can be of any type",
+        "nullable" : true,
+        "oneOf" : [ {
+          "type" : "string"
+        }, {
+          "type" : "number"
+        }, {
+          "type" : "boolean"
+        }, {
+          "type" : "integer"
+        }, {
+          "type" : "object"
+        }, {
+          "items" : {
+            "type" : "object"
+          },
+          "type" : "array"
+        } ]
+      },
+      "InviteLobbyMember_request" : {
+        "properties" : {
+          "inviter_id" : {
+            "description" : "User id of the user inviting the member to the lobby",
+            "type" : "string"
+          },
+          "metadata" : {
+            "description" : "Metadata of the user to be invited to the lobby",
+            "type" : "object"
+          }
+        },
+        "required" : [ "inviter_id" ],
+        "type" : "object"
+      },
+      "JoinLobby_request" : {
+        "properties" : {
+          "metadata" : {
+            "description" : "Metadata of the user joining the lobby",
+            "type" : "object"
+          },
+          "party_id" : {
+            "description" : "Party id of the party to join the lobby",
+            "type" : "string"
+          },
+          "password" : {
+            "description" : "Password to join the lobby",
+            "type" : "string"
+          },
+          "placement" : {
+            "description" : "Placement of the user",
+            "format" : "int32",
+            "nullable" : true,
+            "type" : "integer"
+          },
+          "user_id" : {
+            "description" : "User id of the user joining the lobby",
+            "type" : "string"
+          }
+        },
+        "required" : [ "user_id" ],
+        "type" : "object"
+      },
+      "ModifyLobby_request" : {
+        "properties" : {
+          "accessibility" : {
+            "$ref" : "#/components/schemas/lobbiesLobbyAccessibility"
+          },
+          "allocation_metadata" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "Metadata that is passed into the gameserver upon allocation.",
+            "type" : "object"
+          },
+          "allow_party_join" : {
+            "description" : "If true, parties can be invited or use a password to join the lobby together.  All members of the party will be joined to the lobby (provided the max players allows it) by the party owner using the password or invite url.  The Lobby owner may also add the party to the lobby specifically.",
+            "nullable" : true,
+            "type" : "boolean"
+          },
+          "description" : {
+            "description" : "Description of the Lobby",
+            "type" : "string"
+          },
+          "invite_url" : {
+            "description" : "Direct access to the party API with a token attached that will allow membership to the lobby.",
+            "type" : "string"
+          },
+          "max_members" : {
+            "description" : "The Lobby cap on members.",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "name" : {
+            "description" : "Name of the Lobby",
+            "type" : "string"
+          },
+          "owner" : {
+            "description" : "The user id of the lobby owner",
+            "type" : "string"
+          },
+          "password" : {
+            "description" : "If set, the lobby will require a password when joining. This is a way to socially provide access to your Public lobby.",
+            "type" : "string"
+          },
+          "placement_settings" : {
+            "$ref" : "#/components/schemas/lobbiesPlacementSettings"
+          },
+          "private" : {
+            "description" : "Indicates if the lobby is private. A private lobby will not be listed and is not searchable.  Private lobbies can only be joined by invite, direct addition from the lobby owner, or - if configured - being in a party that was invited/added.",
+            "nullable" : true,
+            "type" : "boolean"
+          },
+          "search_metadata" : {
+            "description" : "The metadata of the lobby. Arbitrary, json serializable data that can be searched on.",
+            "type" : "object"
+          },
+          "visibility" : {
+            "$ref" : "#/components/schemas/lobbiesLobbyVisibility"
+          }
+        },
+        "required" : [ "owner" ],
+        "type" : "object"
+      },
+      "ReadyMember_request" : {
+        "properties" : {
+          "ready" : {
+            "description" : "Boolean indicating if the user is ready",
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "ready" ],
+        "type" : "object"
+      },
+      "StartMatch_request" : {
+        "properties" : {
+          "fleetName" : {
+            "description" : "Fleet name to be used for gameserver allocation",
+            "type" : "string"
+          },
+          "owner" : {
+            "description" : "User id of the lobby owner",
+            "type" : "string"
+          },
+          "region" : {
+            "description" : "Region where the match will be allocated",
+            "type" : "string"
+          },
+          "start_at" : {
+            "description" : "Time in seconds since epoch when the match should start",
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "required" : [ "fleetName", "owner", "region" ],
+        "type" : "object"
+      },
+      "TransferLobbyOwnership_request" : {
+        "properties" : {
+          "current_owner" : {
+            "description" : "User id of the current owner",
+            "type" : "string"
+          }
+        },
+        "required" : [ "current_owner" ],
+        "type" : "object"
+      },
+      "UpdateLobbyMemberMetadata_request" : {
+        "properties" : {
+          "metadata" : {
+            "description" : "Metadata of the user to be updated",
+            "type" : "object"
+          }
+        },
+        "required" : [ "metadata" ],
+        "type" : "object"
+      },
+      "UpdateLobbyMemberPlacement_request" : {
+        "properties" : {
+          "placement" : {
+            "description" : "Placement of the user",
+            "format" : "int32",
+            "nullable" : true,
+            "type" : "integer"
+          }
+        },
+        "required" : [ "placement" ],
+        "type" : "object"
+      },
+      "lobbiesAcceptLobbyInviteResponse" : {
+        "properties" : {
+          "lobby" : {
+            "$ref" : "#/components/schemas/lobbiesLobby"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesAddLobbyMemberResponse" : {
+        "properties" : {
+          "lobby" : {
+            "$ref" : "#/components/schemas/lobbiesLobby"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesCreateLobbyRequest" : {
+        "properties" : {
+          "accessibility" : {
+            "$ref" : "#/components/schemas/lobbiesLobbyAccessibility"
+          },
+          "allocation_metadata" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "Metadata that is passed into the gameserver upon allocation.",
+            "type" : "object"
+          },
+          "allow_party_join" : {
+            "description" : "If true, parties can be invited or use a password to join the lobby together.  All members of the party will be joined to the lobby (provided the max players allows it) by the party owner using the password or invite url.  The Lobby owner may also add the party to the lobby specifically.",
+            "type" : "boolean"
+          },
+          "description" : {
+            "description" : "Description of the Lobby",
+            "type" : "string"
+          },
+          "invite_url" : {
+            "description" : "Direct access to the party API with a token attached that will allow membership to the lobby.",
+            "type" : "string"
+          },
+          "max_members" : {
+            "description" : "The Lobby cap on members.",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "name" : {
+            "description" : "Name of the Lobby",
+            "type" : "string"
+          },
+          "owner_metadata" : {
+            "description" : "The metadata of the owner.",
+            "type" : "object"
+          },
+          "owner_placement" : {
+            "format" : "int32",
+            "nullable" : true,
+            "type" : "integer"
+          },
+          "password" : {
+            "description" : "If set, the lobby will require a password when joining. This is a way to socially provide access to your Public lobby.",
+            "type" : "string"
+          },
+          "placement_settings" : {
+            "$ref" : "#/components/schemas/lobbiesPlacementSettings"
+          },
+          "private" : {
+            "type" : "boolean"
+          },
+          "search_metadata" : {
+            "description" : "The metadata of the lobby. Arbitrary, json serializable data that can be searched on.",
+            "type" : "object"
+          },
+          "start_after_seconds" : {
+            "description" : "Number of seconds after which the lobby will be started",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "visibility" : {
+            "$ref" : "#/components/schemas/lobbiesLobbyVisibility"
+          }
+        },
+        "title" : "Service Requests & Responses",
+        "type" : "object"
+      },
+      "lobbiesCreateLobbyResponse" : {
+        "properties" : {
+          "lobby" : {
+            "$ref" : "#/components/schemas/lobbiesLobby"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesDeleteLobbyResponse" : {
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesGetLobbyResponse" : {
+        "properties" : {
+          "lobby" : {
+            "$ref" : "#/components/schemas/lobbiesLobby"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesInvite" : {
+        "properties" : {
+          "id" : {
+            "title" : "Unique identifier of the invite",
+            "type" : "string"
+          },
+          "invitee_id" : {
+            "title" : "The user id of the invitee",
+            "type" : "string"
+          },
+          "inviter_id" : {
+            "title" : "The user id of the inviter",
+            "type" : "string"
+          },
+          "lobby_id" : {
+            "title" : "The lobby id of the lobby the invite is for",
+            "type" : "string"
+          },
+          "metadata" : {
+            "title" : "The time the invite was last updated",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesInviteLobbyMemberResponse" : {
+        "properties" : {
+          "invite" : {
+            "$ref" : "#/components/schemas/lobbiesInvite"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesJoinLobbyResponse" : {
+        "properties" : {
+          "lobby" : {
+            "$ref" : "#/components/schemas/lobbiesLobby"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesLeaveLobbyResponse" : {
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesListLobbiesForMemberResponse" : {
+        "properties" : {
+          "lobbies" : {
+            "items" : {
+              "$ref" : "#/components/schemas/lobbiesLobby"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesListLobbiesRequest" : {
+        "properties" : {
+          "limit" : {
+            "description" : "Number of results returned. The maximum allowed is 50, defaults to 10 if not provided.",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "offset" : {
+            "description" : "Number of results to skip from the start of the result set",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "sort" : {
+            "description" : "Orders by name. Valid values - asc, desc",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesListLobbiesResponse" : {
+        "properties" : {
+          "lobbies" : {
+            "items" : {
+              "$ref" : "#/components/schemas/lobbiesLobby"
+            },
+            "type" : "array"
+          },
+          "total_count" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesListLobbyInvitesResponse" : {
+        "properties" : {
+          "invites" : {
+            "items" : {
+              "$ref" : "#/components/schemas/lobbiesInvite"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesListLobbyMemberInvitesResponse" : {
+        "properties" : {
+          "invites" : {
+            "items" : {
+              "$ref" : "#/components/schemas/lobbiesInvite"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesLobby" : {
+        "properties" : {
+          "accessibility" : {
+            "$ref" : "#/components/schemas/lobbiesLobbyAccessibility"
+          },
+          "allocated" : {
+            "description" : "Indicates if the lobby has been allocated.",
+            "nullable" : true,
+            "type" : "boolean"
+          },
+          "allocation_metadata" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "Metadata that is passed into the gameserver upon allocation.",
+            "type" : "object"
+          },
+          "allow_party_join" : {
+            "description" : "If true, parties can be invited or use a password to join the lobby together.  All members of the party will be joined to the lobby (provided the max players allows it) by the party owner using the password or invite url.  The Lobby owner may also add the party to the lobby specifically.",
+            "nullable" : true,
+            "type" : "boolean"
+          },
+          "description" : {
+            "title" : "Description of the lobby",
+            "type" : "string"
+          },
+          "id" : {
+            "title" : "Unique identifier of the lobby",
+            "type" : "string"
+          },
+          "invite_url" : {
+            "description" : "Direct access to the party API with a token attached that will allow membership to the lobby.",
+            "type" : "string"
+          },
+          "max_members" : {
+            "description" : "The Lobby cap on members. So sorry, we’re full.",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "member_count" : {
+            "description" : "The current number of members in the lobby.",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "members" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/lobbiesMember"
+            },
+            "description" : "The players that have joined the lobby.",
+            "type" : "object"
+          },
+          "name" : {
+            "title" : "Name of the lobby",
+            "type" : "string"
+          },
+          "owner" : {
+            "title" : "The user id of the lobby owner",
+            "type" : "string"
+          },
+          "password" : {
+            "description" : "If set, the lobby will require a password when joining. This is a way to socially provide access to your Public lobby.",
+            "type" : "string"
+          },
+          "placement_settings" : {
+            "$ref" : "#/components/schemas/lobbiesPlacementSettings"
+          },
+          "private" : {
+            "description" : "Indicates if the lobby is private. This means it will not be listed and is not searchable.  Private lobbies can only be joined by invite, direct addition from the lobby owner, or - if configured - being in a party that was invited/added.",
+            "nullable" : true,
+            "type" : "boolean"
+          },
+          "search_metadata" : {
+            "description" : "The metadata of the lobby. Arbitrary, json serializable data that can be searched on.",
+            "type" : "object"
+          },
+          "visibility" : {
+            "$ref" : "#/components/schemas/lobbiesLobbyVisibility"
+          }
+        },
+        "title" : "Type Definitions",
+        "type" : "object"
+      },
+      "lobbiesLobbyAccessibility" : {
+        "default" : "ACCESSIBILITY_UNKNOWN",
+        "enum" : [ "ACCESSIBILITY_UNKNOWN", "ALLOW_ALL", "INVITE_ONLY", "DISALLOW_ALL", "OWNER_ADMISSION_ONLY", "OWNER_ADMISSION_AND_INVITE" ],
+        "type" : "string"
+      },
+      "lobbiesLobbyVisibility" : {
+        "default" : "VISIBILITY_UNKNOWN",
+        "enum" : [ "VISIBILITY_UNKNOWN", "PUBLIC", "PRIVATE" ],
+        "type" : "string"
+      },
+      "lobbiesMember" : {
+        "properties" : {
+          "id" : {
+            "title" : "The user id of the member",
+            "type" : "string"
+          },
+          "metadata" : {
+            "description" : "The metadata of the member. Arbitrary, json serializable data.",
+            "type" : "object"
+          },
+          "placement" : {
+            "format" : "int32",
+            "nullable" : true,
+            "title" : "Placement of the member",
+            "type" : "integer"
+          },
+          "ready_check" : {
+            "nullable" : true,
+            "title" : "Boolean indicating if the member is the",
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesMetadataFilter" : {
+        "properties" : {
+          "bool_value" : {
+            "description" : "Strongly typed boolean value for comparison, use instead of value for type safety",
+            "nullable" : true,
+            "type" : "boolean"
+          },
+          "double_value" : {
+            "description" : "Strongly typed double value for comparison, use instead of value for type safety",
+            "format" : "double",
+            "nullable" : true,
+            "type" : "number"
+          },
+          "int_value" : {
+            "description" : "Strongly typed integer value for comparison, use instead of value for type safety",
+            "format" : "int64",
+            "nullable" : true,
+            "type" : "integer"
+          },
+          "key" : {
+            "description" : "Field inside metadata to be filtered on",
+            "type" : "string"
+          },
+          "op" : {
+            "description" : "Operator for the comparison. Valid values - LIKE, =, >, <",
+            "type" : "string"
+          },
+          "string_value" : {
+            "description" : "Strongly typed string value for comparison, use instead of value for type safety",
+            "nullable" : true,
+            "type" : "string"
+          },
+          "value" : {
+            "$ref" : "#/components/schemas/AnyValue"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesModifyLobbyResponse" : {
+        "properties" : {
+          "lobby" : {
+            "$ref" : "#/components/schemas/lobbiesLobby"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesPlacementSettings" : {
+        "properties" : {
+          "allow_member_placement_updates" : {
+            "description" : "If true, members can update their placement.",
+            "nullable" : true,
+            "type" : "boolean"
+          },
+          "allow_placement_updates_outside_range" : {
+            "description" : "If true, members can update their placement outside of the range of the num_placements.",
+            "nullable" : true,
+            "type" : "boolean"
+          },
+          "num_placements" : {
+            "format" : "int32",
+            "nullable" : true,
+            "title" : "The maximum number of teams that can be created in the lobby",
+            "type" : "integer"
+          },
+          "placement_strategy" : {
+            "$ref" : "#/components/schemas/lobbiesPlacementStrategy"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesPlacementStrategy" : {
+        "default" : "UNKNOWN_PLACEMENT_STRATEGY",
+        "enum" : [ "UNKNOWN_PLACEMENT_STRATEGY", "PLACEMENT_RANDOM", "PLACEMENT_BALANCED" ],
+        "type" : "string"
+      },
+      "lobbiesReadyMemberResponse" : {
+        "properties" : {
+          "lobby" : {
+            "$ref" : "#/components/schemas/lobbiesLobby"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesRemoveLobbyMemberResponse" : {
+        "properties" : {
+          "lobby" : {
+            "$ref" : "#/components/schemas/lobbiesLobby"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesSearchLobbiesRequest" : {
+        "properties" : {
+          "limit" : {
+            "description" : "Number of results returned. The maximum allowed is 50, defaults to 10 if not provided.",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "metadata_filters" : {
+            "description" : "Metadata filters. IMPORTANT: Only populate value or a single strongly typed value field (bool_value, int_value, double_value, string_value) inside each filter to ensure correct behavior.",
+            "items" : {
+              "$ref" : "#/components/schemas/lobbiesMetadataFilter"
+            },
+            "type" : "array"
+          },
+          "offset" : {
+            "description" : "Number of results to skip from the start of the result set",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/lobbiesSortParams"
+          }
+        },
+        "required" : [ "metadata_filters" ],
+        "type" : "object"
+      },
+      "lobbiesSearchLobbiesResponse" : {
+        "properties" : {
+          "lobbies" : {
+            "items" : {
+              "$ref" : "#/components/schemas/lobbiesLobby"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesSortParams" : {
+        "properties" : {
+          "field" : {
+            "description" : "Field on which the results are to be sorted",
+            "type" : "string"
+          },
+          "order" : {
+            "description" : "Order of sorting. Valid values - asc, desc",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesStartMatchResponse" : {
+        "properties" : {
+          "lobby" : {
+            "$ref" : "#/components/schemas/lobbiesLobby"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesTransferOwnershipResponse" : {
+        "properties" : {
+          "lobby" : {
+            "$ref" : "#/components/schemas/lobbiesLobby"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesUpdateLobbyMemberMetadataResponse" : {
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "lobbiesUpdateLobbyMemberPlacementResponse" : {
+        "properties" : {
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "protobufNullValue" : {
+        "default" : "NULL_VALUE",
+        "description" : "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value.",
+        "enum" : [ "NULL_VALUE" ],
+        "type" : "string"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

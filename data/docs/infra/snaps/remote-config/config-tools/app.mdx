@@ -1,0 +1,24 @@
+# App Tools
+## 1. App Config Tool
+This tool allows you to add or update your app configuration.
+
+To get started:
+1. Click on `App Config > Config` from the side Nav.
+2. Click on the `Add App Config` button.
+3. You will then see a form where you can add or update your configuration.
+
+### App Config Version Details
+1. **App Config Version**: The version of your app configuration. This should be a unique string that can be alphanumeric. The app client explicitly requests this version to get the configuration.
+
+### App Config Content
+1. **Configuration**: The JSON representation of your app configuration.
+2. **Configuration Schema**: The optional JSON schema validator for your configuration. This ensures that only a valid JSON as per the schema is accepted as a valid configuration.
+<Note>
+  The schema is optional but recommended to ensure that only a valid JSON is accepted.
+</Note>
+
+## 2. App Config History Tool
+This tool allows you to view the history of changes made to the app configuration.
+
+### App Config History Details
+1. **Config Version**: Select the version of your app configuration to view the changes.

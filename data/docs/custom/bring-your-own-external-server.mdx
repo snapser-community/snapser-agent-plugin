@@ -1,0 +1,45 @@
+
+
+export const description = 'BYO Server'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Bring your Own External Server
+
+Bring your own external server onto Snapser.
+
+## Concept
+
+Some developers have an existing cloud functions or a server they have been using.
+It's super easy, with BYOS, to architecturally put this behind your Snapend
+gateway. The advantage of doing this is, if you have an Auth snap as part of
+your Snapend then you do not have to handle Authentication and Authorization.
+Instead, your gateway handles this for you and forwards the request to your
+server. All you have to do is, give your server a **name** and add a forwarding domain. For security reasons we only support domains over https.
+
+## Usage
+
+When you are creating a new Snapend in Step number three you will be exposed to all the **Bring your owns (BYOs)**
+that Snapser supports. Click the "Servers" Nav item from the left section. You will see a form that takes in a name and a domain.
+
+It should be noted that the name has to be unique within your Snapend. If you have selected say leaderboards marketplace Snap, then you cannot name your BYOS as leaderboards.
+
+For the domain, make sure you enter just the **domain**. You should not enter any
+additional paths in this section.
+
+![Byos Pic](/images/docs/byos.png)
+
+## Example
+
+Say your cluster URL is **xyzabc** and you have
+added a BYOS called **custom** and the domain
+you entered is **https://foo.bar**. Your server
+will now be reachable at **https://gateway.snapser.com/xyzabc/v1/custom**
+
+<Note>
+  Snapser has made a design decision to always version BYOS. Hence you will find
+  the final URL to have /v1/custom in the example above.
+</Note>

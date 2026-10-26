@@ -1,0 +1,463 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "In-App Purchase of users",
+    "title" : "IAP",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "IAPService"
+  } ],
+  "paths" : {
+    "/v1/iap/bundles" : {
+      "get" : {
+        "description" : "Get multiple Bundles by names",
+        "operationId" : "GetBundles",
+        "parameters" : [ {
+          "explode" : true,
+          "in" : "query",
+          "name" : "names",
+          "required" : false,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/iapGetBundlesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Get Bundles",
+        "tags" : [ "IAPService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/iap/transactions/apple" : {
+      "post" : {
+        "description" : "Verify Apple App Store In-App Purchase for a user",
+        "operationId" : "VerifyAppleTransaction",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/iapVerifyAppleTransactionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/iapTransaction"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Verify Transaction",
+        "tags" : [ "IAPService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/iap/transactions/google" : {
+      "post" : {
+        "description" : "Verify Google Play In-App Purchase for a user",
+        "operationId" : "VerifyGoogleTransaction",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/iapVerifyGoogleTransactionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/iapTransaction"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Verify Transaction",
+        "tags" : [ "IAPService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/iap/transactions/steam" : {
+      "post" : {
+        "description" : "Verify Steam In-App Purchase for a user",
+        "operationId" : "VerifySteamTransaction",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/iapVerifySteamTransactionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/iapTransaction"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Verify Transaction",
+        "tags" : [ "IAPService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/iap/transactions/steam-dlc" : {
+      "post" : {
+        "description" : "Verify Steam DLC ownership for a user",
+        "operationId" : "VerifySteamDlc",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/iapVerifySteamDlcRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/iapTransaction"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Verify Steam DLC",
+        "tags" : [ "IAPService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/iap/transactions/tebex" : {
+      "post" : {
+        "description" : "Verify Tebex Headless In-App Purchase for a user",
+        "operationId" : "VerifyTebexTransaction",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/iapVerifyTebexTransactionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/iapTransaction"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Verify Tebex Transaction",
+        "tags" : [ "IAPService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "iapBundle" : {
+        "properties" : {
+          "created_at" : {
+            "description" : "Unix seconds when the bundle was created",
+            "format" : "int64",
+            "readOnly" : true,
+            "type" : "integer"
+          },
+          "grants" : {
+            "description" : "Grants awarded when the bundle is purchased",
+            "items" : {
+              "$ref" : "#/components/schemas/iapGrant"
+            },
+            "type" : "array"
+          },
+          "id" : {
+            "description" : "Internal identifier of the bundle",
+            "format" : "int64",
+            "readOnly" : true,
+            "type" : "integer"
+          },
+          "name" : {
+            "description" : "Unique name of the bundle",
+            "type" : "string"
+          },
+          "updated_at" : {
+            "description" : "Unix seconds when the bundle was last updated",
+            "format" : "int64",
+            "readOnly" : true,
+            "type" : "integer"
+          }
+        },
+        "required" : [ "grants", "name" ],
+        "type" : "object"
+      },
+      "iapGetBundlesResponse" : {
+        "properties" : {
+          "bundles" : {
+            "items" : {
+              "$ref" : "#/components/schemas/iapBundle"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "iapGrant" : {
+        "properties" : {
+          "id" : {
+            "description" : "Identifier of the granted item or currency",
+            "type" : "string"
+          },
+          "quantity" : {
+            "description" : "Deprecated. Use `quantity_64`. Quantity of the grant (32-bit)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "quantity_64" : {
+            "description" : "Quantity of the granted item or currency",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "type" : {
+            "description" : "Grant kind — either `item` or `currency`",
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "quantity_64", "type" ],
+        "type" : "object"
+      },
+      "iapTransaction" : {
+        "properties" : {
+          "bundle_name" : {
+            "type" : "string"
+          },
+          "created_at" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "grant_status" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "provider" : {
+            "type" : "string"
+          },
+          "purchased_at" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "receipt" : {
+            "format" : "byte",
+            "pattern" : "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+            "type" : "string"
+          },
+          "transaction_id" : {
+            "type" : "string"
+          },
+          "updated_at" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "user_id" : {
+            "type" : "string"
+          },
+          "verification_status" : {
+            "type" : "string"
+          }
+        },
+        "title" : "Message Types and Enums",
+        "type" : "object"
+      },
+      "iapVerifyAppleTransactionRequest" : {
+        "properties" : {
+          "currency" : {
+            "description" : "Currency of the purchase",
+            "type" : "string"
+          },
+          "price" : {
+            "description" : "Price of the purchase",
+            "format" : "float",
+            "type" : "number"
+          },
+          "transaction_id" : {
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "User identifier who purchased a product",
+            "type" : "string"
+          }
+        },
+        "required" : [ "user_id" ],
+        "type" : "object"
+      },
+      "iapVerifyGoogleTransactionRequest" : {
+        "properties" : {
+          "currency" : {
+            "description" : "Currency of the purchase",
+            "type" : "string"
+          },
+          "package_name" : {
+            "description" : "Package name of an app a product purchased from",
+            "type" : "string"
+          },
+          "price" : {
+            "description" : "Price of the purchase",
+            "format" : "float",
+            "type" : "number"
+          },
+          "product_id" : {
+            "description" : "Identifier of a product purchased",
+            "type" : "string"
+          },
+          "purchase_token" : {
+            "description" : "Purchase token received from google after purchase",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "User identifier who purchased a product",
+            "type" : "string"
+          }
+        },
+        "required" : [ "package_name", "product_id", "purchase_token", "user_id" ],
+        "type" : "object"
+      },
+      "iapVerifySteamDlcRequest" : {
+        "properties" : {
+          "dlc_app_id" : {
+            "description" : "Steam App ID of the DLC to verify ownership of",
+            "type" : "string"
+          },
+          "product_id" : {
+            "description" : "Identifier of the product/bundle to grant",
+            "type" : "string"
+          },
+          "steam_id" : {
+            "description" : "64-bit Steam ID of the user",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "User identifier who purchased the DLC",
+            "type" : "string"
+          }
+        },
+        "required" : [ "dlc_app_id", "product_id", "steam_id", "user_id" ],
+        "type" : "object"
+      },
+      "iapVerifySteamTransactionRequest" : {
+        "properties" : {
+          "currency" : {
+            "description" : "Currency of the purchase",
+            "type" : "string"
+          },
+          "order_id" : {
+            "description" : "Steam order/transaction ID from the purchase",
+            "type" : "string"
+          },
+          "price" : {
+            "description" : "Price of the purchase",
+            "format" : "float",
+            "type" : "number"
+          },
+          "product_id" : {
+            "description" : "Identifier of the product/bundle purchased",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "User identifier who purchased a product",
+            "type" : "string"
+          }
+        },
+        "required" : [ "order_id", "product_id", "user_id" ],
+        "type" : "object"
+      },
+      "iapVerifyTebexTransactionRequest" : {
+        "properties" : {
+          "basket_id" : {
+            "description" : "Tebex basket identifier",
+            "type" : "string"
+          },
+          "currency" : {
+            "description" : "Currency of the purchase",
+            "type" : "string"
+          },
+          "price" : {
+            "description" : "Price of the purchase",
+            "format" : "float",
+            "type" : "number"
+          },
+          "product_id" : {
+            "description" : "Bundle name to grant",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "User identifier who purchased a product",
+            "type" : "string"
+          }
+        },
+        "required" : [ "basket_id", "product_id", "user_id" ],
+        "type" : "object"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

@@ -1,0 +1,517 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Set up and apply dynamic configuration for your players",
+    "title" : "Inbox",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "InboxService"
+  } ],
+  "paths" : {
+    "/v1/inbox/bulk-users-followers-message" : {
+      "post" : {
+        "description" : "Send a message to all followers",
+        "operationId" : "SendInboxFollowersMessage",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/inboxSendFollowersMessageRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inboxSendMessageResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Send Message",
+        "tags" : [ "InboxService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inbox/bulk-users-friends-message" : {
+      "post" : {
+        "description" : "Send a message to all friends",
+        "operationId" : "SendInboxFriendsMessage",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/inboxSendFriendsMessageRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inboxSendMessageResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Send Message",
+        "tags" : [ "InboxService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inbox/bulk-users-guild-message" : {
+      "post" : {
+        "description" : "Send a message to all members of a guild",
+        "operationId" : "SendInboxGuildMessage",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/inboxSendGuildMessageRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inboxSendMessageResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Send Message",
+        "tags" : [ "InboxService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inbox/bulk-users-message" : {
+      "post" : {
+        "description" : "Send a message to a user",
+        "operationId" : "SendInboxUserMessage",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/inboxSendUserMessageRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inboxSendMessageResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Send Message",
+        "tags" : [ "InboxService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inbox/users/{user_id}/message-status" : {
+      "put" : {
+        "description" : "Read messages from a inbox",
+        "operationId" : "ReadMessagesByIds",
+        "parameters" : [ {
+          "description" : "UserID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReadMessagesByIds_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Messages",
+        "tags" : [ "InboxService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inbox/users/{user_id}/messages" : {
+      "delete" : {
+        "description" : "Delete message from a inbox",
+        "operationId" : "DeleteMessagesByIds",
+        "parameters" : [ {
+          "description" : "UserID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Comma separated list of message IDs",
+          "explode" : true,
+          "in" : "query",
+          "name" : "message_ids",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Message",
+        "tags" : [ "InboxService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "get" : {
+        "description" : "Get messages from a inbox",
+        "operationId" : "GetMessages",
+        "parameters" : [ {
+          "description" : "UserID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inboxGetMessagesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Messages",
+        "tags" : [ "InboxService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inbox/users/{user_id}/messages/{message_id}" : {
+      "get" : {
+        "description" : "Get message from a inbox by the message Id",
+        "operationId" : "GetMessageById",
+        "parameters" : [ {
+          "description" : "UserID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "message id",
+          "explode" : false,
+          "in" : "path",
+          "name" : "message_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inboxUserMessage"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Message",
+        "tags" : [ "InboxService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "ReadMessagesByIds_request" : {
+        "properties" : {
+          "message_ids" : {
+            "description" : "message id",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "read_status" : {
+            "$ref" : "#/components/schemas/UserMessageReadStatus"
+          }
+        },
+        "required" : [ "message_ids", "read_status" ],
+        "type" : "object"
+      },
+      "UserMessageReadStatus" : {
+        "default" : "UNSPECIFIED_STATUS",
+        "enum" : [ "UNSPECIFIED_STATUS", "READ", "UNREAD" ],
+        "type" : "string"
+      },
+      "inboxGetMessagesResponse" : {
+        "properties" : {
+          "messages" : {
+            "items" : {
+              "$ref" : "#/components/schemas/inboxUserMessage"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "inboxReceiverType" : {
+        "default" : "DEFAULT",
+        "enum" : [ "DEFAULT", "USERS", "FRIENDS", "FOLLOWERS", "SEGMENT", "GUILD" ],
+        "title" : "Message Types and Enums",
+        "type" : "string"
+      },
+      "inboxSendFollowersMessageRequest" : {
+        "properties" : {
+          "content" : {
+            "description" : "Message to be sent",
+            "type" : "string"
+          },
+          "sender_id" : {
+            "description" : "UserID of the sender (required for user messages)",
+            "type" : "string"
+          },
+          "subject" : {
+            "description" : "Message subject",
+            "type" : "string"
+          }
+        },
+        "required" : [ "content", "subject" ],
+        "type" : "object"
+      },
+      "inboxSendFriendsMessageRequest" : {
+        "properties" : {
+          "content" : {
+            "description" : "Message to be sent",
+            "type" : "string"
+          },
+          "sender_id" : {
+            "description" : "UserID of the sender (required for user messages)",
+            "type" : "string"
+          },
+          "subject" : {
+            "description" : "Message subject",
+            "type" : "string"
+          }
+        },
+        "required" : [ "content", "subject" ],
+        "type" : "object"
+      },
+      "inboxSendGuildMessageRequest" : {
+        "properties" : {
+          "category" : {
+            "description" : "Message category, should be either system or user",
+            "enum" : [ "system", "user" ],
+            "type" : "string"
+          },
+          "content" : {
+            "description" : "Message to be sent",
+            "type" : "string"
+          },
+          "guild_id" : {
+            "description" : "Guild ID",
+            "type" : "string"
+          },
+          "image_urls" : {
+            "description" : "Image urls. Not allowed in user messages",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "mime_type" : {
+            "description" : "Mime type. Not allowed in user messages",
+            "type" : "string"
+          },
+          "sender_id" : {
+            "description" : "UserID of the sender (required for user messages)",
+            "type" : "string"
+          },
+          "subject" : {
+            "description" : "Message subject",
+            "type" : "string"
+          }
+        },
+        "required" : [ "category", "content", "guild_id", "subject" ],
+        "type" : "object"
+      },
+      "inboxSendMessageResponse" : {
+        "properties" : {
+          "message_id" : {
+            "description" : "Message ID",
+            "type" : "string"
+          }
+        },
+        "required" : [ "message_id" ],
+        "type" : "object"
+      },
+      "inboxSendUserMessageRequest" : {
+        "properties" : {
+          "category" : {
+            "description" : "Message category, should be either system or user",
+            "enum" : [ "system", "user" ],
+            "type" : "string"
+          },
+          "content" : {
+            "description" : "Message to be sent",
+            "type" : "string"
+          },
+          "image_urls" : {
+            "description" : "Image urls. Not allowed in user messages",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "mime_type" : {
+            "description" : "Mime type. Not allowed in user messages",
+            "type" : "string"
+          },
+          "receiver_ids" : {
+            "description" : "UserID of the target user",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "sender_id" : {
+            "description" : "UserID of the sender (required for user messages)",
+            "type" : "string"
+          },
+          "subject" : {
+            "description" : "Message subject",
+            "type" : "string"
+          }
+        },
+        "required" : [ "category", "content", "receiver_ids", "subject" ],
+        "title" : "Service Requests & Responses",
+        "type" : "object"
+      },
+      "inboxUserMessage" : {
+        "properties" : {
+          "category" : {
+            "type" : "string"
+          },
+          "content" : {
+            "type" : "string"
+          },
+          "image_urls" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "message_id" : {
+            "type" : "string"
+          },
+          "mime_type" : {
+            "type" : "string"
+          },
+          "read_status" : {
+            "$ref" : "#/components/schemas/UserMessageReadStatus"
+          },
+          "received_at" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "receiver_type" : {
+            "$ref" : "#/components/schemas/inboxReceiverType"
+          },
+          "sender_id" : {
+            "type" : "string"
+          },
+          "subject" : {
+            "type" : "string"
+          },
+          "updated_at" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

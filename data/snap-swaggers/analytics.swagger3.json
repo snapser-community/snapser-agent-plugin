@@ -1,0 +1,355 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Collect and analyse data about your users and game",
+    "title" : "Analytics",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "AnalyticsService"
+  } ],
+  "paths" : {
+    "/v1/analytics/app-events/{event_name}" : {
+      "post" : {
+        "description" : "Create a new app event",
+        "operationId" : "CreateAppEvent",
+        "parameters" : [ {
+          "description" : "Event to be added",
+          "explode" : false,
+          "in" : "path",
+          "name" : "event_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateAppEvent_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "App Events",
+        "tags" : [ "AnalyticsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/analytics/batch/app-events" : {
+      "put" : {
+        "description" : "Create a multiple batch events",
+        "operationId" : "BatchCreateAppEvents",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/analyticsBatchCreateAppEventRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/analyticsBatchCreateEventResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "App Events",
+        "tags" : [ "AnalyticsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/analytics/batch/user-events" : {
+      "put" : {
+        "description" : "Create multiple user events",
+        "operationId" : "BatchCreateUserEvents",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/analyticsBatchCreateUserEventRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/analyticsBatchCreateEventResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Events",
+        "tags" : [ "AnalyticsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/analytics/server-time" : {
+      "get" : {
+        "description" : "Gets Server Time",
+        "operationId" : "GetServerTime",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/analyticsServerTime"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Server Time",
+        "tags" : [ "AnalyticsService" ],
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/analytics/user-events/{event_name}" : {
+      "post" : {
+        "description" : "Create a new user event",
+        "operationId" : "CreateUserEvent",
+        "parameters" : [ {
+          "description" : "Event to be added",
+          "explode" : false,
+          "in" : "path",
+          "name" : "event_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateUserEvent_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Events",
+        "tags" : [ "AnalyticsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "CreateAppEvent_request" : {
+        "properties" : {
+          "created_at" : {
+            "description" : "Epoch timestamp of event in seconds, if this and offset are not provided, it will be the request time",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "properties" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "Key value pairs of the properties",
+            "type" : "object"
+          },
+          "time_offset" : {
+            "description" : "Time offset in seconds with server time",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "CreateUserEvent_request" : {
+        "properties" : {
+          "created_at" : {
+            "description" : "Epoch timestamp of event in seconds, if this and offset are not provided, it will be the request time",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "properties" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "Key value pairs of the properties",
+            "type" : "object"
+          },
+          "time_offset" : {
+            "description" : "Time offset in seconds with server time",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "user_id" : {
+            "description" : "UserID of the affected user",
+            "type" : "string"
+          }
+        },
+        "required" : [ "user_id" ],
+        "type" : "object"
+      },
+      "analyticsBatchCreateAppEventRequest" : {
+        "properties" : {
+          "data" : {
+            "description" : "Events array",
+            "items" : {
+              "$ref" : "#/components/schemas/analyticsGenericEvent"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "data" ],
+        "type" : "object"
+      },
+      "analyticsBatchCreateEventResponse" : {
+        "properties" : {
+          "events_failed" : {
+            "description" : "Count of failed events",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "events_ingested" : {
+            "description" : "Count of events successfully ingested",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "responses" : {
+            "description" : "List of responses for each event",
+            "items" : {
+              "$ref" : "#/components/schemas/analyticsBatchCreateEventSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "analyticsBatchCreateEventSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/analyticsGenericEvent"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "analyticsBatchCreateUserEventRequest" : {
+        "properties" : {
+          "data" : {
+            "description" : "Events array",
+            "items" : {
+              "$ref" : "#/components/schemas/analyticsGenericEvent"
+            },
+            "type" : "array"
+          },
+          "user_id" : {
+            "description" : "UserID of the affected user",
+            "type" : "string"
+          }
+        },
+        "required" : [ "data", "user_id" ],
+        "type" : "object"
+      },
+      "analyticsGenericEvent" : {
+        "properties" : {
+          "created_at" : {
+            "description" : "Epoch timestamp of event in seconds, if this and offset are not provided, it will be the request time",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "event" : {
+            "description" : "Event to be added",
+            "type" : "string"
+          },
+          "id" : {
+            "description" : "Order in which events will be ingested",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "properties" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "Key value pairs of the properties",
+            "type" : "object"
+          },
+          "time_offset" : {
+            "description" : "Time offset in seconds with server time",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "event", "id" ],
+        "type" : "object"
+      },
+      "analyticsServerTime" : {
+        "properties" : {
+          "server_time" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

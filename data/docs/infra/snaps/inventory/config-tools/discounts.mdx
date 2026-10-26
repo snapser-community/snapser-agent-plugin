@@ -1,0 +1,61 @@
+# Discount
+This tool allows you to create, update, and view discounts that can be applied to purchase and unlock costs for items and containers.
+
+## Summary
+
+Here is a high-level summary of the concepts in discounts:
+
+- **Discounts**: The overarching entity that holds the eligibility criteria and formula for the discount to be applied.
+- **Applicable Discounts**: Items or containers can then be assigned discount entities with a floor price and a strategy of which of the applicable discounts to pick in case of conflict.
+- **Applied Discounts**: When a user purchases items or unlocks containers, they will see the discount that they were eligible for and was applied, and the price after discount application.
+
+## Discount Details
+
+A discount consists of the following fields:
+
+- **Name**: A unique name is required that identifies the discount.
+- **Display name**: A short name that can be displayed to users.
+- **Description**: A description for the discount.
+- **Eligibility criteria**: The conditions a user must satisfy in order to be eligible for a discount.
+- **Formula**: The formula by which the price of an item will be reduced.
+
+### Eligibility Criteria
+
+Eligibility criteria consist of multiple eligibility groups, where each eligibility group consists of multiple eligibilities.
+A user is considered eligible for a discount if they satisfy the requirements for ***all of the eligibilities in any of the groups***.
+
+Each eligibility can be one of the following types:
+- **Statistics based**: The user must have a certain value for a statistic, e.g., `"num_wins" >= 10`
+- **Segment based**: The user must be part of or not part of a specific segment, e.g., `not in "new_players"`
+- **Time range based**: The user must be within a specific time range, e.g., `between "2023-01-01" and "2023-12-31"`
+
+### Formula
+
+The formula defines how the discount is applied to the price of an item. It can be a simple percentage off or a fixed amount off.
+
+- **Percentage off**: A percentage value that will be subtracted from the price, e.g., `10% off`
+- **Fixed amount off**: A fixed amount that will be subtracted from the price, e.g., `10 coins off`
+- **Statistics based percentage off**: A percentage value that is calculated based on a user's statistic and a denominator, e.g., `(num_wins * 100/ denominator)% off`
+- **Statistics based fixed amount off**: A fixed amount that is calculated based on a user's statistic and a multiplier, e.g., `(num_wins * multiplier) coins off`
+
+## Applying Discounts
+
+Once a discount is created, it can be applied to items or containers.
+
+This applies to:
+- Purchase prices of items and containers
+- Unlock costs of containers
+
+Each of the above can have multiple possible prices, and each price can have multiple applicable discounts.
+Hence, while applying discounts, a strategy is required to determine which discount to apply in case multiple eligibilities are fulfilled.
+The strategy can be one of the following:
+- **Best**: The discount that results in the lowest price will be applied.
+- **Worst**: The discount that results in the highest price will be applied.
+
+Aside from the strategy, each applicable discount can also have a floor price. This is the minimum price that can be applied after the discount is applied.
+If the calculated price after applying the discount is lower than the floor price, the floor price will be used instead.
+
+## Applied Discounts
+
+When a user lists catalog items or containers, the purchasable settings of the discounted items will have a field `applied_discounts` populated. 
+This field will contain the `price_after_discounts` based on their eligibilities. When the user purchases the items or unlocks the containers, only the price after discount will be charged.

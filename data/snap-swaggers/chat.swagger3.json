@@ -1,0 +1,685 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Allow users to communicate with each other in real time",
+    "title" : "Chat",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "ChatService"
+  } ],
+  "paths" : {
+    "/v1/chat/room/{room_id}/join" : {
+      "post" : {
+        "description" : "Join a room chat",
+        "operationId" : "JoinRoom",
+        "parameters" : [ {
+          "description" : "ID of the room",
+          "explode" : false,
+          "in" : "path",
+          "name" : "room_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/JoinRoom_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/chatJoinRoomResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Chat Room",
+        "tags" : [ "ChatService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/chat/room/{room_id}/leave" : {
+      "post" : {
+        "description" : "Leave a room chat",
+        "operationId" : "LeaveRoom",
+        "parameters" : [ {
+          "description" : "ID of the room",
+          "explode" : false,
+          "in" : "path",
+          "name" : "room_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LeaveRoom_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/chatLeaveRoomResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Chat Room",
+        "tags" : [ "ChatService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/chat/room/{room_id}/messages" : {
+      "get" : {
+        "description" : "Get messages from a room chat",
+        "operationId" : "GetRoomMessages",
+        "parameters" : [ {
+          "description" : "ID of the room",
+          "explode" : false,
+          "in" : "path",
+          "name" : "room_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "UserID of the user",
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Origin service of the room. Values must be one of 'guild' or 'lobby'",
+          "explode" : true,
+          "in" : "query",
+          "name" : "room_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Unix timestamp for the time from which messages should be returned",
+          "explode" : true,
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Unix timestamp for the time to which messages should be returned",
+          "explode" : true,
+          "in" : "query",
+          "name" : "to",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Whether the messages should be sorted in ascending or descending order of timestamp (Default: desc)",
+          "explode" : true,
+          "in" : "query",
+          "name" : "order",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/chatGetRoomMessagesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Chat Room",
+        "tags" : [ "ChatService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "post" : {
+        "description" : "Send a message to the room",
+        "operationId" : "SendRoomMessage",
+        "parameters" : [ {
+          "description" : "ID of the room",
+          "explode" : false,
+          "in" : "path",
+          "name" : "room_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SendRoomMessage_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Chat Room",
+        "tags" : [ "ChatService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/chat/users/{user_id}/conversations" : {
+      "get" : {
+        "description" : "Get user chat conversations",
+        "operationId" : "GetConversations",
+        "parameters" : [ {
+          "description" : "UserID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/chatGetConversationsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Chats",
+        "tags" : [ "ChatService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/chat/users/{user_id}/dms/{target_user_id}" : {
+      "get" : {
+        "description" : "Get direct messages from a chat with another user",
+        "operationId" : "GetDirectMessages",
+        "parameters" : [ {
+          "description" : "UserID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "UserID of the target user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "target_user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Unix timestamp for the time from which messages should be returned",
+          "explode" : true,
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Unix timestamp for the time to which messages should be returned",
+          "explode" : true,
+          "in" : "query",
+          "name" : "to",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Whether the messages should be sorted in ascending or descending order of timestamp (Default: desc)",
+          "explode" : true,
+          "in" : "query",
+          "name" : "order",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/chatGetDirectMessagesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Direct Messages",
+        "tags" : [ "ChatService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "post" : {
+        "description" : "Send a direct message to another user",
+        "operationId" : "SendDirectMessage",
+        "parameters" : [ {
+          "description" : "UserID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "UserID of the target user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "target_user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SendDirectMessage_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Direct Messages",
+        "tags" : [ "ChatService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/chat/users/{user_id}/permissions" : {
+      "get" : {
+        "description" : "Get the list permissions set for a user",
+        "operationId" : "GetUserPermissions",
+        "parameters" : [ {
+          "description" : "UserID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/chatGetUserPermissionsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Permissions",
+        "tags" : [ "ChatService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "post" : {
+        "description" : "Set chat permissions for a user and target user",
+        "operationId" : "SetUserPermission",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetUserPermission_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Permissions",
+        "tags" : [ "ChatService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "JoinRoom_request" : {
+        "properties" : {
+          "room_type" : {
+            "description" : "Origin service of the room. Values must be one of 'guild' or 'lobby'",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "UserID of the user",
+            "type" : "string"
+          },
+          "user_metadata" : {
+            "description" : "Metadata of the user",
+            "type" : "object"
+          }
+        },
+        "required" : [ "room_type", "user_id" ],
+        "type" : "object"
+      },
+      "LeaveRoom_request" : {
+        "properties" : {
+          "user_id" : {
+            "description" : "UserID of the user",
+            "type" : "string"
+          }
+        },
+        "required" : [ "user_id" ],
+        "type" : "object"
+      },
+      "SendDirectMessage_request" : {
+        "properties" : {
+          "message" : {
+            "description" : "Message to be sent",
+            "type" : "string"
+          },
+          "message_id" : {
+            "description" : "ID of the message",
+            "type" : "string"
+          }
+        },
+        "required" : [ "message" ],
+        "type" : "object"
+      },
+      "SendRoomMessage_request" : {
+        "properties" : {
+          "message" : {
+            "description" : "Message to be sent",
+            "type" : "string"
+          },
+          "message_id" : {
+            "description" : "ID of the message",
+            "type" : "string"
+          },
+          "room_type" : {
+            "description" : "Origin service of the room. Values must be one of 'guild' or 'lobby'",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "UserID of the user",
+            "type" : "string"
+          }
+        },
+        "required" : [ "message", "room_type", "user_id" ],
+        "type" : "object"
+      },
+      "SetUserPermission_request" : {
+        "properties" : {
+          "permission" : {
+            "description" : "Whether to mark the user as blocked or accepted, or as default (not blocked, or accepted)",
+            "type" : "string"
+          },
+          "target_user_id" : {
+            "description" : "User ID of the target user",
+            "type" : "string"
+          }
+        },
+        "required" : [ "permission", "target_user_id" ],
+        "type" : "object"
+      },
+      "chatCheckUserRoomAccessResponse" : {
+        "properties" : {
+          "allowed" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "chatConversations" : {
+        "properties" : {
+          "users" : {
+            "items" : {
+              "$ref" : "#/components/schemas/chatUserConversation"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "chatGetConversationsResponse" : {
+        "properties" : {
+          "conversations" : {
+            "$ref" : "#/components/schemas/chatConversations"
+          }
+        },
+        "type" : "object"
+      },
+      "chatGetDirectMessagesResponse" : {
+        "properties" : {
+          "messages" : {
+            "items" : {
+              "$ref" : "#/components/schemas/chatTextMessage"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "chatGetRoomMessagesResponse" : {
+        "properties" : {
+          "messages" : {
+            "items" : {
+              "$ref" : "#/components/schemas/chatTextMessage"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "chatGetUserPermissionsResponse" : {
+        "properties" : {
+          "permissions" : {
+            "items" : {
+              "$ref" : "#/components/schemas/chatUserPermission"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "chatJoinRoomResponse" : {
+        "properties" : {
+          "online_users" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "room_id" : {
+            "type" : "string"
+          },
+          "room_type" : {
+            "type" : "string"
+          },
+          "user_id" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "chatLeaveRoomResponse" : {
+        "type" : "object"
+      },
+      "chatTextMessage" : {
+        "properties" : {
+          "content" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "recipient" : {
+            "type" : "string"
+          },
+          "sender" : {
+            "type" : "string"
+          },
+          "sent_at" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "chatUserConversation" : {
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "last_message_at" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "chatUserPermission" : {
+        "properties" : {
+          "permission" : {
+            "type" : "string"
+          },
+          "user_id" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "chatVerifyChatAcceptanceResponse" : {
+        "properties" : {
+          "accepted" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "protobufNullValue" : {
+        "default" : "NULL_VALUE",
+        "description" : "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value.",
+        "enum" : [ "NULL_VALUE" ],
+        "type" : "string"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

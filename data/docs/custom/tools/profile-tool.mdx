@@ -1,0 +1,151 @@
+export const description = 'Profile Tool'
+
+export const meta = {
+  author: 'AJ Apte'
+}
+
+# Profile Tool
+This tool allows you to generate, import, edit and export BYOSnap profiles for your custom snaps.
+
+<Warning>
+  **A profile sets a template, not live settings.** Publishing an edited profile
+  updates your BYOSnap's stored template — but a Snapend only reads that template
+  at the moment the BYOSnap is added to it. Editing a profile here and
+  re-publishing will not change CPU, memory, replicas, env vars, HPA or secrets on
+  a Snapend that already runs your snap; use **Customize Snapend** for those. See
+  [Profile vs. Snapend Manifest](/docs/custom/bring-your-own-snap#profile-vs-snapend-manifest).
+</Warning>
+
+## Concept
+Every developer building a BYOSnap wants to have a way to configure the snap's infrastructure settings. Snapser provides a way to do this by using a BYOSnap profile. This profile is a JSON or a YAML file that contains the following information:
+- **Name**: The name of the BYOSnap
+- **Description**: A brief description of the BYOSnap
+- **Platform**: The platform the BYOSnap is built for. Options are 'linux/arm64' or 'linux/amd64'
+- **Language**: The language the BYOSnap is built in. Options are 'go', 'node', 'python', 'java', 'csharp', 'cpp', 'rust', 'ruby', 'php', 'perl', 'clojure', 'lua', 'ts', 'js', 'kotlin', 'c'
+- **Prefix**: The path prefix for the BYOSnap.
+- **Ingress Ports**: External and Internal ingress ports exposed for the BYOSnap
+- **Readiness Probe Configuration**: Initial delay seconds and path for the readiness probe.
+- **Dev Template** - CPU, Memory, Min Replicas, Command, Args, Env Params for Development Snapends
+- **Stage Template** - CPU, Memory, Min Replicas, Command, Args, Env Params for Staging Snapends
+- **Prod Template** - CPU, Memory, Min Replicas, Command, Args, Env Params and an optional **HPA** block for Production Snapends. HPA (Horizontal Pod Autoscaler) lets you autoscale your BYOSnap between a min and max replica count based on CPU and memory thresholds. HPA is **production only**; on dev and stage the field must be `null`.
+
+Each of the three environment templates can also carry up to five **Secrets** —
+references into the [Secrets Manager](/docs/custom/tools/secrets-manager), each a
+`(file_name, tag)` pair that Snapser mounts at `/opt/byosnap-secrets/$file_name`
+inside the pod. The three lists are independent: adding a secret on the Dev tab
+does not add it to Stage or Prod.
+
+<Note>
+  Secrets you set here reach a Snapend only when the BYOSnap is added to it. To add
+  a secret to a Snapend that already runs the snap, use **Snapend → Customize
+  Snapend** instead — publishing an updated profile will not do it.
+</Note>
+
+<CodeGroup title="BYOSnap Profile Example" label="snapser-byosnap-profile.yml">
+
+```yaml {{ title: 'cURL' }}
+name: "My BYOSnap" # TODO: Add your BYOSnap name here.
+description: "Description" # TODO: Add your BYOSnap description here
+platform: "linux/arm64" # TODO: Add your platform here. Options are 'linux/arm64' or 'linux/amd64'
+language: "go" # TODO: Add your language here. Options are 'go', 'node', 'python', 'java', 'csharp', 'cpp', 'rust', 'ruby', 'php', 'perl', 'clojure', 'lua', 'ts', 'js', 'kotlin', 'c'
+prefix: "/v1" # TODO: Add your prefix here. Prefix should start with / and only contain one path segment. Eg: '/v1'
+ingress:
+  external_port:
+    name: http
+    port: 5003 # TODO: Enter your external port here. Eg: 5003. Make sure it is a number and not a string.
+  internal_ports: []
+  # Uncomment the section below if you need internal ports
+  # internal_ports:
+  #   - name: "grpc" # TODO: Optionally add your internal port name here. Eg: grpc. Names should be unique across the `ingress` dict. IMPORTANT: If you are not adding any internal ports, just keep `internal_ports: []`
+  #     port: 5004 # TODO: Optionally add your internal port here. Eg: 5004. Make sure it is a number and not a string. Port numbers should be unique across the `ingress` dict.
+readiness_probe_config:
+  initial_delay_seconds: null
+  path: null
+# Uncomment the section below if you need a readiness probe
+# readiness_probe_config:
+#   initial_delay_seconds: 5 # "TODO: Optionally add your readiness delay in seconds here. Eg: 5 or use null. Make sure it is a number and not a string."
+#   path: '/healthz' # "TODO: Optionally add your readiness path here. Eg: '/health' or use null"
+dev_template:
+  cpu: 100 # Whole millicores. Range [50, 3000].
+  memory: 0.125 # GB. Range [0.05, 4]. Up to 3 decimal places.
+  min_replicas: 1 # In Dev min_replicas should be 1
+  cmd: "" # TODO: Optionally add your dev command here. Eg: "python3 app.py" or use an empty string
+  args: [] # TODO: Optionally add your dev args here. Eg: ["--port", "5003"] or use an empty array
+  env_params: [] # TODO: Optionally add your dev env params here. Eg: [{"key": "SNAPSER_ENVIRONMENT", "value": "DEVELOPMENT"}] or use an empty array
+  # Uncomment the section below if you need dev env params
+  # env_params:
+  #   - key: SNAPSER_ENVIRONMENT
+  #     value: DEVELOPMENT
+stage_template:
+  cpu: 100 # Whole millicores. Range [50, 3000].
+  memory: 0.125 # GB. Range [0.05, 4]. Up to 3 decimal places.
+  min_replicas: 1 # In Staging min_replicas should be 1
+  cmd: "" # TODO: Optionally add your dev command here. Eg: "python3 app.py" or use an empty string
+  args: [] # TODO: Optionally add your dev args here. Eg: ["--port", "5003"] or use an empty array
+  env_params: [] # TODO: Optionally add your dev env params here. Eg: [{"key": "SNAPSER_ENVIRONMENT", "value": "STAGING"}] or use an empty array
+  # Uncomment the section below if you need dev env params
+  # env_params:
+  #   - key: SNAPSER_ENVIRONMENT
+  #     value: STAGING
+prod_template:
+  cpu: 100 # Whole millicores. Range [50, 3000].
+  memory: 0.125 # GB. Range [0.05, 4]. Up to 3 decimal places.
+  min_replicas: 1 # Used as the static replica count when `hpa` below is null. When `hpa` is set, the HPA min/max replicas govern instead.
+  cmd: "" # TODO: Optionally add your dev command here. Eg: "python3 app.py" or use an empty string
+  args: [] # TODO: Optionally add your dev args here. Eg: ["--port", "5003"] or use an empty array
+  env_params: [] # TODO: Optionally add your dev env params here. Eg: [{"key": "SNAPSER_ENVIRONMENT", "value": "PRODUCTION"}] or use an empty array
+  # Uncomment the section below if you need dev env params
+  # env_params:
+  #   - key: SNAPSER_ENVIRONMENT
+  #     value: PRODUCTION
+  hpa: null # Optional. Production only. Set to null to use the static `min_replicas` above. Uncomment the block below to enable autoscaling.
+  # hpa:
+  #   min_replicas: 3 # Lower bound on autoscaler replica count. Must be > 0.
+  #   max_replicas: 50 # Upper bound on autoscaler replica count. Must be >= min_replicas.
+  #   cpu_utilization_threshold: 75 # Scale up when average CPU exceeds this %. Range (0, 100].
+  #   memory_utilization_threshold: 85 # Scale up when average memory exceeds this %. Range (0, 100].
+  #   scale_up:
+  #     stabilization_window_seconds: 0 # How long the controller waits before scaling up again. Range [0, 3600].
+  #     period_seconds: 30 # Polling interval. Range [0, 300].
+  #     percent: 100 # Add this percent of current replicas per period. Use `pods: N` instead for a fixed step. Specify exactly one of percent or pods.
+  #   scale_down:
+  #     stabilization_window_seconds: 600 # How long the controller waits before scaling down again. Range [0, 3600].
+  #     period_seconds: 60 # Polling interval. Range [0, 300].
+  #     percent: 25 # Remove this percent of current replicas per period. Range (0, 100). Use `pods: N` instead for a fixed step. Specify exactly one of percent or pods.
+```
+</CodeGroup>
+
+## Usage
+Rather than making developers manually create this profile, Snapser provides a tool that allows developers to generate, import, edit and export BYOSnap profiles.
+
+![BYOSnap Profile Tool](/images/docs/byosnap-profile-tool.png)
+
+### Generate
+Use the tool form to enter the details of your BYOSnap profile. Once you have entered all the details, click on the **Download** button to generate the profile. The profile will first be validated and then if it looks good, it will be downloaded as a `.yml` or a `.json` file, depending on your selection.
+
+### Validate
+If you have either imported or edited a profile, you can validate it using the **Validate** button.
+
+## Download
+Once you have generated or edited a profile, you can download it using the **Download** button.
+
+### Import
+If you have a profile saved in your BYOSnap code base. Now one of your developers manually updates it. You can import the updated profile using the **Choose File** viz. Import button. The profile will be validated and whichever attributes are valid will be added to the tool UI. Those that are invalid will not be populated in the tool. Instead you will get a message indicating the error.
+
+If your profile is valid or once you have fixed any errors you got from the validation, you can save the profile using the **Download** button.
+
+### Activity Log
+The tool maintains the last 10 activities performed on the tool. This includes the time of the activity, and the result. This is useful for tracking changes made to the profile.
+
+### Autoscaler (Production tab)
+On the **Production** tab, the tool surfaces an **Autoscaler** subsection under **Scaling**. It is off by default — the **Replicas** field above governs and your snap runs with a static replica count. Flipping the toggle on enables HPA and unlocks the following fields:
+
+- **Min Replicas** / **Max Replicas** — the bounds the autoscaler will respect. Min must be greater than 0 and less than or equal to Max.
+- **CPU Utilization Threshold** — scale up when the average CPU across replicas exceeds this percentage (1–100).
+- **Memory Utilization Threshold** — same, for memory (1–100).
+- **Scale Up Behavior** — how aggressively to add pods. `Stabilization Window` is how long the controller waits before scaling up again (0–3600s). `Period` is the polling interval (0–300s). `Policy` is either a **Percent** of current replicas to add per period, or a fixed **Pods** count — exactly one is set at a time.
+- **Scale Down Behavior** — same shape as Scale Up, but the `Percent` policy is capped to 1–99% (the autoscaler can't scale to zero in one step).
+
+When HPA is on, the Static **Replicas** field above is disabled — the HPA Min/Max take over. The Dev and Stage tabs do not show the Autoscaler subsection at all; HPA is production-only.
+
+

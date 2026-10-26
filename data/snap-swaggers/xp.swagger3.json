@@ -1,0 +1,274 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Xp in snapser cluster",
+    "title" : "Xp",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "XpService"
+  } ],
+  "paths" : {
+    "/v1/xp/user-xp/{user_id}/{name}" : {
+      "get" : {
+        "description" : "Gets the xp of given user, returns error if not set",
+        "operationId" : "GetUserXp",
+        "parameters" : [ {
+          "description" : "UserID of user",
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Name of xp",
+          "in" : "path",
+          "name" : "name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "User session token",
+          "in" : "header",
+          "name" : "Token",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/xpGetUserXpResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User XP",
+        "tags" : [ "XpService" ]
+      },
+      "patch" : {
+        "description" : "Increments the xp of given user, starts from zero if a user xp is not set",
+        "operationId" : "IncrementUserXp",
+        "parameters" : [ {
+          "description" : "UserID of the affected user",
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Name of xp to increment",
+          "in" : "path",
+          "name" : "name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "User session token",
+          "in" : "header",
+          "name" : "Token",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/IncrementUserXp_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/xpUpdateUserXpInfo"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User XP",
+        "tags" : [ "XpService" ],
+        "x-codegen-request-body-name" : "body"
+      },
+      "put" : {
+        "description" : "Sets the xp for a given user",
+        "operationId" : "SetUserXp",
+        "parameters" : [ {
+          "description" : "UserID of the affected user",
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Name of xp to set",
+          "in" : "path",
+          "name" : "name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "User session token",
+          "in" : "header",
+          "name" : "Token",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetUserXp_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/xpUpdateUserXpInfo"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User XP",
+        "tags" : [ "XpService" ],
+        "x-codegen-request-body-name" : "body"
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "xpGetUserXpResponse" : {
+        "properties" : {
+          "xp" : {
+            "description" : "Xp of the user",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "current_level" : {
+            "$ref" : "#/components/schemas/xpLevel"
+          },
+          "next_levels" : {
+            "description" : "Up to next 3 levels in progression",
+            "items" : {
+              "$ref" : "#/components/schemas/xpLevel"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "xpLevel" : {
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "start" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "end" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "xpUpdateUserXpInfo" : {
+        "properties" : {
+          "success" : {
+            "description" : "Status of xp update, true if xp updated successfully",
+            "type" : "boolean"
+          },
+          "before_xp" : {
+            "description" : "Xp of user before the update",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "after_xp" : {
+            "description" : "Xp of user before the update",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "level_up" : {
+            "description" : "Boolean indicating if the user have levelled up because of update",
+            "type" : "boolean"
+          },
+          "levels_progressed" : {
+            "description" : "Array of levels progressed by the user in the event of level up",
+            "items" : {
+              "$ref" : "#/components/schemas/xpLevel"
+            },
+            "type" : "array"
+          },
+          "current_level" : {
+            "$ref" : "#/components/schemas/xpLevel"
+          },
+          "next_levels" : {
+            "description" : "Up to next 3 levels in progression",
+            "items" : {
+              "$ref" : "#/components/schemas/xpLevel"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "SetUserXp_request" : {
+        "properties" : {
+          "value" : {
+            "description" : "Value to be set as the user xp statistic",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "value" ],
+        "type" : "object"
+      },
+      "IncrementUserXp_request" : {
+        "properties" : {
+          "delta" : {
+            "description" : "Value to increment the statistic xp by. Should be non negative integer",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

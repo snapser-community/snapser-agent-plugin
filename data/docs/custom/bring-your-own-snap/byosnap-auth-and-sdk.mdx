@@ -1,0 +1,260 @@
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# BYOSnap: Authentication & SDK Categories
+
+This guide covers the authentication system used in BYOSnaps and how to expose your APIs through different SDK categories, including the Admin SDK.
+
+## Authentication System
+
+BYOSnaps use a header-based authentication system instead of bearer tokens. Snapser automatically injects the appropriate headers for each request, and your BYOSnap validates them using the `validate_authorization` decorator/middleware.
+
+### Authentication Headers
+
+Every BYOSnap request includes the following headers:
+
+- **`Auth-Type`**: Specifies the authentication type (`user`, `api-key`, or `internal`)
+- **`User-Id`**: The ID of the user making the request (present for user-authenticated requests)
+- **`Gateway`**: Set to `internal` for Snap-to-Snap calls within the Snapend
+
+### Authentication Types
+
+Your BYOSnap can expose APIs over three authentication types:
+
+#### 1. User Auth (`user`)
+- Used by game clients and logged-in users
+- Requires a valid user session
+- The `User-Id` header contains the authenticated user's ID
+- Surfaces in the **Client/Game SDK**
+
+#### 2. Api-Key Auth (`api-key`)
+- Used for trusted server-to-server communication
+- Surfaces in the **Client/Game SDK** (for server backends)
+- Does not require a `User-Id` header
+
+#### 3. Internal Auth (`internal`)
+- Used for Snap-to-Snap calls within the same Snapend
+- The `Gateway: internal` header identifies internal calls
+- Surfaces in the **Internal SDK**
+
+### Validation Pattern
+
+Here's how to validate authorization in your BYOSnap:
+
+<CodeGroup title="Validate Authorization" tag="byosnap">
+```python
+# Python (Flask)
+@validate_authorization(AUTH_TYPE_HEADER_VALUE_USER_AUTH, user_id_resource_key="user_id")
+def example_user_endpoint(user_id):
+    auth_type = request.headers.get(AUTH_TYPE_HEADER_KEY)
+    user_id_header = request.headers.get(USER_ID_HEADER_KEY)
+    # Your business logic here
+    return make_response(jsonify({'message': f'Hello user {user_id}'}), 200)
+```
+```go
+// Go
+func exampleUserEndpoint(w http.ResponseWriter, r *http.Request) {
+    // Validate authorization (use validateAuthorization middleware)
+    authType := r.Header.Get("Auth-Type")
+    userID := r.Header.Get("User-Id")
+    // Your business logic here
+}
+```
+```csharp
+// C#
+[HttpGet("users/{userId}/example")]
+[ValidateAuthorization(AppConstants.userAuthType)]
+public ActionResult<SuccessResponseSchema> ExampleUserEndpoint([FromRoute] string userId)
+{
+    var authType = HttpContext.Request.Headers[AppConstants.authTypeHeaderKey].FirstOrDefault();
+    var userIdHeader = HttpContext.Request.Headers[AppConstants.userIdHeaderKey].FirstOrDefault();
+    // Your business logic here
+    return Ok(new SuccessResponseSchema { Message = "Hello user" });
+}
+```
+```typescript
+// Node/TypeScript
+@Get("{userId}/example")
+@Middlewares([authMiddleware(["user"])])
+public async exampleUserEndpoint(@Path() userId: string): Promise<SuccessResponse> {
+    const authType = req.header("Auth-Type");
+    const userIdHeader = req.header("User-Id");
+    // Your business logic here
+    return { message: "Hello user" };
+}
+```
+</CodeGroup>
+
+### Multiple Auth Types
+
+A single endpoint can accept multiple authentication types without needing separate routes:
+
+<CodeGroup title="Multi-Auth Endpoint" tag="byosnap">
+```python
+# Python
+@app.route(f"{API_PREFIX}/users/<user_id>/example/multi-auth", methods=["GET"])
+@validate_authorization(
+    AUTH_TYPE_HEADER_VALUE_USER_AUTH,
+    AUTH_TYPE_HEADER_VALUE_API_KEY_AUTH,
+    GATEWAY_HEADER_INTERNAL_ORIGIN_VALUE,
+    user_id_resource_key="user_id"
+)
+def example_multi_auth_endpoint(user_id):
+    return make_response(jsonify({'message': f'Hello, request for user {user_id}'}), 200)
+```
+</CodeGroup>
+
+## SDK Categories & Admin SDK
+
+The `x-snapser-sdk-categories` Swagger tag controls which SDKs your APIs surface in. This is distinct from authentication types—an API's auth type determines HOW it's called, while its SDK category determines WHERE it appears.
+
+### Available Categories
+
+#### 1. Default (No Tag)
+- Surfaces in the **Client/Game SDK** for client-accessible APIs
+- Surfaces in the **API Explorer** for testing
+
+#### 2. Admin Category
+- Surfaces in the **Admin SDK** for administrative tools and dashboards
+- Used for configuration, management, and monitoring endpoints
+- Combine with `api-key` and/or `internal` auth for security
+
+### Example: Admin SDK Endpoint
+
+To surface an endpoint in the Admin SDK, add `x-snapser-sdk-categories: [admin]` to the Swagger operation and guard it with appropriate auth types:
+
+<CodeGroup title="Admin SDK Endpoint" tag="byosnap">
+```python
+# Python (Flask with Swagger comments)
+@app.route(f"{API_PREFIX}/settings/example/admin", methods=["GET"])
+@validate_authorization(
+    AUTH_TYPE_HEADER_VALUE_API_KEY_AUTH,
+    GATEWAY_HEADER_INTERNAL_ORIGIN_VALUE
+)
+def example_admin_endpoint():
+    """Example endpoint surfaced in the special Admin SDK.
+
+    Note: 'admin' is NOT an auth type. The endpoint is exposed over normal auth
+    types (here api-key + internal); the x-snapser-sdk-categories tag is
+    what places it in the Admin SDK.
+    ---
+    get:
+      summary: 'Example: Admin Configuration'
+      description: 'Exposed over api-key + internal auth and surfaced in the Admin SDK via x-snapser-sdk-categories.'
+      operationId: GetAdminConfig
+      x-snapser-auth-types:
+        - api-key
+        - internal
+      x-snapser-sdk-categories: [admin]
+      responses:
+        200:
+          content:
+            application/json:
+              schema: SuccessMessageSchema
+          description: 'Success'
+    """
+    return make_response(jsonify({'message': 'Hello admin'}), 200)
+```
+```go
+// Go (Swagger comment format)
+// swagger:operation GET /v1/byosnap-example/settings/example/admin exampleAdmin
+// ---
+// summary: Example Admin Configuration
+// description: Exposed over api-key + internal auth and surfaced in the Admin SDK
+// operationId: GetAdminConfig
+// x-snapser-auth-types: ["api-key", "internal"]
+// x-snapser-sdk-categories: ["admin"]
+// responses:
+//   200:
+//     description: Success
+//     schema:
+//       $ref: '#/definitions/SuccessResponseSchema'
+func ExampleAdminEndpoint(w http.ResponseWriter, r *http.Request) {
+    // Your admin logic here
+}
+```
+</CodeGroup>
+
+### Common Admin Endpoints
+
+Typical endpoints exposed in the Admin SDK include:
+
+- **Configuration APIs** - Get/update snap settings via the Configuration Tool
+- **User Management APIs** - Reset/delete user data for the User Manager tool
+- **Import/Export APIs** - Support Snapend clone and sync operations
+- **Custom Tools** - Any admin-only endpoints you want to expose
+
+## Authentication Flow
+
+Here's how a request flows through the authentication system:
+
+1. Client makes a request to your BYOSnap (e.g., `PUT /v1/byosnap-example/users/user-123/profile`)
+2. Snapser Gateway validates the request and injects auth headers:
+   - For user auth: `Auth-Type: user`, `User-Id: user-123`
+   - For api-key auth: `Auth-Type: api-key`
+   - For internal calls: `Gateway: internal`, `Auth-Type: internal`
+3. Your BYOSnap receives the request with headers
+4. Your `validate_authorization` decorator/middleware checks:
+   - Is the `Auth-Type` in the allowed list for this endpoint?
+   - If `user` auth, is the `User-Id` header present and valid?
+   - If `internal` auth, is the `Gateway: internal` header present?
+5. If validation passes, your endpoint handler executes
+6. If validation fails, return a 400 error with `Unauthorized`
+
+## Swagger Specification Rules
+
+When defining endpoints in your Swagger spec, follow these rules:
+
+1. **Always include `x-snapser-auth-types`** - List every auth type your endpoint accepts
+2. **For Admin APIs, add `x-snapser-sdk-categories: [admin]`** - This surfaces the endpoint in the Admin SDK
+3. **Do NOT include `Token` in parameters** - Snapser auto-injects auth headers; you only need to declare them in `x-snapser-auth-types`
+4. **Do NOT document `Auth-Type`, `User-Id`, or `Gateway` headers** - These are implicit and auto-injected
+
+<Note>
+The SDK generators read `x-snapser-auth-types` to understand which SDKs should include your API. The actual header injection and validation happen automatically—you only need to validate them in your code.
+</Note>
+
+## Migration from Bearer Tokens
+
+If you're migrating from an older BYOSnap that used bearer tokens in a `Token` header, here's what changed:
+
+### Before (Bearer Token)
+```json
+{
+  "parameters": [
+    {
+      "name": "Token",
+      "in": "header",
+      "description": "User Session Token",
+      "required": true,
+      "schema": { "type": "string" }
+    }
+  ]
+}
+```
+
+### After (Header-Based Auth)
+```json
+{
+  "x-snapser-auth-types": ["user"],
+  "parameters": []
+}
+```
+
+No `Token` parameter is needed—Snapser automatically handles auth header injection based on `x-snapser-auth-types`.
+
+## Best Practices
+
+1. **Use the core BYOSnap examples** - The core examples (`core/byosnap-python`, etc.) demonstrate the current authentication system
+2. **Always validate auth types** - Even though Snapser validates before routing to you, validate in your code for defense-in-depth
+3. **Combine auth types appropriately** - Use `user` for client calls, `api-key` for trusted servers, `internal` for Snap-to-Snap
+4. **Use Admin category for admin tools** - Don't expose admin endpoints without `x-snapser-sdk-categories: [admin]`
+5. **Keep admin and user endpoints separate** - Use different routes if they have different auth requirements
+
+## See Also
+
+- [BYOSnap Logging & Request Correlation](/docs/custom/bring-your-own-snap/byosnap-logging) - Structured logging and the `X-Request-Id` header
+- [BYOSnap Basic Tutorial](/docs/guides/tutorials/byosnap-basic) - Getting started with BYOSnaps
+- [BYOSnap Intermediate Tutorial](/docs/guides/tutorials/byosnap-intermediate) - Integration with other Snaps
+- [BYOSnap Advanced Tutorial](/docs/guides/tutorials/byosnap-advanced-one) - Configuration tools and hooks

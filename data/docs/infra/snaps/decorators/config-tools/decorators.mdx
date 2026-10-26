@@ -1,0 +1,33 @@
+export const description = 'Decorators'
+
+# Decorators Configuration
+
+This tool allows you to configure which **Profile** and **Statistics** attributes are permitted for use in API response decoration via the Decorators Snap. By default, Snapser does not allow any attributes to be decorated — you must explicitly allowlist them here before clients can use them in a `decorators` request.
+
+This gives you fine-grained control over what user data can be injected into responses — helping you keep sensitive information private and reduce response payload size.
+
+<Note>
+If a client attempts to decorate with an attribute that is not on the allowlist, the request will fail with a validation error.
+</Note>
+
+
+To get started:
+1. Click on **Decorators Configuration** from the side Nav.
+2. You'll see two allowlists — one for **Profiles** and one for **Statistics**.
+3. Use the form to add, update, or remove allowed attributes.
+
+![Admin Settings Pic](/images/docs/decorators-admin-settings.png)
+
+## Statistic Attributes Allowlist
+
+- <u>Add Statistics Attributes</u> – Add tracked statistics (like `wins`, `level`, etc.) that clients are allowed to request via decorators.
+- <u>Remove Statistics Attributes</u> – Remove previously allowed statistics to limit their use in future API responses.
+
+## Profile Attributes Allowlist
+
+- <u>Add Profile Attributes</u> – Add user profile fields (like `gamer_tag`, `avatar`, etc.) that can be included via decorators.
+- <u>Remove Profile Attributes</u> – Remove previously allowed profile fields to prevent further exposure in decorated responses.
+
+<Warning>
+Choose attributes carefully. Do **not** add sensitive fields like email, IP address, or internal IDs to the allowlist, as these could unintentionally be exposed to other users through client-side APIs.
+</Warning>

@@ -1,0 +1,77 @@
+# 1.11.0
+##### June 23, 2026
+
+## Breaking Changes
+1. **Analytics Query Tool removed** — the standalone Query Tool has been retired. Use the new `Launch SQL Lab` button (previously `Launch BI`) to run ad-hoc analytics queries.
+2. The Snapser Documentation is no longer embedded in the Portal. All documentation links now point to the new docs app.
+
+## Spotlight
+1. **Snapend Secrets** — first-class secrets management for BYOSnaps. Upload any number of secrets via snapctl, tag them, and mount them into BYOSnaps through the BYOSnap profile. Cluster manifest, snapctl, Portal, and the WebApp have all been wired up end-to-end to support secrets.
+2. **User Reporting** — a brand new tool for in-game player to user reporting. View and act on reports from a new User Reporting tool.
+3. **GDScript Godot SDK** — Snapser now ships a GDScript SDK for Godot.
+4. **Next.js 16 client upgrade** — the Snapser WebApp has been upgraded to Next.js 16 for performance, security, and modern React features.
+{/* 5. **Queues** — a brand new snap for reliable background work. Create `standard` or `fifo` queues that `pull`, `deliver` to a BYOSnap over HTTP, or `emit` to the EventBus, with retention, rate limiting, retries, and dead-letter queues. Configure them in the new Queues admin tool, which includes a dead-letter inspector to requeue or purge failed messages. */}
+
+---
+
+## Snaps
+
+### Auth
+1. **User Reporting** — new backend support powering the User Reporting feature: configurable report settings, report ingestion, and search across reports by reported user.
+
+### Inventory
+1. **Empty loot table items** — drop tables can now include a configurable chance of dropping `nothing`, letting you model rarity and dry streaks without contortions.
+2. A logging overhaul of the snap was undertaken to improve observability and debuggability of the snap.
+
+### Guilds
+1. **Guild rename** — guild admins can now update the guild name from inside the snap. The matching User Manager tool has been updated to support guild name renames as an admin action.
+
+---
+
+## Web App
+
+### New Tools
+1. **Snapend Secrets** — a new tool for managing Snapend-level secret files. Upload multiple secret files, browse versions, and reference them from your BYOSnap profile to have them mounted into your services.
+2. **User Reporting** — a new configuration tool under Auth admin for setting up user reports, a User Manager view to inspect and act on reports for a given user, and a new snap tool under user snap tools to search reports across the Snapend.
+
+### BYOSnap & Promote to Prod
+1. **Promote to Prod UX refresh** — step 1 now leads with the BYOSnap delta and lets you edit a BYOSnap directly from the diff view, instead of bouncing back out to the BYOSnap tool.
+2. **Promote to Prod bug fix** — fixed a bug where a setting that failed prod validation would re-appear in the diff after editing it and clicking Discard.
+3. **Snapend Infra Dashboard** — now surfaces BYOSnap items alongside the existing infra components so you can see your custom services in context.
+
+### User Manager
+1. **Reset/Delete user UX** — Reset and Delete user actions now open as a modal instead of taking over the page, so you stay anchored in User Manager and don't have to navigate back after the action.
+2. **Storage user manager** — blobs are now sorted, and each blob has Copy and View actions for quick inspection.
+3. Misc user manager polish based on usage feedback.
+
+### Improvements
+1. **Inline doc links** — every inline documentation link in the portal now points to the new docs app.
+2. **Analytics** — the Query Tool has been removed and the `Launch BI` action has been renamed to `Launch SQL Lab`, which is now the single entry point for analytics queries.
+
+---
+
+## Snapctl
+
+### Important changes
+1. You can now add secrets and attach them to your BYOSnaps.
+2. Snapend SDK download now supports the Godot GDScript SDK.
+3. New command: `snapctl byosnap next-version --byosnap-id <id>` shows the next versions you can publish — patch, minor, and major — based on your highest published version, so you don't have to guess which version your next `publish` will accept.
+
+### Commands
+#### Byosnap
+1. `snapctl byosnap publish` now validates your version up front. The `--version` you pass must be strictly greater than the highest already-published version (e.g. if `v1.0.1` is your latest, you must publish `v1.0.2` or higher). If it isn't, the command fails immediately — before building or pushing any image — instead of pushing first and erroring later. Brand-new BYOSnaps with no versions yet can use any valid `vX.Y.Z`.
+2. `snapctl byosnap sync` now confirms the version exists before doing any work. Since `sync` only updates an already-published version, an unpublished `--version` now fails fast with a clear, actionable message (pointing you to `publish` or `direct-deploy`) instead of building/pushing an image and then failing with a misleading "BYOSnap not found." error. Failed syncs no longer leave orphaned image tags in your registry.
+
+---
+
+## Infrastructure
+1. **Snapend Secret cluster manifest** — the cluster manifest now understands and propagates Snapend secrets so BYOSnaps can mount them at runtime.
+2. **Docs infra** — ingress, Jenkins, and deployment plumbing for the new docs app have been built out.
+
+---
+
+## Documentation
+1. **Broken images** — long-standing broken image references in the docs have been cleaned up.
+2. **Inventory empty loot table items** — documented the new "nothing" reward configuration on drop tables.
+3. **Analytics** — docs updated to reflect the removal of the Query Tool and the rename of `Launch BI` → `Launch SQL Lab`.
+4. **User Reporting** — docs updated to reflect the move of User Report tools out of the Auth snap.

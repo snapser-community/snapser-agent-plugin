@@ -1,0 +1,244 @@
+
+export const description = 'Tool Builder'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Custom BYOSnap Configuration Tool
+Snapser allows you to bring in your custom HTML/CSS/JS code as a configuration tool for your BYOSnap.
+
+<Warning>
+  If you prefer not to have your own HTML/CSS/JS code, Snapser supports building configuration tools using our visual Tool Builder. Check out the [Tool Builder](/docs/custom/tools/tool-builder) documentation to learn more. Although, we highly recommend building your own custom tool for maximum flexibility and control.
+</Warning>
+
+<div className="parent">
+  <div className="tutorialBox">
+    # Tutorial
+
+    You can go through BYOSnap Advanced tutorial to learn more.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/byosnap-advanced-two'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div>
+</div>
+
+## Concept
+A BYOSnap configuration tool is a HTML/JS/CSS based tool that is used to configure your BYOSnap. You can upload these tools to Snapser as part of the BYOSnap publish process. Once uploaded, the tool will be available in the Snapend configuration tools section.
+
+The Snapser Web app renders this tool in an iframe and injects the Snapser JS SDK into the tool. This allows you to use the Snapser JS SDK to make network calls to your BYOSnap using simple JavaScript functions.
+
+![BYOSnap Profile Tool](/images/docs/byosnap-html-config-tool-concept.png)
+
+## Building the Tool
+You can build the configuration tool using any HTML/CSS/JS framework of your choice. Since the Snapser JS Tool SDK is injected into the tool at runtime, you can use it to make network calls to your BYOSnap. Below is an example of a simple configuration tool built using plain HTML/JS.
+
+```html
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>BYOSnap Configuration Tool</title>
+
+<style>
+  :root {
+    --bg: white;
+    --text: black;
+    --input-bg: white;
+    --input-text: black;
+    --input-border: #ccc;
+  }
+
+  body {
+    font:14px system-ui;
+    margin:16px;
+    background-color: var(--bg);
+    color: var(--text);
+  }
+
+  input, button {
+    padding:8px;
+    background-color: var(--input-bg);
+    color: var(--input-text);
+    border: 1px solid var(--input-border);
+  }
+
+  .row { display:flex; gap:8px }
+</style>
+
+<h1>BYOSnap Configuration Tool</h1>
+<form id="f">
+  <div class="row">
+    <input id="txt" name="value" placeholder="Type something…" />
+    <button type="submit">Save</button>
+  </div>
+  <div id="msg" role="status" aria-live="polite"></div>
+</form>
+
+<script>
+(async function () {
+  await window.Snapser.ready();
+
+  const f   = document.getElementById('f');
+  const txt = document.getElementById('txt');
+  const msg = document.getElementById('msg');
+
+  // -------- THEME HANDLING --------
+
+  function applyTheme(mode) {
+    const m = mode === 'dark' ? 'dark' : 'light'; // normalize
+
+    if (m === 'dark') {
+      document.documentElement.style.setProperty('--bg', '#1b2225');
+      document.documentElement.style.setProperty('--text', '#ffffff');
+      document.documentElement.style.setProperty('--input-bg', '#1e1e1e');
+      document.documentElement.style.setProperty('--input-text', '#ffffff');
+      document.documentElement.style.setProperty('--input-border', '#444444');
+    } else {
+      document.documentElement.style.setProperty('--bg', '#ffffff');
+      document.documentElement.style.setProperty('--text', '#000000');
+      document.documentElement.style.setProperty('--input-bg', '#ffffff');
+      document.documentElement.style.setProperty('--input-text', '#000000');
+      document.documentElement.style.setProperty('--input-border', '#cccccc');
+    }
+  }
+
+  // Initial theme from SDK (set in host.welcome or default "light")
+  console.log('Initial theme from Snapser._theme:', window.Snapser._theme);
+  applyTheme(window.Snapser._theme);
+
+  // Watch for dynamic updates (host.theme.update)
+  window.Snapser.onTheme((mode) => {
+    console.log('Received theme update from Snapser:', mode);
+    applyTheme(mode);
+  });
+
+  // -------- END THEME HANDLING --------
+
+  // Initial load (GET)
+  try {
+    const { data } = await window.Snapser.config.rpc('/custom', { method: 'GET' });
+    if (data && data.payload) {
+      txt.value = data.payload;
+    }
+  } catch (_) {}
+
+  // Save (PUT) — all_pods: true sends the request to every pod in the cluster
+  f.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    msg.textContent = 'Saving…';
+    try {
+      await window.Snapser.config.rpc('/custom', {
+        method: 'PUT',
+        body: { payload: txt.value },
+        all_pods: true,
+      });
+      msg.textContent = 'Saved ✅';
+    } catch (e) {
+      msg.textContent = 'Failed ❌';
+    }
+  });
+})();
+</script>
+```
+
+There are a few things to note in the above example:
+1. You do not need to include the Snapser JS SDK script tag in your HTML. The Snapser platform will automatically inject the SDK into your tool at runtime.
+1. You use the `window.Snapser.ready()` method to initialize the SDK and wait for it to be ready.
+1. You can use the `window.Snapser.config.rpc` method to make network calls to your BYOSnap. This method takes two arguments:
+   - The first argument is the endpoint you want to call. This endpoint maps to your BYOSnap endpoint `/v1/$byosnapId/settings/<your-endpoint>`.
+   - The second argument is an options object that contains the HTTP method, headers, and body of the request.
+1. The `window.Snapser.config.rpc` method returns a promise that resolves to the response from your BYOSnap.
+
+### Broadcasting to All Pods
+
+By default, `config.rpc` sends the request to a single pod. If you set `all_pods: true` in the options, the request is broadcast to **every pod** running your BYOSnap in the cluster.
+
+```js
+await window.Snapser.config.rpc('/custom', {
+  method: 'PUT',
+  body: { payload: txt.value },
+  all_pods: true,
+});
+```
+
+This is useful when your BYOSnap holds in-memory state that needs to be refreshed across all instances without a restart.
+
+
+<Note>
+When all_pods is false, the response received is exactly what the single pod returns. When all_pods is true, the Snapser platform waits for responses from all pods and aggregates them into an array before returning to the tool. That response will always be a HTTP 200 with the payload format that looks like this:
+
+```json
+{
+    "responses": [
+        {
+            "http_status_code": $responseHttpCodeFromPod1,
+            "body": $responseFromPod1
+        },
+        {
+            "http_status_code": $responseHttpCodeFromPod2,
+            "body": $responseFromPod2
+        }
+    ]
+}
+```
+</Note>
+
+#### When to use `all_pods: true`
+
+| Scenario | Why |
+| --- | --- |
+| **Reloading Remote Config** — Your BYOSnap caches remote config values in memory at startup. An admin updates a value and every pod needs to re-fetch immediately. | Without the broadcast each pod keeps serving stale config until it restarts or its polling interval fires. |
+| **Flushing an in-memory cache** — Your BYOSnap maintains a local LRU cache of player profiles or asset manifests for performance. An admin purges a corrupt entry. | Only the pod that handles the request would flush; other pods continue serving the bad data. |
+| **Toggling a feature flag at runtime** — Your BYOSnap reads feature flags into memory on boot. A game-ops engineer enables a new event mode live. | Players connected to different pods would see different feature states until all pods restart. |
+| **Broadcasting a maintenance or shutdown signal** — You want every pod to start draining connections or entering read-only mode before a deploy. | A single-pod request would only drain one instance; the rest keep accepting new work. |
+
+#### When you do NOT need `all_pods`
+
+| Scenario | Why |
+| --- | --- |
+| **Writing to a database or shared store** — Your BYOSnap persists config to Postgres, Redis, DynamoDB, or Snapser Storage and reads it on every request. | All pods already read from the same source of truth; updating it once is enough. |
+| **Updating a single player's data** — An admin edits one user's inventory or profile through the User Manager tool. | Player data lives in a shared store; only one write is needed. |
+| **Queueing an async job** — Your config tool triggers a background task (e.g. send a push notification campaign) that a worker picks up from a queue. | The job goes onto a shared queue; broadcasting it would create duplicate work. |
+| **Logging or auditing an admin action** — Your BYOSnap writes an audit entry when a setting changes. | One audit row per action is correct; broadcasting would create duplicate audit logs. |
+
+<Note>
+  When `all_pods` is not set, or is set to `false`, the request is routed to a single pod via normal load balancing. This is the default and the right choice for most write-to-store operations.
+</Note>
+
+## Publishing the Tool
+Once you have built your configuration tool, you can publish it to Snapser as part of your BYOSnap. You can do this by including the HTML file in the `snapser-resources` folder of your BYOSnap project. The tool should be named with a prefix `snapser-config-tool-` followed by your desired name and end with `.html` For example: `snapser-config-tool-characters-custom.html`. Here is a real example of uploading a configuration tool as part of the BYOSnap publish process:
+
+```bash
+ajinkyas-mbp:byosnap-python Ajinkya$ snapctl byosnap publish --byosnap-id byosnap-advanced --version "v0.0.1" --path . --resources-path ./snapser-resources/.
+ ____
+/ ___| _ __   __ _ _ __  ___  ___ _ __
+\___ \| '_ \ / _` | '_ \/ __|/ _ \ '__|
+ ___) | | | | (_| | |_) \__ \  __/ |
+|____/|_| |_|\__,_| .__/|___/\___|_|
+                  |_|
+
+Success BYOSnap created successfully
+Success Generate snapctl transaction token
+Success BYOSnap dependencies verified
+...
+...
+Success Uploaded swagger.json
+Success Uploaded README.md
+Success Uploaded tool snapser-config-tool-characters-custom.html ## 👈 This is your tool
+Success Completed the docs uploading process
+Success BYOSNAP publish image successful
+Success BYOSNAP publish version successful
+Success BYOSNAP published successfully
+```
+
+When you publish your BYOSnap, Snapser will upload the configuration tool and make it available in the Snapend configuration tools section.
+
+<Note>
+  You can upload upto 50 tools per BYOSnap. Just name them with the `snapser-config-tool-` prefix and they will be automatically detected by `snapctl`.
+</Note>
+
+## Accessing the Tool
+Once your BYOSnap is published and you add the latest BYOSnap to your Snapend, you can access your custom configuration tool by visiting the `Snaps Configuration` tool under Quick links.
+
+![CustomSnaps](/images/docs/tutorials/byosnap-advanced-config-byosnap.png)

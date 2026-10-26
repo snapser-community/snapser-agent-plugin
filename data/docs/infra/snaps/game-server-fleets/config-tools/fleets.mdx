@@ -1,0 +1,135 @@
+# Fleets
+A fleet is a collection of game servers that can be allocated on Snapser's global infrastructure. You can create multiple fleets for your game.
+
+To get started:
+1. Click on Fleets from the side Nav and then click on the **Add fleet** button
+2. This will show you a form where you can start configuring your first fleet.
+
+## Fleet Details
+- **Name** - A unique name for your fleet. This can be any alphanumeric string with dashes and underscores.
+- **Description** - The description of your fleet.
+
+## Server Image
+- **Image Selector** - Pick the tag of the game server image you uploaded using the SnapCtl. This is the image that will be used to spin up your game servers.
+
+## Counters & Lists
+Declare [Agones Counters and Lists](https://agones.dev/site/docs/guides/counters-and-lists/) for your fleet. Every game server in the fleet is created with the counters and lists you declare here, and your game server code can read and update them at runtime via the Agones SDK — for example to track how many players a server is hosting.
+
+### Counters
+A counter tracks a number, like a player or room count.
+- **Name** - A unique name for the counter. This can be any alphanumeric string with dashes, underscores and dots. Names must be unique across your fleet's counters **and** lists, because they share one namespace on the game server.
+- **Starting Count** - The count each new game server starts with. Must be between `0` and the Max Count.
+- **Max Count** - The maximum value the count can reach. An SDK increment that would exceed it returns an error to your game code.
+
+### Lists
+A list holds a set of unique text values, like player IDs.
+- **Name** - A unique name for the list. Same rules as counter names.
+- **Max Entries** - The maximum number of values the list can hold, up to `1000`.
+
+<Note>
+  You can declare up to **10 counters and 10 lists** per fleet. The Portal creates lists empty; initial values can be supplied via the Snapser Admin SDK (`lists[].values`) if you need them.
+</Note>
+<Note>
+  Starting Count, Max Count and Max Entries are just the initial values handed to each new game server — your game server can change counts, values and even the maximums at runtime via the Agones SDK (for example `Beta().IncrementCounter` or `Beta().SetCounterCapacity`). Only the **names** are fixed: game code cannot add or remove counters or lists after the game server is created.
+</Note>
+<Warning>
+  Changing counters or lists redeploys the fleet's game servers. Servers that are already allocated to a game session keep their old configuration until they are recycled.
+</Warning>
+<Note>
+  Counters & Lists are available on the Game Server Fleets snap version v1.13.0 and above. If you are on an older version, this section will not appear in the fleet form. Upgrade the snap to start configuring counters and lists.
+</Note>
+
+## Server Rotation
+- **Rotate After** - How long a game server can stay up before it is rotated. You can enter the value in seconds, minutes, hours or days; it is stored under the hood in seconds. Enter `0` to disable rotation (servers are never rotated), or a value of at least **5 minutes**.
+  <Note>
+    Server Rotation only applies to servers in the **Ready** state. Servers that are already allocated to a game session are never rotated mid-session — they are only eligible for rotation once they return to the Ready state.
+  </Note>
+  <Note>
+    Server Rotation is available on the Game Server Fleets snap version v1.12.0 and above. If you are on an older version, this field will not appear in the fleet form. Upgrade the snap to start configuring rotation.
+  </Note>
+
+## Configuration Regions
+- **Regions** - The regions in which you want to deploy your fleet. You can select multiple regions.
+  Every region is listed twice: a standard region (`frankfurt`) and its **protected** sibling
+  (`frankfurt-ga`). A protected region runs the same game servers behind Snapser's global edge
+  network, which gives you always-on DDoS protection and a private backbone path to your fleet
+  for no code changes. Read
+  [Protected Fleet Regions](/docs/infra/snaps/game-server-fleets#protected-fleet-regions) before
+  you pick one.
+  <Warning>
+    Picking even one protected region pins the fleet's **Server Ports** to `7777` and `7778` and
+    locks those fields. Ports are a fleet level setting rather than a per environment one, so a
+    protected region in any single environment locks the ports for every environment. See
+    [Server Ports](#server-ports) below.
+  </Warning>
+  <Note>
+    You pick regions per environment, so you can mix the two — `frankfurt` for Development and
+    `frankfurt-ga` for Production is a normal setup.
+  </Note>
+
+## Configuration Allocation Settings
+- **Min Server Count** - The minimum number of servers you want to run for your fleet. If you use a buffer % then min server count has to at least be 1. If you use a buffer number, then minimum server count should be equal to buffer count.
+- **Max Server Count** - The maximum number of servers you want to run for your fleet. This number should be greater or equal to the min server count.
+- **Buffer Server Count** - The number of servers you want to keep in a buffer state. This is the number of servers that will be ready to be allocated to your game within a few seconds. Value can be a number or a percentage.
+  <Note>
+    For example, if you have 1 server allocated and you set the buffer server count to 75%, then you will have 3 servers in the buffer or state.
+  </Note>
+
+![Fleet Add](/images/docs/fleet-add.png)
+
+## Configuration Hardware Settings
+- **CPU** - The number of CPUs you want to allocate to your game server.
+- **Memory** - The amount of memory you want to allocate to your game server.
+
+## Configuration Optional Settings
+- **Command** - The command to run when starting the game server.
+- **Arguments** - The arguments to pass to the command when starting the game server.
+- **Environment Variables** - The environment variables to set when starting the game server. Snapser will set some environment variables by default.
+  <Note>
+    The SNAPEND_ENV will be set to DEVELOPMENT, STAGING OR PRODUCTION based on the environment you are running in.
+    THE SNAPEND_ID will be set to the Snapend ID.
+  </Note>
+
+
+<Note>
+The multi environment configuration is to allow you to have different configurations for different environments.
+For example, you may want to have a different max server count for your development environment
+than your staging environment. So if you clone a snapend from development to a staging snapend, Snapser will
+automatically apply the fleet configuration under staging.
+</Note>
+
+## Server Ports
+Server Ports is the last section in the form because it depends on the regions you picked above.
+- **Ingress Port** - The port on which your game server will be listening. This is the port that your game client will connect to.
+- **Debug Port** - This port is optional. The port on which your game server will be listening for debugging. This is the port that you can use to connect to your game server for debugging.
+
+Both ports apply to the whole fleet. Unlike regions, allocation, hardware and the optional
+settings, they are **not** configured per environment — one pair of ports covers Development,
+Staging and Production.
+
+### Ports in a protected region
+If any environment on the fleet uses a
+[protected region](/docs/infra/snaps/game-server-fleets#protected-fleet-regions) — a region id
+ending in `-ga` — the ports are fixed:
+
+| Field | Value |
+| --- | --- |
+| Ingress Port | `7777` |
+| Debug Port | `7778` |
+
+Snapser's global edge network only forwards traffic on those two ports, so the Portal fills them
+in and disables both fields as soon as a protected region is selected. Remove every protected
+region from every environment and the fields unlock again, leaving `7777` and `7778` in place
+for you to change.
+
+<Warning>
+  Because ports are a fleet level setting, a protected region in **one** environment locks the
+  ports in **all** of them. Selecting `frankfurt-ga` for Production alone will pin your
+  Development fleet's ports to `7777` and `7778` too.
+</Warning>
+
+<Note>
+  Your game server does not need to know about any of this. It still receives a hostname and a
+  port through the Agones SDK exactly as before — only the value of that port is now fixed. See
+  [Getting the Game Server's Hostname and Port](/docs/infra/snaps/game-server-fleets#getting-the-game-servers-hostname-and-port).
+</Note>

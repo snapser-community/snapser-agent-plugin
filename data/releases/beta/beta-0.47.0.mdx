@@ -1,0 +1,63 @@
+# beta-0.47.0
+##### March 7, 2025
+
+## Breaking Changes
+- Internal SDK and Server SDK have a new namespace allowing you to use all the SDKs in a single codebase. Should be a simple copy replace to update your codebase.
+
+## Snaps
+### Assets
+Assets snap got a major upgrade. It now supports:
+- You can now create buckets of type: user and app. The user buckets will be used to store user-generated
+ content. App buckets will be used to store app-generated content.
+- You can now replace assets in a bucket.
+
+### Scheduler
+Scheduler now supports scheduling tasks to execute against a BYOSnap.
+
+### Lobbies
+New settings to control the visibility and accessibility of a Lobby have been added.
+
+## Web App
+### Business Intelligence
+The BI tool link is now visible on the company and game page for all the personas.
+
+### API Explorer
+Major update was made to the API Explorer. It now supports:
+- Multiple tabs, so you can just keep clicking APIs and move across tabs.
+- All tab request data is cached, allowing you to pick up where you left off.
+- Support for variables. You can now store variables and use them across multiple APIs.
+
+### SDK - HTTP Library Options
+We now allow you to pick the HTTP library for your SDK. Currently we are releasing this option for:
+- Unity
+- Typescript
+
+## Snapctl
+- You can now pass the http-lib parameter to the `snapctl snapend download` command.
+  This parameter allows you to specify the HTTP library to use for downloading Snapend resources. The supported values are `requests` and `httpx`. If not specified, the default library is `requests`.
+  ```bash
+  snapctl snapend download --snapend-id gx5x6bc0 --category sdk --format unity --type user --http-lib unitywebrequest --out-path .
+  ```
+- Snapctl now detects if the Docker desktop **Containerd** setting is enabled on your system and
+    throws an error. This is to prevent users from uploading empty BYOSnap or BYOGs images,
+    a side effect of the Containerd setting.
+
+## Bug Fixes
+- Add Edit Snapend, search was not disabled when the UI was loading the snap information. This has now been fixed.
+- The Snapend Infra Logs tool now shows data on page load.
+- API Explorer schema now supports showing examples for objects having **additionalProperties** viz dynamic dictionaries.
+- API Explorer was incorrectly not loading the Server Auth tab if your Snapend had a BYOSnap with a version lower than 0.46.0
+- Search and quick actions was not usable for non-engineering personas. This has now been fixed.
+- Segment configuration tool was not resetting the form. This has now been fixed.
+- API Explorer docs now show the Authentication details for all APIs.
+- For Snapends without Auth, the SDK option now does not show the option to download the Server SDK.
+- Lobby swagger had some incorrect annotations. This has now been fixed.
+- In matchmaking, having multiple string or tag filters would not be fully evaluated for some users. This is now fixed.
+- Bookmarks, were not working for Snap configuration tool pages. This has now been fixed.
+- Cluster-Service roles were getting logged out of the Configuration and User Manager tool. This has now been fixed.
+
+## Documentation
+- Added documentation for all Authentication connectors that Snapser supports.
+- Improved the documentation on the Snapser Logs tool.
+- Major update to the BYOSnap docs especially around ways to hook into the Snapser system of: importing, exporting settings, deleting user data, getting and saving configuration tool settings.
+

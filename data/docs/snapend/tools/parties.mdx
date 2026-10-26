@@ -1,0 +1,150 @@
+export const description = 'Parties Snap Tool'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Parties Tool
+
+## Concept
+
+The **Parties** tool is a Snap Tool, which means it works across many users at once rather than a single user. It lets engineers and customer service agents find any party on a Snapend and act on it — inspect its players, invites, join requests and bans, moderate its membership, transfer ownership, edit its configuration, or delete it outright.
+
+This is most useful during live operations, when you need to answer questions like "why is this player stuck in a party?", "who invited this user?", or "which parties are currently in a game?".
+
+<Note>
+  The Parties tool only appears if the **Parties** snap is part of your Snapend. If the snap is missing, the tool tells you to ask your engineering team to add it.
+</Note>
+
+## Pre-requisites
+
+You need a **cluster-service-\*** role with **Parties** service access. What you can do depends on which role you have:
+
+| Role | What you can do |
+| ---- | --------------- |
+| **cluster-service-view** | Find parties and inspect players, invites, join requests and bans |
+| **cluster-service-edit** | Everything above, plus add, invite, kick, ban, un-ban, approve requests, decline invites, transfer ownership and edit the party |
+| **cluster-service-admin** | Everything above, plus delete a party |
+
+<Note>
+  If you do not have the required permissions, please reach out to your company administrator to upgrade your role.
+</Note>
+
+Actions you lack permission for stay visible but disabled, and hovering them explains why.
+
+## Tool Location
+
+Go to your Snapend and open **Snap Tools** from the left navigation bar, then pick **Parties** from the tool list.
+
+## Finding Parties
+
+The **Find Parties** panel at the top has a **Search By** dropdown with four modes. Each maps to a different Parties API.
+
+| Mode | What it does |
+| ---- | ------------ |
+| **User ID** | Lists every party a given user currently belongs to |
+| **Party ID** | Looks up one party directly by its ID |
+| **List Parties** | Pages through all parties on the Snapend |
+| **Search Parties** | Finds parties whose metadata matches a set of filters |
+
+![Parties Search](/images/docs/parties-tool-search.png)
+
+<Note>
+  All four modes return parties of every visibility — public, private, invite-only and friends-only — because the portal calls the Parties snap over the internal gateway. A game client calling `ListParties` with user auth only sees public parties, so a party you can see here may not be visible in your game's party browser.
+</Note>
+
+### List Parties
+
+Set **Limit** and **Offset** to page through results, and **Sort by Name** to order them ascending or descending by party name. This mode also reports the total number of parties, shown next to the result count as "N of M".
+
+### Search Parties
+
+Add one or more **Metadata Filters**, each made up of a key, an operator and a value. Use the **+** and **−** icons to add and remove filter rows.
+
+Supported operators:
+
+| Op | Meaning |
+| -- | ------- |
+| `=` | Equal to the value |
+| `<>` | Not equal to the value |
+| `LIKE` | Matches the value as a pattern |
+| `>` | Greater than the value |
+| `<` | Less than the value |
+| `*` | Wildcard — matches on the key regardless of its value |
+
+Values are typed automatically: `true` and `false` are sent as booleans, whole numbers as integers, decimals as doubles, and everything else as a string.
+
+Because `*` matches on the key alone, the **Value** field is optional on those rows and is labelled as such.
+
+Search Parties sorts on a chosen field rather than a direction alone. Pick **Sort By** — Party Name, Created or Updated — and then an **Order**. Leave it on **None** to leave results unsorted.
+
+![Parties Metadata Filters](/images/docs/parties-tool-filters.png)
+
+<Note>
+  Search Parties does not report a total count, so the result header shows only how many parties came back on the current page.
+</Note>
+
+## Reading a Party
+
+Click any row in the results table to open the party's details. The panel header shows the party name, its ID, visibility, status and type, along with:
+
+- **Owner** — click the badge icon to open the user's details popover
+- **Players** — current count against the party's maximum
+- **Created** and **Updated** timestamps
+- The party's three **settings**: whether members may join while the party is in a game, whether members may queue for matchmaking on the party's behalf, and whether the party can be updated while in a game
+- The **connection string**, when the party has one
+- **Metadata** and **Search Properties**, rendered as browsable JSON. Each only appears when the party actually has that field set
+
+Use the refresh icon at any time to re-read the party from the snap.
+
+![Parties Details](/images/docs/parties-tool-details.png)
+
+<Note>
+  Every action in this tool is performed as the **party owner**, because the Parties snap authorizes these operations against the owner rather than the portal user. The one exception is declining an invite, which is performed as the invitee.
+</Note>
+
+### Players
+
+The **Players** tab lists everyone in the party, marks the owner, and lets you view each player's metadata.
+
+- **Make owner** — transfers party ownership to that player. Only shown for non-owners.
+- **Kick** — removes the player from the party. They can rejoin unless you also ban them.
+- **Ban** — removes the player and blocks them from rejoining until un-banned.
+
+The owner cannot be kicked or banned. Transfer ownership first if you need to remove them.
+
+Below the table you can **Add** a player by user ID, which joins them to the party immediately, or **Invite** a player by user ID, which creates a pending invite they still have to accept.
+
+### Invites
+
+The **Invites** tab lists pending and resolved invites, showing who was invited, who sent it, its status and when it was created.
+
+**Decline** clears a pending invite. The Parties snap has no owner-side way to rescind an invite, so this declines it on the invitee's behalf — the confirmation dialog says so explicitly. Only pending invites can be declined.
+
+### Join Requests
+
+The **Join Requests** tab lists users asking to join, which is how players get into a private party. **Approve** admits the user and adds them to the party. Only pending requests can be approved.
+
+### Bans
+
+The **Bans** tab lists every banned user along with any metadata recorded with the ban. **Un-ban** removes them from the ban list so they can join again.
+
+## Editing a Party
+
+Click **Edit** in the party header to change the party name, maximum players, visibility, status, and the three party settings, as well as its metadata and search properties JSON.
+
+![Parties Edit](/images/docs/parties-tool-edit.png)
+
+<Warning>
+  Saving replaces the whole party document with the values in the form, including metadata and search properties. The form is pre-filled with the party's current values so you only change what you intend to, but anything you clear will be cleared on the party.
+</Warning>
+
+Invalid JSON in either the metadata or search properties field is caught before the request is sent.
+
+## Deleting a Party
+
+Click **Delete Party** in the party header. You will be asked to confirm, since deleting a party removes all of its players and cannot be undone.
+
+<Note>
+  Parties are ephemeral by design and are created by players, so this tool has no way to create one.
+</Note>

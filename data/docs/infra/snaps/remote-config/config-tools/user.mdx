@@ -1,0 +1,48 @@
+# User Tools
+## 1. User Config Tool
+This tool allows you to add or update your user configuration.
+
+### User Config Content
+1. **Configuration**: The JSON representation of your user configuration.
+2. **Configuration Schema**: The optional JSON schema validator for your configuration. This ensures that only a valid JSON as per the schema is accepted as a valid configuration.
+<Note>
+  The schema is optional but recommended to ensure that only a valid JSON is accepted.
+</Note>
+
+## 2. User Config Overrides Tool
+This tool allows you to add or update your user configuration overrides.
+
+### User Config Override Details
+1. **Summary**: A name for your override. This can be any alphanumeric string.
+
+### User Config Override Audience
+1. **Audience**: The audience for your override. You can select either **All Users** or a specific **Segment**.
+
+### User Config Override Path
+1. **Config Json Viewer**: This section shows you the JSON representation of your user configuration. Hover over a particular element and press copy, to copy the path of that element.
+2. **Path**: The path in your base user configuration that you want to override.
+
+### User Config Override Value
+1. **Value**: The value you want to set for the path in your base user configuration.
+<Note>
+  This override only applies to the path specified. If you want to override multiple paths, you will have to create multiple overrides.
+</Note>
+
+### User Config Override Sort Order
+1. **Sort Order**: The order in which the override should be applied. Overrides are always applied in ascending sort order.
+
+### User Config Override Ramp
+1. **Ramp**: The percentage of users that should receive this override. This is useful when you want to slowly roll out your override to monitor the impact of the changes.
+
+### User Config Override Testing
+1. **Allowlist**: A comma separated list of user IDs for each override. The override will be applied to the configuration of these users even if they are not a part of the specified segment or ramp.
+
+## 3. User Config History Tool
+This tool allows you to view the history of changes made to the user configuration. If you have more than
+one user config saved, you will see a `Revert` button appear next to the version you want to revert to.
+
+## 4. Override Config History Tool
+This tool allows you to view the history of changes made to the user config overrides.
+
+### Override Config History Details
+1. **Override Version**: Select the name of the override to view changes.

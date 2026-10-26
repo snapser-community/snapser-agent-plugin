@@ -1,0 +1,29 @@
+# 1.2.0
+##### November 3, 2025
+
+## Snaps
+### Matchmaking
+1. Added a new "auto-expansion" ability for filters which can replace the current expansion steps.
+1. Adding queue validations for tickets that attempt to queue for a profiles with an incorrect party size. (will be shipped as a path)
+1. Changing the team formation algorithm to be configurable and based on a chosen stat. (will be shipped as a path)
+
+### In-App Purchases
+1. Made a bunch of security fixes. We highly recommend everyone to update to this version.
+
+### Lobbies
+1. Lobby API to allocate Game servers now sanitize the region field to lowercase to avoid region mismatch issues.
+2. User Manager tool now contains a tool to show lobbies the user belongs to along with a tool to search for lobbies and display the details.
+
+## Web App
+1. Updated the UI/UX for the Snapend compare, sync and promote tools. You can now also hide timestamps from the diff view for better readability.
+1. User Manager tool smartly, hides UI elements when the user does not have permission to access certain APIs.
+1. Duplicate new snapend name is now detected when you type in a name in Step 1, rather than the last step where the error was shown earlier.
+1. Fixed a bug with the Seats, Snaps and Olympus seats purchase tool.
+1. Usage calculator allowed adding the Auth snap twice. This has now been fixed.
+1. Game Server Fleet - Snap configuration tool now shows the `region ids` instead of the region names for Stratos regions. This avoids confusion as the APIs require region ids.
+1. Game Server Fleet UI - Now auto refreshes the fleet and game server status every 30 seconds to keep the UI in sync with the actual fleet state.
+1. Update Snapend UI, in import mode, now also shows the config diff.
+
+## Documentation
+1. Updated the In-App Purchases and Notification setup documentation to include snapshots from Apple and Google.
+

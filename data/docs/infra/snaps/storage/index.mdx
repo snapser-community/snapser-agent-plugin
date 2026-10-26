@@ -1,0 +1,3737 @@
+
+
+export const description = 'Storage'
+
+export const meta = {
+  author: 'AJ Apte',
+	editor: 'Alex Vlahopoulos',
+}
+
+# Storage
+
+Snapser's Storage Service makes it easy for games and apps to store any binary game
+data in the cloud. In addition, the service handles data redundancy, scaling,
+and, more importantly, concurrency control for the user's game or app blob. With the
+Snapser storage service, you can rest assured that you are getting a highly
+scalable, performant data store at your fingertips.
+
+## Data Type
+
+You can store any binary data. Structured or unstructured JSON data can be
+saved in the cloud using the Storage service.
+
+<Note>
+  JSON is the most popular format for storing data in the cloud as it is easy to
+  read, write, and parse.
+</Note>
+
+## Blob Types
+
+The storage service comes with three types of blobs:
+
+1. **Blob**: Blobs of data that can be replaced via an update.
+1. **Append Blob**: Blob of data that can be appended to.
+1. **Counter Blob**: Number Blob that can be incremented or decremented.
+1. **JSON Blob**: A blob that can be updated using a JSON schema. This is a new feature that allows you to store data in a structured format. JSON blob also gives you the ability to do sub-document updates with full schema validation.
+
+### JSON Blobs
+JSON blobs allow you to store data in a structured format. Unlike a regular blob which treats the contents as a string, JSON blobs treat them as structured JSON entities.
+
+#### Key Features
+1. **Sub-document updates**: You can update a specific field in the JSON blob without having to replace the entire blob. This is useful for large blobs where you only need to update a small part of the data.
+2. **Schema validation**: You can define a schema for the JSON blob and the storage service will ensure that all updates to the blob adhere to the schema.
+
+
+#### JSON Schema
+The [JSON schema](https://json-schema.org/) is a way to define the structure of the JSON blob. The schema is defined using a JSON object
+that specifies the properties of the blob and their types. The schema is used to validate all updates to the blob.
+
+<Note>
+  By default, sub document updates are only validated for the fields that are being modified. This means that there are certain features of
+  the jsonschema spec that are intentionally not supported in favor of performance. For example, the `anyOf`, `allOf`, `if/then`, etc are not supported. The reason for this is that these features require the entire document to be re-validated against the schema, which can be slow for large documents.
+</Note>
+
+In the configuration section, there is an optional boolean for `strict` validation of arrays. This tells the storage service to fetch the
+array sub document, update it, and then validate it against the schema. This is useful for schemas that rely on validating the array in its
+entirety. For example, if you have a schema that requires the array to be unique or of certain length, then you will need to set this to true.
+
+#### Sub document updates
+
+The sub document APIs - `UpsertSubDocument`, `GetSubDocument`, `DeleteSubDocument`, etc - all accept an object of the following format:
+
+```json
+{
+  "value": "some_object",
+  "path": "path.to.field"
+}
+```
+
+The value can be any valid JSON object. The path is a dot separated string that specifies the location of the field in the JSON blob. The path can be nested and can contain arrays.
+
+#### Example
+
+The following example shows how fetch and update a subdocument JSON array using the storage service.
+
+1. Create a json document
+```
+{
+  "method": "POST",
+  "url": "https://gateway.dev.snapser.io/{NAMESPACE}/v1/storage/owner/{OWNER_ID}/protected/json-blobs/{BLOB_KEY}",
+  "payload": {
+    "value": {
+      "colors": [
+        "red", "green", "blue"
+      ],
+      "season": "summer",
+    }
+  }
+}
+```
+
+2. Fetch the `colors` array:
+```
+{
+  "method": "GET",
+  "url": "https://gateway.dev.snapser.io/{NAMESPACE}/v1/storage/owner/{OWNER_ID}/protected/json-blobs/{BLOB_KEY}/sub-documents/colors",
+  "response": {
+	"value": {
+	  "colors": [
+		"red", "green", "blue"
+	  ]
+	},
+	"cas": "1744303876321378304"
+  }
+}
+```
+
+3. Update the `colors` array to append `yellow`:
+```
+{
+  "method": "PUT",
+  "url": "https://gateway.dev.snapser.io/{NAMESPACE}/v1/storage/owner/{OWNER_ID}/protected/json-blobs/{BLOB_KEY}/sub-documents/colors",
+  "payload": {
+	"updates": [{
+	  "value": "yellow",
+	  "path": "colors"
+	}]
+  }
+}
+```
+
+4. Fetch the whole document:
+```
+{
+  "method": "GET",
+  "url": "https://gateway.dev.snapser.io/{NAMESPACE}/v1/storage/owner/{OWNER_ID}/protected/json-blobs/{BLOB_KEY}",
+  "response": {
+	"value": {
+	  "colors": [
+		"red", "green", "blue", "yellow"
+	  ],
+	  "season": "summer"
+	},
+	"cas": "1744303876321378304"
+  }
+}
+```
+
+Observe that the `colors` array has been updated to include `yellow`. The CAS value has also changed, indicating that the blob has been updated and the `season` field is unchanged.
+
+### Dynamic Blobs
+Occasionally, you may want to create many blob keys at runtime. For example, you may want to create
+a blob for each user in a matchmade game, but can't configure those keys via the admin console beforehand.
+To support this, we've added the concept of a *dynamic blob*.
+
+![Dynamic Blob Toggle](/images/docs/dynamic-blob-toggle.png)
+
+Dynamic blob keys are created the same way as regular blobs via the admin console. If you enable the
+dynamic blob feature, the blob key will be treated as a prefix and the storage service will allow you
+to create blobs with keys that start with that prefix.
+
+The following example shows how serveral user blobs can be created for the same dynamic key:
+
+1. Create the dynamic blob key named `season1` in the admin tool.
+2. Use the BatchCreateBlob
+```
+{
+  "method": "POST",
+  "url": "https://gateway.dev.snapser.io/{NAMESPACE}/v1/storage/batch/blobs",
+  "payload": {
+    "value": {
+      "blobs": [
+		{
+			"value": "blob #1",
+			"owner_id": USER_ID_1,
+			"blob_key": "season1-{USER_ID_1}",
+			"access_type": "public"
+		},
+		{
+			"value": "blob #2",
+			"owner_id": USER_ID_2,
+			"blob_key": "season1-{USER_ID_2}",
+			"access_type": "public"
+		}
+	  ]
+    }
+  }
+}
+```
+
+3. Once the blobs are created, Users 1 & 2 can now fetch or delete their blobs using the User auth API:
+
+```
+{
+  "method": "GET",
+  "url": "https://gateway.dev.snapser.io/{NAMESPACE}/v1/storage/owner/{USER_ID_1}/public/blobs/season1-{USER_ID_1}",
+  "response": {
+	"value": {
+	  "blob #1"
+	},
+	"cas": "1744303876321378304"
+  }
+}
+```
+
+<Note>
+  All write operations on dynamic blobs (insert, replace, update, increment) must use the batch operations API.
+  This is to ensure that the keys are created in a controlled manner and to prevent accidental creation of too many blobs.
+  Once a dynamic blob is created, you can use the regular APIs to read or delete the blobs.
+</Note>
+
+Dynamic blobs are supported for all blob types, including append blobs, counter blobs, and JSON blobs.
+
+## Blob Access Control
+
+Each blob can have one of the following access types during creation.
+
+1. **Public**: Anyone can read or write to these blobs.
+2. **Protected**: Anyone can read the blobs, but only the owners can write to the blobs.
+3. **Private**: No one except the owners can read and write to the blobs.
+   <Note>
+     Most developers chose to use the protected blob type. Use the support
+     channel if you want to discuss this topic further.
+   </Note>
+
+## Concurrency Control
+
+The service provides concurrency control via **Check and Set** or **CAS**. Every blob in the storage service has an
+associated CAS value.
+
+### Check and Set (CAS) for Updates
+Every time you update the blob, the CAS value changes and is returned in the response. Your client
+can only edit the blob contents if the value of the CAS matches. This case is handy if your game or app supports multi-device play.
+
+### Example
+Say the same physical user A is playing your game on an iPhone and iPad. They pick up their iPhone and play the game. They then pick up the iPad. Your iPad client code tries to sync the data with the Storage service and realizes a CAS mismatch (because the game state progressed when the user played on the iPhone). Your game can then allow the user to continue from the same state as the iPhone or replace it with the iPad state.
+This is how the storage service ensures you are not giving any surprises to your audience, and every blob update is happening in a way that guarantees concurrency control.
+
+<Note>
+  Passing CAS on updates is only required when you are using type: Blob. Its not
+  required for append and counter blobs.
+</Note>
+
+### Check and Set (CAS) for Deletes
+
+The `Delete API` for every blob takes an optional CAS parameter. This
+ensures that you can safely delete the contents of the blob only if the CAS
+matches.
+
+## APIs
+
+The `Storage` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name         | HTTP Method | API Description                                                  |
+| ---------------- | ----------- | ---------------------------------------------------------------- |
+| [StorageDeleteAppendBlob](#storagedeleteappendblob-api) | DELETE      | Deletes the append blob                                          |
+| [StorageGetAppendBlob](#storagegetappendblob-api)    | GET         | Retrieve the value of an append blob                             |
+| [StorageUpdateAppendBlob](#storageupdateappendblob-api) | PUT         | Append to the existing blob. Create a new one if it doesn't exist |
+| [StorageDeleteJsonBlob](#storagedeletejsonblob-api) | DELETE      | Deletes the json blob                                          |
+| [StorageGetJsonBlob](#storagegetjsonblob-api)    | GET         | Retrieve the value of a json blob                             |
+| [StorageInsertJsonBlob](#storageinsertjsonblob-api) | POST         | Inserts a json blob. Will fail if the key already exists |
+| [StorageUpsertSubDocument](#storageupsertsubdocument-api) | PUT         | Upsert a sub-document. Optionally insert if it doesn't exist |
+| [StorageDeleteSubDocument](#storagedeletesubdocument-api) | DELETE         | Deletes the sub-document |
+| [StorageGetSubDocument](#storagegetsubdocument-api) | GET         | Retrieve the sub-document for the key |
+| [StorageAppendArrSubDocument](#storageappendarrsubdocument-api) | PUT         | Append to an array sub-document |
+| [StoragePrependArrSubDocument](#storageprependarrsubdocument-api) | PUT       | Prepend to an array sub-document |
+| [StorageDeleteBlob](#storagedeleteblob-api)       | DELETE      | Delete a blob                                                    |
+| [StorageGetBlob](#storagegetblob-api)          | GET         | Retrieve the blob for the key                                    |
+| [StorageInsertBlob](#storageinsertblob-api)       | POST        | Inserts a blob. Will fail if the key already exists              |
+| [StorageReplaceBlob](#storagereplaceblob-api)      | PUT         | Replace a blob. Optionally insert if it doesn't exist            |
+| [StorageGetCas](#storagegetcas-api)           | GET         | Retrieve the cas for the key                                     |
+| [StorageResetCounter](#storageresetcounter-api)     | DELETE      | Reset a counter value to 0                                       |
+| [StorageGetCounter](#storagegetcounter-api)       | GET         | Retrieve a counter value                                         |
+| [StorageIncrementCounter](#storageincrementcounter-api) | PUT         | Increment the counter                                            |
+| [StorageBatchInsertBlob](#storagebatchinsertblob-api) | POST         | Inserts multiple blobs. Will fail if the key already exists                                            |
+| [StorageBatchReplaceBlob](#storagebatchreplaceblob-api) | PUT         | Replace multiple blobs. Optionally insert if it doesn't exist                                            |
+| [StorageBatchGetBlobs](#storagebatchgetblobs-api) | GET         | Retrieve all blobs for the owners                                            |
+| [StorageBatchUpdateAppendBlob](#storagebatchupdateappendblob-api) | PUT         | Append to the existing blobs. Create a new one if it doesn't exist                                            |
+| [StorageBatchGetAppendBlobs](#storagebatchgetappendblobs-api) | GET         | Retrieve all append blobs for the owners                                            |
+| [StorageBatchIncrementCounter](#storagebatchincrementcounter-api) | PUT         | Increment multiple counters                                            |
+| [StorageBatchGetCounters](#storagebatchgetcounters-api) | GET         | Retrieve all counters for the owners                                            |
+</div>
+
+### Usage
+#### StorageDeleteAppendBlob API
+<CodeGroup title="Deletes the append blob" tag="DELETE" label="StorageDeleteAppendBlob">
+```csharp
+/// <summary>
+/// Append Blobs Deletes the append blob
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Append-blob owner&#39;s user ID</param>
+/// <param name="accessType">Access to the append-blob. (public/protected/private)</param>
+/// <param name="key">Append-blob key</param>
+/// <param name="token">User session token</param>
+/// <param name="cas">Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed (optional)</param>
+/// <returns>StorageDeleteAppendBlobResponse</returns>
+public StorageDeleteAppendBlobResponse StorageDeleteAppendBlob(string ownerId, string accessType, string key, string token, string cas = default(string))
+{
+    Snapser.Client.ApiResponse<StorageDeleteAppendBlobResponse> localVarResponse = StorageDeleteAppendBlobWithHttpInfo(ownerId, accessType, key, token, cas);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StorageDeleteAppendBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageDeleteAppendBlobResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+public StorageDeleteAppendBlobResponse(string cas = default(string))
+{
+    this.Cas = cas;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageDeleteAppendBlobRequest : public Request
+{
+public:
+    virtual ~StorageDeleteAppendBlobRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Append-blob owner's user ID */
+    FString OwnerId;
+    /* Access to the append-blob. (public/protected/private) */
+    FString AccessType;
+    /* Append-blob key */
+    FString Key;
+    /* User session token */
+    FString Token;
+    /* Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed */
+    TOptional<FString> Cas;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageDeleteAppendBlobResponse : public Response
+{
+public:
+    virtual ~StorageDeleteAppendBlobResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageDeleteAppendBlobResponse Content;
+};
+
+class SNAPSER_API SnapserStorageDeleteAppendBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageDeleteAppendBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### StorageGetAppendBlob API
+<CodeGroup title="Retrieve the value of an append blob" tag="GET" label="StorageGetAppendBlob">
+```csharp
+/// <summary>
+/// Append Blobs Retrieve the value of an append blob
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Append-blob owner&#39;s user ID</param>
+/// <param name="accessType">Access to the append-blob. (public/protected/private)</param>
+/// <param name="key">Append-blob key</param>
+/// <param name="token">User session token</param>
+/// <returns>StorageGetAppendBlobResponse</returns>
+public StorageGetAppendBlobResponse StorageGetAppendBlob(string ownerId, string accessType, string key, string token)
+{
+    Snapser.Client.ApiResponse<StorageGetAppendBlobResponse> localVarResponse = StorageGetAppendBlobWithHttpInfo(ownerId, accessType, key, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StorageGetAppendBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageGetAppendBlobResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+/// <param name="value">Blob value.</param>
+public StorageGetAppendBlobResponse(string cas = default(string), string value = default(string))
+{
+    this.Cas = cas;
+    this.Value = value;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageGetAppendBlobRequest : public Request
+{
+public:
+    virtual ~StorageGetAppendBlobRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Append-blob owner's user ID */
+    FString OwnerId;
+    /* Access to the append-blob. (public/protected/private) */
+    FString AccessType;
+    /* Append-blob key */
+    FString Key;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageGetAppendBlobResponse : public Response
+{
+public:
+    virtual ~StorageGetAppendBlobResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageGetAppendBlobResponse Content;
+};
+
+class SNAPSER_API SnapserStorageGetAppendBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageGetAppendBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+    /* Blob value */
+    TOptional<FString> Value;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### StorageUpdateAppendBlob API
+<CodeGroup title="Append to the existing blob. Create a new one if it doesn't exist" tag="PUT" label="StorageUpdateAppendBlob">
+```csharp
+/// <summary>
+/// Append Blobs Apend to the existing blob. Create a new one if it doesn&#39;t exist
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Append-blob owner&#39;s user ID</param>
+/// <param name="accessType">Access to the append-blob. (public/protected/private)</param>
+/// <param name="key">Append-blob key</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>StorageUpdateAppendBlobResponse</returns>
+public StorageUpdateAppendBlobResponse StorageUpdateAppendBlob(string ownerId, string accessType, string key, string token, UpdateAppendBlobRequest body)
+{
+    Snapser.Client.ApiResponse<StorageUpdateAppendBlobResponse> localVarResponse = StorageUpdateAppendBlobWithHttpInfo(ownerId, accessType, key, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for UpdateAppendBlobRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="UpdateAppendBlobRequest" /> class.
+/// </summary>
+/// <param name="value">Value to be appended (required).</param>
+public UpdateAppendBlobRequest(string value = default(string))
+{
+    // to ensure "value" is required (not null)
+    if (value == null)
+    {
+        throw new ArgumentNullException("value is a required property for UpdateAppendBlobRequest and cannot be null");
+    }
+    this.Value = value;
+}
+
+/// Snapser.Model for StorageUpdateAppendBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageUpdateAppendBlobResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+public StorageUpdateAppendBlobResponse(string cas = default(string))
+{
+    this.Cas = cas;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageUpdateAppendBlobRequest : public Request
+{
+public:
+    virtual ~StorageUpdateAppendBlobRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Append-blob owner's user ID */
+    FString OwnerId;
+    /* Access to the append-blob. (public/protected/private) */
+    FString AccessType;
+    /* Append-blob key */
+    FString Key;
+    /* User session token */
+    FString Token;
+    SnapserUpdateAppendBlobRequest Body;
+};
+
+class SNAPSER_API SnapserUpdateAppendBlobRequest : public Model
+{
+public:
+    virtual ~SnapserUpdateAppendBlobRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Value to be appended */
+    FString Value;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageUpdateAppendBlobResponse : public Response
+{
+public:
+    virtual ~StorageUpdateAppendBlobResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageUpdateAppendBlobResponse Content;
+};
+
+class SNAPSER_API SnapserStorageUpdateAppendBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageUpdateAppendBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### StorageDeleteJsonBlob API
+<CodeGroup title="Delete a json blob" tag="DELETE" label="StorageDeleteJsonBlob">
+```csharp
+/// <summary>
+/// JSON Blobs Deletes the JSON blob
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Blob owner&#39;s user ID</param>
+/// <param name="accessType">Access to the blob. (public/protected/private)</param>
+/// <param name="jsonBlobKey">Blob key</param>
+/// <param name="token">User session token</param>
+/// <param name="cas">Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed (optional)</param>
+/// <returns>StorageDeleteJsonBlobResponse</returns>
+public StorageDeleteJsonBlobResponse StorageDeleteJsonBlob(string ownerId, string accessType, string jsonBlobKey, string token, string cas = default(string))
+{
+    Snapser.Client.ApiResponse<StorageDeleteJsonBlobResponse> localVarResponse = StorageDeleteJsonBlobWithHttpInfo(ownerId, accessType, jsonBlobKey, token, cas);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StorageDeleteJsonBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageDeleteJsonBlobResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+public StorageDeleteJsonBlobResponse(string cas = default(string))
+{
+    this.Cas = cas;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageDeleteJsonBlobRequest : public Request
+{
+public:
+    virtual ~StorageDeleteJsonBlobRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Blob owner's user ID */
+    FString OwnerId;
+    /* Access to the blob. (public/protected/private) */
+    FString AccessType;
+    /* Blob key */
+    FString JsonBlobKey;
+    /* User session token */
+    FString Token;
+    /* Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed */
+    TOptional<FString> Cas;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageDeleteJsonBlobResponse : public Response
+{
+public:
+    virtual ~StorageDeleteJsonBlobResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageDeleteJsonBlobResponse Content;
+};
+
+class SNAPSER_API SnapserStorageDeleteJsonBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageDeleteJsonBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### StorageGetJsonBlob API
+<CodeGroup title='Retrieve the value of a json blob' tag="GET" label="StorageGetJsonBlob">
+```csharp
+/// <summary>
+/// JSON Blobs Retrieve the JSON blob for the key
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Blob owner&#39;s user ID</param>
+/// <param name="accessType">Access to the blob. (public/protected/private)</param>
+/// <param name="jsonBlobKey">Blob key</param>
+/// <param name="token">User session token</param>
+/// <returns>StorageGetJsonBlobResponse</returns>
+public StorageGetJsonBlobResponse StorageGetJsonBlob(string ownerId, string accessType, string jsonBlobKey, string token)
+{
+    Snapser.Client.ApiResponse<StorageGetJsonBlobResponse> localVarResponse = StorageGetJsonBlobWithHttpInfo(ownerId, accessType, jsonBlobKey, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StorageGetJsonBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageGetJsonBlobResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+/// <param name="value">Value of the blob.</param>
+public StorageGetJsonBlobResponse(string cas = default(string), Object value = default(Object))
+{
+    this.Cas = cas;
+    this.Value = value;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageGetJsonBlobRequest : public Request
+{
+public:
+    virtual ~StorageGetJsonBlobRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Blob owner's user ID */
+    FString OwnerId;
+    /* Access to the blob. (public/protected/private) */
+    FString AccessType;
+    /* Blob key */
+    FString JsonBlobKey;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageGetJsonBlobResponse : public Response
+{
+public:
+    virtual ~StorageGetJsonBlobResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageGetJsonBlobResponse Content;
+};
+
+class SNAPSER_API SnapserStorageGetJsonBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageGetJsonBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+    /* Value of the blob */
+    TOptional<TSharedPtr<FJsonObject>> Value;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### StorageInsertJsonBlob API
+<CodeGroup title='Inserts a json blob' tag="POST" label="StorageInsertJsonBlob">
+```csharp
+/// <summary>
+/// JSON Blobs Inserts a JSON blob. Will fail if the key already exists
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Blob owner&#39;s user ID</param>
+/// <param name="accessType">Access to the blob. (public/protected/private)</param>
+/// <param name="jsonBlobKey">Blob key</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>StorageInsertJsonBlobResponse</returns>
+public StorageInsertJsonBlobResponse StorageInsertJsonBlob(string ownerId, string accessType, string jsonBlobKey, string token, InsertJsonBlobRequest body)
+{
+    Snapser.Client.ApiResponse<StorageInsertJsonBlobResponse> localVarResponse = StorageInsertJsonBlobWithHttpInfo(ownerId, accessType, jsonBlobKey, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InsertJsonBlobRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="InsertJsonBlobRequest" /> class.
+/// </summary>
+/// <param name="ttl">Optional TTL for the blob.</param>
+/// <param name="value">JSON value to be inserted (required).</param>
+public InsertJsonBlobRequest(long ttl = default(long), Object value = default(Object))
+{
+    // to ensure "value" is required (not null)
+    if (value == null)
+    {
+        throw new ArgumentNullException("value is a required property for InsertJsonBlobRequest and cannot be null");
+    }
+    this.Value = value;
+    this.Ttl = ttl;
+}
+
+/// Snapser.Model for StorageInsertJsonBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageInsertJsonBlobResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+public StorageInsertJsonBlobResponse(string cas = default(string))
+{
+    this.Cas = cas;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageInsertJsonBlobRequest : public Request
+{
+public:
+    virtual ~StorageInsertJsonBlobRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Blob owner's user ID */
+    FString OwnerId;
+    /* Access to the blob. (public/protected/private) */
+    FString AccessType;
+    /* Blob key */
+    FString JsonBlobKey;
+    /* User session token */
+    FString Token;
+    SnapserInsertJsonBlobRequest Body;
+};
+
+class SNAPSER_API SnapserInsertJsonBlobRequest : public Model
+{
+public:
+    virtual ~SnapserInsertJsonBlobRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Optional TTL for the blob */
+    TOptional<int64> Ttl;
+    /* JSON value to be inserted */
+    TSharedPtr<FJsonObject> Value;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageInsertJsonBlobResponse : public Response
+{
+public:
+    virtual ~StorageInsertJsonBlobResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageInsertJsonBlobResponse Content;
+};
+
+class SNAPSER_API SnapserStorageInsertJsonBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageInsertJsonBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### StorageUpsertSubDocument API
+<CodeGroup title="Upsert a sub-document" tag="PUT" label="StorageUpsertSubDocument">
+```csharp
+/// <summary>
+/// JSON Blobs Upsert a sub-document. Optionally insert if it doesn&#39;t exist
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Counter owner&#39;s user ID</param>
+/// <param name="accessType">Access to the counter. (public/protected/private)</param>
+/// <param name="jsonBlobKey">Blob key</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>StorageUpsertSubDocumentResponse</returns>
+public StorageUpsertSubDocumentResponse StorageUpsertSubDocument(string ownerId, string accessType, string jsonBlobKey, string token, UpsertSubDocumentRequest body)
+{
+    Snapser.Client.ApiResponse<StorageUpsertSubDocumentResponse> localVarResponse = StorageUpsertSubDocumentWithHttpInfo(ownerId, accessType, jsonBlobKey, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for UpsertSubDocumentRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="UpsertSubDocumentRequest" /> class.
+/// </summary>
+/// <param name="updates">Fragments to be upserted (required).</param>
+public UpsertSubDocumentRequest(List<StorageJsonFragment> updates = default(List<StorageJsonFragment>))
+{
+    // to ensure "updates" is required (not null)
+    if (updates == null)
+    {
+        throw new ArgumentNullException("updates is a required property for UpsertSubDocumentRequest and cannot be null");
+    }
+    this.Updates = updates;
+}
+
+/// Snapser.Model for StorageJsonFragment
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageJsonFragment" /> class.
+/// </summary>
+/// <param name="path">path.</param>
+/// <param name="value">value.</param>
+public StorageJsonFragment(string path = default(string), Object value = default(Object))
+{
+    this.Path = path;
+    this.Value = value;
+}
+
+/// Snapser.Model for StorageUpsertSubDocumentResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageUpsertSubDocumentResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+public StorageUpsertSubDocumentResponse(string cas = default(string))
+{
+    this.Cas = cas;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageUpsertSubDocumentRequest : public Request
+{
+public:
+    virtual ~StorageUpsertSubDocumentRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Counter owner's user ID */
+    FString OwnerId;
+    /* Access to the counter. (public/protected/private) */
+    FString AccessType;
+    /* Blob key */
+    FString JsonBlobKey;
+    /* User session token */
+    FString Token;
+    SnapserUpsertSubDocumentRequest Body;
+};
+
+class SNAPSER_API SnapserUpsertSubDocumentRequest : public Model
+{
+public:
+    virtual ~SnapserUpsertSubDocumentRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Fragments to be upserted */
+    TArray<SnapserStorageJsonFragment> Updates;
+};
+
+class SNAPSER_API SnapserStorageJsonFragment : public Model
+{
+public:
+    virtual ~SnapserStorageJsonFragment() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Path;
+    TOptional<TSharedPtr<FJsonObject>> Value;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageUpsertSubDocumentResponse : public Response
+{
+public:
+    virtual ~StorageUpsertSubDocumentResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageUpsertSubDocumentResponse Content;
+};
+
+class SNAPSER_API SnapserStorageUpsertSubDocumentResponse : public Model
+{
+public:
+    virtual ~SnapserStorageUpsertSubDocumentResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### StorageDeleteSubDocument API
+<CodeGroup title="Deletes the sub-document" tag="DELETE" label="StorageDeleteSubDocument">
+```csharp
+/// <summary>
+/// JSON Blobs Deletes the sub-document
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Counter owner&#39;s user ID</param>
+/// <param name="accessType">Access to the counter. (public/protected/private)</param>
+/// <param name="jsonBlobKey">Blob key</param>
+/// <param name="path">Path to the sub-document</param>
+/// <param name="token">User session token</param>
+/// <param name="cas">Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed (optional)</param>
+/// <returns>StorageDeleteSubDocumentResponse</returns>
+public StorageDeleteSubDocumentResponse StorageDeleteSubDocument(string ownerId, string accessType, string jsonBlobKey, string path, string token, string cas = default(string))
+{
+    Snapser.Client.ApiResponse<StorageDeleteSubDocumentResponse> localVarResponse = StorageDeleteSubDocumentWithHttpInfo(ownerId, accessType, jsonBlobKey, path, token, cas);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StorageDeleteSubDocumentResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageDeleteSubDocumentResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+public StorageDeleteSubDocumentResponse(string cas = default(string))
+{
+    this.Cas = cas;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageDeleteSubDocumentRequest : public Request
+{
+public:
+    virtual ~StorageDeleteSubDocumentRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Counter owner's user ID */
+    FString OwnerId;
+    /* Access to the counter. (public/protected/private) */
+    FString AccessType;
+    /* Blob key */
+    FString JsonBlobKey;
+    /* Path to the sub-document */
+    FString Path;
+    /* User session token */
+    FString Token;
+    /* Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed */
+    TOptional<FString> Cas;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageDeleteSubDocumentResponse : public Response
+{
+public:
+    virtual ~StorageDeleteSubDocumentResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageDeleteSubDocumentResponse Content;
+};
+
+class SNAPSER_API SnapserStorageDeleteSubDocumentResponse : public Model
+{
+public:
+    virtual ~SnapserStorageDeleteSubDocumentResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### StorageGetSubDocument API
+<CodeGroup title="Retrieve the sub-document for the key" tag="GET" label="StorageGetSubDocument">
+```csharp
+/// <summary>
+/// JSON Blobs Retrieve the sub-document for the key
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Counter owner&#39;s user ID</param>
+/// <param name="accessType">Access to the counter. (public/protected/private)</param>
+/// <param name="jsonBlobKey">Blob key</param>
+/// <param name="path">Path to the sub-document</param>
+/// <param name="token">User session token</param>
+/// <returns>StorageGetSubDocumentResponse</returns>
+public StorageGetSubDocumentResponse StorageGetSubDocument(string ownerId, string accessType, string jsonBlobKey, string path, string token)
+{
+    Snapser.Client.ApiResponse<StorageGetSubDocumentResponse> localVarResponse = StorageGetSubDocumentWithHttpInfo(ownerId, accessType, jsonBlobKey, path, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StorageGetSubDocumentResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageGetSubDocumentResponse" /> class.
+/// </summary>
+/// <param name="value">Value of the sub-document.</param>
+public StorageGetSubDocumentResponse(Object value = default(Object))
+{
+    this.Value = value;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageGetSubDocumentRequest : public Request
+{
+public:
+    virtual ~StorageGetSubDocumentRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Counter owner's user ID */
+    FString OwnerId;
+    /* Access to the counter. (public/protected/private) */
+    FString AccessType;
+    /* Blob key */
+    FString JsonBlobKey;
+    /* Path to the sub-document */
+    FString Path;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageGetSubDocumentResponse : public Response
+{
+public:
+    virtual ~StorageGetSubDocumentResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageGetSubDocumentResponse Content;
+};
+
+class SNAPSER_API SnapserStorageGetSubDocumentResponse : public Model
+{
+public:
+    virtual ~SnapserStorageGetSubDocumentResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Value of the sub-document */
+    TOptional<TSharedPtr<FJsonObject>> Value;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### StorageAppendArrSubDocument API
+<CodeGroup title="Append to an array sub-document" tag="PUT" label="StorageAppendArrSubDocument">
+```csharp
+/// <summary>
+/// JSON Blobs Append to an array sub-document
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Counter owner&#39;s user ID</param>
+/// <param name="accessType">Access to the counter. (public/protected/private)</param>
+/// <param name="jsonBlobKey">Blob key</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>StorageAppendArrSubDocumentResponse</returns>
+public StorageAppendArrSubDocumentResponse StorageAppendArrSubDocument(string ownerId, string accessType, string jsonBlobKey, string token, AppendArrSubDocumentRequest body)
+{
+    Snapser.Client.ApiResponse<StorageAppendArrSubDocumentResponse> localVarResponse = StorageAppendArrSubDocumentWithHttpInfo(ownerId, accessType, jsonBlobKey, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AppendArrSubDocumentRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AppendArrSubDocumentRequest" /> class.
+/// </summary>
+/// <param name="updates">Fragments to be appended (required).</param>
+public AppendArrSubDocumentRequest(List<StorageJsonFragment> updates = default(List<StorageJsonFragment>))
+{
+    // to ensure "updates" is required (not null)
+    if (updates == null)
+    {
+        throw new ArgumentNullException("updates is a required property for AppendArrSubDocumentRequest and cannot be null");
+    }
+    this.Updates = updates;
+}
+
+/// Snapser.Model for StorageJsonFragment
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageJsonFragment" /> class.
+/// </summary>
+/// <param name="path">path.</param>
+/// <param name="value">value.</param>
+public StorageJsonFragment(string path = default(string), Object value = default(Object))
+{
+    this.Path = path;
+    this.Value = value;
+}
+
+/// Snapser.Model for StorageAppendArrSubDocumentResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageAppendArrSubDocumentResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+public StorageAppendArrSubDocumentResponse(string cas = default(string))
+{
+    this.Cas = cas;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageAppendArrSubDocumentRequest : public Request
+{
+public:
+    virtual ~StorageAppendArrSubDocumentRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Counter owner's user ID */
+    FString OwnerId;
+    /* Access to the counter. (public/protected/private) */
+    FString AccessType;
+    /* Blob key */
+    FString JsonBlobKey;
+    /* User session token */
+    FString Token;
+    SnapserAppendArrSubDocumentRequest Body;
+};
+
+class SNAPSER_API SnapserAppendArrSubDocumentRequest : public Model
+{
+public:
+    virtual ~SnapserAppendArrSubDocumentRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Fragments to be appended */
+    TArray<SnapserStorageJsonFragment> Updates;
+};
+
+class SNAPSER_API SnapserStorageJsonFragment : public Model
+{
+public:
+    virtual ~SnapserStorageJsonFragment() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Path;
+    TOptional<TSharedPtr<FJsonObject>> Value;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageAppendArrSubDocumentResponse : public Response
+{
+public:
+    virtual ~StorageAppendArrSubDocumentResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageAppendArrSubDocumentResponse Content;
+};
+
+class SNAPSER_API SnapserStorageAppendArrSubDocumentResponse : public Model
+{
+public:
+    virtual ~SnapserStorageAppendArrSubDocumentResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### StoragePrependArrSubDocument API
+<CodeGroup title="Prepend to an array sub-document" tag="PUT" label="StoragePrependArrSubDocument">
+```csharp
+/// <summary>
+/// JSON Blobs Prepend to an array sub-document
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Counter owner&#39;s user ID</param>
+/// <param name="accessType">Access to the counter. (public/protected/private)</param>
+/// <param name="jsonBlobKey">Blob key</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>StoragePrependArrSubDocumentResponse</returns>
+public StoragePrependArrSubDocumentResponse StoragePrependArrSubDocument(string ownerId, string accessType, string jsonBlobKey, string token, PrependArrSubDocumentRequest body)
+{
+    Snapser.Client.ApiResponse<StoragePrependArrSubDocumentResponse> localVarResponse = StoragePrependArrSubDocumentWithHttpInfo(ownerId, accessType, jsonBlobKey, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapaser.Model for PrependArrSubDocumentRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="PrependArrSubDocumentRequest" /> class.
+/// </summary>
+/// <param name="updates">Fragments to be prepended (required).</param>
+public PrependArrSubDocumentRequest(List<StorageJsonFragment> updates = default(List<StorageJsonFragment>))
+{
+    // to ensure "updates" is required (not null)
+    if (updates == null)
+    {
+        throw new ArgumentNullException("updates is a required property for PrependArrSubDocumentRequest and cannot be null");
+    }
+    this.Updates = updates;
+}
+
+/// Snapaser.Model for StorageJsonFragment
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageJsonFragment" /> class.
+/// </summary>
+/// <param name="path">path.</param>
+/// <param name="value">value.</param>
+public StorageJsonFragment(string path = default(string), Object value = default(Object))
+{
+    this.Path = path;
+    this.Value = value;
+}
+
+/// Snapaser.Model for StoragePrependArrSubDocumentResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StoragePrependArrSubDocumentResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+public StoragePrependArrSubDocumentResponse(string cas = default(string))
+{
+    this.Cas = cas;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StoragePrependArrSubDocumentRequest : public Request
+{
+public:
+    virtual ~StoragePrependArrSubDocumentRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Counter owner's user ID */
+    FString OwnerId;
+    /* Access to the counter. (public/protected/private) */
+    FString AccessType;
+    /* Blob key */
+    FString JsonBlobKey;
+    /* User session token */
+    FString Token;
+    SnapserPrependArrSubDocumentRequest Body;
+};
+
+class SNAPSER_API SnapserPrependArrSubDocumentRequest : public Model
+{
+public:
+    virtual ~SnapserPrependArrSubDocumentRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Fragments to be prepended */
+    TArray<SnapserStorageJsonFragment> Updates;
+};
+
+class SNAPSER_API SnapserStorageJsonFragment : public Model
+{
+public:
+    virtual ~SnapserStorageJsonFragment() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Path;
+    TOptional<TSharedPtr<FJsonObject>> Value;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StoragePrependArrSubDocumentResponse : public Response
+{
+public:
+    virtual ~StoragePrependArrSubDocumentResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStoragePrependArrSubDocumentResponse Content;
+};
+
+class SNAPSER_API SnapserStoragePrependArrSubDocumentResponse : public Model
+{
+public:
+    virtual ~SnapserStoragePrependArrSubDocumentResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### StorageDeleteBlob API
+<CodeGroup title="Delete a blob" tag="DELETE" label="StorageDeleteBlob">
+```csharp
+/// <summary>
+/// Blobs Delete a blob
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Blob owner&#39;s user ID</param>
+/// <param name="accessType">Access to the blob. (public/protected/private)</param>
+/// <param name="key">Blob key</param>
+/// <param name="token">User session token</param>
+/// <param name="cas">Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed (optional)</param>
+/// <returns>StorageDeleteBlobResponse</returns>
+public StorageDeleteBlobResponse StorageDeleteBlob(string ownerId, string accessType, string key, string token, string cas = default(string))
+{
+    Snapser.Client.ApiResponse<StorageDeleteBlobResponse> localVarResponse = StorageDeleteBlobWithHttpInfo(ownerId, accessType, key, token, cas);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StorageDeleteBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageDeleteBlobResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+public StorageDeleteBlobResponse(string cas = default(string))
+{
+    this.Cas = cas;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageDeleteBlobRequest : public Request
+{
+public:
+    virtual ~StorageDeleteBlobRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Blob owner's user ID */
+    FString OwnerId;
+    /* Access to the blob. (public/protected/private) */
+    FString AccessType;
+    /* Blob key */
+    FString Key;
+    /* User session token */
+    FString Token;
+    /* Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed */
+    TOptional<FString> Cas;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageDeleteBlobResponse : public Response
+{
+public:
+    virtual ~StorageDeleteBlobResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageDeleteBlobResponse Content;
+};
+
+class SNAPSER_API SnapserStorageDeleteBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageDeleteBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### StorageGetBlob API
+<CodeGroup title="Retrieve the blob for the key" tag="GET" label="StorageGetBlob">
+```csharp
+/// <summary>
+/// Blobs Retrieve the blob for the key
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Blob owner&#39;s user ID</param>
+/// <param name="accessType">Access to the blob. (public/protected/private)</param>
+/// <param name="key">Blob key</param>
+/// <param name="token">User session token</param>
+/// <returns>StorageGetBlobResponse</returns>
+public StorageGetBlobResponse StorageGetBlob(string ownerId, string accessType, string key, string token)
+{
+    Snapser.Client.ApiResponse<StorageGetBlobResponse> localVarResponse = StorageGetBlobWithHttpInfo(ownerId, accessType, key, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StorageGetBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageGetBlobResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+/// <param name="value">Blob value.</param>
+public StorageGetBlobResponse(string cas = default(string), string value = default(string))
+{
+    this.Cas = cas;
+    this.Value = value;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageGetBlobRequest : public Request
+{
+public:
+    virtual ~StorageGetBlobRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Blob owner's user ID */
+    FString OwnerId;
+    /* Access to the blob. (public/protected/private) */
+    FString AccessType;
+    /* Blob key */
+    FString Key;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageGetBlobResponse : public Response
+{
+public:
+    virtual ~StorageGetBlobResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageGetBlobResponse Content;
+};
+
+class SNAPSER_API SnapserStorageGetBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageGetBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+    /* Blob value */
+    TOptional<FString> Value;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### StorageInsertBlob API
+<CodeGroup title="Inserts a blob. Will fail if the key already exists" tag="POST" label="StorageInsertBlob">
+```csharp
+/// <summary>
+/// Blobs Inserts a blob. Will fail if the key already exists
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Blob owner&#39;s user ID</param>
+/// <param name="accessType">Access to the blob. (public/protected/private)</param>
+/// <param name="key">Blob key</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>StorageInsertBlobResponse</returns>
+public StorageInsertBlobResponse StorageInsertBlob(string ownerId, string accessType, string key, string token, InsertBlobRequest body)
+{
+    Snapser.Client.ApiResponse<StorageInsertBlobResponse> localVarResponse = StorageInsertBlobWithHttpInfo(ownerId, accessType, key, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InsertBlobRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="InsertBlobRequest" /> class.
+/// </summary>
+/// <param name="ttl">Optional TTL for the blob.</param>
+/// <param name="value">Blob value to be inserted (required).</param>
+public InsertBlobRequest(long ttl = default(long), string value = default(string))
+{
+    // to ensure "value" is required (not null)
+    if (value == null)
+    {
+        throw new ArgumentNullException("value is a required property for InsertBlobRequest and cannot be null");
+    }
+    this.Value = value;
+    this.Ttl = ttl;
+}
+
+/// Snapser.Model for StorageInsertBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageInsertBlobResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+public StorageInsertBlobResponse(string cas = default(string))
+{
+    this.Cas = cas;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageInsertBlobRequest : public Request
+{
+public:
+    virtual ~StorageInsertBlobRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Blob owner's user ID */
+    FString OwnerId;
+    /* Access to the blob. (public/protected/private) */
+    FString AccessType;
+    /* Blob key */
+    FString Key;
+    /* User session token */
+    FString Token;
+    SnapserInsertBlobRequest Body;
+};
+
+class SNAPSER_API SnapserInsertBlobRequest : public Model
+{
+public:
+    virtual ~SnapserInsertBlobRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Optional TTL for the blob */
+    TOptional<int64> Ttl;
+    /* Blob value to be inserted */
+    FString Value;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageInsertBlobResponse : public Response
+{
+public:
+    virtual ~StorageInsertBlobResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageInsertBlobResponse Content;
+};
+
+class SNAPSER_API SnapserStorageInsertBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageInsertBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### StorageReplaceBlob API
+<CodeGroup title="Replace a blob. Optionally insert if it doesn't exist" tag="PUT" label="StorageReplaceBlob">
+```csharp
+/// <summary>
+/// Blobs Replace a blob. Optionally insert if it doesn&#39;t exist
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Blob owner&#39;s user ID</param>
+/// <param name="accessType">Access to the blob. (public/protected/private)</param>
+/// <param name="blobKey">Blob key</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>StorageReplaceBlobResponse</returns>
+public StorageReplaceBlobResponse StorageReplaceBlob(string ownerId, string accessType, string blobKey, string token, ReplaceBlobRequest body)
+{
+    Snapser.Client.ApiResponse<StorageReplaceBlobResponse> localVarResponse = StorageReplaceBlobWithHttpInfo(ownerId, accessType, blobKey, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ReplaceBlobRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="ReplaceBlobRequest" /> class.
+/// </summary>
+/// <param name="cas">CAS value retrieved from the last operation.</param>
+/// <param name="create">Whether the blob should be created if it doesn&#39;t exist.</param>
+/// <param name="ttl">Optional TTL for the blob.</param>
+/// <param name="value">Blob value to be inserted (required).</param>
+public ReplaceBlobRequest(string cas = default(string), bool create = default(bool), long ttl = default(long), string value = default(string))
+{
+    // to ensure "value" is required (not null)
+    if (value == null)
+    {
+        throw new ArgumentNullException("value is a required property for ReplaceBlobRequest and cannot be null");
+    }
+    this.Value = value;
+    this.Cas = cas;
+    this.Create = create;
+    this.Ttl = ttl;
+}
+
+/// Snapser.Model for StorageReplaceBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageReplaceBlobResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+public StorageReplaceBlobResponse(string cas = default(string))
+{
+    this.Cas = cas;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageReplaceBlobRequest : public Request
+{
+public:
+    virtual ~StorageReplaceBlobRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Blob owner's user ID */
+    FString OwnerId;
+    /* Access to the blob. (public/protected/private) */
+    FString AccessType;
+    /* Blob key */
+    FString BlobKey;
+    /* User session token */
+    FString Token;
+    SnapserReplaceBlobRequest Body;
+};
+
+class SNAPSER_API SnapserReplaceBlobRequest : public Model
+{
+public:
+    virtual ~SnapserReplaceBlobRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value retrieved from the last operation */
+    TOptional<FString> Cas;
+    /* Whether the blob should be created if it doesn't exist */
+    TOptional<bool> Create;
+    /* Optional TTL for the blob */
+    TOptional<int64> Ttl;
+    /* Blob value to be inserted */
+    FString Value;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageReplaceBlobResponse : public Response
+{
+public:
+    virtual ~StorageReplaceBlobResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageReplaceBlobResponse Content;
+};
+
+class SNAPSER_API SnapserStorageReplaceBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageReplaceBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### StorageBatchReplaceBlob API
+<CodeGroup title="Replace multiple blobs. Optionally insert if it doesn't exist" tag="PUT" label="StorageBatchReplaceBlob">
+```csharp
+/// <summary>
+/// Blobs (App Auth) Replace multiple blobs. Optionally insert if it doesn&#39;t exist
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">(app auth only)</param>
+/// <param name="body"></param>
+/// <returns>StorageBatchReplaceBlobResponse</returns>
+public StorageBatchReplaceBlobResponse StorageBatchReplaceBlob(string token, StorageBatchReplaceBlobRequest body)
+{
+    Snapser.Client.ApiResponse<StorageBatchReplaceBlobResponse> localVarResponse = StorageBatchReplaceBlobWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StorageBatchReplaceBlobRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBatchReplaceBlobRequest" /> class.
+/// </summary>
+/// <param name="blobs">blobs.</param>
+public StorageBatchReplaceBlobRequest(List<StorageReplaceBlobRequest> blobs = default(List<StorageReplaceBlobRequest>))
+{
+    this.Blobs = blobs;
+}
+
+/// Snapser.Model for StorageReplaceBlobRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageReplaceBlobRequest" /> class.
+/// </summary>
+/// <param name="accessType">Access to the blob. (public/protected/private) (required).</param>
+/// <param name="blobKey">Blob key (required).</param>
+/// <param name="cas">CAS value retrieved from the last operation.</param>
+/// <param name="create">Whether the blob should be created if it doesn&#39;t exist.</param>
+/// <param name="ownerId">Blob owner&#39;s user ID (required).</param>
+/// <param name="ttl">Optional TTL for the blob.</param>
+/// <param name="value">Blob value to be inserted (required).</param>
+public StorageReplaceBlobRequest(AccessTypeEnum accessType = default(AccessTypeEnum), string blobKey = default(string), string cas = default(string), bool create = default(bool), string ownerId = default(string), long ttl = default(long), string value = default(string))
+{
+    this.AccessType = accessType;
+    // to ensure "blobKey" is required (not null)
+    if (blobKey == null)
+    {
+        throw new ArgumentNullException("blobKey is a required property for StorageReplaceBlobRequest and cannot be null");
+    }
+    this.BlobKey = blobKey;
+    // to ensure "ownerId" is required (not null)
+    if (ownerId == null)
+    {
+        throw new ArgumentNullException("ownerId is a required property for StorageReplaceBlobRequest and cannot be null");
+    }
+    this.OwnerId = ownerId;
+    // to ensure "value" is required (not null)
+    if (value == null)
+    {
+        throw new ArgumentNullException("value is a required property for StorageReplaceBlobRequest and cannot be null");
+    }
+    this.Value = value;
+    this.Cas = cas;
+    this.Create = create;
+    this.Ttl = ttl;
+}
+
+/// <summary>
+/// Access to the blob. (public/protected/private)
+/// </summary>
+/// <value>Access to the blob. (public/protected/private)</value>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum AccessTypeEnum
+{
+    /// <summary>
+    /// Enum Public for value: public
+    /// </summary>
+    [EnumMember(Value = "public")] Public = 1,
+
+    /// <summary>
+    /// Enum Private for value: private
+    /// </summary>
+    [EnumMember(Value = "private")] Private = 2,
+
+    /// <summary>
+    /// Enum Protected for value: protected
+    /// </summary>
+    [EnumMember(Value = "protected")] Protected = 3
+}
+
+/// Snapser.Model for StorageBatchReplaceBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBatchReplaceBlobResponse" /> class.
+/// </summary>
+/// <param name="results">results.</param>
+public StorageBatchReplaceBlobResponse(List<StorageBatchSingleReplaceBlobResponse> results = default(List<StorageBatchSingleReplaceBlobResponse>))
+{
+    this.Results = results;
+}
+
+/// Snapser.Model for StorageBatchSingleReplaceBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBatchSingleReplaceBlobResponse" /> class.
+/// </summary>
+/// <param name="message">message.</param>
+/// <param name="request">request.</param>
+/// <param name="response">response.</param>
+/// <param name="success">success.</param>
+public StorageBatchSingleReplaceBlobResponse(string message = default(string), StorageReplaceBlobRequest request = default(StorageReplaceBlobRequest), StorageBlobAndOwner response = default(StorageBlobAndOwner), bool success = default(bool))
+{
+    this.Message = message;
+    this.Request = request;
+    this.Response = response;
+    this.Success = success;
+}
+
+/// Snapser.Model for StorageBlobAndOwner
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBlobAndOwner" /> class.
+/// </summary>
+/// <param name="accessType">accessType.</param>
+/// <param name="cas">cas.</param>
+/// <param name="key">key.</param>
+/// <param name="ownerId">ownerId.</param>
+/// <param name="scope">scope.</param>
+/// <param name="value">value.</param>
+public StorageBlobAndOwner(string accessType = default(string), string cas = default(string), string key = default(string), string ownerId = default(string), string scope = default(string), string value = default(string))
+{
+    this.AccessType = accessType;
+    this.Cas = cas;
+    this.Key = key;
+    this.OwnerId = ownerId;
+    this.Scope = scope;
+    this.Value = value;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageBatchReplaceBlobRequest : public Request
+{
+public:
+    virtual ~StorageBatchReplaceBlobRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserStorageBatchReplaceBlobRequest Body;
+};
+
+class SNAPSER_API SnapserStorageBatchReplaceBlobRequest : public Model
+{
+public:
+    virtual ~SnapserStorageBatchReplaceBlobRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserStorageReplaceBlobRequest>> Blobs;
+};
+
+class SNAPSER_API SnapserStorageReplaceBlobRequest : public Model
+{
+public:
+    virtual ~SnapserStorageReplaceBlobRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class AccessTypeEnum
+    {
+        _Public,
+        _Private,
+        _Protected,
+    };
+
+    static FString EnumToString(const AccessTypeEnum& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, AccessTypeEnum& EnumValue);
+    /* Access to the blob. (public/protected/private) */
+    AccessTypeEnum AccessType;
+    /* Blob key */
+    FString BlobKey;
+    /* CAS value retrieved from the last operation */
+    TOptional<FString> Cas;
+    /* Whether the blob should be created if it doesn't exist */
+    TOptional<bool> Create;
+    /* Blob owner's user ID */
+    FString OwnerId;
+    /* Optional TTL for the blob */
+    TOptional<int64> Ttl;
+    /* Blob value to be inserted */
+    FString Value;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageBatchReplaceBlobResponse : public Response
+{
+public:
+    virtual ~StorageBatchReplaceBlobResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageBatchReplaceBlobResponse Content;
+};
+
+class SNAPSER_API SnapserStorageBatchReplaceBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageBatchReplaceBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserStorageBatchSingleReplaceBlobResponse>> Results;
+};
+
+class SNAPSER_API SnapserStorageBatchSingleReplaceBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageBatchSingleReplaceBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Message;
+    TOptional<SnapserStorageReplaceBlobRequest> Request;
+    TOptional<SnapserStorageBlobAndOwner> Response;
+    TOptional<bool> Success;
+};
+
+class SNAPSER_API SnapserStorageBlobAndOwner : public Model
+{
+public:
+    virtual ~SnapserStorageBlobAndOwner() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> AccessType;
+    TOptional<FString> Cas;
+    TOptional<FString> Key;
+    TOptional<FString> OwnerId;
+    TOptional<FString> Scope;
+    TOptional<FString> Value;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### StorageGetCas API
+<CodeGroup title="Retrieve the cas for the key" tag="GET" label="StorageGetCas">
+```csharp
+/// <summary>
+/// Cas Retrieve the cas for the key
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Blob owner&#39;s user ID</param>
+/// <param name="accessType">Access to the blob. (public/protected/private)</param>
+/// <param name="key">Blob key</param>
+/// <param name="token">User session token</param>
+/// <returns>StorageGetCasResponse</returns>
+public StorageGetCasResponse StorageGetCas(string ownerId, string accessType, string key, string token)
+{
+    Snapser.Client.ApiResponse<StorageGetCasResponse> localVarResponse = StorageGetCasWithHttpInfo(ownerId, accessType, key, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StorageGetCasResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageGetCasResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+public StorageGetCasResponse(string cas = default(string))
+{
+    this.Cas = cas;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageGetCasRequest : public Request
+{
+public:
+    virtual ~StorageGetCasRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Blob owner's user ID */
+    FString OwnerId;
+    /* Access to the blob. (public/protected/private) */
+    FString AccessType;
+    /* Blob key */
+    FString Key;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageGetCasResponse : public Response
+{
+public:
+    virtual ~StorageGetCasResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageGetCasResponse Content;
+};
+
+class SNAPSER_API SnapserStorageGetCasResponse : public Model
+{
+public:
+    virtual ~SnapserStorageGetCasResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### StorageResetCounter API
+<CodeGroup title="Reset a counter value to 0" tag="DELETE" label="StorageResetCounter">
+```csharp
+/// <summary>
+/// Counters Reset a counter value to 0
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Counter owner&#39;s user ID</param>
+/// <param name="accessType">Access to the counter. (public/protected/private)</param>
+/// <param name="key">Counter key</param>
+/// <param name="token">User session token</param>
+/// <returns>StorageResetCounterResponse</returns>
+public StorageResetCounterResponse StorageResetCounter(string ownerId, string accessType, string key, string token)
+{
+    Snapser.Client.ApiResponse<StorageResetCounterResponse> localVarResponse = StorageResetCounterWithHttpInfo(ownerId, accessType, key, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StorageResetCounterResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageResetCounterResponse" /> class.
+/// </summary>
+/// <param name="count">Value of the counter (required).</param>
+public StorageResetCounterResponse(int count = default(int))
+{
+    this.Count = count;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageResetCounterRequest : public Request
+{
+public:
+    virtual ~StorageResetCounterRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Counter owner's user ID */
+    FString OwnerId;
+    /* Access to the counter. (public/protected/private) */
+    FString AccessType;
+    /* Counter key */
+    FString Key;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageResetCounterResponse : public Response
+{
+public:
+    virtual ~StorageResetCounterResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageResetCounterResponse Content;
+};
+
+class SNAPSER_API SnapserStorageResetCounterResponse : public Model
+{
+public:
+    virtual ~SnapserStorageResetCounterResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Value of the counter */
+    int32 Count = 0;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### StorageGetCounter API
+<CodeGroup title="Retrieve a counter value" tag="GET" label="StorageGetCounter">
+```csharp
+/// <summary>
+/// Counters Retrieve a counter value
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Counter owner&#39;s user ID</param>
+/// <param name="accessType">Access to the counter. (public/protected/private)</param>
+/// <param name="key">Counter key</param>
+/// <param name="token">User session token</param>
+/// <returns>StorageGetCounterResponse</returns>
+public StorageGetCounterResponse StorageGetCounter(string ownerId, string accessType, string key, string token)
+{
+    Snapser.Client.ApiResponse<StorageGetCounterResponse> localVarResponse = StorageGetCounterWithHttpInfo(ownerId, accessType, key, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StorageGetCounterResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageGetCounterResponse" /> class.
+/// </summary>
+/// <param name="count">Value of the counter (required).</param>
+public StorageGetCounterResponse(int count = default(int))
+{
+    this.Count = count;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageGetCounterRequest : public Request
+{
+public:
+    virtual ~StorageGetCounterRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Counter owner's user ID */
+    FString OwnerId;
+    /* Access to the counter. (public/protected/private) */
+    FString AccessType;
+    /* Counter key */
+    FString Key;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageGetCounterResponse : public Response
+{
+public:
+    virtual ~StorageGetCounterResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageGetCounterResponse Content;
+};
+
+class SNAPSER_API SnapserStorageGetCounterResponse : public Model
+{
+public:
+    virtual ~SnapserStorageGetCounterResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Value of the counter */
+    int32 Count = 0;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### StorageIncrementCounter API
+<CodeGroup title="Increment the counter" tag="PUT" label="StorageIncrementCounter">
+```csharp
+/// <summary>
+/// Counters Increment the counter
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="ownerId">Counter owner&#39;s user ID</param>
+/// <param name="accessType">Access to the counter. (public/protected/private)</param>
+/// <param name="key">Counter key</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>StorageIncrementCounterResponse</returns>
+public StorageIncrementCounterResponse StorageIncrementCounter(string ownerId, string accessType, string key, string token, IncrementCounterRequest body)
+{
+    Snapser.Client.ApiResponse<StorageIncrementCounterResponse> localVarResponse = StorageIncrementCounterWithHttpInfo(ownerId, accessType, key, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for IncrementCounterRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="IncrementCounterRequest" /> class.
+/// </summary>
+/// <param name="count">Value to increment the counter by. Use negative to decrement (required).</param>
+public IncrementCounterRequest(int count = default(int))
+{
+    this.Count = count;
+}
+
+/// Snapser.Model for StorageIncrementCounterResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageIncrementCounterResponse" /> class.
+/// </summary>
+/// <param name="count">Value of the counter (required).</param>
+public StorageIncrementCounterResponse(int count = default(int))
+{
+    this.Count = count;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageIncrementCounterRequest : public Request
+{
+public:
+    virtual ~StorageIncrementCounterRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Counter owner's user ID */
+    FString OwnerId;
+    /* Access to the counter. (public/protected/private) */
+    FString AccessType;
+    /* Counter key */
+    FString Key;
+    /* User session token */
+    FString Token;
+    SnapserIncrementCounterRequest Body;
+};
+
+class SNAPSER_API SnapserIncrementCounterRequest : public Model
+{
+public:
+    virtual ~SnapserIncrementCounterRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Value to increment the counter by. Use negative to decrement */
+    int32 Count = 0;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageIncrementCounterResponse : public Response
+{
+public:
+    virtual ~StorageIncrementCounterResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageIncrementCounterResponse Content;
+};
+
+class SNAPSER_API SnapserStorageIncrementCounterResponse : public Model
+{
+public:
+    virtual ~SnapserStorageIncrementCounterResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Value of the counter */
+    int32 Count = 0;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### StorageBatchInsertBlob API
+<CodeGroup title="Inserts multiple blobs. Will fail if the key already exists" tag="POST" label="StorageBatchInsertBlob">
+```csharp
+/// <summary>
+/// Blobs Inserts multiple blobs. Will fail if the key already exists
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>StorageBatchInsertBlobResponse</returns>
+public StorageBatchInsertBlobResponse StorageBatchInsertBlob(string token, StorageBatchInsertBlobRequest body)
+{
+    Snapser.Client.ApiResponse<StorageBatchInsertBlobResponse> localVarResponse = StorageBatchInsertBlobWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StorageBatchInsertBlobRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBatchInsertBlobRequest" /> class.
+/// </summary>
+/// <param name="blobs">blobs.</param>
+public StorageBatchInsertBlobRequest(List<StorageInsertBlobRequest> blobs = default(List<StorageInsertBlobRequest>))
+{
+    this.Blobs = blobs;
+}
+
+/// Snapser.Model for StorageInsertBlobRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageInsertBlobRequest" /> class.
+/// </summary>
+/// <param name="accessType">Access to the blob. (public/protected/private) (required).</param>
+/// <param name="blobKey">Blob key (required).</param>
+/// <param name="ownerId">Blob owner&#39;s user ID (required).</param>
+/// <param name="ttl">Optional TTL for the blob.</param>
+/// <param name="value">Blob value to be inserted (required).</param>
+public StorageInsertBlobRequest(AccessTypeEnum accessType = default(AccessTypeEnum), string blobKey = default(string), string ownerId = default(string), long ttl = default(long), string value = default(string))
+{
+    this.AccessType = accessType;
+    // to ensure "blobKey" is required (not null)
+    if (blobKey == null)
+    {
+        throw new ArgumentNullException("blobKey is a required property for StorageInsertBlobRequest and cannot be null");
+    }
+    this.BlobKey = blobKey;
+    // to ensure "ownerId" is required (not null)
+    if (ownerId == null)
+    {
+        throw new ArgumentNullException("ownerId is a required property for StorageInsertBlobRequest and cannot be null");
+    }
+    this.OwnerId = ownerId;
+    // to ensure "value" is required (not null)
+    if (value == null)
+    {
+        throw new ArgumentNullException("value is a required property for StorageInsertBlobRequest and cannot be null");
+    }
+    this.Value = value;
+    this.Ttl = ttl;
+}
+
+/// <summary>
+/// Access to the blob. (public/protected/private)
+/// </summary>
+/// <value>Access to the blob. (public/protected/private)</value>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum AccessTypeEnum
+{
+    /// <summary>
+    /// Enum Public for value: public
+    /// </summary>
+    [EnumMember(Value = "public")] Public = 1,
+
+    /// <summary>
+    /// Enum Private for value: private
+    /// </summary>
+    [EnumMember(Value = "private")] Private = 2,
+
+    /// <summary>
+    /// Enum Protected for value: protected
+    /// </summary>
+    [EnumMember(Value = "protected")] Protected = 3
+}
+
+/// Snapser.Model for StorageBatchInsertBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBatchInsertBlobResponse" /> class.
+/// </summary>
+/// <param name="results">results.</param>
+public StorageBatchInsertBlobResponse(List<StorageBatchSingleBlobResponse> results = default(List<StorageBatchSingleBlobResponse>))
+{
+    this.Results = results;
+}
+
+/// Snapser.Model for StorageBatchSingleBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBatchSingleBlobResponse" /> class.
+/// </summary>
+/// <param name="message">message.</param>
+/// <param name="request">request.</param>
+/// <param name="response">response.</param>
+/// <param name="success">success.</param>
+public StorageBatchSingleBlobResponse(string message = default(string), StorageInsertBlobRequest request = default(StorageInsertBlobRequest), StorageBlobAndOwner response = default(StorageBlobAndOwner), bool success = default(bool))
+{
+    this.Message = message;
+    this.Request = request;
+    this.Response = response;
+    this.Success = success;
+}
+
+/// Snapser.Model for StorageBlobAndOwner
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBlobAndOwner" /> class.
+/// </summary>
+/// <param name="accessType">accessType.</param>
+/// <param name="cas">cas.</param>
+/// <param name="key">key.</param>
+/// <param name="ownerId">ownerId.</param>
+/// <param name="scope">scope.</param>
+/// <param name="value">value.</param>
+public StorageBlobAndOwner(string accessType = default(string), string cas = default(string), string key = default(string), string ownerId = default(string), string scope = default(string), string value = default(string))
+{
+    this.AccessType = accessType;
+    this.Cas = cas;
+    this.Key = key;
+    this.OwnerId = ownerId;
+    this.Scope = scope;
+    this.Value = value;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageBatchInsertBlobRequest : public Request
+{
+public:
+    virtual ~StorageBatchInsertBlobRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserStorageBatchInsertBlobRequest Body;
+};
+
+class SNAPSER_API SnapserStorageBatchInsertBlobRequest : public Model
+{
+public:
+    virtual ~SnapserStorageBatchInsertBlobRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserStorageInsertBlobRequest>> Blobs;
+};
+
+class SNAPSER_API SnapserStorageInsertBlobRequest : public Model
+{
+public:
+    virtual ~SnapserStorageInsertBlobRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class AccessTypeEnum
+    {
+        _Public,
+        _Private,
+        _Protected,
+    };
+
+    static FString EnumToString(const AccessTypeEnum& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, AccessTypeEnum& EnumValue);
+    /* Access to the blob. (public/protected/private) */
+    AccessTypeEnum AccessType;
+    /* Blob key */
+    FString BlobKey;
+    /* Blob owner's user ID */
+    FString OwnerId;
+    /* Optional TTL for the blob */
+    TOptional<int64> Ttl;
+    /* Blob value to be inserted */
+    FString Value;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageBatchInsertBlobResponse : public Response
+{
+public:
+    virtual ~StorageBatchInsertBlobResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageBatchInsertBlobResponse Content;
+};
+
+class SNAPSER_API SnapserStorageBatchInsertBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageBatchInsertBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserStorageBatchSingleBlobResponse>> Results;
+};
+
+class SNAPSER_API SnapserStorageBatchSingleBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageBatchSingleBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Message;
+    TOptional<SnapserStorageInsertBlobRequest> Request;
+    TOptional<SnapserStorageBlobAndOwner> Response;
+    TOptional<bool> Success;
+};
+
+class SNAPSER_API SnapserStorageBlobAndOwner : public Model
+{
+public:
+    virtual ~SnapserStorageBlobAndOwner() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> AccessType;
+    TOptional<FString> Cas;
+    TOptional<FString> Key;
+    TOptional<FString> OwnerId;
+    TOptional<FString> Scope;
+    TOptional<FString> Value;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### StorageBatchGetBlobs API
+<CodeGroup title="Retrieve all blobs for the owners" tag="GET" label="StorageBatchGetBlobs">
+```csharp
+/// <summary>
+/// Blobs Retrieve all blobs for the owners
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="accessType">Access to the blob. (public/protected/private)</param>
+/// <param name="ownerId">Blob owners user IDs</param>
+/// <param name="blobKey">Blob key</param>
+/// <param name="token">User session token</param>
+/// <returns>StorageBatchGetBlobsResponse</returns>
+public StorageBatchGetBlobsResponse StorageBatchGetBlobs(string accessType, List<string> ownerId, string blobKey, string token)
+{
+    Snapser.Client.ApiResponse<StorageBatchGetBlobsResponse> localVarResponse = StorageBatchGetBlobsWithHttpInfo(accessType, ownerId, blobKey, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StorageBatchGetBlobsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBatchGetBlobsResponse" /> class.
+/// </summary>
+/// <param name="blobs">blobs.</param>
+/// <param name="results">results.</param>
+public StorageBatchGetBlobsResponse(List<StorageUserBlobResponse> blobs = default(List<StorageUserBlobResponse>), List<StorageBatchGetBlobsSingleResponse> results = default(List<StorageBatchGetBlobsSingleResponse>))
+{
+    this.Blobs = blobs;
+    this.Results = results;
+}
+
+/// Snapser.Model for StorageUserBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageUserBlobResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+/// <param name="ownerId">Blob owner&#39;s user ID.</param>
+/// <param name="value">Blob value.</param>
+public StorageUserBlobResponse(string cas = default(string), string ownerId = default(string), string value = default(string))
+{
+    this.Cas = cas;
+    this.OwnerId = ownerId;
+    this.Value = value;
+}
+
+/// Snapser.Model for StorageBatchGetBlobsSingleResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBatchGetBlobsSingleResponse" /> class.
+/// </summary>
+/// <param name="message">message.</param>
+/// <param name="request">request.</param>
+/// <param name="response">response.</param>
+/// <param name="success">success.</param>
+public StorageBatchGetBlobsSingleResponse(string message = default(string), StorageGetBlobRequest request = default(StorageGetBlobRequest), StorageUserBlobResponse response = default(StorageUserBlobResponse), bool success = default(bool))
+{
+    this.Message = message;
+    this.Request = request;
+    this.Response = response;
+    this.Success = success;
+}
+
+/// Snapser.Model for StorageGetBlobRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageGetBlobRequest" /> class.
+/// </summary>
+/// <param name="accessType">Access to the blob. (public/protected/private) (required).</param>
+/// <param name="blobKey">Blob key (required).</param>
+/// <param name="ownerId">Blob owner&#39;s user ID (required).</param>
+public StorageGetBlobRequest(AccessTypeEnum accessType = default(AccessTypeEnum), string blobKey = default(string), string ownerId = default(string))
+{
+    this.AccessType = accessType;
+    // to ensure "blobKey" is required (not null)
+    if (blobKey == null)
+    {
+        throw new ArgumentNullException("blobKey is a required property for StorageGetBlobRequest and cannot be null");
+    }
+    this.BlobKey = blobKey;
+    // to ensure "ownerId" is required (not null)
+    if (ownerId == null)
+    {
+        throw new ArgumentNullException("ownerId is a required property for StorageGetBlobRequest and cannot be null");
+    }
+    this.OwnerId = ownerId;
+}
+
+/// <summary>
+/// Access to the blob. (public/protected/private)
+/// </summary>
+/// <value>Access to the blob. (public/protected/private)</value>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum AccessTypeEnum
+{
+    /// <summary>
+    /// Enum Public for value: public
+    /// </summary>
+    [EnumMember(Value = "public")] Public = 1,
+
+    /// <summary>
+    /// Enum Private for value: private
+    /// </summary>
+    [EnumMember(Value = "private")] Private = 2,
+
+    /// <summary>
+    /// Enum Protected for value: protected
+    /// </summary>
+    [EnumMember(Value = "protected")] Protected = 3
+}
+
+/// Snapser.Model for StorageUserBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageUserBlobResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+/// <param name="ownerId">Blob owner&#39;s user ID.</param>
+/// <param name="value">Blob value.</param>
+public StorageUserBlobResponse(string cas = default(string), string ownerId = default(string), string value = default(string))
+{
+    this.Cas = cas;
+    this.OwnerId = ownerId;
+    this.Value = value;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageBatchGetBlobsRequest : public Request
+{
+public:
+    virtual ~StorageBatchGetBlobsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Access to the blob. (public/protected/private) */
+    FString AccessType;
+    /* Blob owners user IDs */
+    TArray<FString> OwnerId;
+    /* Blob key */
+    FString BlobKey;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageBatchGetBlobsResponse : public Response
+{
+public:
+    virtual ~StorageBatchGetBlobsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageBatchGetBlobsResponse Content;
+};
+
+class SNAPSER_API SnapserStorageBatchGetBlobsResponse : public Model
+{
+public:
+    virtual ~SnapserStorageBatchGetBlobsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserStorageUserBlobResponse>> Blobs;
+    TOptional<TArray<SnapserStorageBatchGetBlobsSingleResponse>> Results;
+};
+
+class SNAPSER_API SnapserStorageUserBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageUserBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+    /* Blob owner's user ID */
+    TOptional<FString> OwnerId;
+    /* Blob value */
+    TOptional<FString> Value;
+};
+
+class SNAPSER_API SnapserStorageBatchGetBlobsSingleResponse : public Model
+{
+public:
+    virtual ~SnapserStorageBatchGetBlobsSingleResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Message;
+    TOptional<SnapserStorageGetBlobRequest> Request;
+    TOptional<SnapserStorageUserBlobResponse> Response;
+    TOptional<bool> Success;
+};
+
+class SNAPSER_API SnapserStorageGetBlobRequest : public Model
+{
+public:
+    virtual ~SnapserStorageGetBlobRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class AccessTypeEnum
+    {
+        _Public,
+        _Private,
+        _Protected,
+    };
+
+    static FString EnumToString(const AccessTypeEnum& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, AccessTypeEnum& EnumValue);
+    /* Access to the blob. (public/protected/private) */
+    AccessTypeEnum AccessType;
+    /* Blob key */
+    FString BlobKey;
+    /* Blob owner's user ID */
+    FString OwnerId;
+};
+
+class SNAPSER_API SnapserStorageUserBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageUserBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+    /* Blob owner's user ID */
+    TOptional<FString> OwnerId;
+    /* Blob value */
+    TOptional<FString> Value;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### StorageBatchUpdateAppendBlob API
+<CodeGroup title="Append to the existing blobs. Create a new one if it doesn't exist" tag="PUT" label="StorageBatchUpdateAppendBlob">
+```csharp
+/// <summary>
+/// Append Blobs Apend to the existing blobs. Create a new one if it doesn&#39;t exist
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>StorageBatchUpdateAppendBlobResponse</returns>
+public StorageBatchUpdateAppendBlobResponse StorageBatchUpdateAppendBlob(string token, StorageBatchUpdateAppendBlobRequest body)
+{
+    Snapser.Client.ApiResponse<StorageBatchUpdateAppendBlobResponse> localVarResponse = StorageBatchUpdateAppendBlobWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StorageBatchUpdateAppendBlobRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBatchUpdateAppendBlobRequest" /> class.
+/// </summary>
+/// <param name="appendBlobs">appendBlobs.</param>
+public StorageBatchUpdateAppendBlobRequest(List<StorageUpdateAppendBlobRequest> appendBlobs = default(List<StorageUpdateAppendBlobRequest>))
+{
+    this.AppendBlobs = appendBlobs;
+}
+
+/// Snapser.Model for StorageUpdateAppendBlobRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageUpdateAppendBlobRequest" /> class.
+/// </summary>
+/// <param name="accessType">Access to the append-blob. (public/protected/private) (required).</param>
+/// <param name="appendBlobKey">Append-blob key (required).</param>
+/// <param name="ownerId">Append-blob owner&#39;s user ID (required).</param>
+/// <param name="value">Value to be appended (required).</param>
+public StorageUpdateAppendBlobRequest(AccessTypeEnum accessType = default(AccessTypeEnum), string appendBlobKey = default(string), string ownerId = default(string), string value = default(string))
+{
+    this.AccessType = accessType;
+    // to ensure "appendBlobKey" is required (not null)
+    if (appendBlobKey == null)
+    {
+        throw new ArgumentNullException("appendBlobKey is a required property for StorageUpdateAppendBlobRequest and cannot be null");
+    }
+    this.AppendBlobKey = appendBlobKey;
+    // to ensure "ownerId" is required (not null)
+    if (ownerId == null)
+    {
+        throw new ArgumentNullException("ownerId is a required property for StorageUpdateAppendBlobRequest and cannot be null");
+    }
+    this.OwnerId = ownerId;
+    // to ensure "value" is required (not null)
+    if (value == null)
+    {
+        throw new ArgumentNullException("value is a required property for StorageUpdateAppendBlobRequest and cannot be null");
+    }
+    this.Value = value;
+}
+
+/// <summary>
+/// Access to the append-blob. (public/protected/private)
+/// </summary>
+/// <value>Access to the append-blob. (public/protected/private)</value>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum AccessTypeEnum
+{
+    /// <summary>
+    /// Enum Public for value: public
+    /// </summary>
+    [EnumMember(Value = "public")] Public = 1,
+
+    /// <summary>
+    /// Enum Private for value: private
+    /// </summary>
+    [EnumMember(Value = "private")] Private = 2,
+
+    /// <summary>
+    /// Enum Protected for value: protected
+    /// </summary>
+    [EnumMember(Value = "protected")] Protected = 3
+}
+
+/// Snapser.Model for StorageBatchUpdateAppendBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBatchUpdateAppendBlobResponse" /> class.
+/// </summary>
+/// <param name="results">results.</param>
+public StorageBatchUpdateAppendBlobResponse(List<StorageBatchSingleUpdateAppendBlobResponse> results = default(List<StorageBatchSingleUpdateAppendBlobResponse>))
+{
+    this.Results = results;
+}
+
+/// Snapser.Model for StorageBatchSingleUpdateAppendBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBatchSingleUpdateAppendBlobResponse" /> class.
+/// </summary>
+/// <param name="message">message.</param>
+/// <param name="request">request.</param>
+/// <param name="response">response.</param>
+/// <param name="success">success.</param>
+public StorageBatchSingleUpdateAppendBlobResponse(string message = default(string), StorageUpdateAppendBlobRequest request = default(StorageUpdateAppendBlobRequest), StorageAppendBlobAndOwner response = default(StorageAppendBlobAndOwner), bool success = default(bool))
+{
+    this.Message = message;
+    this.Request = request;
+    this.Response = response;
+    this.Success = success;
+}
+
+/// Snapser.Model for StorageAppendBlobAndOwner
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageAppendBlobAndOwner" /> class.
+/// </summary>
+/// <param name="cas">cas.</param>
+/// <param name="key">key.</param>
+/// <param name="ownerId">ownerId.</param>
+/// <param name="value">value.</param>
+public StorageAppendBlobAndOwner(string cas = default(string), string key = default(string), string ownerId = default(string), string value = default(string))
+{
+    this.Cas = cas;
+    this.Key = key;
+    this.OwnerId = ownerId;
+    this.Value = value;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageBatchUpdateAppendBlobRequest : public Request
+{
+public:
+    virtual ~StorageBatchUpdateAppendBlobRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserStorageBatchUpdateAppendBlobRequest Body;
+};
+
+class SNAPSER_API SnapserStorageBatchUpdateAppendBlobRequest : public Model
+{
+public:
+    virtual ~SnapserStorageBatchUpdateAppendBlobRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserStorageUpdateAppendBlobRequest>> AppendBlobs;
+};
+
+class SNAPSER_API SnapserStorageUpdateAppendBlobRequest : public Model
+{
+public:
+    virtual ~SnapserStorageUpdateAppendBlobRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class AccessTypeEnum
+    {
+        _Public,
+        _Private,
+        _Protected,
+    };
+
+    static FString EnumToString(const AccessTypeEnum& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, AccessTypeEnum& EnumValue);
+    /* Access to the append-blob. (public/protected/private) */
+    AccessTypeEnum AccessType;
+    /* Append-blob key */
+    FString AppendBlobKey;
+    /* Append-blob owner's user ID */
+    FString OwnerId;
+    /* Value to be appended */
+    FString Value;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageBatchUpdateAppendBlobResponse : public Response
+{
+public:
+    virtual ~StorageBatchUpdateAppendBlobResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageBatchUpdateAppendBlobResponse Content;
+};
+
+class SNAPSER_API SnapserStorageBatchUpdateAppendBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageBatchUpdateAppendBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserStorageBatchSingleUpdateAppendBlobResponse>> Results;
+};
+
+class SNAPSER_API SnapserStorageBatchSingleUpdateAppendBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageBatchSingleUpdateAppendBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Message;
+    TOptional<SnapserStorageUpdateAppendBlobRequest> Request;
+    TOptional<SnapserStorageAppendBlobAndOwner> Response;
+    TOptional<bool> Success;
+};
+
+class SNAPSER_API SnapserStorageAppendBlobAndOwner : public Model
+{
+public:
+    virtual ~SnapserStorageAppendBlobAndOwner() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Cas;
+    TOptional<FString> Key;
+    TOptional<FString> OwnerId;
+    TOptional<FString> Value;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### StorageBatchGetAppendBlobs API
+<CodeGroup title="Retrieve all append blobs for the owners" tag="GET" label="StorageBatchGetAppendBlobs">
+```csharp
+/// <summary>
+/// Append Blobs Retrieve all append blobs for the owners
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="accessType">Access to the append-blob. (public/protected/private)</param>
+/// <param name="ownerId">Append-blob owners user IDs</param>
+/// <param name="appendBlobKey">Append-blob key</param>
+/// <param name="token">User session token</param>
+/// <returns>StorageBatchGetAppendBlobsResponse</returns>
+public StorageBatchGetAppendBlobsResponse StorageBatchGetAppendBlobs(string accessType, List<string> ownerId, string appendBlobKey, string token)
+{
+    Snapser.Client.ApiResponse<StorageBatchGetAppendBlobsResponse> localVarResponse = StorageBatchGetAppendBlobsWithHttpInfo(accessType, ownerId, appendBlobKey, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StorageBatchGetAppendBlobsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBatchGetAppendBlobsResponse" /> class.
+/// </summary>
+/// <param name="appendBlobs">appendBlobs.</param>
+/// <param name="results">results.</param>
+public StorageBatchGetAppendBlobsResponse(List<StorageUserAppendBlobResponse> appendBlobs = default(List<StorageUserAppendBlobResponse>), List<StorageBatchGetAppendBlobsSingleResponse> results = default(List<StorageBatchGetAppendBlobsSingleResponse>))
+{
+    this.AppendBlobs = appendBlobs;
+    this.Results = results;
+}
+
+/// Snapser.Model for StorageUserAppendBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageUserAppendBlobResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+/// <param name="ownerId">Append-blob owner&#39;s user ID.</param>
+/// <param name="value">Append-blob value.</param>
+public StorageUserAppendBlobResponse(string cas = default(string), string ownerId = default(string), string value = default(string))
+{
+    this.Cas = cas;
+    this.OwnerId = ownerId;
+    this.Value = value;
+}
+
+/// Snapser.Model for StorageBatchGetAppendBlobsSingleResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBatchGetAppendBlobsSingleResponse" /> class.
+/// </summary>
+/// <param name="message">message.</param>
+/// <param name="request">request.</param>
+/// <param name="response">response.</param>
+/// <param name="success">success.</param>
+public StorageBatchGetAppendBlobsSingleResponse(string message = default(string), StorageGetAppendBlobRequest request = default(StorageGetAppendBlobRequest), StorageUserAppendBlobResponse response = default(StorageUserAppendBlobResponse), bool success = default(bool))
+{
+    this.Message = message;
+    this.Request = request;
+    this.Response = response;
+    this.Success = success;
+}
+
+/// Snapser.Model for StorageGetAppendBlobRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageGetAppendBlobRequest" /> class.
+/// </summary>
+/// <param name="accessType">Access to the append-blob. (public/protected/private) (required).</param>
+/// <param name="appendBlobKey">Append-blob key (required).</param>
+/// <param name="ownerId">Append-blob owner&#39;s user ID (required).</param>
+public StorageGetAppendBlobRequest(AccessTypeEnum accessType = default(AccessTypeEnum), string appendBlobKey = default(string), string ownerId = default(string))
+{
+    this.AccessType = accessType;
+    // to ensure "appendBlobKey" is required (not null)
+    if (appendBlobKey == null)
+    {
+        throw new ArgumentNullException("appendBlobKey is a required property for StorageGetAppendBlobRequest and cannot be null");
+    }
+    this.AppendBlobKey = appendBlobKey;
+    // to ensure "ownerId" is required (not null)
+    if (ownerId == null)
+    {
+        throw new ArgumentNullException("ownerId is a required property for StorageGetAppendBlobRequest and cannot be null");
+    }
+    this.OwnerId = ownerId;
+}
+
+/// <summary>
+/// Access to the blob. (public/protected/private)
+/// </summary>
+/// <value>Access to the blob. (public/protected/private)</value>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum AccessTypeEnum
+{
+    /// <summary>
+    /// Enum Public for value: public
+    /// </summary>
+    [EnumMember(Value = "public")] Public = 1,
+
+    /// <summary>
+    /// Enum Private for value: private
+    /// </summary>
+    [EnumMember(Value = "private")] Private = 2,
+
+    /// <summary>
+    /// Enum Protected for value: protected
+    /// </summary>
+    [EnumMember(Value = "protected")] Protected = 3
+}
+
+/// Snapser.Model for StorageUserAppendBlobResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageUserAppendBlobResponse" /> class.
+/// </summary>
+/// <param name="cas">CAS value used for future operations.</param>
+/// <param name="ownerId">Append-blob owner&#39;s user ID.</param>
+/// <param name="value">Append-blob value.</param>
+public StorageUserAppendBlobResponse(string cas = default(string), string ownerId = default(string), string value = default(string))
+{
+    this.Cas = cas;
+    this.OwnerId = ownerId;
+    this.Value = value;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageBatchGetAppendBlobsRequest : public Request
+{
+public:
+    virtual ~StorageBatchGetAppendBlobsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Access to the append-blob. (public/protected/private) */
+    FString AccessType;
+    /* Append-blob owners user IDs */
+    TArray<FString> OwnerId;
+    /* Append-blob key */
+    FString AppendBlobKey;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageBatchGetAppendBlobsResponse : public Response
+{
+public:
+    virtual ~StorageBatchGetAppendBlobsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageBatchGetAppendBlobsResponse Content;
+};
+
+class SNAPSER_API SnapserStorageBatchGetAppendBlobsResponse : public Model
+{
+public:
+    virtual ~SnapserStorageBatchGetAppendBlobsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserStorageUserAppendBlobResponse>> AppendBlobs;
+    TOptional<TArray<SnapserStorageBatchGetAppendBlobsSingleResponse>> Results;
+};
+
+class SNAPSER_API SnapserStorageUserAppendBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageUserAppendBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+    /* Append-blob owner's user ID */
+    TOptional<FString> OwnerId;
+    /* Append-blob value */
+    TOptional<FString> Value;
+};
+
+class SNAPSER_API SnapserStorageBatchGetAppendBlobsSingleResponse : public Model
+{
+public:
+    virtual ~SnapserStorageBatchGetAppendBlobsSingleResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Message;
+    TOptional<SnapserStorageGetAppendBlobRequest> Request;
+    TOptional<SnapserStorageUserAppendBlobResponse> Response;
+    TOptional<bool> Success;
+};
+
+class SNAPSER_API SnapserStorageGetAppendBlobRequest : public Model
+{
+public:
+    virtual ~SnapserStorageGetAppendBlobRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class AccessTypeEnum
+    {
+        _Public,
+        _Private,
+        _Protected,
+    };
+
+    static FString EnumToString(const AccessTypeEnum& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, AccessTypeEnum& EnumValue);
+    /* Access to the append-blob. (public/protected/private) */
+    AccessTypeEnum AccessType;
+    /* Append-blob key */
+    FString AppendBlobKey;
+    /* Append-blob owner's user ID */
+    FString OwnerId;
+};
+
+class SNAPSER_API SnapserStorageUserAppendBlobResponse : public Model
+{
+public:
+    virtual ~SnapserStorageUserAppendBlobResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* CAS value used for future operations */
+    TOptional<FString> Cas;
+    /* Append-blob owner's user ID */
+    TOptional<FString> OwnerId;
+    /* Append-blob value */
+    TOptional<FString> Value;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### StorageBatchIncrementCounter API
+<CodeGroup title="Increment multiple counters" tag="PUT" label="StorageBatchIncrementCounter">
+```csharp
+/// <summary>
+/// Counters Increment multiple counters
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>StorageBatchIncrementCounterResponse</returns>
+public StorageBatchIncrementCounterResponse StorageBatchIncrementCounter(string token, StorageBatchIncrementCounterRequest body)
+{
+    Snapser.Client.ApiResponse<StorageBatchIncrementCounterResponse> localVarResponse = StorageBatchIncrementCounterWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StorageBatchIncrementCounterRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBatchIncrementCounterRequest" /> class.
+/// </summary>
+/// <param name="counters">counters.</param>
+public StorageBatchIncrementCounterRequest(List<StorageIncrementCounterRequest> counters = default(List<StorageIncrementCounterRequest>))
+{
+    this.Counters = counters;
+}
+
+/// Snapser.Model for StorageIncrementCounterRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageIncrementCounterRequest" /> class.
+/// </summary>
+/// <param name="accessType">Access to the counter. (public/protected/private) (required).</param>
+/// <param name="count">Value to increment the counter by. Use negative to decrement (required).</param>
+/// <param name="counterKey">Counter key (required).</param>
+/// <param name="ownerId">Counter owner&#39;s user ID (required).</param>
+public StorageIncrementCounterRequest(AccessTypeEnum accessType = default(AccessTypeEnum), int count = default(int), string counterKey = default(string), string ownerId = default(string))
+{
+    this.AccessType = accessType;
+    this.Count = count;
+    // to ensure "counterKey" is required (not null)
+    if (counterKey == null)
+    {
+        throw new ArgumentNullException("counterKey is a required property for StorageIncrementCounterRequest and cannot be null");
+    }
+    this.CounterKey = counterKey;
+    // to ensure "ownerId" is required (not null)
+    if (ownerId == null)
+    {
+        throw new ArgumentNullException("ownerId is a required property for StorageIncrementCounterRequest and cannot be null");
+    }
+    this.OwnerId = ownerId;
+}
+
+/// <summary>
+/// Access to the counter. (public/protected/private)
+/// </summary>
+/// <value>Access to the counter. (public/protected/private)</value>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum AccessTypeEnum
+{
+    /// <summary>
+    /// Enum Public for value: public
+    /// </summary>
+    [EnumMember(Value = "public")] Public = 1,
+
+    /// <summary>
+    /// Enum Private for value: private
+    /// </summary>
+    [EnumMember(Value = "private")] Private = 2,
+
+    /// <summary>
+    /// Enum Protected for value: protected
+    /// </summary>
+    [EnumMember(Value = "protected")] Protected = 3
+}
+
+/// Snapser.Model for StorageBatchIncrementCounterResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBatchIncrementCounterResponse" /> class.
+/// </summary>
+/// <param name="counters">counters.</param>
+public StorageBatchIncrementCounterResponse(List<StorageBatchSingleIncrementCounterResponse> counters = default(List<StorageBatchSingleIncrementCounterResponse>))
+{
+    this.Counters = counters;
+}
+
+/// Snapser.Model for StorageBatchSingleIncrementCounterResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBatchSingleIncrementCounterResponse" /> class.
+/// </summary>
+/// <param name="message">message.</param>
+/// <param name="request">request.</param>
+/// <param name="response">response.</param>
+/// <param name="success">success.</param>
+public StorageBatchSingleIncrementCounterResponse(string message = default(string), StorageIncrementCounterRequest request = default(StorageIncrementCounterRequest), StorageCounterAndOwner response = default(StorageCounterAndOwner), bool success = default(bool))
+{
+    this.Message = message;
+    this.Request = request;
+    this.Response = response;
+    this.Success = success;
+}
+
+/// Snapser.Model for StorageCounterAndOwner
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageCounterAndOwner" /> class.
+/// </summary>
+/// <param name="count">count.</param>
+/// <param name="key">key.</param>
+/// <param name="ownerId">ownerId.</param>
+public StorageCounterAndOwner(int count = default(int), string key = default(string), string ownerId = default(string))
+{
+    this.Count = count;
+    this.Key = key;
+    this.OwnerId = ownerId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageBatchIncrementCounterRequest : public Request
+{
+public:
+    virtual ~StorageBatchIncrementCounterRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserStorageBatchIncrementCounterRequest Body;
+};
+
+class SNAPSER_API SnapserStorageBatchIncrementCounterRequest : public Model
+{
+public:
+    virtual ~SnapserStorageBatchIncrementCounterRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserStorageIncrementCounterRequest>> Counters;
+};
+
+class SNAPSER_API SnapserStorageIncrementCounterRequest : public Model
+{
+public:
+    virtual ~SnapserStorageIncrementCounterRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class AccessTypeEnum
+    {
+        _Public,
+        _Private,
+        _Protected,
+    };
+
+    static FString EnumToString(const AccessTypeEnum& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, AccessTypeEnum& EnumValue);
+    /* Access to the counter. (public/protected/private) */
+    AccessTypeEnum AccessType;
+    /* Value to increment the counter by. Use negative to decrement */
+    int32 Count = 0;
+    /* Counter key */
+    FString CounterKey;
+    /* Counter owner's user ID */
+    FString OwnerId;
+};
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageBatchIncrementCounterResponse : public Response
+{
+public:
+    virtual ~StorageBatchIncrementCounterResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageBatchIncrementCounterResponse Content;
+};
+
+class SNAPSER_API SnapserStorageBatchIncrementCounterResponse : public Model
+{
+public:
+    virtual ~SnapserStorageBatchIncrementCounterResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserStorageBatchSingleIncrementCounterResponse>> Counters;
+};
+
+class SNAPSER_API SnapserStorageBatchSingleIncrementCounterResponse : public Model
+{
+public:
+    virtual ~SnapserStorageBatchSingleIncrementCounterResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Message;
+    TOptional<SnapserStorageIncrementCounterRequest> Request;
+    TOptional<SnapserStorageCounterAndOwner> Response;
+    TOptional<bool> Success;
+};
+
+class SNAPSER_API SnapserStorageCounterAndOwner : public Model
+{
+public:
+    virtual ~SnapserStorageCounterAndOwner() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<int32> Count;
+    TOptional<FString> Key;
+    TOptional<FString> OwnerId;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### StorageBatchGetCounters API
+<CodeGroup title="Retrieve all counters for the owners" tag="GET" label="StorageBatchGetCounters">
+```csharp
+/// <summary>
+/// Counters Retrieve all counters for the owners
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="accessType">Access to the counter. (public/protected/private)</param>
+/// <param name="ownerId">Counter owners user IDs</param>
+/// <param name="counterKey">Counter key</param>
+/// <param name="token">User session token</param>
+/// <returns>StorageBatchGetCountersResponse</returns>
+public StorageBatchGetCountersResponse StorageBatchGetCounters(string accessType, List<string> ownerId, string counterKey, string token)
+{
+    Snapser.Client.ApiResponse<StorageBatchGetCountersResponse> localVarResponse = StorageBatchGetCountersWithHttpInfo(accessType, ownerId, counterKey, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StorageBatchGetCountersResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBatchGetCountersResponse" /> class.
+/// </summary>
+/// <param name="counters">counters.</param>
+/// <param name="results">results.</param>
+public StorageBatchGetCountersResponse(List<StorageUserCounterResponse> counters = default(List<StorageUserCounterResponse>), List<StorageBatchGetCountersSingleResponse> results = default(List<StorageBatchGetCountersSingleResponse>))
+{
+    this.Counters = counters;
+    this.Results = results;
+}
+
+/// Snapser.Model for StorageUserCounterResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageUserCounterResponse" /> class.
+/// </summary>
+/// <param name="count">Value of the counter (required).</param>
+/// <param name="ownerId">Counter owner&#39;s user ID.</param>
+public StorageUserCounterResponse(int count = default(int), string ownerId = default(string))
+{
+    this.Count = count;
+    this.OwnerId = ownerId;
+}
+
+/// Snapser.Model for StorageBatchGetCountersSingleResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageBatchGetCountersSingleResponse" /> class.
+/// </summary>
+/// <param name="message">message.</param>
+/// <param name="request">request.</param>
+/// <param name="response">response.</param>
+/// <param name="success">success.</param>
+public StorageBatchGetCountersSingleResponse(string message = default(string), StorageGetCounterRequest request = default(StorageGetCounterRequest), StorageUserCounterResponse response = default(StorageUserCounterResponse), bool success = default(bool))
+{
+    this.Message = message;
+    this.Request = request;
+    this.Response = response;
+    this.Success = success;
+}
+
+/// Snapser.Model for StorageGetCounterRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageGetCounterRequest" /> class.
+/// </summary>
+/// <param name="accessType">Access to the counter. (public/protected/private) (required).</param>
+/// <param name="counterKey">Counter key (required).</param>
+/// <param name="ownerId">Counter owner&#39;s user ID (required).</param>
+public StorageGetCounterRequest(AccessTypeEnum accessType = default(AccessTypeEnum), string counterKey = default(string), string ownerId = default(string))
+{
+    this.AccessType = accessType;
+    // to ensure "counterKey" is required (not null)
+    if (counterKey == null)
+    {
+        throw new ArgumentNullException("counterKey is a required property for StorageGetCounterRequest and cannot be null");
+    }
+    this.CounterKey = counterKey;
+    // to ensure "ownerId" is required (not null)
+    if (ownerId == null)
+    {
+        throw new ArgumentNullException("ownerId is a required property for StorageGetCounterRequest and cannot be null");
+    }
+    this.OwnerId = ownerId;
+}
+
+/// <summary>
+/// Access to the counter. (public/protected/private)
+/// </summary>
+/// <value>Access to the counter. (public/protected/private)</value>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum AccessTypeEnum
+{
+    /// <summary>
+    /// Enum Public for value: public
+    /// </summary>
+    [EnumMember(Value = "public")] Public = 1,
+
+    /// <summary>
+    /// Enum Private for value: private
+    /// </summary>
+    [EnumMember(Value = "private")] Private = 2,
+
+    /// <summary>
+    /// Enum Protected for value: protected
+    /// </summary>
+    [EnumMember(Value = "protected")] Protected = 3
+}
+
+/// Snapser.Model for StorageUserCounterResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StorageUserCounterResponse" /> class.
+/// </summary>
+/// <param name="count">Value of the counter (required).</param>
+/// <param name="ownerId">Counter owner&#39;s user ID.</param>
+public StorageUserCounterResponse(int count = default(int), string ownerId = default(string))
+{
+    this.Count = count;
+    this.OwnerId = ownerId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStorageServiceApi::StorageBatchGetCountersRequest : public Request
+{
+public:
+    virtual ~StorageBatchGetCountersRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Access to the counter. (public/protected/private) */
+    FString AccessType;
+    /* Counter owners user IDs */
+    TArray<FString> OwnerId;
+    /* Counter key */
+    FString CounterKey;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserStorageServiceApi::StorageBatchGetCountersResponse : public Response
+{
+public:
+    virtual ~StorageBatchGetCountersResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStorageBatchGetCountersResponse Content;
+};
+
+class SNAPSER_API SnapserStorageBatchGetCountersResponse : public Model
+{
+public:
+    virtual ~SnapserStorageBatchGetCountersResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserStorageUserCounterResponse>> Counters;
+    TOptional<TArray<SnapserStorageBatchGetCountersSingleResponse>> Results;
+};
+
+class SNAPSER_API SnapserStorageUserCounterResponse : public Model
+{
+public:
+    virtual ~SnapserStorageUserCounterResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Value of the counter */
+    int32 Count = 0;
+    /* Counter owner's user ID */
+    TOptional<FString> OwnerId;
+};
+
+class SNAPSER_API SnapserStorageBatchGetCountersSingleResponse : public Model
+{
+public:
+    virtual ~SnapserStorageBatchGetCountersSingleResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Message;
+    TOptional<SnapserStorageGetCounterRequest> Request;
+    TOptional<SnapserStorageUserCounterResponse> Response;
+    TOptional<bool> Success;
+};
+
+class SNAPSER_API SnapserStorageGetCounterRequest : public Model
+{
+public:
+    virtual ~SnapserStorageGetCounterRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class AccessTypeEnum
+    {
+        _Public,
+        _Private,
+        _Protected,
+    };
+
+    static FString EnumToString(const AccessTypeEnum& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, AccessTypeEnum& EnumValue);
+    /* Access to the counter. (public/protected/private) */
+    AccessTypeEnum AccessType;
+    /* Counter key */
+    FString CounterKey;
+    /* Counter owner's user ID */
+    FString OwnerId;
+};
+
+class SNAPSER_API SnapserStorageUserCounterResponse : public Model
+{
+public:
+    virtual ~SnapserStorageUserCounterResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Value of the counter */
+    int32 Count = 0;
+    /* Counter owner's user ID */
+    TOptional<FString> OwnerId;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/storage-api.png)
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code | Variable                 | Message                             | HTTP | gRPC               |
+| ---- | ------------------------ | ----------------------------------- | ---- | ------------------ |
+| 5000 | ErrKeyNotFound           | Key not found                       | 404  | NotFound           |
+| 5001 | ErrInvalidStorageType    | Storage type for key does not match | 400  | InvalidArgument    |
+| 5002 | ErrInvalidAccessType     | Access type for key does not match  | 400  | InvalidArgument    |
+| 5005 | ErrDocumentNotFound      | Document not found                  | 404  | NotFound           |
+| 5006 | ErrDocumentAlreadyExists | Document already exists             | 409  | AlreadyExists      |
+| 5007 | ErrCasMismatch           | CAS mismatch                        | 400  | FailedPrecondition |
+| 5010 | ErrKeyAlreadyExists      | Key already exists                  | 409  | AlreadyExists      |
+| 5011 | ErrPathNotFound          | Path not found                      | 404  | NotFound           |
+</div>
+
+## Additional Details
+
+### Data Stores
+
+Couchbase and POSTGRES
+
+### Service Dependencies
+
+The Storage service does not depend on any other Snap.
+
+### Recommended Services
+
+The Storage service works best when paired with the Auth service.
+
+### Upcoming enhancements
+
+None planned at the moment.

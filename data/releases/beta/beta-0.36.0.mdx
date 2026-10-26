@@ -1,0 +1,38 @@
+# beta-0.36.0
+##### August 22, 2024
+
+## Snaps
+### ***New Snap*** Kids Web Services (KWS) Snap
+- Snapser has partnered with Epic games to bring COPPA compliance to your games. The Kids Web Services (KWS) Snap provides a seamless integration between your Snapend and the KWS service, allowing you to easily configure and manage your COPPA compliance settings.
+
+### Game Server Fleet
+- **New Geo**: You can now spin up your game servers in the new `us-east` Virginia region.
+- **New Feature**: You can now set minimum number of game servers that should be running at all times. This is especially useful for games using the buffer % based scaling.
+
+### Lobbies
+- Lobbies configuration now supports **kick_on_disconnect**. This is a boolean flag that when set to true, will kick the user from the lobby when they disconnect from the web socket connection.
+- **New Emitter**: Lobbies now supports a user disconnected event. This event is emitted when a user disconnects from their web socket connection allowing you to clean up any user state.
+
+### Chat & Lobbies
+- **New Feature**: Chat now supports messaging between users in a lobby.
+
+### Quests
+- You now have an option to either have manually assigned quests or auto assigned quests.
+- Quest rewards can now have XP and Energy rewards in addition to the existing Inventory and Currency rewards.
+
+### Inventory and Currency
+- **New API**: Added a new API to Grant an Open a container in a single call.
+- GET Quests API now also returns details of the reward items. This reduces the number of chained client calls to get the reward items.
+
+## Bug Fixes
+### Web App
+- Fleet logs were not supporting regex searches.
+
+### Quests
+- Fixed an issue of updating quest status when items were granted via drop tables.
+
+### Inventory
+- Enhanced validations for app auth based granting in the Inventory snap.
+
+## Web App
+- **UX**: Minor improvement to the Snapend regions UI.

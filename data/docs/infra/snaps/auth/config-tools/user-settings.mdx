@@ -1,0 +1,23 @@
+# User Settings
+
+This tool is used to control the following settings:
+
+## 1. Disable User Creation
+When enabled, this setting prohibits user creation via external calls. You can still create users using `api-key` or `internal` auth methods. Additionally, you can use the `Users Create` tool in the Auth configuration tools to create users for your game.
+
+## 2. Session Inactivity Timeout
+
+Session inactivity timeout is the number of seconds a users session is active even if they are not interacting with the game. We recommend that you keep this value above 604800 seconds or 7 days.
+
+## 3. Token Validity Timeout
+
+Token validity timeout is the number of seconds a token is valid for. Game client should refresh the token before this timeout. We recommend that you keep this value around 2592000 seconds or 30 days.
+
+<Note>
+  NOTE: The `Session Inactivity` and `Token Validity` timeout settings can be set to a really low value for testing in development and staging environments. But in production,
+  we recommend that you keep the session inactivity timeout to be above 7 days and session token validity to be around 30 days.
+</Note>
+
+## 4. Single Session Per User
+
+When enabled, user will be logged out of other sessions upon a new login.

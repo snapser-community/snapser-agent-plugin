@@ -1,0 +1,15 @@
+# beta-0.49.1
+##### May 9, 2025
+
+## Breaking Change
+### Inventory
+- Fix for API array fields in the `BatchGetUserItems` API and any other APIs that included the `DropTable` or `Container`, that were improperly tagged as Objects, leading to faulty types in generated SDKs. Since the API has now been modified, the SDKs will need to be regenerated. This is a breaking change for any existing SDKs that were generated before this fix.
+
+## Spotlight
+- Bring your own workstation is getting rolled out to all users. This allows you to use your own workstation for development and testing your BYOSnaps.
+
+## Bug Fixes
+### Web App
+- Child Access pages now correctly show the user names that have access. This was incorrectly hidden before causing confusion.
+- Updated the Resources page images for templates.
+- Snapser AI Assistant now supports new commands like Downloading a SDK and viewing the  documentation.

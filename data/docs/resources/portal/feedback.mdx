@@ -1,0 +1,99 @@
+export const description = 'Feedback'
+
+export const meta = {
+  author: 'AJ Apte'
+}
+
+# Feedback
+
+Snapser is built with its customers, not just for them. The **Feedback** tool lets you send
+feature requests, bug reports, and notes on how a tool feels to use, straight from the Web App
+to the Snapser team.
+
+Every submission becomes a ticket that our team triages. You do not need to open a separate support
+thread or email anymore.
+
+<Warning>
+Feedback is available on the Premium and Enterprise tiers.
+</Warning>
+
+## Sending feedback
+
+1. Click your avatar in the top right corner of the Web App.
+2. Select **Feedback** from the menu.
+3. Fill in the form and click **Submit**.
+
+![snapser-feedback](/images/docs/portal-feedback.png)
+
+You will see a confirmation with a reference for your submission. Keep it if you want to
+mention the request in a later conversation with our team.
+
+## The form
+
+| Field | What it is for |
+|---|---|
+| **Type** | `Feature` for something you want built, `Bug` for something broken, `UX` for something that works but is awkward to use. |
+| **Page** | The page the feedback is about. Snapser fills this in with the page you came from. Edit it if the feedback is about somewhere else. |
+| **Title** | A one-line summary. Up to 120 characters. |
+| **Description** | The detail. Up to 5000 characters. |
+
+<Note>
+  Open the tool from the page you want to talk about. Snapser then fills in the **Page** field
+  for you, and our team knows exactly where to look.
+</Note>
+
+## Attachments
+
+A screenshot or a screen recording usually explains a problem faster than a paragraph.
+
+- **Paste** an image or a video directly into the **Description** field. It appears as a chip
+  below the form.
+- Or click **Attach** and pick a file.
+
+You can attach up to 3 files, each up to 50 MB. Images and video only.
+
+<Note>
+  Wait for each attachment to finish uploading before you submit. **Submit** stays disabled
+  while an upload is in flight. Remove an attachment by clicking the cross on its chip.
+</Note>
+
+## What we attach for you
+
+To save you describing your setup, each submission carries some context about where it came
+from:
+
+- The page you were on
+- Your company, app, and Snapend Ids
+- Your email address
+- The Web App version and environment
+
+## UX feedback
+
+The `UX` type exists because we want to hear about the things that are not bugs. A flow that
+takes too many clicks, a label that reads wrong, a table that hides the column you need — these
+never surface in a support ticket, and they are the changes that make the Web App better to
+live in day to day.
+
+## FAQs
+
+### Who can send feedback?
+
+Anyone on your team with a Snapser account, as long as your company is on the Premium or
+Enterprise tier. There is no separate permission or [access role](/docs/resources/portal/access)
+to assign.
+
+### Will someone reply to me?
+
+Feedback is a one-way channel into our backlog, not a support queue. Our team reads and triages
+everything, but you will not get a reply in the tool. For anything that needs an answer, use
+your usual support channel.
+
+### Is this the right place for an outage?
+
+No. Feedback goes to a product backlog. If your Snapend is down or degraded, use your support
+channel so it reaches an on-call engineer.
+
+### What happens to my screenshots?
+
+Attachments are stored with the ticket and are visible only to the Snapser team. They are not
+public, and the links do not work outside our issue tracker.

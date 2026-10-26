@@ -1,0 +1,40 @@
+# Push and Email Templates
+This tool allows you to add, update, and delete notification templates. This works for both email and push notification templates.
+
+To get started:
+1. Click on `Setup > Templates` from the side Nav.
+2. Click on the `Add a Template` button to create a new template.
+
+### Template Details
+1. **Name**: The name of the template. This should be unique and an alphanumeric string.
+
+### Template Category
+1. **Type**: The type of the template. Accepted values are `push_notification` or `email`.
+<Note>
+  Roblox notifications are not presently supported in the template category.
+</Note>
+
+### Template Content
+1. **Locale**: The locale of the template. This is used to differentiate between templates for different locales.
+    You can come up with your own locale codes or use the standard ones like `en_US`, `en_GB`, etc.
+2. **Title**: The title of the template for the particular locale. This is the subject for emails and title for push notifications.
+3. **Body**: The body of the template. This is the content of the email or push notification. You can use variables in the body that will be replaced with actual values when the notification is sent.
+    Use the `{{.variable}}` syntax to define variables in the template.
+
+![Admin Notifications Pic](/images/docs/notifications-template.png)
+
+## Push and Email Template Import
+This tool allows you to import notification templates from a CSV file.
+
+To get started:
+1. Click on `Setup > Templates` from the side Nav.
+2. Click on the `Import Templates` button.
+3. This will open up a form where you can upload your CSV file.
+
+### Template Import Details
+1. **CSV File**: The CSV file containing the templates. The CSV file should have the following columns in order: `name`, `type`, `locale`, `title`, `body`.
+<CodeGroup>
+```
+welcome,push_notification/email,en_US,Welcome to Snapser,Hello {{.playerName}} welcome to Snapser
+```
+</CodeGroup>

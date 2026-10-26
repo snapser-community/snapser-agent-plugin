@@ -1,0 +1,121 @@
+
+export const description =
+  'This beginner-friendly guide assists users new to Snapser in constructing their initial customized Snapend tailored to their app.'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Create a Snapend
+
+Custom backend, also known as Snapend, runs on Snapser's Kubernetes platform. It's a modular backend that can be customized to your app's needs. Snapser provides a suite of essential backend services, multi-geo relay compute capabilities, and comprehensive server hosting—all seamlessly integrated and supported by robust business intelligence & live ops tooling.
+
+With Snapser, your team can effortlessly architect, deploy, and manage dynamic apps, ensuring a seamless experience for users worldwide.
+
+## Introduction
+This beginner-friendly guide assists users new to Snapser in constructing their initial customized Snapend tailored to their app. You will learn how to set up your app, add Snapends, customize, and configure your Snapend.
+
+<Note>
+  This guide is a prerequisite for other tutorials. It is recommended to go through this guide first before proceeding to other tutorials.
+</Note>
+
+## Step 1: Set up your app
+
+To integrate Snapser features into your app, you need to create an account and add your app to it. This section demonstrates how to do that.
+
+<Note>
+  If you have already created an app in Snapser, you can skip this step and proceed to the next one.
+</Note>
+
+1. **Log in to your Snapser account** at https://snapser.com/login.
+2. Navigate to the **Apps dashboard** and click on the **New App** button located in the upper right corner.
+3. **Enter the name of your app** in the designated field. It's advisable to use a name that closely matches your app's title to avoid confusion among your team members. Click **Add** when done.
+    ![Add new app name](/images/docs/tutorials/create-snapend-add-game.png)
+    <Note>
+    Avoid adding prefixes like "dev", "staging", or "prod". Snapser supports multiple environments for each app, allowing you to create a separate custom backend for each stage of your app development.
+    </Note>
+
+<Checkpoint step={1}>
+  Shortly after, your app will appear in the Apps dashboard, ready for you to build your first custom backend.
+</Checkpoint>
+
+## Step 2: Snapend Creation
+
+1. In the **Apps dashboard**, click on the app you have added. This action brings up a view that shows the development, staging, and production environments. Since there are currently no Snapends, let's add one.
+![GameClick](/images/docs/tutorials/create-snapend-game.png)
+1. In the Development environment, click on **Create a Snapend**.
+![GameClick](/images/docs/tutorials/create-snapend-game-home.png)
+1. **Enter the name of your Snapend** in the **Name your Snapend** field and click **Continue**.
+    ![Name your Snapend](/images/docs/quick-start/name-your-snapend.png)
+    <Note>
+      If you are unsure about which Snaps to select, consider using the **Quick Add** button (lightning bolt icon). You can choose from several templates that automatically add multiple Snaps to your Snapend.
+    </Note>
+1. At this point, you can add any number of Snaps you want from the **Select Snaps** panel. Each Snap widget provides a short description of the service and links to more information. As you add Snapends, you can see a preview of the services Snapser is adding in the **Snapend Preview** panel.
+1. To keep this tutorial simple, select the **Authentication** and **Analytics** Snaps by clicking **Add** for each Snap and then click **Continue**.
+![Add the Authentication and Analytics Snaps](/images/docs/tutorials/create-snapend-add-snaps.png)
+
+The **Snapend Preview** panel is interactive. You can expand each service to see more details and also pan around the viewport or expand it to full screen mode.
+![Snapend Preview](/images/docs/quick-start/snapend-preview.png)
+1. In the **Customize** step, you can configure the [Gateway](../snapend/networking/gateway), add [external servers](/docs/custom/bring-your-own-external-server), or bring your [Data Stores](/docs/custom/bring-your-own-data-store). However, for the simplicity of this tutorial, you do not need to do that now as you can always make changes to your configuration later. Click the **Continue** button to move onto the next step.
+1. Review the Snapends you added and click the **Snap it** button. A pop-up window will appear showing you the state of creating your cluster, which takes a moment or two to complete.
+    ![Spinning up cluster](/images/docs/tutorials/create-snapend-cluster-spinup.png)
+    <Note>
+      If your Snapend creation fails please reach out to your dedicated Customer Success Manager or reach out to us on our Discord server.
+    </Note>
+1. As Snapser finishes setting up the Snapser cluster in Kubernetes (which includes infrastructure, configuration of Snaps, network and security, and generating your Snapend), click the **App** button to wait for your Snapend to be operational.
+![Snap Dashboard](/images/docs/tutorials/create-snapend-cluster-ready.png)
+
+<Checkpoint step={2}>
+  You have successfully created your first Snapend. You can now customize and configure your Snapend.
+</Checkpoint>
+
+## Step 3: Configure Snapend
+
+After your Snapend is ready, you will see its widget under the app Snapends section. Clicking on this widget will take you to our Snapend page.
+![Snapend Dashboard](/images/docs/tutorials/create-snapend-snapend-dashboard.png)
+
+From here, you may want to configure your Snaps. For example, in the Authentication Snap, you may want to enable anonymous authentication. You can access this configuration tool by following these steps:
+1. On your Snapend homepage look for Quick links.
+1. Click the **Snaps Configuration** button under **Quick Links**.
+1. Now you can click on either **Analytics** or **Authentication Snaps**, but for this tutorial, you’ll only modify the settings for the **Authentication** Snap. Click on the **Configure** button in the **Authentication Snap** to add authentication connectors.
+  ![Snaps Admin under Quick Links](/images/docs/tutorials/snapend-create-admin-home.png)
+1. Select the `Authentication > Connectors` tool from the tool navigation and then click on the **Add a connector** button. You will see quite a few connectors in the menu but lets select **Anonymous** and press Save.
+![Add Anonymous Authentication](/images/docs/tutorials/snapend-create-admin-auth-anon.png)
+1. Your custom backend is now configured to allow anonymous authentication. But you can also add other authentication connectors like Facebook, X, Steam, XBox, Apple, Google, Discord etc.
+<Checkpoint step={3}>
+  Congratulations! You now have a configured Snapend with Anonymous authentication enabled and is ready to be integrated into your app.
+</Checkpoint>
+
+## Next Steps
+Check out some of the tutorials to follow up on the Snapend you just created.
+
+<div className="parent">
+  <div className="servicesBox">
+    # Snapend Tools
+
+    This tutorial helps you get acquainted with with the primary tools of a Snapend: Snap Configuration Tools, Downloads Tool, API Explorer and Infrastructure tools.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/snapend-tools'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div>
+  <div className="tutorialBox">
+    # Snapend Security
+
+    Check out the tutorial to understand how Snapend security works. This tutorial will help you understand how to secure your Snapend and the services running on it.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/snapend-security'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div>
+  {/* <div className="servicesBox">
+    # Setup Snapser CLI
+
+    You can go through the Setup Snapser CLI tutorial to install and configure Snapctl.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/setup-snapctl'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div> */}
+</div>

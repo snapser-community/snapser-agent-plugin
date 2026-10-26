@@ -1,0 +1,2236 @@
+
+
+export const description = 'Guilds'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Guilds
+
+The Guilds snap provides games or social apps with the ability to create user clans or groups. Many games/apps allow users to team up as part of a guild or a clan. These user groups can then be incentivized to work towards a common goal, or to compete amongst
+themselves as a community. Each guild has an "admin" who is responsible for managing guild metadata and memberships.
+
+## Guild Types
+
+The Guilds snap supports the following guild types:
+
+1. **Public**: As the name suggests, any user can choose to join these type of guilds at any time, as long as they still have available slots.
+2. **Private**: Users cannot join private guilds directly. They have to request membership to private guilds, which are visible to the guild admin. The guild admin can then decide to add them to the guild, or to reject their request.
+
+<Note>A user can only be a part of a single guild at any given time.</Note>
+
+## Custom metadata
+
+Each guild has a **metadata** property that can store an arbitrary JSON object. The guild admin is allowed to update the **metadata** of the guild. Further, each guild member also has a **metadata** JSON object that can be updated by the member themselves.
+
+## Guild admins
+
+Each guild has a single member who is designated as the guild admin. By default, the creator of the guild is made the admin for that guild.
+
+### Any user can
+
+- Join public guilds
+- Request to join private guilds
+- Update the member metadata for themselves within a guild
+- Participate in the guild and inter-guild leaderboards
+- Leave their current guild
+
+### But only guild admins can
+
+- Add members to the guild
+- Remove / kick members from the guild
+- Accept or reject membership requests for private guilds
+- Update the guild metadata
+- Make the guild **public** or **private**
+- Transfer admin privileges to a different member of the guild
+- Delete the guild
+
+<Note>
+  Since each guild should always have an admin, admin members cannot leave the
+  guild until they transfer the admin privileges to some other guild member.
+</Note>
+
+## Guild Leaderboards
+The Guilds snap integrates with the Leaderboards snap. This allows you to unlock an inter guild leaderboard with almost no setup.
+
+<Note>
+  Guild leaderboards are completely optional. But you essentially get them for free without any additional setup.
+</Note>
+
+{/* ### Intra-guild
+
+If your game or app also uses the **Leaderboards** snap, you can enable **Intra-guild Leaderboards** in the Guilds snap. After enabling this option, any new guild that is created will have a leaderboard associated with it. Each guild member can then update their scores on this leaderboard. You can enable this option, and configure the type and behavior of these guild leaderboards through the Admin Tools for the Guilds snap. */}
+
+### Inter-guild
+
+If your game or app also uses the **Leaderboards** snap, you can enable **Inter-guild Leaderboard** in the Guilds snap. Enabling this option will create a common leaderboard that all guilds can be a part of. Any guild members can contribute to and increment the score for their guild on this leaderboard. You can enable this option, and configure the
+behavior of this leaderboard through the `Leaderboard Configuration Tool` for the Guilds snap.
+
+## User Presence
+
+If the snapend is configured with websockets, the Guilds snap will automatically propagate user presence information to members of the same guild. On websocket connection, the snap will send a message to all other guild members of
+the user indicating that the user is online. When the websocket connection is closed, the snap will send a message to all other guild members of the user indicating that the user is offline.
+
+Users can also send presence updates to via the `Message_UserPresenceRequest` websocket message. This can be used to set a current status message, toggle do-not-disturb, or to indicate that the user is currently playing a game. This information will be propagated to all other guild members of the user.
+
+## APIs
+
+The `Guilds` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name                             | HTTP Method | API Description                                                                  |
+| ------------------------------------ | ----------- | -------------------------------------------------------------------------------- |
+| [GuildsCreateGuild](#guildscreateguild-api)                          | POST        | Creates a guild                                                                  |
+| [GuildsGetInterGuildLeaderboardScores](#guildsgetinterguildleaderboardscores-api)       | GET         | Gets the scores of an interguild leaderboard                                     |
+| [GuildsIncrementInterGuildLeaderboardScores](#guildsincrementinterguildleaderboardscores-api) | PATCH       | Increment score for the inter-guild leaderboard                                  |
+| [GuildsGetMember](#guildsgetmember-api)                            | GET         | Returns details for the member                                                   |
+| [GuildsSearchGuilds](#guildssearchguilds-api)                         | POST        | Search the guild with the given name                                             |
+| [GuildsGetGuildForUserId](#guildsgetguildforuserid-api)            | GET           | Returns the guild a user is a member of                                         |
+| [GuildsDeleteGuild](#guildsdeleteguild-api)                          | DELETE      | (Guild Admin Only) Deletes the guild with the given ID                           |
+| [GuildsGetGuild](#guildsgetguild-api)                             | GET         | Returns the guild with specified ID                                              |
+| [GuildsUpdateGuild](#guildsupdateguild-api)                          | PUT         | (Guild Admin Only) Updates the guild with the given ID                           |
+| [GuildsTransferAdmin](#guildstransferadmin-api)                        | PUT         | (Guild Admin Only) Updates a guild's admin                                       |
+| [GuildsGetGuildLeaderboardScores](#guildsgetguildleaderboardscores-api)            | GET         | Returns leaderboard scores for the guild                                         |
+| [GuildsIncrementGuildLeaderboardScore](#guildsincrementguildleaderboardscore-api)       | PATCH       | Increment score for a user on the guild leaderboard                              |
+| [GuildsSetGuildLeaderboardScores](#guildssetguildleaderboardscores-api)            | PUT         | Sets score for a user on the guild leaderboard (only non 'counter' leaderboards) |
+| [GuildsAddMember](#guildsaddmember-api)                            | POST        | (Guild Admin Only) Adds a member to a guild                                      |
+| [GuildsRemoveMember](#guildsremovemember-api)                         | DELETE      | (Guild Admin Only) Removes a member from the specified guild                     |
+| [GuildsUpdateMemberMetadata](#guildsupdatemembermetadata-api)                 | PUT         | Updates the member metadata                                                      |
+| [GuildsJoinGuild](#guildsjoinguild-api)                            | POST        | Joins a guild                                                                    |
+| [GuildsGetMembershipRequests](#guildsgetmembershiprequests-api)                | GET         | Returns all membership requests for the guild                                    |
+| [GuildsRequestMembership](#guildsrequestmembership-api)                    | POST        | Sends a request to join the given private guild                                  |
+| [GuildsDeleteMembershipRequest](#guildsdeletemembershiprequest-api)              | DELETE      | Deletes the guild membership request for the user                                |
+| [GuildsLeaveGuild](#guildsleaveguild-api)                           | DELETE      | Leave the guild                                                                  |
+</div>
+
+### Usage
+#### GuildsCreateGuild API
+<CodeGroup title="Create a guild" tag="POST" label="GuildsCreateGuild">
+```csharp
+/// <summary>
+/// Guilds Creates a guild
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>GuildsCreateGuildResponse</returns>
+public GuildsCreateGuildResponse GuildsCreateGuild(string token, GuildsCreateGuildRequest body)
+{
+    Snapser.Client.ApiResponse<GuildsCreateGuildResponse> localVarResponse = GuildsCreateGuildWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for GuildsCreateGuildRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsCreateGuildRequest" /> class.
+/// </summary>
+/// <param name="guildMetadata">JSON metadata for the guild.</param>
+/// <param name="isPublic">Is the guild public (required).</param>
+/// <param name="memberMetadata">JSON metadata for the admin member.</param>
+/// <param name="name">Name of the guild (required).</param>
+/// <param name="userId">ID of the user (required).</param>
+public GuildsCreateGuildRequest(Object guildMetadata = default(Object), bool isPublic = default(bool), Object memberMetadata = default(Object), string name = default(string), string userId = default(string))
+{
+    this.IsPublic = isPublic;
+    // to ensure "name" is required (not null)
+    if (name == null)
+    {
+        throw new ArgumentNullException("name is a required property for GuildsCreateGuildRequest and cannot be null");
+    }
+    this.Name = name;
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for GuildsCreateGuildRequest and cannot be null");
+    }
+    this.UserId = userId;
+    this.GuildMetadata = guildMetadata;
+    this.MemberMetadata = memberMetadata;
+}
+
+/// Snapser.Model for GuildsCreateGuildResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsCreateGuildResponse" /> class.
+/// </summary>
+/// <param name="guildId">guildId.</param>
+public GuildsCreateGuildResponse(string guildId = default(string))
+{
+    this.GuildId = guildId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsCreateGuildRequest : public Request
+{
+public:
+    virtual ~GuildsCreateGuildRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserGuildsCreateGuildRequest Body;
+};
+
+class SNAPSER_API SnapserGuildsCreateGuildRequest : public Model
+{
+public:
+    virtual ~SnapserGuildsCreateGuildRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* JSON metadata for the guild */
+    TOptional<TSharedPtr<FJsonObject>> GuildMetadata;
+    /* Is the guild public */
+    bool IsPublic = false;
+    /* JSON metadata for the admin member */
+    TOptional<TSharedPtr<FJsonObject>> MemberMetadata;
+    /* Name of the guild */
+    FString Name;
+    /* ID of the user */
+    FString UserId;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsCreateGuildResponse : public Response
+{
+public:
+    virtual ~GuildsCreateGuildResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserGuildsCreateGuildResponse Content;
+};
+
+class SNAPSER_API SnapserGuildsCreateGuildResponse : public Model
+{
+public:
+    virtual ~SnapserGuildsCreateGuildResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> GuildId;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsGetInterGuildLeaderboardScores API
+<CodeGroup title="Get inter-guild leaderboard scores" tag="GET" label="GuildsGetInterGuildLeaderboardScores">
+```csharp
+/// <summary>
+/// Get Inter-guild Leaderboard Scores Gets the scores of an interguild leaderboard
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="range">Range of the leaderboard requested: &#39;top&#39;, &#39;bottom&#39; or &#39;around&#39; the user specified</param>
+/// <param name="count">Number of rankings to be displayed</param>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="guildId">Optional ID for the guild whose standing is requested (optional)</param>
+/// <param name="offset">For recurring leaderboards, the offset from the latest occurrence of the leaderboard (optional)</param>
+/// <returns>GuildsGetInterGuildLeaderboardScoresResponse</returns>
+public GuildsGetInterGuildLeaderboardScoresResponse GuildsGetInterGuildLeaderboardScores(string range, long count, string userId, string token, string guildId = default(string), int? offset = default(int?))
+{
+    Snapser.Client.ApiResponse<GuildsGetInterGuildLeaderboardScoresResponse> localVarResponse = GuildsGetInterGuildLeaderboardScoresWithHttpInfo(range, count, userId, token, guildId, offset);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for GuildsGetInterGuildLeaderboardScoresResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsGetInterGuildLeaderboardScoresResponse" /> class.
+/// </summary>
+/// <param name="guildScores">List of guilds in the order defined by the leaderboard.</param>
+/// <param name="tier">tier.</param>
+public GuildsGetInterGuildLeaderboardScoresResponse(List<GuildsGuildScore> guildScores = default(List<GuildsGuildScore>), GuildsTier tier = default(GuildsTier))
+{
+    this.GuildScores = guildScores;
+    this.Tier = tier;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsGetInterGuildLeaderboardScoresRequest : public Request
+{
+public:
+    virtual ~GuildsGetInterGuildLeaderboardScoresRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Range of the leaderboard requested: 'top', 'bottom' or 'around' the user specified */
+    FString Range;
+    /* Number of rankings to be displayed */
+    int64 Count = 0;
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    /* Optional ID for the guild whose standing is requested */
+    TOptional<FString> GuildId;
+    /* For recurring leaderboards, the offset from the latest occurrence of the leaderboard */
+    TOptional<int32> Offset;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsGetInterGuildLeaderboardScoresResponse : public Response
+{
+public:
+    virtual ~GuildsGetInterGuildLeaderboardScoresResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserGuildsGetInterGuildLeaderboardScoresResponse Content;
+};
+
+class SNAPSER_API SnapserGuildsGetInterGuildLeaderboardScoresResponse : public Model
+{
+public:
+    virtual ~SnapserGuildsGetInterGuildLeaderboardScoresResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* List of guilds in the order defined by the leaderboard */
+    TOptional<TArray<SnapserGuildsGuildScore>> GuildScores;
+    TOptional<SnapserGuildsTier> Tier;
+};
+
+class SNAPSER_API SnapserGuildsGuildScore : public Model
+{
+public:
+    virtual ~SnapserGuildsGuildScore() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> GuildId;
+    TOptional<FString> Rank;
+    TOptional<double> Score;
+};
+
+class SNAPSER_API SnapserGuildsTier : public Model
+{
+public:
+    virtual ~SnapserGuildsTier() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> BucketSize;
+    TOptional<FString> Description;
+    TOptional<FString> Name;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsIncrementInterGuildLeaderboardScores API
+<CodeGroup title="Increment inter-guild leaderboard scores" tag="PATCH" label="GuildsIncrementInterGuildLeaderboardScores">
+```csharp
+/// <summary>
+/// Increment Inter-guild Leaderboard Score Increment score for the inter-guild leaderboard
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="guildId">ID of the guild whose score is being updated</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>GuildsIncrementInterGuildLeaderboardScoreResponse</returns>
+public GuildsIncrementInterGuildLeaderboardScoreResponse GuildsIncrementInterGuildLeaderboardScores(string guildId, string token, IncrementInterGuildLeaderboardScoresRequest body)
+{
+    Snapser.Client.ApiResponse<GuildsIncrementInterGuildLeaderboardScoreResponse> localVarResponse = GuildsIncrementInterGuildLeaderboardScoresWithHttpInfo(guildId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for IncrementInterGuildLeaderboardScoresRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="IncrementInterGuildLeaderboardScoresRequest" /> class.
+/// </summary>
+/// <param name="delta">The delta of the score to increment (required).</param>
+/// <param name="tierName">Name of the tier.</param>
+/// <param name="userId">User ID of the user (required).</param>
+public IncrementInterGuildLeaderboardScoresRequest(double delta = default(double), string tierName = default(string), string userId = default(string))
+{
+    this.Delta = delta;
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for IncrementInterGuildLeaderboardScoresRequest and cannot be null");
+    }
+    this.UserId = userId;
+    this.TierName = tierName;
+}
+
+/// Snapser.Model for IncrementInterGuildLeaderboardScoresResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsIncrementInterGuildLeaderboardScoreResponse" /> class.
+/// </summary>
+/// <param name="rank">Latest rank to be returned.</param>
+/// <param name="score">Incremented score to be returned.</param>
+/// <param name="tier">tier.</param>
+public GuildsIncrementInterGuildLeaderboardScoreResponse(decimal rank = default(decimal), double score = default(double), GuildsTier tier = default(GuildsTier))
+{
+    this.Rank = rank;
+    this.Score = score;
+    this.Tier = tier;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsIncrementInterGuildLeaderboardScoresRequest : public Request
+{
+public:
+    virtual ~GuildsIncrementInterGuildLeaderboardScoresRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the guild whose score is being updated */
+    FString GuildId;
+    /* User session token */
+    FString Token;
+    SnapserIncrementInterGuildLeaderboardScoresRequest Body;
+};
+
+class SNAPSER_API SnapserIncrementInterGuildLeaderboardScoresRequest : public Model
+{
+public:
+    virtual ~SnapserIncrementInterGuildLeaderboardScoresRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* The delta of the score to increment */
+    double Delta = 0.0;
+    /* Name of the tier */
+    TOptional<FString> TierName;
+    /* User ID of the user */
+    FString UserId;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsIncrementInterGuildLeaderboardScoresResponse : public Response
+{
+public:
+    virtual ~GuildsIncrementInterGuildLeaderboardScoresResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserGuildsIncrementInterGuildLeaderboardScoreResponse Content;
+};
+
+class SNAPSER_API SnapserGuildsIncrementInterGuildLeaderboardScoreResponse : public Model
+{
+public:
+    virtual ~SnapserGuildsIncrementInterGuildLeaderboardScoreResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Latest rank to be returned */
+    TOptional<double> Rank;
+    /* Incremented score to be returned */
+    TOptional<double> Score;
+    TOptional<SnapserGuildsTier> Tier;
+};
+
+class SNAPSER_API SnapserGuildsTier : public Model
+{
+public:
+    virtual ~SnapserGuildsTier() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> BucketSize;
+    TOptional<FString> Description;
+    TOptional<FString> Name;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsGetMember API
+<CodeGroup title="Get member details" tag="GET" label="GuildsGetMember">
+```csharp
+/// <summary>
+/// Get Member Details Returns details for the member
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">ID of the user</param>
+/// <param name="token">User session token</param>
+/// <returns>GuildsGetMemberResponse</returns>
+public GuildsGetMemberResponse GuildsGetMember(string userId, string token)
+{
+    Snapser.Client.ApiResponse<GuildsGetMemberResponse> localVarResponse = GuildsGetMemberWithHttpInfo(userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for GuildsGetMemberResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsGetMemberResponse" /> class.
+/// </summary>
+/// <param name="member">member.</param>
+public GuildsGetMemberResponse(GuildsMember member = default(GuildsMember))
+{
+    this.Member = member;
+}
+
+/// Snapser.Model for GuildsMember
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsMember" /> class.
+/// </summary>
+/// <param name="guildId">guildId.</param>
+/// <param name="id">id.</param>
+/// <param name="joinDate">joinDate.</param>
+/// <param name="metadata">metadata.</param>
+/// <param name="type">type.</param>
+public GuildsMember(string guildId = default(string), string id = default(string), string joinDate = default(string), Object metadata = default(Object), string type = default(string))
+{
+    this.GuildId = guildId;
+    this.Id = id;
+    this.JoinDate = joinDate;
+    this.Metadata = metadata;
+    this.Type = type;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsGetMemberRequest : public Request
+{
+public:
+    virtual ~GuildsGetMemberRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsGetMemberResponse : public Response
+{
+public:
+    virtual ~GuildsGetMemberResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserGuildsGetMemberResponse Content;
+};
+
+class SNAPSER_API SnapserGuildsGetMemberResponse : public Model
+{
+public:
+    virtual ~SnapserGuildsGetMemberResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserGuildsMember> Member;
+};
+
+class SNAPSER_API SnapserGuildsMember : public Model
+{
+public:
+    virtual ~SnapserGuildsMember() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> GuildId;
+    TOptional<FString> Id;
+    TOptional<FString> JoinDate;
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    TOptional<FString> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsSearchGuilds API
+<CodeGroup title="Search guilds" tag="POST" label="GuildsSearchGuilds">
+```csharp
+/// <summary>
+/// Guild Search the guild with the given name
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>GuildsSearchGuildsResponse</returns>
+public GuildsSearchGuildsResponse GuildsSearchGuilds(string token, GuildsSearchGuildsRequest body)
+{
+    Snapser.Client.ApiResponse<GuildsSearchGuildsResponse> localVarResponse = GuildsSearchGuildsWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for GuildsSearchGuildsRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsSearchGuildsRequest" /> class.
+/// </summary>
+/// <param name="access">Filter by guild type. Valid values - public, private.</param>
+/// <param name="limit">Number of results returned. The maximum allowed is 50, defaults to 10 if not provided..</param>
+/// <param name="memberCount">memberCount.</param>
+/// <param name="metadataFilters">Metadata filters. IMPORTANT: Only populate value or a single strongly typed value field (bool_value, int_value, double_value, string_value) inside each filter to ensure correct behavior..</param>
+/// <param name="name">Returns guilds that have the name matching this field.</param>
+/// <param name="offset">Number of results to skip from the start of the result set.</param>
+/// <param name="sort">sort.</param>
+/// <param name="userId">ID of the user (required).</param>
+public GuildsSearchGuildsRequest(string access = default(string), long limit = default(long), GuildsMemberCountFilter memberCount = default(GuildsMemberCountFilter), List<GuildsMetadataFilter> metadataFilters = default(List<GuildsMetadataFilter>), string name = default(string), long offset = default(long), GuildsSortParams sort = default(GuildsSortParams), string userId = default(string))
+{
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for GuildsSearchGuildsRequest and cannot be null");
+    }
+    this.UserId = userId;
+    this.Access = access;
+    this.Limit = limit;
+    this.MemberCount = memberCount;
+    this.MetadataFilters = metadataFilters;
+    this.Name = name;
+    this.Offset = offset;
+    this.Sort = sort;
+}
+
+/// Snapser.Model for GuildsMemberCountFilter
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsMemberCountFilter" /> class.
+/// </summary>
+/// <param name="op">Comparison operator for member count. Valid values: &lt;, &gt;, &#x3D;.</param>
+/// <param name="value">Value for the member count comparison.</param>
+public GuildsMemberCountFilter(string op = default(string), long value = default(long))
+{
+    this.Op = op;
+    this.Value = value;
+}
+
+/// Snapser.Model for GuildsMetadataFilter
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsMetadataFilter" /> class.
+/// </summary>
+/// <param name="boolValue">Strongly typed boolean value for comparison, use instead of value for type safety.</param>
+/// <param name="doubleValue">Strongly typed double value for comparison, use instead of value for type safety.</param>
+/// <param name="intValue">Strongly typed integer value for comparison, use instead of value for type safety.</param>
+/// <param name="key">Field inside metadata to be filtered on.</param>
+/// <param name="op">Operator for the comparison. Valid values - LIKE, &#x3D;, &lt;&gt;, &gt;, &lt;.</param>
+/// <param name="stringValue">Strongly typed string value for comparison, use instead of value for type safety.</param>
+/// <param name="value">value.</param>
+public GuildsMetadataFilter(bool boolValue = default(bool), double doubleValue = default(double), long intValue = default(long), string key = default(string), string op = default(string), string stringValue = default(string), AnyValue value = default(AnyValue))
+{
+    this.BoolValue = boolValue;
+    this.DoubleValue = doubleValue;
+    this.IntValue = intValue;
+    this.Key = key;
+    this.Op = op;
+    this.StringValue = stringValue;
+    this.Value = value;
+}
+
+/// Snapser.Model for GuildsSortParams
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsSortParams" /> class.
+/// </summary>
+/// <param name="field">Field on which the results are to be sorted.</param>
+/// <param name="order">Order of sorting. Valid values - asc, desc.</param>
+public GuildsSortParams(string field = default(string), string order = default(string))
+{
+    this.Field = field;
+    this.Order = order;
+}
+
+/// Snapser.Model for GuildsSearchGuildsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsSearchGuildsResponse" /> class.
+/// </summary>
+/// <param name="guilds">guilds.</param>
+/// <param name="total">total.</param>
+public GuildsSearchGuildsResponse(List<GuildsGuildSummary> guilds = default(List<GuildsGuildSummary>), string total = default(string))
+{
+    this.Guilds = guilds;
+    this.Total = total;
+}
+
+/// Snapser.Model for GuildsGuildSummary
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsGuildSummary" /> class.
+/// </summary>
+/// <param name="admin">admin.</param>
+/// <param name="id">id.</param>
+/// <param name="isPublic">isPublic.</param>
+/// <param name="memberCount">memberCount.</param>
+/// <param name="metadata">metadata.</param>
+/// <param name="name">name.</param>
+public GuildsGuildSummary(string admin = default(string), string id = default(string), bool isPublic = default(bool), string memberCount = default(string), Object metadata = default(Object), string name = default(string))
+{
+    this.Admin = admin;
+    this.Id = id;
+    this.IsPublic = isPublic;
+    this.MemberCount = memberCount;
+    this.Metadata = metadata;
+    this.Name = name;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsSearchGuildsRequest : public Request
+{
+public:
+    virtual ~GuildsSearchGuildsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserGuildsSearchGuildsRequest Body;
+};
+
+class SNAPSER_API SnapserGuildsSearchGuildsRequest : public Model
+{
+public:
+    virtual ~SnapserGuildsSearchGuildsRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Filter by guild type. Valid values - public, private */
+    TOptional<FString> Access;
+    /* Number of results returned. The maximum allowed is 50, defaults to 10 if not provided. */
+    TOptional<int64> Limit;
+    TOptional<SnapserGuildsMemberCountFilter> MemberCount;
+    /* Metadata filters. IMPORTANT: Only populate value or a single strongly typed value field (bool_value, int_value, double_value, string_value) inside each filter to ensure correct behavior. */
+    TOptional<TArray<SnapserGuildsMetadataFilter>> MetadataFilters;
+    /* Returns guilds that have the name matching this field */
+    TOptional<FString> Name;
+    /* Number of results to skip from the start of the result set */
+    TOptional<int64> Offset;
+    TOptional<SnapserGuildsSortParams> Sort;
+    /* ID of the user */
+    FString UserId;
+};
+
+class SNAPSER_API SnapserGuildsMemberCountFilter : public Model
+{
+public:
+    virtual ~SnapserGuildsMemberCountFilter() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Comparison operator for member count. Valid values: <, >, = */
+    TOptional<FString> Op;
+    /* Value for the member count comparison */
+    TOptional<int64> Value;
+};
+
+class SNAPSER_API SnapserGuildsMetadataFilter : public Model
+{
+public:
+    virtual ~SnapserGuildsMetadataFilter() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Strongly typed boolean value for comparison, use instead of value for type safety */
+    TOptional<bool> BoolValue;
+    /* Strongly typed double value for comparison, use instead of value for type safety */
+    TOptional<double> DoubleValue;
+    /* Strongly typed integer value for comparison, use instead of value for type safety */
+    TOptional<int64> IntValue;
+    /* Field inside metadata to be filtered on */
+    TOptional<FString> Key;
+    /* Operator for the comparison. Valid values - LIKE, =, <>, >, < */
+    TOptional<FString> Op;
+    /* Strongly typed string value for comparison, use instead of value for type safety */
+    TOptional<FString> StringValue;
+    TOptional<SnapserAnyValue> Value;
+};
+
+class SNAPSER_API SnapserGuildsSortParams : public Model
+{
+public:
+    virtual ~SnapserGuildsSortParams() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Field on which the results are to be sorted */
+    TOptional<FString> Field;
+    /* Order of sorting. Valid values - asc, desc */
+    TOptional<FString> Order;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsSearchGuildsResponse : public Response
+{
+public:
+    virtual ~GuildsSearchGuildsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserGuildsSearchGuildsResponse Content;
+};
+
+class SNAPSER_API SnapserGuildsSearchGuildsResponse : public Model
+{
+public:
+    virtual ~SnapserGuildsSearchGuildsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserGuildsGuildSummary>> Guilds;
+    TOptional<FString> Total;
+};
+
+class SNAPSER_API SnapserGuildsGuildSummary : public Model
+{
+public:
+    virtual ~SnapserGuildsGuildSummary() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Admin;
+    TOptional<FString> Id;
+    TOptional<bool> IsPublic;
+    TOptional<FString> MemberCount;
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    TOptional<FString> Name;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsDeleteGuild API
+<CodeGroup title="Delete a guild" tag="DELETE" label="GuildsDeleteGuild">
+```csharp
+/// <summary>
+/// Guild Operations (Guild Admin Only) Deletes the guild with the given ID
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="guildId">Guild ID for deleting the guild</param>
+/// <param name="userId">ID of the user</param>
+/// <param name="token">User session token</param>
+/// <returns>Object</returns>
+public Object GuildsDeleteGuild(string guildId, string userId, string token)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = GuildsDeleteGuildWithHttpInfo(guildId, userId, token);
+    return localVarResponse.Data;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsDeleteGuildRequest : public Request
+{
+public:
+    virtual ~GuildsDeleteGuildRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Guild ID for deleting the guild */
+    FString GuildId;
+    /* ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsDeleteGuildResponse : public Response
+{
+public:
+    virtual ~GuildsDeleteGuildResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsGetGuildForUserId API
+<CodeGroup title="Get a guild for a userId" tag="GET" label="GuildsGetGuildForUserId">
+```csharp
+/// <summary>
+/// Guild Returns the guild a user is a member of
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">ID of the user</param>
+/// <param name="token">User session token</param>
+/// <returns>GuildsGetGuildForUserIdResponse</returns>
+public GuildsGetGuildForUserIdResponse GuildsGetGuildForUserId(string userId, string token)
+{
+    Snapser.Client.ApiResponse<GuildsGetGuildForUserIdResponse> localVarResponse = GuildsGetGuildForUserIdWithHttpInfo(userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for GuildsGetGuildForUserIdResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsGetGuildForUserIdResponse" /> class.
+/// </summary>
+/// <param name="guild">guild.</param>
+public GuildsGetGuildForUserIdResponse(GuildsGuild guild = default(GuildsGuild))
+{
+    this.Guild = guild;
+}
+
+/// Snapser.Model for GuildsGuild
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsGuild" /> class.
+/// </summary>
+/// <param name="admin">admin.</param>
+/// <param name="id">id.</param>
+/// <param name="isPublic">isPublic.</param>
+/// <param name="leaderboard">leaderboard.</param>
+/// <param name="members">members.</param>
+/// <param name="metadata">metadata.</param>
+/// <param name="name">name.</param>
+/// <param name="type">type.</param>
+public GuildsGuild(string admin = default(string), string id = default(string), bool isPublic = default(bool), string leaderboard = default(string), List<string> members = default(List<string>), Object metadata = default(Object), string name = default(string), string type = default(string))
+{
+    this.Admin = admin;
+    this.Id = id;
+    this.IsPublic = isPublic;
+    this.Leaderboard = leaderboard;
+    this.Members = members;
+    this.Metadata = metadata;
+    this.Name = name;
+    this.Type = type;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsGetGuildForUserIdRequest : public Request
+{
+public:
+    virtual ~GuildsGetGuildForUserIdRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsGetGuildForUserIdResponse : public Response
+{
+public:
+    virtual ~GuildsGetGuildForUserIdResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserGuildsGetGuildForUserIdResponse Content;
+};
+
+class SNAPSER_API SnapserGuildsGetGuildForUserIdResponse : public Model
+{
+public:
+    virtual ~SnapserGuildsGetGuildForUserIdResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserGuildsGuild> Guild;
+};
+
+class SNAPSER_API SnapserGuildsGuild : public Model
+{
+public:
+    virtual ~SnapserGuildsGuild() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Admin;
+    TOptional<FString> Id;
+    TOptional<bool> IsPublic;
+    TOptional<FString> Leaderboard;
+    TOptional<TArray<FString>> Members;
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    TOptional<FString> Name;
+    TOptional<FString> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### GuildsGetGuild API
+<CodeGroup title="Get a guild" tag="GET" label="GuildsGetGuild">
+```csharp
+/// <summary>
+/// Guild Operations Returns the guild with specified ID
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="guildId">User ID for the user whose data is being returned</param>
+/// <param name="token">User session token</param>
+/// <returns>GuildsGetGuildResponse</returns>
+public GuildsGetGuildResponse GuildsGetGuild(string guildId, string token)
+{
+    Snapser.Client.ApiResponse<GuildsGetGuildResponse> localVarResponse = GuildsGetGuildWithHttpInfo(guildId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for GuildsGetGuildResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsGetGuildResponse" /> class.
+/// </summary>
+/// <param name="guild">guild.</param>
+public GuildsGetGuildResponse(GuildsGuild guild = default(GuildsGuild))
+{
+    this.Guild = guild;
+}
+
+/// Snapser.Model for GuildsGuild
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsGuild" /> class.
+/// </summary>
+/// <param name="admin">admin.</param>
+/// <param name="id">id.</param>
+/// <param name="isPublic">isPublic.</param>
+/// <param name="leaderboard">leaderboard.</param>
+/// <param name="members">members.</param>
+/// <param name="metadata">metadata.</param>
+/// <param name="name">name.</param>
+/// <param name="type">type.</param>
+public GuildsGuild(string admin = default(string), string id = default(string), bool isPublic = default(bool), string leaderboard = default(string), List<string> members = default(List<string>), Object metadata = default(Object), string name = default(string), string type = default(string))
+{
+    this.Admin = admin;
+    this.Id = id;
+    this.IsPublic = isPublic;
+    this.Leaderboard = leaderboard;
+    this.Members = members;
+    this.Metadata = metadata;
+    this.Name = name;
+    this.Type = type;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsGetGuildRequest : public Request
+{
+public:
+    virtual ~GuildsGetGuildRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID for the user whose data is being returned */
+    FString GuildId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsGetGuildResponse : public Response
+{
+public:
+    virtual ~GuildsGetGuildResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserGuildsGetGuildResponse Content;
+};
+
+class SNAPSER_API SnapserGuildsGetGuildResponse : public Model
+{
+public:
+    virtual ~SnapserGuildsGetGuildResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserGuildsGuild> Guild;
+};
+
+class SNAPSER_API SnapserGuildsGuild : public Model
+{
+public:
+    virtual ~SnapserGuildsGuild() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Admin;
+    TOptional<FString> Id;
+    TOptional<bool> IsPublic;
+    TOptional<FString> Leaderboard;
+    TOptional<TArray<FString>> Members;
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    TOptional<FString> Name;
+    TOptional<FString> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsUpdateGuild API
+<CodeGroup title="Update a guild" tag="PUT" label="GuildsUpdateGuild">
+```csharp
+/// <summary>
+/// Guild Operations (Guild Admin Only) Updates the guild with the given ID
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="guildId">Guild ID for updating the guild</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object GuildsUpdateGuild(string guildId, string token, UpdateGuildRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = GuildsUpdateGuildWithHttpInfo(guildId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for UpdateGuildRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="UpdateGuildRequest" /> class.
+/// </summary>
+/// <param name="isPublic">If the guild id public or private (required).</param>
+/// <param name="metadata">Metadata for the guild (required).</param>
+public UpdateGuildRequest(bool isPublic = default, Object metadata = default)
+{
+    this.IsPublic = isPublic;
+    // to ensure "metadata" is required (not null)
+    if (metadata == null)
+    {
+        throw new ArgumentNullException("metadata is a required property for UpdateGuildRequest and cannot be null");
+    }
+    this.Metadata = metadata;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsUpdateGuildRequest : public Request
+{
+public:
+    virtual ~GuildsUpdateGuildRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Guild ID for updating the guild */
+    FString GuildId;
+    /* User session token */
+    FString Token;
+    SnapserUpdateGuildRequest Body;
+};
+
+class SNAPSER_API SnapserUpdateGuildRequest : public Model
+{
+public:
+    virtual ~SnapserUpdateGuildRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* If the guild id public or private */
+    bool IsPublic = false;
+    /* Metadata for the guild */
+    TSharedPtr<FJsonObject> Metadata;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsUpdateGuildResponse : public Response
+{
+public:
+    virtual ~GuildsUpdateGuildResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsTransferAdmin API
+<CodeGroup title="Transfer admin privileges" tag="PUT" label="GuildsTransferAdmin">
+```csharp
+/// <summary>
+/// Transfer Admin (Guild Admin Only) Updates a guild&#39;s admin
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="guildId">ID of the guild</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object GuildsTransferAdmin(string guildId, string token, TransferAdminRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = GuildsTransferAdminWithHttpInfo(guildId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for TransferAdminRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="TransferAdminRequest" /> class.
+/// </summary>
+/// <param name="targetUserId">User ID of the new admin (required).</param>
+/// <param name="userId">ID of the user (required).</param>
+public TransferAdminRequest(string targetUserId = default(string), string userId = default(string))
+{
+    // to ensure "targetUserId" is required (not null)
+    if (targetUserId == null)
+    {
+        throw new ArgumentNullException("targetUserId is a required property for TransferAdminRequest and cannot be null");
+    }
+    this.TargetUserId = targetUserId;
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for TransferAdminRequest and cannot be null");
+    }
+    this.UserId = userId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsTransferAdminRequest : public Request
+{
+public:
+    virtual ~GuildsTransferAdminRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the guild */
+    FString GuildId;
+    /* User session token */
+    FString Token;
+    SnapserTransferAdminRequest Body;
+};
+
+class SNAPSER_API SnapserTransferAdminRequest : public Model
+{
+public:
+    virtual ~SnapserTransferAdminRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* User ID of the new admin */
+    FString TargetUserId;
+    /* ID of the user */
+    FString UserId;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsTransferAdminResponse : public Response
+{
+public:
+    virtual ~GuildsTransferAdminResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsGetGuildLeaderboardScores API
+<CodeGroup title="Get guild leaderboard scores" tag="GET" label="GuildsGetGuildLeaderboardScores">
+```csharp
+/// <summary>
+/// Get Guild Leaderboard Scores Returns leaderboard scores for the guild
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="guildId">ID of the guild</param>
+/// <param name="range">Range of the leaderboard requested: &#39;top&#39;, &#39;bottom&#39; or &#39;around&#39; the user specified</param>
+/// <param name="count">Number of rankings to be displayed</param>
+/// <param name="token">User session token</param>
+/// <param name="userId">Optional user ID for the user who&#39;s standing is requested (optional)</param>
+/// <param name="offset">For recurring leaderboards, the offset from the latest occurrence of the leaderboard (optional)</param>
+/// <returns>GuildsGetGuildLeaderboardScoresResponse</returns>
+public GuildsGetGuildLeaderboardScoresResponse GuildsGetGuildLeaderboardScores(string guildId, string range, long count, string token, string userId = default(string), int? offset = default(int?))
+{
+    Snapser.Client.ApiResponse<GuildsGetGuildLeaderboardScoresResponse> localVarResponse = GuildsGetGuildLeaderboardScoresWithHttpInfo(guildId, range, count, token, userId, offset);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for GuildsGetGuildLeaderboardScoresResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsGetGuildLeaderboardScoresResponse" /> class.
+/// </summary>
+/// <param name="tier">tier.</param>
+/// <param name="userScores">List of users in the order defined by the leaderboard.</param>
+public GuildsGetGuildLeaderboardScoresResponse(GuildsTier tier = default(GuildsTier), List<GuildsUserScore> userScores = default(List<GuildsUserScore>))
+{
+    this.Tier = tier;
+    this.UserScores = userScores;
+}
+
+/// Snapser.Model for GuildsTier
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsTier" /> class.
+/// </summary>
+/// <param name="bucketSize">bucketSize.</param>
+/// <param name="description">description.</param>
+/// <param name="name">name.</param>
+public GuildsTier(string bucketSize = default(string), string description = default(string), string name = default(string))
+{
+    this.BucketSize = bucketSize;
+    this.Description = description;
+    this.Name = name;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsGetGuildLeaderboardScoresRequest : public Request
+{
+public:
+    virtual ~GuildsGetGuildLeaderboardScoresRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the guild */
+    FString GuildId;
+    /* Range of the leaderboard requested: 'top', 'bottom' or 'around' the user specified */
+    FString Range;
+    /* Number of rankings to be displayed */
+    int64 Count = 0;
+    /* User session token */
+    FString Token;
+    /* Optional user ID for the user who's standing is requested */
+    TOptional<FString> UserId;
+    /* For recurring leaderboards, the offset from the latest occurrence of the leaderboard */
+    TOptional<int32> Offset;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsGetGuildLeaderboardScoresResponse : public Response
+{
+public:
+    virtual ~GuildsGetGuildLeaderboardScoresResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserGuildsGetGuildLeaderboardScoresResponse Content;
+};
+
+class SNAPSER_API SnapserGuildsGetGuildLeaderboardScoresResponse : public Model
+{
+public:
+    virtual ~SnapserGuildsGetGuildLeaderboardScoresResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserGuildsTier> Tier;
+    /* List of users in the order defined by the leaderboard */
+    TOptional<TArray<SnapserGuildsUserScore>> UserScores;
+};
+
+class SNAPSER_API SnapserGuildsTier : public Model
+{
+public:
+    virtual ~SnapserGuildsTier() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> BucketSize;
+    TOptional<FString> Description;
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserGuildsUserScore : public Model
+{
+public:
+    virtual ~SnapserGuildsUserScore() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Rank;
+    TOptional<double> Score;
+    TOptional<FString> UserId;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsIncrementGuildLeaderboardScore API
+<CodeGroup title="Increment guild leaderboard score" tag="PATCH" label="GuildsIncrementGuildLeaderboardScore">
+```csharp
+/// <summary>
+/// Update Guild Leaderboard Score Increment score for a user on the guild leaderboard
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="guildId">Guild Id</param>
+/// <param name="userId">User ID for the user whose score is being updated</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>GuildsIncrementGuildLeaderboardScoreResponse</returns>
+public GuildsIncrementGuildLeaderboardScoreResponse GuildsIncrementGuildLeaderboardScore(string guildId, string userId, string token, IncrementGuildLeaderboardScoreRequest body)
+{
+    Snapser.Client.ApiResponse<GuildsIncrementGuildLeaderboardScoreResponse> localVarResponse = GuildsIncrementGuildLeaderboardScoreWithHttpInfo(guildId, userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for IncrementGuildLeaderboardScoreRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="IncrementGuildLeaderboardScoreRequest" /> class.
+/// </summary>
+/// <param name="delta">The delta of the score to increment (required).</param>
+/// <param name="tierName">Name of the tier.</param>
+public IncrementGuildLeaderboardScoreRequest(double delta = default(double), string tierName = default(string))
+{
+    this.Delta = delta;
+    this.TierName = tierName;
+}
+
+/// Snapser.Model for IncrementGuildLeaderboardScoreResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsIncrementGuildLeaderboardScoreResponse" /> class.
+/// </summary>
+/// <param name="rank">Latest rank to be returned.</param>
+/// <param name="score">Incremented score to be returned.</param>
+/// <param name="tier">tier.</param>
+public GuildsIncrementGuildLeaderboardScoreResponse(decimal rank = default(decimal), double score = default(double), GuildsTier tier = default(GuildsTier))
+{
+    this.Rank = rank;
+    this.Score = score;
+    this.Tier = tier;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsIncrementGuildLeaderboardScoreRequest : public Request
+{
+public:
+    virtual ~GuildsIncrementGuildLeaderboardScoreRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Guild Id */
+    FString GuildId;
+    /* User ID for the user whose score is being updated */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserIncrementGuildLeaderboardScoreRequest Body;
+};
+
+class SNAPSER_API SnapserIncrementGuildLeaderboardScoreRequest : public Model
+{
+public:
+    virtual ~SnapserIncrementGuildLeaderboardScoreRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* The delta of the score to increment */
+    double Delta = 0.0;
+    /* Name of the tier */
+    TOptional<FString> TierName;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsIncrementGuildLeaderboardScoreResponse : public Response
+{
+public:
+    virtual ~GuildsIncrementGuildLeaderboardScoreResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserGuildsIncrementGuildLeaderboardScoreResponse Content;
+};
+
+class SNAPSER_API SnapserGuildsIncrementGuildLeaderboardScoreResponse : public Model
+{
+public:
+    virtual ~SnapserGuildsIncrementGuildLeaderboardScoreResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Latest rank to be returned */
+    TOptional<double> Rank;
+    /* Incremented score to be returned */
+    TOptional<double> Score;
+    TOptional<SnapserGuildsTier> Tier;
+};
+
+class SNAPSER_API SnapserGuildsTier : public Model
+{
+public:
+    virtual ~SnapserGuildsTier() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> BucketSize;
+    TOptional<FString> Description;
+    TOptional<FString> Name;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsSetGuildLeaderboardScores API
+<CodeGroup title="Set guild leaderboard scores" tag="PUT" label="GuildsSetGuildLeaderboardScores">
+```csharp
+/// <summary>
+/// Update Guild Leaderboard Score Sets score for a user on the guild leaderboard (only non &#39;counter&#39; leaderboards)
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="guildId">Name of the guild</param>
+/// <param name="userId">User ID for the user who&#39;s score is being updated</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>GuildsSetGuildLeaderboardScoreResponse</returns>
+public GuildsSetGuildLeaderboardScoreResponse GuildsSetGuildLeaderboardScores(string guildId, string userId, string token, SetGuildLeaderboardScoresRequest body)
+{
+    Snapser.Client.ApiResponse<GuildsSetGuildLeaderboardScoreResponse> localVarResponse = GuildsSetGuildLeaderboardScoresWithHttpInfo(guildId, userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SetGuildLeaderboardScoresRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="SetGuildLeaderboardScoresRequest" /> class.
+/// </summary>
+/// <param name="score">New score to be inserted (required).</param>
+/// <param name="tierName">Name of the tier.</param>
+public SetGuildLeaderboardScoresRequest(double score = default(double), string tierName = default(string))
+{
+    this.Score = score;
+    this.TierName = tierName;
+}
+
+/// Snapser.Model for SetGuildLeaderboardScoresResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsSetGuildLeaderboardScoreResponse" /> class.
+/// </summary>
+/// <param name="score">Latest score to be returned.</param>
+/// <param name="tier">tier.</param>
+public GuildsSetGuildLeaderboardScoreResponse(double score = default(double), GuildsTier tier = default(GuildsTier))
+{
+    this.Score = score;
+    this.Tier = tier;
+}
+
+/// Snapser.Model for GuildsTier
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsTier" /> class.
+/// </summary>
+/// <param name="bucketSize">bucketSize.</param>
+/// <param name="description">description.</param>
+/// <param name="name">name.</param>
+public GuildsTier(string bucketSize = default(string), string description = default(string), string name = default(string))
+{
+    this.BucketSize = bucketSize;
+    this.Description = description;
+    this.Name = name;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsSetGuildLeaderboardScoresRequest : public Request
+{
+public:
+    virtual ~GuildsSetGuildLeaderboardScoresRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Name of the guild */
+    FString GuildId;
+    /* User ID for the user who's score is being updated */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserSetGuildLeaderboardScoresRequest Body;
+};
+
+class SNAPSER_API SnapserSetGuildLeaderboardScoresRequest : public Model
+{
+public:
+    virtual ~SnapserSetGuildLeaderboardScoresRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* New score to be inserted */
+    double Score = 0.0;
+    /* Name of the tier */
+    TOptional<FString> TierName;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsSetGuildLeaderboardScoresResponse : public Response
+{
+public:
+    virtual ~GuildsSetGuildLeaderboardScoresResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserGuildsSetGuildLeaderboardScoreResponse Content;
+};
+
+class SNAPSER_API SnapserGuildsSetGuildLeaderboardScoreResponse : public Model
+{
+public:
+    virtual ~SnapserGuildsSetGuildLeaderboardScoreResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Latest score to be returned */
+    TOptional<double> Score;
+    TOptional<SnapserGuildsTier> Tier;
+};
+
+class SNAPSER_API SnapserGuildsTier : public Model
+{
+public:
+    virtual ~SnapserGuildsTier() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> BucketSize;
+    TOptional<FString> Description;
+    TOptional<FString> Name;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsAddMember API
+<CodeGroup title="Add a member to a guild" tag="POST" label="GuildsAddMember">
+```csharp
+/// <summary>
+/// Add Member (Guild Admin Only) Adds a member to a guild
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="guildId">ID of the guild</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object GuildsAddMember(string guildId, string token, AddMemberRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = GuildsAddMemberWithHttpInfo(guildId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for
+/// <summary>
+/// Initializes a new instance of the <see cref="AddMemberRequest" /> class.
+/// </summary>
+/// <param name="metadata">Metadata for the user.</param>
+/// <param name="targetUserId">User ID of the user to be added (required).</param>
+public AddMemberRequest(Object metadata = default, string targetUserId = default)
+{
+    // to ensure "targetUserId" is required (not null)
+    if (targetUserId == null)
+    {
+        throw new ArgumentNullException("targetUserId is a required property for AddMemberRequest and cannot be null");
+    }
+    this.TargetUserId = targetUserId;
+    this.Metadata = metadata;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsAddMemberRequest : public Request
+{
+public:
+    virtual ~GuildsAddMemberRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the guild */
+    FString GuildId;
+    /* User session token */
+    FString Token;
+    SnapserAddMemberRequest Body;
+};
+
+class SNAPSER_API SnapserAddMemberRequest : public Model
+{
+public:
+    virtual ~SnapserAddMemberRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Metadata for the user */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* User ID of the user to be added */
+    FString TargetUserId;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsAddMemberResponse : public Response
+{
+public:
+    virtual ~GuildsAddMemberResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsRemoveMember API
+<CodeGroup title="Remove a member from a guild" tag="DELETE" label="GuildsRemoveMember">
+```csharp
+/// <summary>
+/// Member Operations (Guild Admin Only) Removes a member from the specified guild
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="guildId">ID of the guild</param>
+/// <param name="targetUserId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <returns>Object</returns>
+public Object GuildsRemoveMember(string guildId, string targetUserId, string token)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = GuildsRemoveMemberWithHttpInfo(guildId, targetUserId, token);
+    return localVarResponse.Data;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsRemoveMemberRequest : public Request
+{
+public:
+    virtual ~GuildsRemoveMemberRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the guild */
+    FString GuildId;
+    /* User ID of the user */
+    FString TargetUserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsRemoveMemberResponse : public Response
+{
+public:
+    virtual ~GuildsRemoveMemberResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsUpdateMemberMetadata API
+<CodeGroup title="Update member metadata" tag="PUT" label="GuildsUpdateMemberMetadata">
+```csharp
+/// <summary>
+/// Member Operations Updates the member metadata
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="guildId">ID of the guild</param>
+/// <param name="userId">ID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object GuildsUpdateMemberMetadata(string guildId, string userId, string token, UpdateMemberMetadataRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = GuildsUpdateMemberMetadataWithHttpInfo(guildId, userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for UpdateMemberMetadataRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="UpdateMemberMetadataRequest" /> class.
+/// </summary>
+/// <param name="metadata">metadata.</param>
+public UpdateMemberMetadataRequest(Object metadata = default(Object))
+{
+    this.Metadata = metadata;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsUpdateMemberMetadataRequest : public Request
+{
+public:
+    virtual ~GuildsUpdateMemberMetadataRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the guild */
+    FString GuildId;
+    /* ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserUpdateMemberMetadataRequest Body;
+};
+
+class SNAPSER_API SnapserUpdateMemberMetadataRequest : public Model
+{
+public:
+    virtual ~SnapserUpdateMemberMetadataRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsUpdateMemberMetadataResponse : public Response
+{
+public:
+    virtual ~GuildsUpdateMemberMetadataResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsJoinGuild API
+<CodeGroup title="Join a guild" tag="POST" label="GuildsJoinGuild">
+```csharp
+/// <summary>
+/// Join Guild Joins a guild
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="guildId">ID of the guild</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object GuildsJoinGuild(string guildId, string token, JoinGuildRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = GuildsJoinGuildWithHttpInfo(guildId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for JoinGuildRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="JoinGuildRequest" /> class.
+/// </summary>
+/// <param name="metadata">Metadata of the user.</param>
+/// <param name="userId">User ID of the user (required).</param>
+public JoinGuildRequest(Object metadata = default(Object), string userId = default(string))
+{
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for JoinGuildRequest and cannot be null");
+    }
+    this.UserId = userId;
+    this.Metadata = metadata;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsJoinGuildRequest : public Request
+{
+public:
+    virtual ~GuildsJoinGuildRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the guild */
+    FString GuildId;
+    /* User session token */
+    FString Token;
+    SnapserJoinGuildRequest Body;
+};
+
+class SNAPSER_API SnapserJoinGuildRequest : public Model
+{
+public:
+    virtual ~SnapserJoinGuildRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Metadata of the user */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* User ID of the user */
+    FString UserId;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsJoinGuildResponse : public Response
+{
+public:
+    virtual ~GuildsJoinGuildResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsGetMembershipRequests API
+<CodeGroup title="Get membership requests" tag="GET" label="GuildsGetMembershipRequests">
+```csharp
+/// <summary>
+/// Membership Requests Returns all membership requests for the guild
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="guildId">User ID of the user</param>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="limit">Number of results returned. The maximum allowed is 50, defaults to 10 if not provided. (optional)</param>
+/// <param name="offset">Number of results to skip from the start of the result set (optional)</param>
+/// <returns>GuildsGetMembershipRequestsResponse</returns>
+public GuildsGetMembershipRequestsResponse GuildsGetMembershipRequests(string guildId, string userId, string token, long? limit = default(long?), long? offset = default(long?))
+{
+    Snapser.Client.ApiResponse<GuildsGetMembershipRequestsResponse> localVarResponse = GuildsGetMembershipRequestsWithHttpInfo(guildId, userId, token, limit, offset);
+    return localVarResponse.Data;
+}
+/// Snapser.Model for GuildsGetMembershipRequestsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsGetMembershipRequestsResponse" /> class.
+/// </summary>
+/// <param name="membershipRequests">membershipRequests.</param>
+/// <param name="total">total.</param>
+public GuildsGetMembershipRequestsResponse(List<GuildsMembershipRequest> membershipRequests = default(List<GuildsMembershipRequest>), string total = default(string))
+{
+    this.MembershipRequests = membershipRequests;
+    this.Total = total;
+}
+
+/// Snapser.Model for GuildsMembershipRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="GuildsMembershipRequest" /> class.
+/// </summary>
+/// <param name="guildId">guildId.</param>
+/// <param name="id">id.</param>
+/// <param name="memberMetadata">memberMetadata.</param>
+/// <param name="requestDate">requestDate.</param>
+/// <param name="type">type.</param>
+/// <param name="userId">userId.</param>
+public GuildsMembershipRequest(string guildId = default(string), string id = default(string), Object memberMetadata = default(Object), string requestDate = default(string), string type = default(string), string userId = default(string))
+{
+    this.GuildId = guildId;
+    this.Id = id;
+    this.MemberMetadata = memberMetadata;
+    this.RequestDate = requestDate;
+    this.Type = type;
+    this.UserId = userId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsGetMembershipRequestsRequest : public Request
+{
+public:
+    virtual ~GuildsGetMembershipRequestsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString GuildId;
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    /* Number of results returned. The maximum allowed is 50, defaults to 10 if not provided. */
+    TOptional<int64> Limit;
+    /* Number of results to skip from the start of the result set */
+    TOptional<int64> Offset;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsGetMembershipRequestsResponse : public Response
+{
+public:
+    virtual ~GuildsGetMembershipRequestsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserGuildsGetMembershipRequestsResponse Content;
+};
+
+class SNAPSER_API SnapserGuildsGetMembershipRequestsResponse : public Model
+{
+public:
+    virtual ~SnapserGuildsGetMembershipRequestsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserGuildsMembershipRequest>> MembershipRequests;
+    TOptional<FString> Total;
+};
+
+class SNAPSER_API SnapserGuildsMembershipRequest : public Model
+{
+public:
+    virtual ~SnapserGuildsMembershipRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> GuildId;
+    TOptional<FString> Id;
+    TOptional<TSharedPtr<FJsonObject>> MemberMetadata;
+    TOptional<FString> RequestDate;
+    TOptional<FString> Type;
+    TOptional<FString> UserId;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsRequestMembership API
+<CodeGroup title="Request membership to a guild" tag="POST" label="GuildsRequestMembership">
+```csharp
+/// <summary>
+/// Membership Requests Sends a request to join the given private guild
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="guildId"></param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object GuildsRequestMembership(string guildId, string token, RequestMembershipRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = GuildsRequestMembershipWithHttpInfo(guildId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for RequestMembershipRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="RequestMembershipRequest" /> class.
+/// </summary>
+/// <param name="metadata">metadata.</param>
+/// <param name="userId">userId.</param>
+public RequestMembershipRequest(Object metadata = default(Object), string userId = default(string))
+{
+    this.Metadata = metadata;
+    this.UserId = userId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsRequestMembershipRequest : public Request
+{
+public:
+    virtual ~GuildsRequestMembershipRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    FString GuildId;
+    /* User session token */
+    FString Token;
+    SnapserRequestMembershipRequest Body;
+};
+
+class SNAPSER_API SnapserRequestMembershipRequest : public Model
+{
+public:
+    virtual ~SnapserRequestMembershipRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    TOptional<FString> UserId;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsRequestMembershipResponse : public Response
+{
+public:
+    virtual ~GuildsRequestMembershipResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsDeleteMembershipRequest API
+<CodeGroup title="Delete a membership request" tag="DELETE" label="GuildsDeleteMembershipRequest">
+```csharp
+/// <summary>
+/// Delete Membership Request Deletes the guild membership request for the user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="guildId">ID of the guild</param>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <returns>Object</returns>
+public Object GuildsDeleteMembershipRequest(string guildId, string userId, string token)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = GuildsDeleteMembershipRequestWithHttpInfo(guildId, userId, token);
+    return localVarResponse.Data;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsDeleteMembershipRequestRequest : public Request
+{
+public:
+    virtual ~GuildsDeleteMembershipRequestRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the guild */
+    FString GuildId;
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsDeleteMembershipRequestResponse : public Response
+{
+public:
+    virtual ~GuildsDeleteMembershipRequestResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GuildsLeaveGuild API
+<CodeGroup title="Leave a guild" tag="DELETE" label="GuildsLeaveGuild">
+```csharp
+/// <summary>
+/// Leave Guild Leave the guild
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="guildId">Guild ID </param>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <returns>Object</returns>
+public Object GuildsLeaveGuild(string guildId, string userId, string token)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = GuildsLeaveGuildWithHttpInfo(guildId, userId, token);
+    return localVarResponse.Data;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGuildsServiceApi::GuildsLeaveGuildRequest : public Request
+{
+public:
+    virtual ~GuildsLeaveGuildRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Guild ID  */
+    FString GuildId;
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserGuildsServiceApi::GuildsLeaveGuildResponse : public Response
+{
+public:
+    virtual ~GuildsLeaveGuildResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/guilds-api.png)
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code | Variable                        | Message                    | HTTP | gRPC            |
+| ---- | ------------------------------- | -------------------------- | ---- | --------------- |
+| 6000 | ErrLeaderboardsSnapDoesNotExist | leaderboard snap not added | 400  | InvalidArgument |
+</div>
+
+## Additional Details
+
+### Data Stores
+
+Couchbase and POSTGRES
+
+### Service Dependencies
+
+The guilds service does not depend on any other Snap.
+
+### Recommended Services
+
+The guilds service works best with the Auth and Leaderboards services.
+
+### Upcoming enhancements
+
+None planned at the moment.

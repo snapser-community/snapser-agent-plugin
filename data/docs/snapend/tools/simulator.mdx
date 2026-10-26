@@ -1,0 +1,92 @@
+export const description = 'Matchmaking Simulator'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Matchmaking Simulator
+
+## About
+The Matchmaking Simulator lets you run full matchmaking simulations against your live matchmaking configuration — without needing real clients or players. You define a synthetic population of tickets (their stats, latencies, string values, and tags), choose how they arrive over time, and the simulator replays them through the matchmaker. Every run produces a report with headline metrics, distribution charts, and downloadable artifacts, and you can compare any two runs side by side.
+
+This tool is especially useful for tuning match profiles, validating rule and filter changes before they ship, and understanding trade-offs between match quality and wait times.
+
+## Pre-requisites
+
+1. **Matchmaking Snap** at version `v1.13.0` or above must be part of your Snapend.
+2. At least one **Match Profile** configured under `Configuration Tools > Matchmaking` if you want your scenarios to run against a saved profile.
+
+To open the tool, select your Snapend and navigate to `Snap Tools > Matchmaking Simulator`.
+
+The tool is organized into three tabs: **Scenarios**, **Runs**, and **Compare**.
+
+## Scenarios
+
+The Scenarios tab lists your saved scenarios. A scenario is a reusable description of a simulation: the ticket population, the arrival pattern, and the run parameters. Use the search box to filter scenarios by name, click a scenario's name to edit it, or hover over a row to reveal the **Run**, **Edit**, **Clone**, and **Delete** actions. Deleting a scenario always asks for confirmation.
+
+Click **New Scenario** to create one. The editor opens in a modal with the following sections:
+
+### Profile
+
+Bind the scenario to one of your match profiles. The binding is live — the simulator always resolves the profile at run time, so profile edits you make later are automatically picked up by the next run. If the referenced profile has been deleted, the editor warns you so you can pick a new one.
+
+### Population
+
+- **Ticket count**: How many tickets to inject over the course of the run.
+- **Statistics**: Synthetic stats for each ticket (for example `mmr` or `elo`). Each stat draws from a distribution — `normal` (mean, stddev, optional min/max clamps) or `uniform` (min, max). Stat values are written to each ticket's `double_args`, which both `statistics_filters` and `double_range_filters` in the profile match against.
+- **Latency**: Per-region latency distributions, using the same `normal`/`uniform` options.
+- **String Values**: Weighted choices written to each ticket's `string_args` (for example `pc:0.7, console:0.3`); `string_equals_filters` in the profile match against them.
+- **Tags**: Each ticket receives the tag with the given probability (0–1); `tag_present_filters` in the profile match against them.
+
+### Arrival
+
+How tickets enter the queue over time:
+
+- **burst**: All tickets arrive at once at the start of the run.
+- **poisson**: Tickets arrive randomly at the given average rate (tickets/second).
+- **ramp**: The arrival rate ramps linearly from a start rate to an end rate across the run.
+
+### Run
+
+- **Duration (min)**: How long the simulated clock runs.
+- **Tick (s)**: How often the matcher evaluates the queue.
+- **Ticket timeout (s)**: How long a ticket waits before it is abandoned.
+- **Seed**: Seed for the random generators. The same scenario with the same seed produces the same run — change the seed to explore variance.
+
+### Saving and running
+
+- **Save / Update**: Persists the scenario and returns to the list.
+- **Save & Run**: Persists the scenario and immediately starts a run.
+- **Run without saving**: Runs the scenario as currently configured without persisting your edits — useful for quick what-if experiments.
+
+<Note>
+  Scenarios can carry advanced fields the form does not edit (explicit ticket lists and bucket distributions). If you load such a scenario, the editor tells you and preserves those fields on save.
+</Note>
+
+## Runs
+
+The Runs tab shows the history of every simulation across all scenarios, with headline numbers (matches, abandoned tickets, wait p50/p90) per run. Use the scenario filter to narrow the list. Click **View** on any run to open its full report. Triggering a run from anywhere in the tool also lands here, with the report opening automatically once the simulation finishes.
+
+### The run report
+
+- **Summary cards**: Matches formed, matched players, abandoned tickets (and % of injected), and wait time percentiles (p50/p90/p99). If the run carries stats, each stat also gets a card with its mean spread, max spread, and mean team delta.
+- **Stat spread vs wait**: One scatter chart per stat, plotting each match's stat spread against how long its players waited. These charts appear only when the run's population defines statistics.
+- **Wait time distribution**: Histogram of match wait times.
+- **Matches by region**: How matches distributed across latency regions.
+- **Expansion histograms**: For profiles that use expansion steps, how many matches formed at each expansion interval, per stat.
+- **Scenario details**: A collapsible section showing the exact scenario document the run executed with and the profile that was resolved at run time — useful when auditing older runs after configuration has changed.
+
+<Note>
+  Immediately after a live run you can download `report.html` and `events.jsonl` from the report header. Stored runs keep only their summary and chart data, so the downloads are available only in the report shown right after the run completes.
+</Note>
+
+## Compare
+
+The Compare tab puts two runs side by side. Pick a scenario and a run for side A and side B — they can be two runs of the same scenario (for example, before and after a profile change) or runs from different scenarios.
+
+- **Delta summary**: A table of every headline metric and per-stat spread with the A value, B value, and delta. Deltas are colored by direction of improvement — green when B improves on A, red when it regresses — taking into account whether lower or higher is better for each metric.
+- **Overlaid scatter charts**: For every stat present in both runs, both runs' spread-vs-wait points are drawn on a single chart so you can see quality/wait trade-offs shift.
+
+<Note>
+  When comparing runs from different scenarios, deltas may reflect differences in population or arrival patterns rather than your matchmaking tuning. For clean profile comparisons, run the same scenario against both configurations.
+</Note>

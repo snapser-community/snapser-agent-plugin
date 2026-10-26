@@ -1,0 +1,245 @@
+export const description = 'Event Bus'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Event Bus
+
+The Snapser Event Bus snap gives you a durable, robust, highly scalable event backbone for your app's backend. It is designed to be highly available and fault-tolerant, and can be used to build a wide range of event-driven games and apps.
+
+<Warning>
+  This is a Premium snap. You will need to be on a Premium plan to use it.
+</Warning>
+
+<Note>
+With the combination of Gateway WebSockets and the Event bus snap you can build a complete real-time experience for your users. Some of the Snapser customers chose to go this route completely instead of the API based Snapser SDK route. Talk to your support team to understand the best approach for your app.
+</Note>
+
+## Configuration
+
+### Snap Events
+You will be able to register the events you want to listen to in the Event bus configurations **Websocket** tool. As Snaps are added to the Snapend, the event bus snap automatically registers into its system and exposes them in the event bus configuration. Allowing you to toggle them on or off as needed.
+
+<Note>
+  If you do not see an event you are looking for, please reach out to your support team.
+</Note>
+
+### BYOSnap
+BYOSnaps can also listen for events exposed by the event bus snap via a Webhook. You can configure webhooks in the
+Event bus configurations **Webhook** tool.
+
+#### Webhook Configuration
+
+To decode the payload:
+1. Go to **Tools > Downloads** and download either Raw Protobuf or the already generated code from the list
+1. If you downloaded Raw Protobuf then generate the language-specific code
+1. Decode the payload using the *eventbus.ByoWebhookRequest* message type
+1. If the `ByoWebhookRequest.message_type` field is equal to `eventbus.MessageType.MESSAGE_TYPE_SNAP_EVENT` (currently that's the only
+ message type supported) then go to the next step
+1. Decode the `ByoWebhookRequest.byo_snap_event.payload` field using the `service_name` and `event_id` fields
+    1. Create a switch case for the `service_name`, then use the `{service_name}.{service_name}EventTypes` enum that is
+       in each service proto to decode the payload
+
+**Example Payload (as JSON)**
+
+*Note: The body is sent in binary as native protobuf format*
+
+```json
+{
+  "messageType": "MESSAGE_TYPE_SNAP_EVENT",
+  "timestamp": "1731867539512",
+  "byoSnapEvent": {
+    "eventId": 1,
+    "serviceName": "auth",
+    "payload": "CiRkNGNiZjExYi1kMzA1LTRmMTMtYjdhZi0xNDMxZDg1N2QyMTk="
+  }
+}
+```
+
+<CodeGroup title="Example: Decoding in Go">
+```go
+// Parse body as eventbus.WebhookMessage
+var wr eventbuspb.ByoWebhookRequest
+err = proto.Unmarshal(body, &wr)
+if err != nil {
+    panic(err)
+}
+
+// Switch on the message type - only one right now which is SNAP_EVENT
+switch wr.MessageType {
+case eventbuspb.MessageType_MESSAGE_TYPE_SNAP_EVENT:
+    snapEvent := wr.GetByoSnapEvent()
+    // Switch on the service_name to know which enum to use for the event-type -> message-type
+    switch snapEvent.ServiceName {
+    case "auth":
+        // Switch on the event-id (the Event* enums in each service types proto)
+        switch snapEvent.EventId {
+        case uint32(authpb.AuthEventType_AUTH_ANON_USER_ADDED):
+            authAnonUserAdded := &authpb.EventAuthAnonUserAdded{}
+            if err := proto.Unmarshal([]byte(snapEvent.Payload), authAnonUserAdded); err != nil {
+                panic(err)
+            }
+            fmt.Printf("Got EventAuthAnonUserAdded: %v\n", authAnonUserAdded)
+            PrintMessage(authAnonUserAdded)
+        default:
+            log.Printf("unknown event_id: %v", snapEvent.EventId)
+        }
+    default:
+        log.Printf("unknown service_name: %v", snapEvent.ServiceName)
+    }
+default:
+    log.Printf("unhandled message type: %v", wr.MessageType)
+}
+```
+</CodeGroup>
+
+### Overview of the Webhook flow
+
+![Eventbus BYOSnap](/images/docs/eventbus-to-byosnap.png)
+
+## Event Receivers
+
+Events emitted by the Snapser event bus can be accessed in two ways:
+1. Listening to events in your Snapend via Hermes Web Socket.
+2. Listening to events in your BYOSnap via HTTP.
+
+## BYOSnap Custom Events
+
+BYOSnaps can register custom events using `RegisterByoEventTypes()` and publish events of those types using `PublishByoEvent()`.
+In the EventBus Snap configuration registered event-types can be turned on for Webhooks and the WebSocket enabling events of those
+to be received.
+
+### Registering Event-Types
+
+During startup of your BYOSnap call `RegisterByoEventTypes()` to register custom event-types. This
+is safe to call each time your BYOSnap starts.
+
+Regardless of the language you are using, the process is the same:
+1. Get the gRPC address of eventbus from the environment variable `SNAPEND_EVENTBUS_GRPC_URL`.
+The value of this should be `service-eventbus:8080`
+2. Create a gRPC client to the eventbus service
+3. Set a gateway header on gRPC calls to `gateway=internal`
+    - In Go: `ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs("gateway", "internal"))`
+    - In Python: `metadata = [('gateway', 'internal')]`
+4. Define the event-type (see below for examples)
+5. Register the event-types by calling `RegisterByoEventTypes()` on the gRPC eventbus client
+
+#### Defining Event-Types
+
+Event-types describe your events, they need to be registered with the eventbus and they only require a `Subject` which
+is used to route and identify the payload.
+
+```go
+var praiseEventType = &eventbuspb.SnapserEventType{
+	Subject:            "snapser.byo.byosnap-rewards.praise",
+	Description:        "Praise the user for doing something",
+    EventTypeId:       1, // Optional, can be used to identify the payload
+}
+```
+
+Either the `Subject` or `EventTypeId` can be used to identify the payload. `Subject` is a fully qualified string for the event-type and
+unique across all services. If you use `EventTypeId` to identify the payload, you'll want to use it in combination with `ServiceName`
+(which is your BYOSnap ID).
+
+### Examples
+
+<CodeGroup title="Example: Registering event-types in Go">
+```go
+// Define your event-types. We'll use subject to identify the payload, however you can also use EventTypeId (in combination with ServiceName)
+var praiseEventType = &eventbuspb.SnapserEventType{
+	Subject:            "snapser.byo.byosnap-rewards.praise",
+	Description:        "Praise the user for doing something",
+}
+
+var eventTypes = []*eventbuspb.SnapserEventType{
+	praiseEventType,
+}
+
+// Get the address of the eventbus service from the environment
+eventbusAddr := os.Getenv("EVENTBUS_ADDR")
+if eventbusAddr == "" {
+    log.Fatal().Msg("EVENTBUS_ADDR is required")
+}
+
+// Create a grpc client
+conn, err := grpc.NewClient(eventbusUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
+if err != nil {
+	log.Error().Err(err).Msg("failed to create grpc client")
+}
+defer conn.Close()
+eventbusClient := eventbuspb.NewEventbusServiceClient(conn)
+
+// Set the gateway header to internal
+ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs("gateway", "internal"))
+
+// Register the event-types
+req := &eventbuspb.RegisterByoEventTypesRequest{
+    ByosnapId:  "byosnap-rewards",
+    EventTypes: eventTypes,
+}
+_, err = eventbusClient.RegisterByoEventTypes(ctx, req)
+if err != nil {
+    log.Fatal().Msgf("failed to register event types: %v", err)
+}
+```
+</CodeGroup>
+
+### Publishing Events
+
+Once you have registered your event-types, you can publish events of those types using `PublishByoEvent()`. See the example below.
+
+<CodeGroup title="Example: Publishing events in Go">
+```go
+// Create the request
+praiseReq := &eventbuspb.PublishByoEventRequest{
+    ByosnapId:  byoSnapID,
+    Subject:    "praise", // This is the last group/segment of the subject, a prefix of snapser.byo.{byosnapid} will be added to it
+    Payload:    []byte(fmt.Sprintf("Nice work, you joined a lobby - %s", randomPraise)),
+    Recipients: []string{ev.JoinedUserId},
+}
+ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs("gateway", "internal"))
+_, err := a.eventbusClient.PublishByoEvent(ctx, praiseReq)
+if err != nil {
+    log.Error().Err(err).Msg("failed to publish event")
+```
+</CodeGroup>
+
+### Receiving events
+
+Custom events are received the same as any other Snap event - see the [Webhook Configuration](#webhook-configuration) section for details on how to decode the payload.
+
+## APIs
+
+The `Event Bus` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name    | HTTP Method | API Description                     |
+| ----------- | ----------- | ----------------------------------- |
+| PublishByoEvent | POST        | Publishes a BYOSnap event to NATS via the EventBus service |
+| RegisterByoEventTypes | PUT        | Registers custom event types for a BYOSnap |
+</div>
+
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/client-logs-api.png) */}
+
+### Error Codes returned by the service
+
+This service only returns [generic errors](../generic-errors).
+
+## Additional Details
+
+### Data Stores
+
+NATS
+
+### Service Dependencies
+
+None
+
+### Recommended Services
+
+Hermes Web Socket

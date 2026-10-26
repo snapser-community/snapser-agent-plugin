@@ -1,0 +1,44 @@
+# beta-0.53.0
+##### July 28, 2025
+
+## Spotlight
+### Full Duplex Realtime - BYOSnap
+Snapser now supports full duplex comms between your client and your BYOSnap. From a client you can now open up a websocket connection and reach our BYOSnap APIs. You can also use the Hermes Notify user gRPC to then send something back to the client. This allows you to build real-time features in your game that can interact with your BYOSnap.
+
+## Snaps
+### Social Graph
+We have added a new API to get a users online friends.
+
+### Inventory
+The Inventory discounts feature now supports percentage and custom formulas based on users statistics.
+
+---
+
+## Bug Fixes
+### API Explorer
+Changing tabs was removing all the custom query parameters or headers that the user had added. This has now been fixed, and the custom query parameters and headers will persist across tabs.
+
+### Auth
+Auth settings sync was not working for email templates. This has now been fixed.
+
+### Experiments
+Fixed the diff shown in the sync tool when syncing experiments. The displayed diff was wrong, and it has now been corrected to show the actual changes made.
+
+---
+
+## Web App
+### Snaps Descriptions
+We have added descriptions to the snaps in the web app. This will help users understand what each snap does and how it can be used.
+
+### API Explorer - User Details Widget
+The user details widget has also been added to the API Explorer history view. This allows you to see the details of the user.
+
+### Business Intelligence Access
+The Business Intelligence access has been moved from the Tools section to the main Access section.
+
+---
+
+## Documentation
+### BYOSnap
+- Fixed a documentation issue regarding the `health check` endpoint.
+- Also added a warning to inform users about the SDK generator’s limitation with non-200 2XX responses—it always falls back to using the response schema defined for the 200 response.

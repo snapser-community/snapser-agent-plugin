@@ -1,0 +1,134 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Decorate responses with additional information",
+    "title" : "Decorators",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "DecoratorsService"
+  } ],
+  "paths" : {
+    "/v1/decorators/decorations" : {
+      "post" : {
+        "description" : "Decorate APIs with additional information",
+        "operationId" : "DecorateRpc",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/decoratorsDecorateRpcRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/decoratorsDecorateRpcResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Decorate RPC",
+        "tags" : [ "DecoratorsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "decoratorsDecorateRpcRequest" : {
+        "properties" : {
+          "decorators" : {
+            "$ref" : "#/components/schemas/decoratorsDecorators"
+          },
+          "request" : {
+            "format" : "byte",
+            "pattern" : "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+            "type" : "string"
+          },
+          "rpc" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "decoratorsDecorateRpcResponse" : {
+        "properties" : {
+          "decorations" : {
+            "$ref" : "#/components/schemas/decoratorsDecorations"
+          },
+          "response" : {
+            "format" : "byte",
+            "pattern" : "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "decoratorsDecorations" : {
+        "properties" : {
+          "users" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/decoratorsUserDecoration"
+            },
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "decoratorsDecorators" : {
+        "properties" : {
+          "profiles" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "statistics" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "decoratorsUserDecoration" : {
+        "properties" : {
+          "profile" : {
+            "type" : "object"
+          },
+          "statistics" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "protobufNullValue" : {
+        "default" : "NULL_VALUE",
+        "description" : "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value.",
+        "enum" : [ "NULL_VALUE" ],
+        "type" : "string"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

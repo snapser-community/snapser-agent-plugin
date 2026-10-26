@@ -1,0 +1,191 @@
+export const description = 'Intra Snapend Networking'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Intra Snapend Networking
+
+Every Snapend comes with its own secure network harness. This harness prevents bad actors from getting access to your snapend, while allowing low latency and high throughput network connectivity between all the building blocks of your Snapend. This includes the game servers, relay servers, and your Snaps including your own custom BYO snaps.
+
+
+## Concept
+All elements of your Snapend share a private network. This allows snaps to communicate with each other without exposing them to the public internet. Additionally, you can also communicate with your snaps from your custom Snaps and game servers.
+
+![network-harness](/images/docs/network-harness.png)
+
+<Warning>
+    Presently, the Snapser fleets are outside the Snapend network. This means that you will need to use the `Api-Key` SDK to make API calls to your Snaps from your game servers. We are working on bringing the game server fleets inside the Snapend network.
+</Warning>
+
+### Internal URLs
+Every Snap in your Snapend has two internal URLs available for consumption:
+1. HTTP URL: This URL is used for making REST API calls to the Snap.
+2. gRPC URL: This URL is used for making gRPC API calls to the Snap.
+
+<Note>
+    Both URLs include the Ports as well.
+</Note>
+
+When a Snapend is created, the Snapend automatically generates these URLs for each Snap in the Snapend. These URLs are only accessible from within the Snapend network. Snapser also sets them as environment variables in your Snapend. Here is the naming convention for the environment variables:
+```
+SNAPEND_<SNAP_NAME>_HTTP_URL
+SNAPEND_<SNAP_NAME>_GRPC_URL
+```
+For example, if you have the `Inventory` snap, then the environment variables would be:
+```
+SNAPEND_INVENTORY_HTTP_URL=http://service-inventory:8090/
+SNAPEND_INVENTORY_GRPC_URL=service-inventory:8080
+```
+
+<Note>
+Note that the HTTP Port is always 8090 and the gRPC port is always 8080.
+</Note>
+
+## Details
+This section describes how all the permutations of routes within your Snapend.
+1. **BYOSnaps to Snaps** - This is the most common route. You can communicate with other Snaps in your Snapend from your BYOSnaps.
+2. **Game Servers to Snaps** - Game Servers are outside your Snapend network. You should use the `Api-Key` SDK to make API calls to your Snaps.
+3. **BYOSnaps to Game Servers** - BYO Game server URLs are always publicly accessible. You will be able to make calls to your game server from your Snaps and BYOSnaps using the public URL of your game server.
+4. **BYOSnaps and Game Servers to Public Internet** - Your BYOSnaps and BYOGame servers can talk to the public internet. This allows your custom code to make external API calls or connect to a data plane that you are running outside Snapser.
+
+Now, let's dive into each of these routes in detail.
+
+### A. BYOSnaps to Snaps
+You can communicate with other Snaps in your Snapend from your BYOSnaps using:
+1. Your own code using HTTP or gRPC libraries
+2. Snapser provided SDKs for making HTTP calls
+3. Snapser provided Protos for making gRPC calls
+
+#### 1. HTTP or gRPC Libraries
+With the environment variables set for each Snap, you can now access your Snaps from your custom code. You can use the HTTP URL to make REST API calls to your Snap or use the gRPC URL to make gRPC API calls to your Snap.
+
+#### 2. SDKs
+You can use the Snapser provided SDKs to make API calls to your Snaps. The SDKs are available for download from the `Snapend Downloads` tool.
+- **BYOSnap to Snaps** - Chose the `internal` SDK if you want to make calls from your BYOSnap to other Snaps.
+
+##### BYOSnap to Snap Example
+Say you have written your own Snap called `byosnap-custom` in `Python`. You want to access the Inventory Snap from your BYOSnap.
+Here is how you would do it:
+<CodeGroup title="Python BYOSnap to Inventory Snap" tag=".py" label="InventoryGrantItems">
+```python
+@app.route("/v1/byosnap-custom/resource-one/<req_id>", methods=["GET"])
+def api_one(req_id):
+    # IMPORTANT: Override the host with the SNAP_HTTP_URL
+    configuration = snapser_app.Configuration(
+        # host="http://service-inventory:8080"
+        host=os.environ['SNAPEND_INVENTORY_HTTP_URL']
+    )
+    with snapser_app.ApiClient(configuration) as api_client:
+        api_instance = snapser_app.InventoryServiceApi(api_client)
+        body = snapser_app.ServiceRequestsResponses(items={"chicken": 1})
+        try:
+            # IMPORTANT: Pass SNAPEND_INTERNAL_HEADER as the gateway input
+            api_response = api_instance.inventory_app_grant_items_to_user_with_http_info(
+                user_id=req_id, gateway=os.environ['SNAPEND_INTERNAL_HEADER'], body,
+            )
+            print(f"Response: {api_response}")
+            return jsonify({
+                'id': req_id,
+                'content': api_response.data,
+                'status_code': api_response.status_code,
+                'content': 'test'
+            })
+        except snapser_app.ApiException as e:
+            print(f"Status: {e.status}")
+            print(f"Reason: {e.reason}")
+            print(f"Body: {e.body}")
+            print(f"Headers: {e.headers}")
+        except Exception as e:
+            print("Exception: %s\n" % e)
+    return jsonify({
+        'id': req_id,
+        'content': 'Example: BYOSnap to Inventory Snap',
+    })
+```
+</CodeGroup>
+
+#### 3. Protos for gRPC
+If you are using gRPC to make API calls to your Snaps, you can use the Protos provided by Snapser. The Protos are available for download from the `Snapend Downloads` tool.
+
+
+### B. Game Servers to Snaps
+Game Servers are outside your Snapend network. You should use the `Api-Key` SDK to make API calls to your Snaps. The SDK is available for download from the `Snapend Downloads` tool.
+
+##### Game Servers to Snaps Example
+Say you have a game server written in `C#` and you want to access the Statistics Snap from your game server. Here is how you would do it:
+
+<CodeGroup title="Game Server to Statistics snap" tag=".cs" label="GetStatistic">
+```csharp
+using Snapser.Api;
+using System;
+
+public async void GetStatistic(string key, Action<SnapserServiceResponse> callback = null)
+{
+    if (ClusterURL.IsEmptyOrNull())
+    {
+        Debug.LogError("No cluster url available to get storage data from storage services.");
+        return;
+    }
+
+    if (_statisticsService == null || !HasStatisticsEnabled)
+    {
+        Debug.LogError("Stats service is not instantiated. Increment stat call can't be initiated");
+        return;
+    }
+
+    StatisticsUserStatistic response;
+    SnapserServiceResponse incrementStatResponse;
+    try
+    {
+        // IMPORTANT: Replace 'YOUR_API_KEY' with the actual app key
+        response = await _statisticsService.GetUserStatisticAsync(UserId, key, 'YOUR_API_KEY');
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine(e);
+        incrementStatResponse = new SnapserServiceResponse(false, e.Message);
+        callback?.Invoke(incrementStatResponse);
+        Debug.Log("Get Stats Call Complete - " + incrementStatResponse.Success + " - " + incrementStatResponse.ResponseMessage);
+        return;
+    }
+
+    if (response != null)
+    {
+        incrementStatResponse = new SnapserServiceResponse(true, "Ok", response);
+        callback?.Invoke(incrementStatResponse);
+        Debug.Log("Get Stats Call Complete - " + incrementStatResponse.Success + " - " + incrementStatResponse.ResponseMessage + ". Stat for key - " + response.Key + " is " + response.Value + ". User Id - " + response.UserId);
+    }
+}
+```
+</CodeGroup>
+
+
+### C. BYOSnaps to Game Servers
+BYO Game server URLs are always publicly accessible. You will be able to make calls to your game server from your Snaps and BYOSnaps
+using the public URL of your game server.
+
+### D. BYOSnaps and Game Servers to Public Internet
+Your BYOSnaps and BYOGame servers can talk to the public internet. This allows your custom code to make external API calls or
+connect to a data plane that you are running outside Snapser.
+
+#### HTTPS Setup for Game Servers
+
+When your game server code makes HTTPS calls — whether to Snapser APIs or any external HTTPS endpoint — many game engines do not automatically use the system CA certificate store on Linux. Without a trusted CA certificate bundle, HTTPS calls will fail with SSL verification errors.
+
+To fix this, you need to bundle a CA certificate bundle with your game server build.
+
+##### Unreal Engine
+
+1. **Download the certificate bundle** — Download the standard Mozilla CA bundle (`cacert.pem`) from [https://curl.se/docs/caextract.html](https://curl.se/docs/caextract.html)
+
+2. **Place in Content folder** — Copy `cacert.pem` into `<UnrealProjectRoot>/Content/Certificates/`
+   - The virtual game path for this file is `/Game/Certificates`
+
+3. **Cook the certificates** — In **Project Settings**, find the **Packaging** section. Under **Additional Assets Directories to Cook**, add `/Game/Certificates`
+
+4. **Done** — Unreal's HTTP library automatically detects and uses certificate files from the `/Game/Certificates` directory. No code changes are needed.
+
+##### Unity
+
+Unity setup documentation is coming soon. Contact [Snapser support](https://snapser.com/support) for guidance in the meantime.

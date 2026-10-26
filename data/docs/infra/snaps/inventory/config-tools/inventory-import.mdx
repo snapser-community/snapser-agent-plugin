@@ -1,0 +1,74 @@
+# Inventory Import
+This tool allows you to import catalog items and containers from a CSV file.
+
+To get started:
+1. Click on Inventory > Import from the side Nav.
+2. Click on the Import button > From CSV File.
+3. This will open up a form where you can upload your Inventory CSV.
+
+## Field Descriptions
+1. name - The unique name of the item. This is a required field and should be alphanumeric without spaces.
+2. display_name - The display name of the item. This is the name that will be shown to the users.
+3. class_name - The class name of the item. This is used to group similar items together.
+4. description - The description of the item.
+5. stackable - Whether the item is stackable or not. This is a boolean field with values TRUE or FALSE.
+6. tradable - Whether the item is tradable or not. This is a boolean field with values TRUE or FALSE. (Presently, not really used, but will be in future releases)
+7. ttl - The time to live of the item in seconds. 0 means the item never expires. A non-zero value means the item will expire after that many seconds from the time it is added to the inventory.
+8. consumable - Whether the item is consumable or not. This is a JSON field with the following structure: `{"is_consumable": true}`. Leave it empty if the item is not consumable.
+9. container - Whether the item is a container or not. This is a JSON field with the following structure: `{"items": {"item_name": quantity}, "virtual_currencies": {"currency_name": amount}, "drop_tables": {"drop_table_name": weight}, "unlock_cost": [{"type": "ENERGY|ITEM|CURRENCY", "name": "name", "count": amount}]}`. Leave it empty if the item is not a container.
+10. purchasable - Whether the item is purchasable or not. This is a JSON field with the following structure: `{"settings": [{"price": $amount, "currency": "$currency_name", "display_price": $display_amount}]}`. Leave it as `"{""settings"":[]}"` if the item is not purchasable.
+11. sub_inventory - Whether the item is a sub-inventory or not. This is a JSON field with the following structure: `{"is_sub_inventory": true}`.
+12. user_inventory_instance_limit - The maximum number of instances of this item that a user can have in their inventory. This is an integer field. Use 0 for unlimited instances.
+13. user_inventory_instance_limit_per_sub_inventory - The maximum number of instances of this item that a user can have within a single sub-inventory. This is an integer field. Use 0 for unlimited instances. This limit is checked per-scope: when granting to a sub-inventory, only items in that sub-inventory count against the limit.
+14. metadata - The metadata of the item. This is a JSON field where you can add any additional information about the item.
+15. tags - The tags of the item. This is a comma separated list of strings.
+
+<Warning>
+  IMPORTANT: The `user_inventory_instance_limit` field is only supported in Inventory 1.4.0 and above. If you are using an older version of the Inventory snap, please do not include this field in your CSV.
+</Warning>
+
+<Warning>
+  IMPORTANT: The `user_inventory_instance_limit_per_sub_inventory` field is only supported in Inventory 1.6.0 and above. If you are using an older version of the Inventory snap, please do not include this field in your CSV.
+</Warning>
+
+### Examples
+
+#### Example: 1.a Sample CSV for importing catalog items
+<Note>
+  The example below needs you to add a currency called `gold` in your virtual currencies before you import the CSV.
+</Note>
+```csv
+name,display_name,class_name,description,stackable,tradable,ttl,consumable,container,purchasable,sub_inventory,user_inventory_instance_limit,user_inventory_instance_limit_per_sub_inventory,metadata,tags
+armor,Armor,armor,A sturdy set of armor that can protect you from harm,FALSE,TRUE,0,"{""is_consumable"": true}",,"{""settings"": [{""price"": 100, ""currency"": ""gold"", ""display_price"": 10}]}","{""is_sub_inventory"": true}",0,0,"{""defense"": 10}","armor,heavy,plate"
+pet,Pet,pet,A loyal companion that can fight by your side,FALSE,TRUE,0,"{""is_consumable"": true}",,"{""settings"": [{""price"": 100, ""currency"": ""gold"", ""display_price"": 10}]}","{""is_sub_inventory"": true}",0,0,"{""attack"": 5, ""defense"": 5}","pet,companion,animal"
+spell,Spell,spell,A powerful spell that can be used to attack enemies or buff allies,FALSE,TRUE,900,"{""is_consumable"": true}",,"{""settings"": [{""price"": 100, ""currency"": ""gold"", ""display_price"": 10}]}","{""is_sub_inventory"": false}",0,0,"{""effect"": ""deals 10 damage""}","spell,attack,magic"
+vehicle,Vehicle,vehicle,A fast and powerful vehicle that can be used to travel long distances,FALSE,TRUE,900,"{""is_consumable"": true}",,"{""settings"": [{""price"": 1000, ""currency"": ""gold"", ""display_price"": 100}]}","{""is_sub_inventory"": true}",1,0,"{""speed"": 100}","vehicle,transportation,cars"
+food,Food,food,A delicious meal that can restore your health,TRUE,TRUE,0,"{""is_consumable"": true}",,"{""settings"": [{""price"": 50, ""currency"": ""gold"", ""display_price"": 5}]}","{""is_sub_inventory"": true}",30,0,"{""effect"": ""restores 10 health""}","food,healing,meals"
+```
+
+#### Example: 1.b Sample CSV for importing containers
+<Note>
+  The example below needs you to add a currency called `gold` in your virtual currencies and items called `armor`, `pet`, `spell`, `vehicle` and `food` in your catalog before you import the CSV. You can use the above sample CSV to import these items.
+</Note>
+```csv
+name,display_name,class_name,description,stackable,tradable,ttl,consumable,container,purchasable,sub_inventory,user_inventory_instance_limit,user_inventory_instance_limit_per_sub_inventory,metadata,tags
+silver_chest,Silver chest,chest,Unlockable silver chest,FALSE,FALSE,0,"{""is_consumable"": true}","{""items"":{""armor"":1,""pet"":1},""virtual_currencies"":{""gold"":100},""drop_tables"":{""loot"":3},""unlock_cost"":[{""type"":""ENERGY"",""name"":""lives"",""count"":1},{""type"":""ITEM"",""name"":""key"",""count"":1},{""type"":""CURRENCY"",""name"":""gold"",""count"":100}]}","{""settings"":[]}","{""is_sub_inventory"": false}",0,0,,"chest,locked"
+gold_chest,Gold chest,chest,Unlockable gold chest,FALSE,FALSE,0,"{""is_consumable"": true}","{""items"":{""armor"":1,""pet"":1, ""spell"": 10, ""food"": 10},""virtual_currencies"":{""gold"":1000},""drop_tables"":{""loot"":5},""unlock_cost"":[{""type"":""ENERGY"",""name"":""lives"",""count"":1},{""type"":""ITEM"",""name"":""key"",""count"":1},{""type"":""CURRENCY"",""name"":""gold"",""count"":100}]}","{""settings"":[]}","{""is_sub_inventory"": false}",0,0,,"chest,locked"
+```
+
+#### Example: 2 Sample CSV for importing items that are not purchasable
+```csv
+name,display_name,class_name,description,stackable,tradable,ttl,consumable,container,purchasable,sub_inventory,user_inventory_instance_limit,user_inventory_instance_limit_per_sub_inventory,metadata,tags
+"shoe_5","Dunk Low","shoes","Iconic silhouette with premium materials",FALSE,FALSE,0,,,"{""settings"":[]}","{""is_sub_inventory"":false}",0,0,"{""images"":[""https://images.pexels.com/photos/1240892/pexels-photo-1240892.jpeg?auto=compress&cs=tinysrgb&w=400""],""price"":100,""rating"":""4.9""}","basketball"
+"shoe_4","Zoom Pegasus","shoes","Reliable running companion with Zoom Air",FALSE,FALSE,0,,,"{""settings"":[]}","{""is_sub_inventory"":false}",0,0,"{""images"":[""https://images.pexels.com/photos/1598508/pexels-photo-1598508.jpeg?auto=compress&cs=tinysrgb&w=400""],""price"":120,""rating"":""4.8""}","running"
+"shoe_3","Blazer Mid","shoes","Vintage basketball style meets modern comfort",FALSE,FALSE,0,,,"{""settings"":[]}","{""is_sub_inventory"":false}",0,0,"{""images"":[""https://images.pexels.com/photos/2563077/pexels-photo-2563077.jpeg?auto=compress&cs=tinysrgb&w=400""],""price"":100,""rating"":""4.6""}","basketball"
+"shoe_2","React Infinity","shoes","Responsive cushioning for long runs",FALSE,FALSE,0,,,"{""settings"":[]}","{""is_sub_inventory"":false}",0,0,"{""images"":[""https://images.pexels.com/photos/1464625/pexels-photo-1464625.jpeg?auto=compress&cs=tinysrgb&w=400""],""price"":160,""rating"":""4.7""}","running"
+"shoe_0","Air Force 1","shoes","Classic basketball shoe with timeless style",FALSE,FALSE,0,,,"{""settings"":[]}","{""is_sub_inventory"":false}",1,0,"{""images"":[""https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?auto=compress&cs=tinysrgb&w=400""],""price"":110,""rating"":4.9}","basketball"
+"shoe_1","Air Max 270","shoes","Comfortable running shoe with Max Air unit",FALSE,FALSE,0,,,"{""settings"":[]}","{""is_sub_inventory"":false}",30,0,"{""images"":[""https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=400""],""price"":150,""rating"":""4.8""}","running"
+```
+
+![Admin Csv](/images/docs/inventory-csv.png)
+
+<Note>
+Soon we will add a way to import drop tables from a CSV file.
+</Note>

@@ -1,0 +1,166 @@
+export const description = 'Authentication'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Security
+
+Security for your Snapend is provided via our Snap called **Auth**. If you have added the Auth snap to your snapend, your gateway automatically enables authentication. As a result, any non-public APIs would need a valid token from the user to access the API or the App-Key in case you are making App-Auth calls.
+
+## Tutorials
+The best way to understand Snapend is to go through the following tutorial:
+1. [Snapend Security](/docs/guides/tutorials/snapend-security): This tutorial will expose you to the security features of your Snapend.
+
+## Gateway & Auth Snap
+
+The Gateway that comes with every Snapend has a tightly coupled relationship with the Auth Snap. In a Snapend, if the Auth Snap was
+not snapped then the gateway will not perform any authentication checks on behalf of your infrastructure.
+
+![Gateway No Auth Snap](/images/docs/gateway/gateway-no-auth.png)
+
+On the other hand, if the Auth Snap was snapped then the gateway will perform authentication checks on behalf of your infrastructure.
+
+![Gateway Auth Snap](/images/docs/gateway/gateway-auth.png)
+
+## Authentication Types
+The gateway supports three types of authentication:
+1. **User Authentication** - Ideal for use from your client code.
+2. **Api-Key Authentication** - Ideal for use from any trusted server code or your game servers.
+3. **Internal Authentication** - Ideal for use from your BYOSnaps to access other snaps.
+4. **App Authentication** [Deprecated] - This legacy auth will be deprecated. Ideal for use from any trusted server code or your game servers.
+
+<Note>
+  Snapser has the ability to generate custom SDKs for the four types of authentication categories. They are named exactly as the category they represent. You can download these SDKs from your Snapend's dashboard.
+</Note>
+
+### User Authentication
+User Authentication is used to authenticate your app's user with your Snapend. Every `user auth` call coming into your Snapend will have a header called `Token` with a valid JWT token of the user.
+
+```
+-H 'Token: <user_token>'
+```
+
+Example:
+
+```
+curl https://gateway.snapser.com/v1/leaderboard \
+  -H "Token: {token}"
+```
+![Gateway User Auth](/images/docs/gateway/gateway-user-auth.png)
+
+#### SDK
+Snapser provides a **User SDK** that you can use in your client code. The methods exposed in the SDK take the `token` as a parameter to the function and then add the token to the header of the request.
+
+#### BYOSnaps
+If you have a BYOSnap and want to expose an API to user auth, remember to tag your API using `x-snapser-auth-types: [user]`. This makes sure, Snapser generates the correct SDK for your BYOSnap. Note: Validating that the appropriate headers are present in the request is the responsibility of the BYOSnap.
+
+### Recommendation for User Authentication in Client Code
+
+The client code on every warm launch should try to renew the token, allowing the user to keep playing your game. If the token has expired, however, you will need to throw the user back to the login screen, where they can log in and get a new token.
+
+#### Custom Security Policies
+The **User Auth Exemption** tool in the Auth Snap configuration, allows you to nominate APIs that you do not want to allow user auth. This is useful when you want to lock down certain APIs to only be accessed by your server code or your BYOSnaps viz. via the Server SDK or Internal SDK. Check out the [User Auth Exemption tool](/docs/infra/snaps/auth) for more details.
+
+
+### API Key Authentication
+If you have an external trusted server or have your Snapser fleet server and want to make calls to your Snapend, you should use `Api-Key` auth. Every call coming into your Snapend will need a header called `Api-Key`, which is a long lasting key specific to your snapend. This key is generated using the Auth Snaps **API Key Manager** configuration tool.
+
+<Note>
+  The Api-Key can either be a long lasting key or have an expiry. It depends on your choice during creation. Its important to treat this key as a secret. Do not share this key with anyone. Also never use this key from your client code.
+</Note>
+
+```
+-H 'App-Key: <api_key>'
+```
+
+Example:
+
+```
+curl https://gateway.snapser.com/v1/leaderboard \
+  -H "Api-Key: {api_key}"
+```
+#### SDK
+Snapser provides a **Api-Key SDK** that you can use in your trusted server code. The methods exposed in the SDK take the `Api-Key` as a parameter to the function and then add the `Api-Key` to the header of the request.
+
+#### BYOSnaps
+If you have a BYOSnap and want to expose an API to api-key auth, remember to tag your API using `x-snapser-auth-types: [api-key]`. This makes sure, Snapser generates the correct SDK for your BYOSnap. Note: Validating that the appropriate headers are present in the request is the responsibility of the BYOSnap.
+
+![Gateway Server Auth](/images/docs/gateway/gateway-server-auth.png)
+
+#### Custom Security Policies
+The **API Key Manager** tool in the Auth Snap configuration, allows you to create custom security policies. Using the tool, you are able to create an Api-Key and select the APIs that the key can access. This is useful when you want to restrict access to certain APIs to certain keys. Check out the [Api Key manager tool](/docs/infra/snaps/auth) for more details.
+
+### Internal Authentication
+Internal Authentication can be used by your BYOSnaps to access other snaps. Every outgoing call from your BYOSnap will need to have a special header called `Gateway` with
+a value of `internal`. This will allow your BYOSnap to access other snaps in your Snapend. Snapser also automatically sets environment variables per Snapend, with both HTTP and GRPC **url:port** for each snap in your Snapend. You can use these environment variables to access other snaps in your Snapend.
+
+```
+-H 'Gateway: internal'
+```
+Example:
+
+  ```
+  curl https://gateway.snapser.com/v1/leaderboard \
+    -H "Gateway: internal"
+  ```
+![Gateway Internal Auth](/images/docs/gateway/gateway-internal-auth.png)
+
+#### SDK
+Snapser provides a **Internal SDK** that you can use in your trusted server code. The methods exposed in the SDK take `Gateway` as a parameter to the function, where you need to pass the hardcoded string `internal`. THen the SDK will add the `Gateway` to the header of the request.
+
+#### BYOSnaps
+If you have a BYOSnap and want to expose an API to internal auth, remember to tag your API using `x-snapser-auth-types: [api-key]`. This makes sure, Snapser generates the correct SDK for your BYOSnap. Note: Validating that the appropriate headers are present in the request is the responsibility of the BYOSnap.
+
+
+### App Authentication [Deprecated]
+If you have an external trusted server or have your Snapser fleet server and want to make calls to your Snapend, you should
+use app auth. Every call coming into your Snapend will need a header called `App-Key`, which is a long lasting key specific to your
+snapend. You can download your app auth SDK from your Snapend's dashboard.
+
+<Note>
+  The App-Key is a long lasting key and should be treated as a secret. Do not
+  share this key with anyone. Also never use this key from your client code.
+</Note>
+
+```
+-H 'App-Key: <app_key>'
+```
+
+Example:
+
+```
+curl https://gateway.snapser.com/v1/leaderboard \
+  -H "App-Key: {app_key}"
+```
+<Note>
+  If you have a BYOSnap and an Auth Snap in your Snapend and want to use App auth, remember your BYOSnap API endpoints should expect a `App-Key` header. Without this the calls will
+  terminate at the gateway with a failure.
+</Note>
+
+![Gateway Internal Auth](/images/docs/gateway/gateway-app-auth.png)
+
+
+## FAQs
+### Do you support anonymous auth?
+
+Yes! Most mobile apps want to avoid adding friction for their users and want
+them to start in anonymous mode. Users can then associate email auth or any
+third-party authentications we support and continue playing the same app or game.
+
+### What about authenticating with a third party?
+
+Snapser supports Facebook, Google, Apple, Steam, Xbox, Discord and Epic Auth already. New connectors like PSN and Nintendo are coming soon.
+
+<Note>
+  The Snapser SDK does not have Facebook, Sign in with Apple, and Google client
+  SDKs baked in. You will have to pull these SDKs into your client code. But
+  once you get the token from their SDK, you can then call the Snapser SDK APIs
+  to complete the sign up/login or association.
+</Note>
+
+### I want to use my own authentication or integrate 3P primary authentication.
+
+We presently are working on enabling "Bring your own Auth" technology. Please
+talk to us if you are interested in enabling this for your app. 

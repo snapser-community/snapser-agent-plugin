@@ -1,0 +1,1560 @@
+export const description = 'BYO Snap'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Bring your Own Snap
+
+Bring your own Snap to Snapser and make it part of your game or app kubernetes cluster.
+
+## Concept
+
+Snapser allows developers to bring their microservices, macroservices or monoliths to the Snapser platform. Developers can bring any number of microservices to the platform and they can be written in any language. Snapser CLI will be able to build your microservice and push it to your personal Snapser Container Registry. You will then be able to publish new versions of your service which your studio developers can deploy to their Snapend.
+
+<Note>
+  All your published BYOSnaps always remain private to your company. No one
+  outside your studio can see or use your BYOSnaps.
+</Note>
+
+## Tutorials
+
+The best way to understand BYOSnaps is to go through the following tutorials
+
+1. [BYOSnap Basic](/docs/guides/tutorials/byosnap-basic): Basic tutorial to get you started with BYOSnaps. This tutorial covers the following topics:
+   - Create a new microservice
+   - Add new API
+   - Automatically generate swagger.json from code annotations so as to enable SDK generation
+   - Publish and test the BYOSnap
+1. [BYOSnap Intermediate](/docs/guides/tutorials/byosnap-intermediate): This tutorial builds on the basic tutorial to expose you to intra Snapend communication and local debugging. In this tutorial you will learn:
+   - Integrate the Internal SDK to communicate with other Snaps in your Snapend
+   - Use Snapser's BYOWS (Bring your own Workstation) technology to locally debug your BYOSnap
+   - Publish and test the BYOSnap
+1. [BYOSnap Advanced](/docs/guides/tutorials/byosnap-advanced-one): This advanced tutorial shows how you can integrate your BYOSnap with the Snapser Hooks system. Additionally, you will learn how to build a custom BYOSnap configuration tool, using the Snapser UI config builder. In summary, you will learn:
+   - How to integrate into the Snapser hooks like: Settings Import Export, User Deletion hook, BYOSnap configuration tool built using the Snapser UI builder, BYOSnap User Manager tool, Emit custom events.
+1. [BYOSnap Advanced](/docs/guides/tutorials/byosnap-advanced-two): This advanced tutorial shows how you can integrate your BYOSnap with the Snapser Hooks system. Additionally, you will learn how you can integrate your own HTML tool with the Snapser JS SDK and use it as a BYOSnap configuration tool or as a User Manager tool. In summary, you will learn:
+   - How to integrate into the Snapser hooks like: Settings Import Export, User Deletion hook, HTML based configuration and user manager tool, BYOSnap User Manager tool, Emit custom events.
+1. [BYOSnap Realtime](/docs/guides/tutorials/byosnap-realtime): This tutorial shows you how you can integrate your BYOSnap with the Snapser realtime event system, powered by the Eventbus Snap. In this tutorial, you will learn:
+   - How to register a custom event from your BYOSnap, listen for events via webooks and publish events to the Snapser event bus.
+
+<Note>
+  We highly recommend going through these tutorials, to understand the use and
+  power of BYOSnaps.
+</Note>
+
+## Pre-requisites
+
+### 1. Python 3.X and Pip
+
+The Snapser CLI tool that you will use for BYOSnaps, has a dependency on Python 3.X and Pip. MacOS comes pre installed with Python. But please make sure you are running Python 3.X. On Windows, you can download Python 3.X from the Windows store.
+
+### 2. Docker
+
+Some of the commands also need docker. You can download the latest version of Docker from the [Docker website](https://www.docker.com/products/docker-desktop).
+
+<Note>
+  **IMPORTANT**: Open up Docker desktop and settings. Make sure this setting is
+  **disabled** **Use containerd for pulling and storing images**. ![Docker Issue
+  Pic](/images/docs/docker-setting.png) This is because Snapser uses Docker to
+  build and push images to the Snapser registry. Having this setting enabled
+  will cause issues with the Snapser CLI tool.
+</Note>
+
+### 3. Snapser CLI
+
+Snapser requires customers to use the Snapser CLI tool to build, upload and push images to the Snapser registry. The [Snapctl tool](https://pypi.org/project/snapctl/) is available on Pypi and can be installed via pip. The CLI tool supports both MacOSX and Windows OS.
+
+Detailed documentation on the Snapser CLI tool can be found [here](/docs/resources/cli).
+
+#### Installation
+
+<CodeGroup title="Install Snapctl" tag="bash">
+```bash
+pip install --user snapctl
+```
+</CodeGroup>
+
+<Note>
+  After you install snapctl you may have to add the python bin folder to your
+  path. For example, on MacOSX this is usually ~/Library/Python/3.9/bin . On
+  Windows this is usually
+  C:\Users\username\AppData\Roaming\Python\Python39\Scripts .
+</Note>
+
+#### Snapser CLI Setup
+
+##### Get your Snapser Access Key
+
+<Note>
+  You need to have one of the following roles to generate an API key: -
+  **company-admin** - **company-edit** - **game-admin** - **game-edit**
+</Note>
+
+Log in to your Snapser account. Click on your user icon on the top right and select, User Account. In the left navigation click on **Developer** which will bring up your Personal API Key widget. If you have not generated an API Key yet click on the **Generate** button to generate a new key. You can generate up to 3 API Keys per user account.
+
+<Note>
+  Please make sure you save your API key in a safe place. You will not be able
+  to see it again.
+</Note>
+
+##### Setup a local config
+
+Create a file named `~/.snapser/config`. Open it using the editor of your choice and replace with your personal Snapser Access key. Save the file.
+
+<CodeGroup title="Snapser Config" tag="bash" label="~/.snapser/config">
+```bash
+[default]
+SNAPSER_API_KEY = <key>
+```
+</CodeGroup>
+
+Or you can run the following command
+
+on MacOSX
+
+<CodeGroup title="Snapser Config OSX" tag="bash" label="~/.snapser/config">
+```
+# $your_api_key = Your Snapser developer key
+echo -e "[default]\nSNAPSER_API_KEY=$your_api_key" > ~/.snapser/config
+```
+</CodeGroup>
+
+on Windows Powershell
+
+<CodeGroup title="Snapser Config Windows" tag="bash" label="~/.snapser/config">
+```
+# $your_api_key = Your Snapser developer key
+echo "[default]
+SNAPSER_API_KEY=$your_api_key" | Out-File -encoding utf8 ~\.snapser\config
+```
+</CodeGroup>
+
+##### Verify Snapctl installation
+
+<CodeGroup title="Snapctl validate setup" tag="bash">
+```
+snapctl validate
+```
+</CodeGroup>
+
+You should see the latest snapctl version in the output
+
+### Dockerfile
+
+You need a **Dockerfile** that can build your BYOSnap. Snapser uses this file to create an image, tag it and upload it to your private repository.
+
+### Swagger File (optional)
+
+You can optionally have a swagger.json file for your BYOSnap. This file will be used to automatically generate the SDK and give your BYOSnap access to the API Explorer.
+
+### README.md (optional)
+
+You can optionally have a README.md file for your BYOSnap. This file will be used to show your BYOSnap documentation to the user.
+
+## Networking
+
+### BYOSnap Accessibility
+
+In order for your Snapend gateway to route calls to your BYOSnap, each API endpoint must have:
+
+1. **An API Prefix** - typically `/v1` or `/v2` (set when you publish your Snap)
+2. **Authentication Type Declaration** - specify which auth types your endpoint accepts
+
+#### API Prefix
+
+Each BYOSnap API endpoint should have a prefix to route calls from your Snapend gateway. 
+
+BYOSnap URL format is as follows:
+
+```bash
+https://gateway.snapser.com/$clusterId/$prefix/$byosnap_sid
+```
+
+#### Authentication Headers
+
+BYOSnaps use header-based authentication. Snapser automatically injects the appropriate headers based on the request context:
+
+- **`Auth-Type`**: `user`, `api-key`, or `internal` - specifies how the request is authenticated
+- **`User-Id`**: The ID of the user making the request (for user auth)
+- **`Gateway`**: `internal` - indicates the call is from within the Snapend
+
+Your BYOSnap validates these headers using the `validate_authorization` decorator/middleware.
+
+<Note>
+  See the [Authentication & SDK Categories guide](/docs/custom/bring-your-own-snap/byosnap-auth-and-sdk) for complete details on the authentication system and how to expose endpoints in different SDKs (including the Admin SDK).
+</Note>
+
+Here is an example of how a typical Swagger file for a BYOSnap should look like:
+
+<CodeGroup title="BYOSnap Swagger" tag="swagger.json">
+```json
+{
+  "info": {
+    "description": "Custom Python Service API",
+    "version": "1.0.0-oas3",
+    "contact": {
+      "email": "tech@snapser.com"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "title": "Custom Python Service"
+  },
+  "servers": [],
+  "tags": [
+    {
+      "name": "Custom Python Service",
+      "description": "Endpoints for the Custom Python Service"
+    }
+  ],
+  "paths": {
+    "/v1/byosnap-example/resource-one/{req_id}": {
+      "get": {
+        "summary": "Get Resource One",
+        "description": "Retrieve a resource by ID",
+        "operationId": "GetResourceOne",
+        "x-snapser-auth-types": ["user", "api-key"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "req_id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomService"
+                }
+              }
+            },
+            "description": "A successful response"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomService"
+                }
+              }
+            },
+            "description": "A successful creation"
+          }
+        }
+      }
+    }
+  },
+  "openapi": "3.0.2",
+  "components": {
+    "schemas": {
+      "CustomService": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "content": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+```
+</CodeGroup>
+
+<Note>
+  **Key points:**
+  - Include `x-snapser-auth-types` to declare which authentication types your endpoint accepts
+  - Do NOT include `Token` or other authentication headers in the parameters section—Snapser auto-injects them
+  - The Snapser Gateway validates the request before routing to your BYOSnap based on the declared auth types
+</Note>
+
+### BYOSnap to other Snaps
+
+Snapser provides with a way to communicate with your Snaps via HTTP or gRPC. Please check the [Intra Snapend Networking](/docs/snapend/networking/intra-snapend) documentation.
+
+### Understanding Authentication Headers
+
+Your BYOSnap code validates requests by checking the authentication headers Snapser injects. Here's what each header indicates:
+
+1. **`Auth-Type: user`** - The request is from an authenticated user. The `User-Id` header contains their ID.
+2. **`Auth-Type: api-key`** - The request is from a trusted server using an API key.
+3. **`Auth-Type: internal`** - The request is from another Snap within the same Snapend (indicated by `Gateway: internal`).
+4. **`User-Id: <id>`** - Present for user-authenticated requests; contains the validated user ID.
+5. **`Gateway: internal`** - Set to `internal` for Snap-to-Snap calls within the Snapend.
+
+Use your `validate_authorization` decorator/middleware to enforce the correct auth types on each endpoint. For complete details, see the [Authentication & SDK Categories guide](/docs/custom/bring-your-own-snap/byosnap-auth-and-sdk).
+
+## Setup
+
+### Snapctl Setup
+
+Snapser provides a way to bring your custom code via the Snapser CLI tool.
+
+#### Step 1: Generate a BYOSnap Profile
+
+Generate a BYOSnap profile. This JSON file contains the name, description, platform, language, and multi environment configuration for your BYOSnap. We recommend that you commit this file to root of your codebase.
+
+<Note>
+  This file sets your BYOSnap's **template**. Every publish updates it, but a Snapend
+  only picks it up at the moment the BYOSnap is added to that Snapend. Editing this
+  file will not reconfigure a Snapend that already runs your snap. Read
+  [Profile vs. Snapend Manifest](#profile-vs-snapend-manifest) before you rely on it
+  to change CPU, secrets or env vars.
+</Note>
+
+<CodeGroup title="BYOSnap Profile Generation" tag="bash">
+```bash
+# Command to generate BYOSnap Profile.
+# $file_name = Profile file name. Extension should be with .json or .yaml or .yml. Eg: snapser-byosnap-profile.yaml
+# $out_path = Path where the profile will be generated. Best practice is to generate the profile in the root of your codebase.
+
+snapctl byosnap generate-profile --profile-filename $file_name --out-path $out_path
+
+```
+</CodeGroup>
+
+The sample generated file will look like the following. You will need to fill in the TODOs.
+
+<CodeGroup title="BYOSnap Profile" tag="snapser-byosnap-profile.json">
+```json
+{
+    "name": "TODO: Add your BYOSnap name here. Name has to start with byosnap-. This is to ensure we avoid any collisions.",
+    "description": "TODO: Add your BYOSnap description here",
+    "platform": "TODO: Add your platform here. Options are 'linux/arm64' or 'linux/amd64'",
+    "language": "TODO: Add your language here. Options are 'go', 'node', 'python', 'java', 'csharp', 'cpp', 'rust', 'ruby', 'php', 'perl', 'clojure', 'lua', 'ts', 'js', 'kotlin', 'c'",
+    "prefix": "TODO: Add your prefix here. Prefix should start with /. Eg: '/v1'",
+    "http_port": "TODO: Add your HTTP Port. Eg: 8080",
+    "readiness_probe_config": {
+        "initial_delay_seconds": "TODO: Add your readiness delay in seconds here. Eg: 5 or use null",
+        "path": "TODO: Add your readiness path here. Eg: '/health' or use null"
+    },
+    "dev_template": {
+        "cpu": 100,
+        "memory": 0.125,
+        "min_replicas": 1,
+        "cmd": "",
+        "args": [],
+        "env_params": [
+            {
+                "key": "SNAPSER_ENVIRONMENT",
+                "value": "DEVELOPMENT"
+            }
+        ]
+    },
+    "stage_template": {
+        "cpu": 100,
+        "memory": 0.125,
+        "min_replicas": 1,
+        "cmd": "",
+        "args": [],
+        "env_params": [
+            {
+                "key": "SNAPSER_ENVIRONMENT",
+                "value": "STAGING"
+            }
+        ]
+    },
+    "prod_template": {
+        "cpu": 100,
+        "memory": 0.125,
+        "min_replicas": 2,
+        "cmd": "",
+        "args": [],
+        "env_params": [
+            {
+                "key": "SNAPSER_ENVIRONMENT",
+                "value": "PRODUCTION"
+            }
+        ],
+        "hpa": null
+    }
+}
+```
+
+</CodeGroup>
+
+<Note>
+  The `hpa` field is **production only**. Leave it `null` to run with a static `min_replicas` count, or set it to an HPA template to enable autoscaling on the production deployment. A populated `hpa` looks like:
+
+```json
+"hpa": {
+    "min_replicas": 3,
+    "max_replicas": 50,
+    "cpu_utilization_threshold": 75,
+    "memory_utilization_threshold": 85,
+    "scale_up": {
+        "stabilization_window_seconds": 0,
+        "period_seconds": 30,
+        "percent": 100
+    },
+    "scale_down": {
+        "stabilization_window_seconds": 600,
+        "period_seconds": 60,
+        "percent": 25
+    }
+}
+```
+
+Specify exactly one of `percent` or `pods` on each scale behavior. `scale_down.percent` must be strictly less than 100. See the [Profile Tool](/docs/custom/tools/profile-tool#autoscaler-production-tab) doc for the full field reference and bounds. Dev and Stage templates must always have `hpa: null` — the validator rejects HPA on non-prod templates.
+
+</Note>
+
+### Step 2: Build and Publish your BYOSnap
+
+This step will create a new BYOSnap if not present, build your code, push it to your Snapser registry and publish it as a new version.
+
+<CodeGroup title="BYOSnap Publish" tag="bash">
+```bash
+# Command to publish BYOSnap.
+# $byosnap_id = BYOSnap ID for your snap. It should be starting with byosnap-. This is to avoid any collisions.
+# $version = Semantic version for your snap Eg: v0.0.1
+# $path = Local code path where your Dockerfile is present
+# snapctl byosnap publish --byosnap-id byosnap-jinks-flask --version "v0.0.1" --path /Users/AJ/Development/SnapserEngine/jinks_flask
+
+snapctl byosnap publish --byosnap-id $byosnap_id --version $version --path $path
+
+```
+</CodeGroup>
+After this step, your BYOSnap will be ready to be used in your Snapend.
+
+#### Multi-Architecture Support
+Snapser supports multi-architecture BYOSnaps. You can build and publish your BYOSnap for multiple architectures like `linux/amd64` and `linux/arm64`. Each published version can use a different architecture, allowing you to support different developer machines and environments.
+<Note>
+  You can use the `--platform` flag to the `snapctl byosnap publish` command to specify the architecture for your BYOSnap. The options are 'linux/amd64' or 'linux/arm64'. If no option, is given the platform uses the one in your BYOSnap profile.
+</Note>
+
+
+### Manual Setup
+This is the legacy way of setting up your BYOSnap.
+
+<Note>
+We recommend using the Snapctl setup as it is more streamlined.
+</Note>
+
+#### Step 1: Create a Snap
+
+Click on the **Snaps** Nav bar item. This will take you to your private snap marketplace. This page will show you a list of all your uploaded Snaps. Click on the **Add Private Snap** button. You will now see a form where you can start entering details of your Snap.
+
+You should give your Snap a short descriptive identifier as well as enter the other details requested. It should be noted that, Snapser automatically prefixes your snap id with **byosnap-** to avoid collisions. After filling in the form and clicking next, Snapser creates a Snap for you. However, you still need to upload your code and then publish your Snap before your developers can start using it.
+
+<Note>
+Snapser supports both linux/arm64 and linux/amd64 architectures.
+</Note>
+
+![Byoc Pic](/images/docs/byosnap.png)
+
+You can also create a BYOSnap via the Snapser CLI. You will need to run the following command.
+
+<CodeGroup title="BYOSnap Create" tag="bash">
+```bash
+# Command to create a BYOSnap.
+# $byosnap_id = BYOSnap ID for your snap. It should be starting with byosnap-. This is to avoid any collisions.
+# $byosnap_name = Name of your BYOSnap
+# $desc = Description of your BYOSnap
+# $platform = Platform for your BYOSnap. Options are 'linux/amd64' or 'linux/arm64'
+# $language = Language for your BYOSnap. Options are 'go', 'node', 'python', 'java', 'csharp', 'cpp', 'rust', 'ruby'
+snapctl byosnap create --byosnap-id $byosnap_id --name "$byosnap_name" --desc "$desc" --platform "$platform" --language "$language"
+```
+
+</CodeGroup>
+
+#### Step 2: Upload the code as a docker image
+
+Now open up Terminal (MacOSX) or Powershell (Windows). In order to upload your custom code you will need to download the Snapser CLI and run the following command. CLI token can be copied from the Web App.
+
+<CodeGroup title="BYOSnap Publish Image" tag="bash">
+```bash
+snapctl byosnap publish-image --byosnap-id $byosnap_sid --tag $image_tag --path $code_root_path
+```
+</CodeGroup>
+
+If you want your resources files like Docker, Swagger, README to be in a different folder
+than the root of your code, you can pass the path to the resources folder using the `--resources-path` flag.
+
+<CodeGroup title="BYOSnap Publish Image" tag="bash">
+```bash
+snapctl byosnap publish-image --byosnap-id $byosnap_sid --tag $image_tag --path $code_root_path --resources-path $resources_path
+```
+</CodeGroup>
+
+<Note>
+  It may take up to 5 minutes for the build and upload to complete depending on
+  your internet connection. At the end you will get a message like "Success
+  BYOSnap publish complete" and you can move to the next step.
+</Note>
+
+<Note>
+  We recommend having the swagger.json and README.md files at the root of your
+  code during publishing a BYOSNap. This unlocks the ability to generate a SDK,
+  use the API Explorer and power the BYOSnap documentation widget.
+</Note>
+
+#### Step 3: Save your Snap
+
+Running this CLI command builds an image and uploads it to your own Snapser repository. Next step, is to
+pick an image and save it as your private Snap.
+
+##### Published Tag
+
+If you have just uploaded your BYOSnap image, you should then hit the **refresh** button, under the
+**Published Tag** selector and you will see the new `$(tag_name)` show up, which you can select.
+
+##### Base URL Prefix
+
+We recommend that you `URL version` your BYOSnap. This is good practice to future proof your game. You
+should add a Prefix like `v1` to your Snap. This will make sure your BYOSnap URL is:
+
+```
+https://gateway.snapser.com/$clusterId/$prefix/byosnap-$byoSnapName
+```
+
+<Note>
+  You will need to make sure your APIs endpoints are prefixed with the same
+  prefix. This is to make sure your Snapend can route the calls to your BYOSnap.
+</Note>
+
+##### Readiness Configuration
+
+You can also set the readiness configuration for your Snap. This includes:
+
+1. Path - The full path to the readiness endpoint. For example, `/v1/byosnap-$byosnapId/healthz` or `/healthz`.
+2. Start Delay - The time to wait before starting the readiness check. Typically you want to chose a number between 1-10 seconds.
+
+<Note>
+  The readiness endpoint is accessed by the Snapser internal system. Hence you
+  do not need to expose the readiness endpoint to the outside world if you do
+  not want to. Use the endpoint URL without the prefix to make it strictly
+  internal eb: `/healthz`. But if you want to expose the readiness endpoint to
+  the outside world, you can use the full URL with the prefix like
+  `/v1/byosnap-$byosnapId/healthz`.
+</Note>
+
+##### BYOSnap Ingress Ports
+
+Each BYOSnap allows you to expose ingress ports
+
+1. External Port - This is the port your BYOSnap is listening on. Your gateway will use to route the calls to your Snap.
+
+   - Name: Name for your external port. This is hardcoded to `http`
+   - Port: The port your BYOSnap is listening on. Eg: 8080
+     <Note>
+       The BYOSnap admin tool built using the BYOSnap tool builder will use the
+       external port to reach your BYOSnap endpoints.
+     </Note>
+
+2. Internal Ports - These are the ports your BYOSnap is listening on inside the container. Best used to expose a port so that other BYOSnaps can talk to your BYOSnap. You can have more than one internal port.
+   - Name: Name for your internal port.
+   - Port: The port your BYOSnap is listening on. Eg: 8080
+
+<Note>
+  It should be noted that the name and the port numbers need to be unique across
+  external and internal ports.
+</Note>
+
+##### BYOSnap Version
+
+You will need to provide the semantic version of your BYOSnap. If you have published a BYOSnap before, the
+new BYOSnap will have to be a higher version than the previous one.
+
+<Note>
+  This is done to protect your infrastructure from breaking changes. Forcing new
+  versions to be higher ensures that any live Snapends are not impacted by the
+  new version.
+</Note>
+
+##### Multi Environment Configuration
+
+You can also add your multi environment configurations. Which includes CPU, Memory, Min Replicas, Command, Arguments, Environment Variables, and (production only) an HPA block for
+dev, stage and prod environments. You at least need to setup the configuration for one of the environment. You can always come back and add more configurations later.
+
+1. CPU - The CPU limit for the Snap
+2. Memory - The Memory limit for the Snap
+3. Min Replicas - The minimum number of replicas for the Snap. The default is 1 in Dev and Staging and 2 in Prod. On Production, this is the **static** replica count — it only takes effect when HPA (see below) is disabled.
+4. Environment Variables - The environment variables for the Snap you want to initialize with
+5. Command & Arguments (optional) - Optional command and argument overrides.
+6. HPA (optional, **production only**) - Horizontal Pod Autoscaler configuration. When enabled, the prod deployment scales between a min and max replica count based on CPU and memory utilization thresholds, with configurable scale-up and scale-down behaviors. When `hpa` is null, the static Min Replicas above governs. HPA must be `null` on Dev and Stage. You can also configure HPA per-snap during the **Promote-to-Prod** flow's Customize step.
+7. Secrets (optional) - Up to 5 references into the [Secrets Manager](/docs/custom/tools/secrets-manager) per environment template. Each reference is a `(file_name, tag)` pair that Snapser mounts at `/opt/byosnap-secrets/$file_name` inside the pod at startup, with the tag's value as the file contents. Use this for API keys, certificates, JSON service-account blobs and anything else you don't want baked into the image. See the Secrets Manager doc for the full lifecycle.
+
+<Warning>
+  These per-environment values are the BYOSnap's **template**, not live settings. They
+  are copied into a Snapend at the moment your BYOSnap is added to it, and never again.
+  Editing them later — in the profile or here — reaches every Snapend that adds this
+  BYOSnap *afterwards*, but none that already run it. For those, use
+  **Customize Snapend**. See [Profile vs. Snapend Manifest](#profile-vs-snapend-manifest).
+</Warning>
+
+<Note>
+  Once your BYOSnap is deployed to a Snapend, head to **Infrastructure → Dashboard** on that Snapend to verify what actually landed: CPU / memory, autoscaler (HPA) state, and the attached secrets / args / env vars for each BYOSnap, all sourced from the live snapend manifest.
+</Note>
+
+On hitting `Save`, your snap will be ready for your own internal developers to use.
+
+![BYOSnap Publish Pic](/images/docs/byosnap-publish.png)
+
+<Note>
+  This just means you have uploaded your custom code onto Snapser. But you still
+  need to deploy it to your Snapend. Check the Deploying BYOSnap section below.
+</Note>
+
+You can also deploy BYOSnap via the Snapser CLI. You will need to run the following command.
+
+<CodeGroup title="BYOSnap Publish Version" tag="bash">
+```bash
+# customTag: Can be any string
+# semanticVersion: Semantic version of your BYOSnap eg: v1.0.1
+# httpPort: Port your BYOSnap is listening on
+# pathToBYOSnapProfile: Path to your BYOSnap multi environment configuration profile. You can generate this file using the `snapctl byosnap generate-profile` command
+snapctl byosnap publish-version --byosnap-id $byoSnapId --tag $customTag --version "$semanticVersion" --http-port $httpPort --byosnap-profile $pathToBYOSnapProfile
+```
+</CodeGroup>
+
+<Note>
+  You will need the BYOSnap profile JSON for this command. You can generate this
+  file using the `snapctl byosnap generate-profile` command.
+</Note>
+
+## Profile vs. Snapend Manifest
+
+This is the single most common point of confusion with BYOSnaps, so it is worth
+being explicit about it. In one sentence:
+
+> **A BYOSnap profile is a template for adding the BYOSnap to a deployment. Once
+> it's added, you manage the deployment profile — the Snapend manifest.**
+
+### How it works
+
+Think of your BYOSnap profile as a **recipe card**.
+
+When you publish a BYOSnap, you hand Snapser that card. It says how much CPU your
+service wants, which environment variables it needs, which secrets to mount — the
+lot. Snapser files the card away.
+
+Later you build a Snapend and say "add BYOSnap A to this." Snapser pulls out your
+card, **copies** what's on it onto that Snapend's own sheet of paper, and from
+then on it cooks from the sheet — not from the card. That copy happens exactly
+once: the first time that particular BYOSnap lands on that particular Snapend.
+
+Now say you change your mind. You add a secret to the card, bump the CPU, and
+publish again. Snapser updates the filed card. **Any Snapend you build from here
+on gets the new version**, because it takes a fresh copy at the moment you add
+the snap.
+
+But the Snapends that are *already* running your BYOSnap? They're cooking from
+sheets they wrote a long time ago. Your new card never reaches them.
+
+And here's the bit that catches almost everyone: telling one of those Snapends to
+run a **newer version** of your BYOSnap doesn't help either. That swaps out the
+code and nothing else. The sheet stays exactly as it was — same CPU, same env
+vars, same secrets (or same lack of them).
+
+So if you want a Snapend that's already running your snap to pick up a config
+change, you have to go and edit its sheet directly. That's **Customize Snapend**
+in the Web UI.
+
+One more wrinkle, because it surprises people in the good direction: "already
+running your snap" is per BYOSnap, not per Snapend. If you've got a Snapend
+that's six months old but has *never* had BYOSnap A on it, adding A to it today
+works like a brand-new Snapend — it takes a fresh copy of the card, secrets and
+all.
+
+**Rule of thumb:** if the Snapend has never seen this BYOSnap, the profile is in
+charge. The moment it has, the Snapend is in charge, and the Web UI is how you
+talk to it.
+
+<Note>
+  **Two different things get called a "profile".** Keep them apart:
+
+  - **BYOSnap profile** — your `snapser-byosnap-profile.json`. A *template*. Lives in
+    your repo, shipped to Snapser on publish.
+  - **Deployment profile** — the BYOSnap's block inside a **Snapend manifest**. The
+    live configuration for one BYOSnap on one Snapend. This is what actually gets
+    deployed, and it's what **Customize Snapend** and the Promote-to-Prod Customize
+    step edit.
+
+  The first becomes the second, once, at attach time.
+</Note>
+
+<Warning>
+  **Publishing a new version does not re-apply your template to Snapends that
+  already run this BYOSnap.** Bumping a Snapend to a newer version rolls out new
+  *code* — it does not re-read the template. To change CPU, memory, replicas, env
+  vars, command, args, HPA or **secrets** on a Snapend that already has your
+  BYOSnap, use **Customize Snapend**.
+</Warning>
+
+### Why they're separate
+
+This split is deliberate, and once it clicks it's one of the nicer things about
+running a BYOSnap.
+
+Your **image** and your **runtime configuration** have completely different
+lifecycles. Code changes when you ship a feature. CPU, replica counts, env vars
+and secrets change when your traffic changes, when you rotate a credential, or
+when someone is paging you at 2am. If those were welded together, every "give it
+more memory" would mean editing a file in your repo, a Docker build, a new
+semantic version, and a publish — just to change one number.
+
+Because they're decoupled, they don't. Need to double the CPU on a Snapend? Open
+**Customize Snapend**, change it, deploy. Same image, new configuration — no new
+BYOSnap version, no rebuild, no repo change. Rotating a secret works the same
+way: repoint the tag and deploy. (Production is the one exception, and for a
+related reason — direct edits there are disabled, so production config changes go
+through the **Promote to Prod → Customize BYOSnaps** step where they're reviewed
+alongside the rest of the diff.)
+
+It also means one published version can run everywhere at once with settings that
+suit each place: 100 millicores and a test payment-provider key on an engineer's
+dev Snapend, two cores with HPA and the live key on prod. One image, many
+deployment profiles.
+
+And it keeps live infrastructure out of reach of a repo edit. If profiles stayed
+live, someone changing a default in a JSON file and publishing could silently
+resize or reconfigure a running service. Instead, changing a running Snapend is
+always an explicit action taken against that Snapend.
+
+The trade-off is exactly what this page is about: your profile stops being the
+source of truth the moment a Snapend has your snap. That is the price of your
+repo not being able to reach into live infrastructure — and for live ops, it's a
+good trade.
+
+### When the template is applied
+
+| Moment | What happens to the template |
+| ------ | ---------------------------- |
+| `snapctl byosnap publish` with an edited profile | The BYOSnap's **stored template is updated**. True on the first publish and every publish after it. |
+| **BYOSnaps → \<your snap\> → Update** in the portal | Same thing — edits the stored template directly. |
+| Adding the BYOSnap to a Snapend **for the first time** | The stored template is **copied into that Snapend's manifest**. This is the one and only handoff, and it happens whether the Snapend is brand new or has existed for months. |
+| Bumping the version on a Snapend that already has this BYOSnap | **Nothing.** New image, same configuration. |
+| Any later edit to the profile or stored template | **Nothing**, for any Snapend already carrying the BYOSnap. |
+
+The two cases worth memorising:
+
+1. **The Snapend does not have this BYOSnap yet.** Adding it pulls the current
+   template as the defaults. From here on, that configuration is part of the
+   Snapend manifest.
+2. **The Snapend already has an earlier version of this BYOSnap.** Updating the
+   version does *not* re-apply the template. Go to **Customize Snapend** in the
+   Web UI and change what you need.
+
+### Example
+
+Say `byosnap-payments` is already running on your dev Snapend `abc123`. Today
+you add a Stripe key to the Secrets Manager and you want your service to mount
+it.
+
+**What people try (and why it doesn't work):**
+
+1. Open `snapser-byosnap-profile.json` and add `stripe-api-key @ dev-2026-08` to
+   the `dev_template` secrets list.
+2. Run `snapctl byosnap publish --byosnap-id byosnap-payments --version v0.2.0 ...`.
+   This *does* update the stored template — so far so good.
+3. Roll it out:
+   `snapctl snapend update --snapend-id abc123 --byosnaps byosnap-payments:v0.2.0`.
+4. Shell into the pod, look in `/opt/byosnap-secrets/` — **it's empty.**
+
+Nothing is broken. `abc123` took its copy of the configuration back when
+`byosnap-payments` was first added to it. Step 3 swapped the container image; it
+did not re-read the template. The Snapend's manifest still says "no secrets", and
+the manifest is what gets deployed.
+
+Here's the part that makes this genuinely confusing: if you had instead spun up a
+**new** Snapend and added `byosnap-payments` to it, the secret *would* be there —
+because that's a first attach, so the template gets copied in. Same publish, two
+different outcomes.
+
+**What to do instead:**
+
+- **For a Snapend that already runs this BYOSnap** → **Snapend → Customize
+  Snapend**, find `byosnap-payments`, add the secret, deploy. You have to do this
+  once per existing Snapend; there is no bulk path.
+- **For Snapends that don't have it yet** → nothing extra to do. Publishing your
+  updated profile (or editing the stored template via **BYOSnaps → \<your snap\>
+  → Update**) already covers them. They'll pick it up when the BYOSnap is added.
+
+<Note>
+  This also means "add the BYOSnap to an existing Snapend for the first time" behaves
+  like a brand-new Snapend, not like an update. If a Snapend has never had this
+  BYOSnap before, attaching it now pulls the current stored template — secrets and all.
+</Note>
+
+### Where to make changes
+
+| I want to change… | For… | Go to |
+| ----------------- | ---- | ----- |
+| CPU, memory, replicas, HPA, env vars, cmd, args, secrets | A Snapend that already runs this BYOSnap | **Snapend → Customize Snapend**, then deploy |
+| The same | The production Snapend | **Promote to Prod → Customize BYOSnaps** |
+| The same | Any Snapend that doesn't have this BYOSnap yet | Edit your profile + `snapctl byosnap publish`, or **BYOSnaps → \<your snap\> → Update** |
+| The same | A Snapend, from CI or a script | `snapctl snapend download` → edit the manifest → `snapctl snapend apply` |
+| Name, description, language | The BYOSnap itself | Your profile + `snapctl byosnap publish`, or **BYOSnaps → \<your snap\> → Update** |
+| Which image version is running | One Snapend | `snapctl snapend update --snapend-id $id --byosnaps byosnap-x:v0.2.0` |
+
+<Note>
+  To confirm what actually landed, open **Snapend → Infrastructure → Dashboard**.
+  It reads straight from the live Snapend manifest and shows each BYOSnap's CPU,
+  memory, HPA state, and the counts of attached secrets, args and env vars. If
+  it isn't there, it isn't deployed — regardless of what your profile file says.
+</Note>
+
+### Version control
+
+Commit your `snapser-byosnap-profile.json` — it is the source of your BYOSnap's
+template, and every publish pushes it.
+Keeping it accurate and committed means each new Snapend — and each new attach of
+this BYOSnap onto an existing Snapend — starts from the configuration you
+actually intended. Just don't expect it to reconfigure Snapends that are already
+running your snap.
+
+## Deploy
+
+BYOSnap can be deployed via a Snapend. You will be able to add your BYOSnap to your Snapend during Snapend creation or edit. Once you are on Step 2 of your Snapend creation/update process you will see the following UI. Select **Private Snap** from the black colored filter widget. You will then see all your uploaded BYOSnaps. Click on the one
+you want to add to your Snapend.
+
+![BYOSnap Deploy Snap Pic](/images/docs/byosnap-deploy-snap-select.png)
+
+After you click Snap it, your BYOSnap will be attached to your Snapend gateway and will actually be in the same Kubernetes
+cluster along with your other snaps.
+
+You can also deploy your BYOSnap via the Snapser CLI after you have publish a new BYOSnap version.
+You will need the `snapctl snapend update` command to update your Snapend with the new version of your BYOSnap.
+
+<CodeGroup title="Snapend Update" tag="bash">
+```bash
+# Help for the snapend update command
+snapctl snapend update --help
+
+# Update Snapend with new BYOSnap version
+
+# snapend_id = Snapend ID of your BYOSnap
+
+# $byosnaps = Comma separated list of BYOSnap IDs you want to deploy and the version you want to deploy. Eg: byosnap-service-1:v1.0.0,byosnap-service--2:v1.0.0
+
+#
+
+# Example:
+
+# snapctl snapend update --snapend-id gx5x6bc0 --byosnaps byosnap-service-1:v1.0.0,byosnap-service--2:v1.0.0
+
+snapctl snapend update --snapend-id $snapend_Id --byosnaps $byosnaps
+
+# If you want to wait till the Snapend is ready to accept traffic, you can pass the --wait flag
+
+snapctl snapend update --snapend-id $snapend_id --byosnaps $byosnaps --blocking
+
+```
+</CodeGroup>
+<Note>
+  BYOSnap has a usage fee depending on the CPU and Memory you select. Please
+  check our pricing page or contact our customer service.
+</Note>
+
+### Direct Deploy
+During development, you want to quickly test code changes without polluting your version history. The new Direct Deploy workflow streamlines this process:
+
+1. **Develop**: Make code changes locally
+2. **Direct Deploy**: Test in dev Snapend without creating a version (`snapctl byosnap direct-deploy`)
+3. **Debug**: Use [BYOWS](/docs/custom/bring-your-own-ws) for local debugging when needed
+4. **Publish**: Create a versioned release when ready (`snapctl byosnap publish`)
+
+Direct Deploy allows you to rapidly iterate without the overhead of version management, keeping your version history clean and focused on actual releases.
+
+<Warning>
+  The `byosnap sync` command is deprecated and will be removed in a future release. Please migrate to `byosnap direct-deploy`.
+</Warning>
+
+<CodeGroup title="BYOSnap Direct Deploy" tag="bash">
+```bash
+# Help for the byosnap command
+snapctl byosnap direct-deploy --help
+
+# Deploy local code directly to dev Snapend (no version needed)
+# $byosnap_id = BYOSnap ID for your snap (should start with byosnap-)
+# $snapend_id = Dev Snapend Id
+# $code_path = Local code path where your Dockerfile is present
+# $resources_path = Optional path to the resources directory in your Snap
+# $platform = Optional platform override (linux/arm64 or linux/amd64)
+
+# Basic usage
+snapctl byosnap direct-deploy --byosnap-id byosnap-jinks-flask --snapend-id "jxmmfryo" --path /Users/AJ/Development/SnapserEngine/jinks_flask
+
+# With resources path
+snapctl byosnap direct-deploy --byosnap-id $byosnap_id --snapend-id $snapend_id --path $code_path --resources-path $resources_path
+
+# With platform override
+snapctl byosnap direct-deploy --byosnap-id $byosnap_id --snapend-id $snapend_id --path $code_path --platform linux/amd64
+
+# Wait for deployment to complete
+snapctl byosnap direct-deploy --byosnap-id $byosnap_id --snapend-id $snapend_id --path $code_path --blocking
+```
+
+</CodeGroup>
+
+<Note>
+  Direct Deploy only works for Development Snapends. Use `snapctl byosnap
+  publish` for Staging and Production deployments.
+</Note>
+
+<Note>
+  For the fastest local development experience, use [BYOWS (Bring Your Own
+  Workstation)](/docs/custom/bring-your-own-ws) which allows you to run your
+  BYOSnap locally and remotely attach it to your Snapend for live debugging.
+</Note>
+
+## Testing
+
+To reach our BYOSnap you will need to use the following URL format
+
+```bash
+  https://gateway.snapser.com/$clusterId/$prefix/$byosnap_sid
+```
+
+So lets say your clusterId is **x76ft5** and you picked **/v1** as your prefix,
+**byosnap-custom-snap** as your BYOSnap Id when you had published the Snap, and
+you have a GET API endpoint `/resource-one` then to test your BYOSnap you will have to make a call to
+
+```bash
+  https://gateway.snapser.com/x76ft5/v1/byosnap-custom-snap/resource-one
+```
+
+## Monitoring and Logging
+
+Once the BYOSnap is in the Snapend you get monitoring and logging out of the box.
+You can view the infrastructure metrics and the logs via the tools you see under **Infrastructure**.
+
+### Logs
+
+Snapser recommends game studios to use the following best practices for logging in their BYOSnap.:
+
+1. Logs should be in a structured JSON format.
+2. If the JSON log has a field called **level** with one of the four values **debug, info, warn, error**,
+   Snapser will automatically parse the log and show it in the correct color in the Snapser Logs tool.
+3. If you have a field called **timestamp** in your JSON log, Snapser will use that as the
+   timestamp for the log. The timestamp should be in the format **ISO-8601**.
+4. Emit the request id from the `X-Request-Id` header as a **request-id** JSON field so Snapser
+   can correlate all log lines of one request. See the
+   [Logging & Request Correlation guide](/docs/custom/bring-your-own-snap/byosnap-logging) for
+   code examples.
+
+## Configuration Tool Builder
+
+You can use the Snapser provided [Tool Builder](/docs/custom/tools/tool-builder) to create a
+configuration tool for your custom BYOSnap. The tool allows you to export a tool JSON that you can
+save to the `--resources-path` folder while uploading your BYOSnap. This will allow you to have a
+custom configuration tool for your BYOSnap. You can add multiple tool files and Snapser will automatically
+display them inside the Snapend Configuration Tools widget.
+
+## Integrating with the Snapser Hooks
+
+Whenever a BYOSnap is part of a Snapend it can tap into the Snapser Hooks for various features.
+
+### 1. SDK
+
+Snapctl publish and sync commands look for a swagger.json file in the root of your code or
+in the resources folder that you pass to the command. If the file is found, Snapser will
+automatically save the swagger.json file in the Snapser registry. This will allow Snapser to generate the SDK for your BYOSnap.
+
+<Note>
+  Check out the [BYOSnap Basic tutorial](/docs/guides/tutorials/byosnap-basic)
+  to understand how you can automatically generate the swagger based on code
+  annotations.
+</Note>
+
+<Warning>
+  Note: The Snapser SDK currently has a known limitation regarding 2XX
+  responses. While your Swagger/OpenAPI spec may define specific schemas for
+  responses like 201, 202, etc., the Snapser SDK will always default to using
+  the schema defined for 200 as the response type for all 2XX responses. This is
+  a constraint of the current SDK generation process.
+</Warning>
+
+### 2. API Explorer
+
+The uploaded swagger.json file with the Snapctl publish and sync commands will also be used to
+render the API Explorer view for your BYOSnap. This will allow your developers to test your BYOSnap
+endpoints directly from the Snapser Web App.
+
+<Note>
+  Since the API Explorer works within the browser, you will have to make sure
+  your BYOSnap has CORS enabled. Add the following headers to your endpoints:
+  ```
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+  Access-Control-Allow-Headers: Content-Type, Auth-Type, User-Id, Gateway, Api-Key
+  ```
+  See the example in Python below.
+</Note>
+
+<CodeGroup title="BYOSnap API Explorer URL" tag="bash">
+```python
+@app.route('/$prefix/$byosnapId/openapispec', methods=["OPTIONS"])
+@app.route('/$prefix/$byosnapId/markdown', methods=["OPTIONS"])
+@app.route('/$prefix/$byosnapId/settings', methods=["OPTIONS"])
+@app.route("/$prefix/$byosnapId/settings/export", methods=["OPTIONS"])
+@app.route("/$prefix/$byosnapId/settings/import", methods=["OPTIONS"])
+@app.route('/$prefix/$byosnapId/health', methods=["OPTIONS"])
+@cross_origin()
+def cors_overrides(path):
+    return f'{path} Ok'
+
+```
+</CodeGroup>
+
+### 3. BYOSnap Documentation
+Snapctl publish and sync commands look for a README.md file in the root of your code or
+in the resources folder that you pass to the command. If the file is found, Snapser will
+automatically save the README.md file in the Snapser registry. This will allow Snapser to
+display the documentation for your BYOSnap in the Snapser Web App.
+
+### 4. Snapend Configuration Tools
+As you can see in the Configuration Tool Builder section, you can create a configuration tool
+for your BYOSnap. The tool JSON file should be saved  in the resources folder that you pass to
+the Snapctl publish and sync commands. This will allow Snapser to display the configuration
+tool in the Snapser Web App.
+
+Each custom configuration tool you build makes a call to your BYOSnap to get and set the
+settings. Its upto the BYOSnap to store these settings somewhere.
+
+<Note>
+  Most Snapser users chose to use the Storage snap and an internal SDK to store these settings. Please find the example below.
+</Note>
+
+
+#### Configuration Tool Endpoints
+1. **Get Settings**: GET **/$prefix/$byosnapId/settings** - The endpoint should return the settings for the BYOSnap.
+2. **Update Settings**: PUT **/$prefix/$byosnapId/settings** - The endpoint should accept a payload and save the settings for the BYOSnap.
+
+
+<CodeGroup title="BYOSnap Configuration Tool" tag=".py">
+```python
+@app.route("/v1/byosnap-example/settings", methods=["GET"])
+def get_settings():
+    '''
+    Get the settings
+    '''
+    # This is the payload that the tool expects to get from the backend in order to render the tool
+    # This payload is auto generated by the BYOSnap Tool builder and can be different
+    # for each BYOSnap tool
+    default_settings = {
+        'version': 'v1.0.0',
+        'id': 'characters',
+        'endpoint': '',
+        'category': 'flat_form',
+        'env_support': 'single',
+        'sections': [
+            {
+                'id': 'registration',
+                'components': [
+                    {
+                        'id': 'characters',
+                        'type': 'textarea',
+                        'value': ''
+                    }
+                ]
+            }
+        ]
+    }
+    configuration = snapser.Configuration(
+        host=os.environ['SNAPEND_STORAGE_HTTP_URL']
+    )
+    with snapser.ApiClient(configuration=configuration) as api_client:
+        # Create an instance of the API class
+        api_instance = snapser.StorageServiceApi(api_client)
+        try:
+            # Anonymous Login
+            api_response = api_instance.storage_internal_get_blob(
+                access_type='private',
+                blob_key='character_settings',
+                owner_id='byosnap_characters',
+                gateway=os.environ['SNAPEND_INTERNAL_HEADER']
+            )
+            if api_response is None:
+                return make_response(jsonify(default_settings), 200)
+            return make_response(jsonify(json.loads(api_response.value)), 200)
+        except ApiException as e:
+            pass
+    return make_response(jsonify(default_settings), 200)
+
+   # return make_response(jsonify(), 200)
+
+
+@app.route("/v1/byosnap-example/settings", methods=["PUT"])
+def update_settings():
+    '''
+    Update the settings
+    '''
+    try:
+        blob_data = request.get_json()
+        if 'payload' in blob_data:
+            blob_data = blob_data['payload']
+        character_string = blob_data['sections'][0]['components'][0]['value']
+        # Split the characters by comma but also trim the characters
+        character_list = character_string.split(',')
+        character_list = [character.strip() for character in character_list]
+        # Check for duplicates
+        if len(character_list) != len(set(character_list)):
+            return make_response(jsonify({
+                'error_message': 'Duplicate characters found'
+            }), 400)
+        blob_data['sections'][0]['components'][0]['value'] = ','.join(
+            character_list)
+    except Exception as e:
+        return make_response(jsonify({
+            'error_message': 'Invalid JSON ' + str(e)
+        }), 500)
+
+    configuration = snapser.Configuration(
+        host=os.environ['SNAPEND_STORAGE_HTTP_URL']
+    )
+    with snapser.ApiClient(configuration=configuration) as api_client:
+        cas = '12345'
+        # Create an instance of the API class
+        api_instance = snapser.StorageServiceApi(api_client)
+        try:
+            # Anonymous Login
+            api_response = api_instance.storage_internal_get_blob(
+                access_type='private',
+                blob_key='character_settings',
+                owner_id='byosnap_characters',
+                gateway=os.environ['SNAPEND_INTERNAL_HEADER']
+            )
+            if api_response is not None:
+                cas = api_response.cas
+        except ApiException:
+            # You come here when the doc is not even present
+            pass
+        try:
+            api_response = api_instance.storage_internal_replace_blob(
+                access_type='private',
+                blob_key='character_settings',
+                owner_id='byosnap_characters',
+                gateway=os.environ['SNAPEND_INTERNAL_HEADER'],
+                body={
+                    "value": json.dumps(blob_data),
+                    "ttl": 0,
+                    "create": True,
+                    "cas": cas
+                }
+            )
+            if api_response is None:
+                return make_response(jsonify({
+                    'error_message': 'Server Error'
+                }), 500)
+            return make_response(jsonify(blob_data), 200)
+        except ApiException as e:
+            return make_response(jsonify({
+                'error_message': 'Server Exception: ' + str(e)
+            }), 500)
+```
+
+</CodeGroup>
+
+### 5. Snapser Sync & Promotion Tech
+
+Snapser provides a way to sync Snapends with other Snapends and promote Snapends from one environment to another.
+For BYOSnaps to tap into this system, every Snap exports their own settings. The destination
+Snapend will then import these settings. In order to know, if the import would even work,
+the destination Snapend will validate the import. All this is orchestrated by Snapser for you, and
+all you have to do is implement the following endpoints.
+
+#### Import Export Endpoints
+
+1. **Export**: GET **/$prefix/$byosnapId/settings/export** - The endpoint should export the settings powering this BYOSnap in the format you see below.
+2. **Import**: POST **/$prefix/$byosnapId/settings/import** - The endpoint should accept a payload in the format you see below and save the settings.
+3. **Validate Import**: POST **/$prefix/$byosnapId/settings/validate-import** - The endpoint should accept a payload similar to the import and respond with a 200 if the BYOSnap is able to accept those settings.
+
+```json
+response = {
+        "version": "v0.0.1",
+        "exported_at": 1740786750,
+        "data": {
+            ...
+        }
+    }
+```
+
+<Note>
+  The expected value of `data` has to be an object. Most users of Snapser
+  directly store the **payload** that the BYOSnap Tool builder generates into
+  the storage snap. Also note, every BYOSnap has an environment variable called
+  `BYOSNAP_VERSION` which is the version of the BYOSnap that you can use during
+  the import and export process.
+</Note>
+
+<CodeGroup title="BYOSnap Configuration Tool Settings" tag=".py">
+```python
+@app.route("/v1/byosnap-example/settings/export", methods=["GET"])
+def settings_export():
+    response = {
+        # This is the payload that the Settings import export system expects.
+        "version": os.environ['BYOSNAP_VERSION'],
+        "exported_at": int(time.time()),
+        "data": {
+            # This is the payload that the BYOSnap Tool builder generates.
+            "character_settings": {}
+        }
+    }
+    configuration = snapser.Configuration(
+        host=os.environ['SNAPEND_STORAGE_HTTP_URL']
+    )
+    with snapser.ApiClient(configuration=configuration) as api_client:
+        # Create an instance of the API class
+        api_instance = snapser.StorageServiceApi(api_client)
+        try:
+            # Storage Settings
+            api_response = api_instance.storage_internal_get_blob(
+                access_type='private',
+                blob_key='character_settings',
+                owner_id='byosnap_characters',
+                gateway=os.environ['SNAPEND_INTERNAL_HEADER']
+            )
+            if api_response is None:
+                return make_response(jsonify(response), 200)
+            response['data']['character_settings'] = json.loads(
+                api_response.value)
+            return make_response(jsonify(response), 200)
+        except ApiException as e:
+            pass
+    return make_response(jsonify(response), 200)
+
+@app.route("/v1/byosnap-example/settings/import", methods=["POST"])
+def settings_import():
+    try:
+        settings_data = request.get_json()
+        if not settings_data or 'data' not in settings_data:
+            return make_response(jsonify({
+                'error_message': 'Invalid JSON'
+            }), 500)
+        # Save the characters to the storage
+        configuration = snapser.Configuration(
+            host=os.environ['SNAPEND_STORAGE_HTTP_URL']
+        )
+        with snapser.ApiClient(configuration=configuration) as api_client:
+            cas = '12345'
+            # Create an instance of the API class
+            api_instance = snapser.StorageServiceApi(api_client)
+            try:  # Get Storage CAS
+                api_response = api_instance.storage_internal_get_blob(
+                    access_type='private',
+                    blob_key='character_settings',
+                    owner_id='byosnap_characters',
+                    gateway=os.environ['SNAPEND_INTERNAL_HEADER']
+                )
+                if api_response is not None:
+                    cas = api_response.cas
+            except ApiException:  # You come here when the doc is not even present
+                pass
+            try:
+                api_response = api_instance.storage_internal_replace_blob(
+                    access_type='private',
+                    blob_key='character_settings',
+                    owner_id='byosnap_characters',
+                    gateway=os.environ['SNAPEND_INTERNAL_HEADER'],
+                    body={
+                        "value": json.dumps(settings),
+                        "ttl": 0,
+                        "create": True,
+                        "cas": cas
+                    }
+                )
+                if api_response is None:
+                    return make_response(jsonify({
+                        'error_message': 'Server Error'
+                    }), 500)
+                return make_response(jsonify(settings), 200)
+            except ApiException as e:
+                return make_response(jsonify({
+                    'error_message': 'Server Exception: ' + str(e)
+                }), 500)
+    except Exception as e:
+        return make_response(jsonify({
+            'error_message': 'Server Exception' + str(e)
+        }), 500)
+
+
+@app.route("/v1/byosnap-example/settings/validate-import", methods=["POST"])
+def validate_settings():
+    settings_data = request.get_json()
+    if 'data' not in settings_data:
+        return make_response(jsonify({
+            'error_message': 'Invalid JSON'
+        }), 500)
+    response = {
+        'version': os.environ['BYOSNAP_VERSION'],
+        'exported_at': int(time.time()),
+        'data': {
+            'character_settings': {}
+        }
+    }
+    configuration = snapser.Configuration(
+        host=os.environ['SNAPEND_STORAGE_HTTP_URL']
+    )
+    with snapser.ApiClient(configuration=configuration) as api_client:
+        # Create an instance of the API class
+        api_instance = snapser.StorageServiceApi(api_client)
+        try:  # Storage Settings
+            api_response = api_instance.storage_internal_get_blob(
+                access_type='private',
+                blob_key='character_settings',
+                owner_id='byosnap_characters',
+                gateway=os.environ['SNAPEND_INTERNAL_HEADER']
+            )
+            if api_response is None:
+                return make_response(jsonify(response), 200)
+            # Load storage data
+            response['data']['character_settings'] = json.loads(
+                api_response.value)
+            return make_response(jsonify(response), 200)
+        except ApiException as e:
+            pass
+    return make_response(jsonify(response), 200)
+```
+</CodeGroup>
+
+### 6. User Data Reset and Delete
+Every Snapend comes with a User Manager tool, allowing you to reset and delete user data.
+If your BYOSnap has the following endpoint **/v1/byosnap-example/settings/users/:user_id/data** registered you will be able to hook into this
+system. Basically, when a user is deleted or reset, Snapser will call the following endpoint
+automatically, allowing you to delete or reset the user data.
+
+#### User Data Delete Endpoint
+1. DELETE **/$prefix/$byosnapId/settings/users/:user_id/data** - The endpoint should reset the user data for the given user_id.
+
+<CodeGroup title="BYOSnap User Data Reset and Delete" tag=".py">
+```python
+@app.route("/v1/byosnap-example/settings/users/<user_id>/data", methods=["DELETE"])
+def delete_user_data(user_id):
+    gateway = request.headers.get('Gateway')
+    if not gateway or gateway.lower() != 'internal':
+        return make_response(jsonify({
+            'error_message': 'Unauthorized'
+        }), 401)
+    # Delete the character blob from storage
+    storage_configuration = snapser.Configuration(
+        host=os.environ['SNAPEND_STORAGE_HTTP_URL']
+    )
+    with snapser.ApiClient(configuration=storage_configuration) as storage_api_client:
+        storage_api_instance = snapser.StorageServiceApi(storage_api_client)
+        try:
+            # Get blob
+            storage_api_response = storage_api_instance.storage_internal_delete_blob(
+                access_type='private',
+                blob_key='game',
+                owner_id=user_id,
+                gateway=os.environ['SNAPEND_INTERNAL_HEADER']
+            )
+            if storage_api_response is None:
+                return make_response(jsonify({
+                    'error_message': 'No blob'
+                }), 400)
+        except ApiException:
+            pass
+    return make_response(jsonify({}), 200)
+```
+
+</CodeGroup>
+
+### 7. GDPR & CCPA Compliance
+
+Snapser provides a way to comply with GDPR and CCPA regulations by allowing you to retrieve and delete user data.
+
+The following hooks should be implemented in your BYOSnap:
+
+### Get User Data hook
+
+Implement the following endpoint in your BYOSnap that retrieves user data based on the user ID.
+
+- Method: `GET`
+- URL: `/v1/$byosnapId/settings/users/<user_id>/data`
+- Response: Any JSON object containing user data.
+
+<CodeGroup title="GDPR BYOSnap Get User Data" tag=".py">
+```python
+@app.route("/v1/byosnap-advanced/settings/users/<user_id>/data", methods=["GET"])
+@validate_authorization(GATEWAY_HEADER_INTERNAL_ORIGIN_VALUE, user_id_resource_key="user_id")
+def get_user_data(user_id):
+    '''
+    Get User Data
+    '''
+    gateway = request.headers.get('Gateway')
+    if not gateway or gateway.lower() != 'internal':
+        return make_response(jsonify({
+            'error_message': 'Unauthorized'
+        }), 401)
+    # Delete the character blob from storage
+    configuration = snapser_internal.Configuration()
+    with snapser_internal.ApiClient(configuration=configuration) as storage_api_client:
+        storage_api_instance = snapser_internal.StorageServiceApi(
+            storage_api_client)
+        try:
+            # Get blob
+            api_response = storage_api_instance.storage_internal_get_blob(
+                access_type='private',
+                blob_key='characters',
+                owner_id=user_id,
+                gateway=os.environ['SNAPEND_INTERNAL_HEADER']
+            )
+            if api_response is None:
+                return make_response(jsonify({
+                    'error_message': 'No data'
+                }), 400)
+            return make_response(jsonify(json.loads(api_response.value)), 200)
+        except ApiException:
+            pass
+    return make_response(jsonify({}), 200)
+```
+</CodeGroup>
+
+### Delete User Data hook
+
+Implement the following endpoint in your BYOSnap that deletes user data based on the user ID.
+
+<Note>
+  This is identical to the User Data Reset and Delete endpoint, but it is
+  important to note that this endpoint is specifically for GDPR and CCPA
+  compliance.
+</Note>
+
+- Method: `DELETE`
+- URL: `/v1/$byosnapId/settings/users/<user_id>/data`
+- Response: Empty object
+
+<CodeGroup title="GDPR BYOSnap Get User Data" tag=".py">
+```python
+@app.route("/v1/byosnap-advanced/settings/users/<user_id>/data", methods=["DELETE"])
+@validate_authorization(GATEWAY_HEADER_INTERNAL_ORIGIN_VALUE, user_id_resource_key="user_id")
+def delete_user_data(user_id):
+    '''
+    Delete User Data
+    '''
+    gateway = request.headers.get('Gateway')
+    if not gateway or gateway.lower() != 'internal':
+        return make_response(jsonify({
+            'error_message': 'Unauthorized'
+        }), 401)
+    # Delete the character blob from storage
+    configuration = snapser_internal.Configuration()
+    with snapser_internal.ApiClient(configuration=configuration) as storage_api_client:
+        storage_api_instance = snapser_internal.StorageServiceApi(
+            storage_api_client)
+        try:
+            # Get blob
+            storage_api_response = storage_api_instance.storage_internal_delete_blob(
+                access_type='private',
+                blob_key='characters',
+                owner_id=user_id,
+                gateway=os.environ['SNAPEND_INTERNAL_HEADER']
+            )
+            if storage_api_response is None:
+                return make_response(jsonify({
+                    'error_message': 'No blob'
+                }), 400)
+        except ApiException:
+            pass
+    return make_response(jsonify({}), 200)
+```
+</CodeGroup>
+
+### Conclusion
+
+If you have:
+
+1. Added a swagger.json file to your codebase
+2. Added a README.md file to your codebase
+3. Implemented:
+   - Endpoints for Import Export
+   - Endpoints for User Data Reset and Delete
+   - Endpoints for Snapend Configuration Tools to save and retrieve settings
+
+You will have a fully integrated BYOSnap with all the features of the Snapser Hooks.
+
+## Custom Events
+
+BYOSnaps can register custom events using **RegisterByoEventTypes()** and publish events of those types using **PublishByoEvent()**.
+In the EventBus Snap configuration registered event-types can be turned on for Webhooks and the WebSocket enabling events of those
+to be received.
+
+### Registering Event-Types
+
+During startup of your BYOSnap call **RegisterByoEventTypes()** to register custom event-types. This is a create-or-replace operation
+and is safe to call each time your BYOSnap starts.
+
+**Payload and Identifying Event-Types**
+
+Either the **Subject** or **EventTypeId** can be used to identify the payload. **Subject** is a fully qualified string for the event-type and
+unique across all services. If you use **EventTypeId** to identify the payload, you'll want to use it in combination with **ServiceName**
+(which is your BYOSnap ID).
+
+For more information including example code see the
+[Registering Event-Types](/docs/infra/snaps/eventbus#registering-event-types) section of
+the [EventBus Snap](/docs/infra/snaps/eventbus) documentation.
+
+### Publishing Events
+
+Once you have registered your event-types, you can publish events of those types using **PublishByoEvent()**. See the example below.
+
+For more information including example code see the [Publishing Events](/docs/infra/snaps/eventbus#publishing-events) section of
+the [EventBus Snap](/docs/infra/snaps/eventbus) documentation.
+
+## SDK
+
+If you have a swagger.json file v3.x, at the root of your code or in the folder that you pass via **--resources-path** variable, Snapser will include your BYOSnap in the generated Snapend SDK. This means that your developers can start using your custom code without having to write any client side bindings.
+
+<Note>
+  You should check out the [BYOSnap Basic
+  tutorial](/docs/guides/tutorials/byosnap-basic) to understand how you can
+  automatically generate the swagger based on code annotations.
+</Note>
+
+Once you have the swagger.json ready and tagged with the appropirate custom tag **x-snapser-auth-types: user|api-key|internal** Snapser will generate all the SDKs for your BYOSnap:
+
+1. User SDK - For game or app clients to use.
+2. Api-Key SDK - For use from trusted server code.
+3. Internal SDK - For other BYOSnaps to communicate with other snaps.
+
+<Warning>
+  Note: The Snapser SDK currently has a known limitation regarding 2XX
+  responses. While your Swagger/OpenAPI spec may define specific schemas for
+  responses like 201, 202, etc., the Snapser SDK will always default to using
+  the schema defined for 200 as the response type for all 2XX responses. This is
+  a constraint of the current SDK generation process.
+</Warning>
+
+## Documentation
+
+If you have a README.md file at the root of your code or in the folder that you pass
+via **--resources-path** variable, Snapser will include your BYOSnap in the Snapend documentation widget.
+
+## Pricing
+
+BYOSnap is charged based on the CPU and Memory requirements of your Snap. You have the ability
+to chose the minimum replicas in production along with the CPU and Memory for your Snap.
+Please check out the [Pricing](/pricing) page for more details.
+
+## FAQs
+
+#### Is the BYOSnap truly in my cluster?
+
+Yes, unlike some other products out there that make you host your custom code in a separate cloud functions like environment,
+Snapser BYOSnap is truly in your cluster. This means the latency for your custom code to talk to other Snaps is super low.
+
+![BYOSnap Architecture](/images/docs/byosnap-architecture.png)
+
+#### I am unable to reach my BYOSNap via an API call
+
+Please check the BYOSnap Networking section. If you continue seeing issues, please reach out to your Snapser support team.
+
+#### I am unable to reach my BYOSNap via the API Explorer but Curl works
+
+This is most likely due to CORS. Your BYOSnap code needs enable CORS on the endpoints you have exposed. Most modern frameworks have a way to enable CORS using some sort of a library. Please reach out to us if you need help with this.
+
+#### Is there any limit on the number of BYOSnaps?
+
+Nope, there is no limit to the number of BYOSnaps you can add to your Snapend.

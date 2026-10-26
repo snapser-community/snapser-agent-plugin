@@ -1,0 +1,64 @@
+import {DOCS_BI_PAGE, DOCS_BYO_GS_PAGE, DOCS_BYO_SNAP_PAGE, DOCS_CLI_PAGE, DOCS_CONCEPT, DOCS_MARKETPLACE_PAGE, DOCS_OVERVIEW, DOCS_RESOURCES_PORTAL_PATH, DOCS_SERVICE_PATH, DOCS_SNAPEND_ABOUT, DOCS_USER_MANAGER_PAGE, GUIDES_PATH, RELAY_PATH} from '@/configs/routes'
+
+
+export const description = 'Introduction to Snapser.'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Welcome to Snapser
+
+**Snapser** enables developers to quickly build highly customizable, scalable and secure backends tailored to modern apps and games that are ready to operate. Our platform empowers teams with a unified suite of essential backend services, multi-geo relay compute capabilities, comprehensive server hosting—all seamlessly integrated and supported by robust business intelligence & live ops tooling. With Snapser, your organization can effortlessly architect, deploy, and manage dynamic digital experiences, ensuring seamless engagement for users worldwide.
+
+<div className="parent">
+  <div className="conceptBox">
+    # Introduction
+
+    Snapser offers developers a comprehensive, customizable backend solution with seamless integration of custom code, data, and servers.
+
+    <div>
+      <DocsButton href={DOCS_OVERVIEW} variant="contained" color="secondary" size="small" sx={{ml: 2, mb: 1}}>Overview</DocsButton>
+      <DocsButton href={DOCS_CONCEPT} variant="contained" color="secondary" size="small" sx={{ml: 2, mb: 1}}>Concept</DocsButton>
+    </div>
+  </div>
+
+  <div className="tutorialBox">
+    # Guides
+
+    Snapser tutorials & starter projects for integrating Snapser into Unity, Unreal Engine, Discord, Roblox, as well as popular web and mobile stacks such as React, configuration, SDK installation, and usage examples.
+    <div>
+      <DocsButton href={GUIDES_PATH+'#tutorials'} variant="contained" color="secondary" size="small" sx={{ml: 2, mb: 1}}>Tutorials</DocsButton>
+      <DocsButton href={GUIDES_PATH+'#starter-projects'} variant="contained" color="secondary" size="small" sx={{ml: 2, mb: 1}}>Starter Projects</DocsButton>
+    </div>
+  </div>
+</div>
+
+<div className="parent">
+  <div className="servicesBox">
+    # Infrastructure
+
+    Understand the various building blocks that make up your custom real-time backend.
+
+    <DocsButton href={DOCS_SERVICE_PATH} variant="contained" color="secondary" size="small" sx={{ml: 2, mb: 1}}>Multiplayer Services</DocsButton>
+    <DocsButton href={DOCS_BYO_GS_PAGE} variant="contained" color="secondary" size="small" sx={{ml: 2, mb: 1}}>Game Server Hosting</DocsButton>
+    <DocsButton href={RELAY_PATH} variant="contained" color="secondary" size="small" sx={{ml: 2, mb: 1}}>Relay Servers</DocsButton>
+    <DocsButton href={DOCS_BYO_SNAP_PAGE} variant="contained" color="secondary" size="small" sx={{ml: 2, mb: 1}}>Custom Code</DocsButton>
+    <DocsButton href={DOCS_SNAPEND_ABOUT} variant="contained" color="secondary" size="small" sx={{ml: 2, mb: 1}}>Snapend</DocsButton>
+    <DocsButton href={DOCS_BI_PAGE} variant="contained" color="secondary" size="small" sx={{ml: 2, mb: 1}}>Business Intelligence</DocsButton>
+  </div>
+
+  <div className="resourcesBox">
+    # Resources
+
+    Manage accounts for your organization, build CI/CD pipelines, and access Snapser tools and services.
+
+    <div>
+      <DocsButton href={DOCS_RESOURCES_PORTAL_PATH} variant="contained" color="secondary" size="small" sx={{ml: 2, mb: 1}}>Portal</DocsButton>
+      <DocsButton href={DOCS_CLI_PAGE} variant="contained" color="secondary" size="small" sx={{ml: 2, mb: 1}}>CLI</DocsButton>
+      <DocsButton href={DOCS_USER_MANAGER_PAGE} variant="contained" color="secondary" size="small" sx={{ml: 2, mb: 1}}>Tools</DocsButton>
+      <DocsButton href={DOCS_MARKETPLACE_PAGE} variant="contained" color="secondary" size="small" sx={{ml: 2, mb: 1}}>Marketplace</DocsButton>
+    </div>
+  </div>
+</div>

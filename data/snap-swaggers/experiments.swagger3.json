@@ -1,0 +1,160 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Test and apply your product and code",
+    "title" : "Experiments",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "ExperimentsService"
+  } ],
+  "paths" : {
+    "/v1/experiments/user-experiments/{experiment_name}/users/{user_id}" : {
+      "get" : {
+        "description" : "Gets the user experiment for the user",
+        "operationId" : "GetUserExperiment",
+        "parameters" : [ {
+          "description" : "Name of the experiment",
+          "explode" : false,
+          "in" : "path",
+          "name" : "experiment_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/experimentsUserExperiment"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Experiment",
+        "tags" : [ "ExperimentsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/experiments/users/{user_id}/experiments" : {
+      "get" : {
+        "description" : "Gets all user experiments for the user",
+        "operationId" : "GetUserExperiments",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Whether to include inactive experiments",
+          "explode" : true,
+          "in" : "query",
+          "name" : "include_inactive_experiments",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/experimentsGetUserExperimentsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Experiments",
+        "tags" : [ "ExperimentsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "experimentsGetUserExperimentsResponse" : {
+        "properties" : {
+          "user_experiments" : {
+            "items" : {
+              "$ref" : "#/components/schemas/experimentsUserExperiment"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "experimentsUserExperiment" : {
+        "properties" : {
+          "assigned_variant" : {
+            "type" : "string"
+          },
+          "audience_evaluated" : {
+            "type" : "boolean"
+          },
+          "excluded_for" : {
+            "type" : "string"
+          },
+          "experiment_name" : {
+            "type" : "string"
+          },
+          "in_audience" : {
+            "type" : "boolean"
+          },
+          "in_ramp" : {
+            "type" : "boolean"
+          },
+          "is_override" : {
+            "type" : "boolean"
+          },
+          "ramp_roll" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "state" : {
+            "type" : "string"
+          },
+          "treatment" : {
+            "description" : "not actually persisted. Set when asked for.",
+            "type" : "string"
+          },
+          "user_id" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

@@ -1,0 +1,388 @@
+export const description = 'Remote Config'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Remote Config
+
+App clients often need dynamic configuration on startup to drive unique
+experiences and setup features and scaffolding on app or game launch. For most apps
+this can be a blocking call and so low latency is an absolute must. With the
+Remote config snap you get a low latency performant service that delivers
+studio defined app configuration to your clients. The service also supports
+overrides at a per user or segment level, allowing you to deliver unique
+experiences to different users.
+
+## Quick Tour
+<Video src="https://www.youtube.com/embed/nIxFygaVGx0?start=42" title="Snapser - Remote Config Snap" />
+
+## Remote Config Types
+There are two types of remote configurations:
+1. **App config**: This is the base configuration that is applicable to all users. Mainly controls game or app features and settings. You can use app configs for feature flags, TOS URLs etc. You can have multiple app configs, keyed by version.
+2. **User config**: This is the configuration that is specifically for game/app users. You use user config for personalization. User configs have a concept of overrides that can be applied to a segment of users or to individual users.
+
+<Note>
+  Snapser recommends that this is the first API you hit post login or token
+  refresh to setup your base configuration.
+</Note>
+
+## App configs
+Game studio can setup their base remote configuration using the **App Config** admin tool. The tool takes a JSON representation of your
+app config and allows you to enter a JSON schema validator to ensure that only a valid JSON as per the schema is accepted as a valid configuration.
+
+### Base App Config
+
+The base app configuration is nothing but a JSON that is applicable to the entire app.
+This JSON is completely designed by the developer and Snapser
+delivers it to the app client.
+
+### Version
+
+You can add multiple versions of your app config. This is useful when you want to
+roll out a new version of your app configuration if you are making any non-backward compatible changes.
+
+### Example
+
+Consider you have the following base app configuration with version `v1`:
+
+```
+{
+  "server_version": "1.0",
+  "tos_version": '1.5',
+}
+```
+
+Say you replaced your backend server with a new version and you want to update the configuration to reflect this change. You can create a new version of your app config with version `v2` and change your upcoming client build to point to this new version `v2`.:
+
+```
+{
+  "server_version": "2.0",
+  "tos_version": '1.5',
+}
+```
+Eventually you can deprecate the old version `v1` and remove it from the snap configuration tool.
+
+## User configs
+
+Developers can setup their base remote configuration using the **User Config** admin tool.
+The tool takes a JSON representation of your user config and allows you to enter a JSON schema validator to ensure that
+only a valid JSON as per the schema is accepted as a valid configuration.
+
+![Admin Pic](/images/docs/remote-config-admin.png)
+
+### Base User Config
+
+The base user configuration is nothing but a JSON that is applicable to all users.
+
+### Overrides
+
+Within the remote configuration snap, you have the ability to override
+certain sections of your JSON base configuration. You also have the ability to
+associate this override with all users or only a segment of users. Snapser
+also allows you to slowly rollout your overrides, ensuring that you are
+rolling out these changes safely and can monitor the impact of the changes.
+
+As an example you may decide to add overrides for the following cases:
+1. For users under level 5, you may enable a feature that shows helper style windows and guides in the app.
+2. You may want to unlock features for highly engaged players in your app.
+3. You may want to give a discount to users who have not made a purchase in the last 30 days.
+
+### Audience
+You can chose one of the following audiences for your override:
+
+- **All Users**: Allows you to target your entire user base using overrides to provide the overridden configuration to deterministic portions of your base user config.
+- **Segment**: Allows you to select one of your already configured segments to target.
+
+For example, if you only want to target users with 100 or more logins, you can:
+  - (Statistics Service) Create a User Statistic called "logins" and increment it when a user logs in.
+  - (Statistics Service) Create a Segment that has a predicate that "logins" is equal to or greater than 100.
+  - (Remote Config Service) Select that Segment in the Remote Config service when choosing the audience for your override.
+
+### Sort Order
+
+Users may be eligible for multiple overrides, that potentially modify the same
+field in the configuration. To prevent conflicts, a sort order can be
+specified for each override. Overrides are always applied in ascending sort
+order.
+
+### Testing
+
+You can specify a comma separated list of user IDs for each override. The
+override will be applied to the configuration of these users even if they are
+not a part of the specified segment or ramp.
+
+<Note>
+  This is primarily meant to be used for game/app admins and QA to easily test out
+  the game with specific overrides applied.
+</Note>
+
+![Override Pic](/images/docs/remote-config-admin-overrides.png)
+
+
+### User Config Example
+
+Consider you have the following base user configuration:
+
+```
+{
+  "store": {
+    "enabled": true,
+    "discount": {
+      "percentage": 10,
+      "valid_until": "2023-01-05"
+    }
+  },
+  "show_tutorial": false,
+  "banner_content": "<h1>New Years Sale!</h1>"
+}
+```
+
+Now say, you want to provide a bigger discount to a segment of users.
+You can create a new override in your admin tool by specifying **store.discount.percentage** as the **Path** and **20** as the **Value**.
+
+```
+{
+  "percentage": 20,
+  "valid_until": "2023-01-10"
+}
+```
+
+<Note>
+  Overrides need to be a valid JSON as well. Also, the override will be checked
+  to ensure that the resulting configuration is still valid according to the
+  provided schema, for additional safety.
+</Note>
+
+Finally, you will have to select the audience to apply this override to. You can
+either select **All Users** or a specific **Segment**.
+
+
+## Tracking History
+
+Remote config history maintains a version history of all configuration changes.
+It encompasses modifications related to app-config, user-config, and overrides.
+This history allows rollback to previous versions whenever needed and ensures that changes
+can be tracked, analyzed, and reverted if unexpected issues arise.
+
+### App Config History
+Click on `App Config > History` to view the App Config history.
+Select the config version to view the changes.
+
+![App config history Pic](/images/docs/remote-config-app-config-history.png)
+
+### User Config History
+Click on `User Config > User Config History` to view the User Config history.
+The User Config tool allows you to view the history of changes made to the user config.
+If you have more than one saved user config, you will see a `Revert` button appear next to the version you want to revert to.
+Once Reverted, a new version will be created with the reverted configuration and with the `Copy of` value populated with the version that was reverted from.
+
+![User config history Pic](/images/docs/remote-config-user-config-history.png)
+
+### Overrides History
+Click on `User Config > Overrides History` to view the User Config history.
+Select the override version to view the changes.
+  ![Overrides history Pic](/images/docs/remote-config-overrides-history.png)
+
+## Playground Tool
+
+The **Playground** tool allows you to preview the configuration that would be
+returned by the service for a given user or segment of users.
+Using this tool you can specify one or more overrides to preview and visualize what the
+resulting configuration would look like by applying those overrides.
+
+![Playground Pic](/images/docs/remote-config-admin-playground.png)
+
+## User Config Preview
+
+The **Preview User Config** tool allows you to
+see the configuration that would be returned by the service for a given user.
+
+![User Config Pic](/images/docs/remote-config-admin-user.png)
+
+## APIs
+
+The `Remote Config` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name      | HTTP Method | API Description                 |
+| ------------- | ----------- | ------------------------------- |
+| [RemoteConfigGetAppConfig](#remoteconfiggetappconfig-api)  | GET         | Returns the config for the app  |
+| [RemoteConfigGetUserConfig](#remoteconfiggetuserconfig-api) | GET         | Returns the config for the user |
+</div>
+
+### Usage
+#### RemoteConfigGetAppConfig API
+<CodeGroup title="Returns the config for the app" tag="GET" label="RemoteConfigGetAppConfig">
+```csharp
+/// <summary>
+/// Get App Config Returns the config for the app
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="varVersion">version of the app</param>
+/// <returns>RemoteConfigGetAppConfigResponse</returns>
+public RemoteConfigGetAppConfigResponse RemoteConfigGetAppConfig(string varVersion)
+{
+    Snapser.Client.ApiResponse<RemoteConfigGetAppConfigResponse> localVarResponse = RemoteConfigGetAppConfigWithHttpInfo(varVersion);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for RemoteConfigGetAppConfigResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="RemoteConfigGetAppConfigResponse" /> class.
+/// </summary>
+/// <param name="config">Config for the app.</param>
+public RemoteConfigGetAppConfigResponse(Object config = default(Object))
+{
+    this.Config = config;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserRemoteConfigServiceApi::RemoteConfigGetAppConfigRequest : public Request
+{
+public:
+    virtual ~RemoteConfigGetAppConfigRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* version of the app */
+    FString Version;
+};
+
+// Response
+class SNAPSER_API SnapserRemoteConfigServiceApi::RemoteConfigGetAppConfigResponse : public Response
+{
+public:
+    virtual ~RemoteConfigGetAppConfigResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserRemoteConfigGetAppConfigResponse Content;
+};
+
+class SNAPSER_API SnapserRemoteConfigGetAppConfigResponse : public Model
+{
+public:
+    virtual ~SnapserRemoteConfigGetAppConfigResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Config for the app */
+    TOptional<TSharedPtr<FJsonObject>> Config;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### RemoteConfigGetUserConfig API
+<CodeGroup title="Returns the config for the user" tag="GET" label="RemoteConfigGetUserConfig">
+```csharp
+/// <summary>
+/// Get User Config Returns the config for the user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <returns>RemoteConfigGetUserConfigResponse</returns>
+public RemoteConfigGetUserConfigResponse RemoteConfigGetUserConfig(string userId, string token)
+{
+    Snapser.Client.ApiResponse<RemoteConfigGetUserConfigResponse> localVarResponse = RemoteConfigGetUserConfigWithHttpInfo(userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for RemoteConfigGetUserConfigResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="RemoteConfigGetUserConfigResponse" /> class.
+/// </summary>
+/// <param name="config">Config for the user.</param>
+public RemoteConfigGetUserConfigResponse(Object config = default(Object))
+{
+    this.Config = config;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserRemoteConfigServiceApi::RemoteConfigGetUserConfigRequest : public Request
+{
+public:
+    virtual ~RemoteConfigGetUserConfigRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserRemoteConfigServiceApi::RemoteConfigGetUserConfigResponse : public Response
+{
+public:
+    virtual ~RemoteConfigGetUserConfigResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserRemoteConfigGetUserConfigResponse Content;
+};
+
+class SNAPSER_API SnapserRemoteConfigGetUserConfigResponse : public Model
+{
+public:
+    virtual ~SnapserRemoteConfigGetUserConfigResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Config for the user */
+    TOptional<TSharedPtr<FJsonObject>> Config;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/remote-config-api.png)
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code  | Variable                  | Message                   | HTTP | gRPC          |
+| ----- | ------------------------- | ------------------------- | ---- | ------------- |
+| 16000 | ErrAppConfigAlreadyExists | app config already exists | 400  | AlreadyExists |
+| 16001 | ErrAppConfigNotFound      | app config not found      | 404  | NotFound      |
+</div>
+
+## Additional Details
+
+### Data Stores
+
+POSTGRES
+
+### Service Dependencies
+
+The remote config service does not depend on any other Snap.
+
+### Recommended Services
+
+The remote config service works best with the Auth and Statistics &
+Segmentation services.
+
+### Upcoming enhancements
+
+None planned at the moment.

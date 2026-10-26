@@ -1,0 +1,679 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Collect and track data for your players",
+    "title" : "Statistics",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "StatisticsService"
+  } ],
+  "paths" : {
+    "/v1/statistics/batch/user-stats" : {
+      "get" : {
+        "description" : "Fetches user statistics for multiple users",
+        "operationId" : "BatchGetUserStatistics",
+        "parameters" : [ {
+          "description" : "ID(s) of the user(s) to get statistics for",
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Name of the statistics to get",
+          "explode" : true,
+          "in" : "query",
+          "name" : "keys",
+          "required" : false,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/statisticsBatchGetUserStatisticsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Statistics",
+        "tags" : [ "StatisticsService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      },
+      "patch" : {
+        "description" : "Increments user statistics in bulk for multiple users",
+        "operationId" : "BatchIncrementUserStatistics",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/statisticsBatchIncrementUserStatisticsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/statisticsBatchIncrementUserStatisticsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Statistics (App Auth)",
+        "tags" : [ "StatisticsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Sets user statistics in bulk for multiple users",
+        "operationId" : "BatchSetUserStatistics",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/statisticsBatchSetUserStatisticsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/statisticsBatchSetUserStatisticsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Statistics",
+        "tags" : [ "StatisticsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/statistics/batch/user-stats/{user_id}" : {
+      "put" : {
+        "description" : "Updates user statistics in bulk",
+        "operationId" : "BatchUpdateUserStatistics",
+        "parameters" : [ {
+          "description" : "User ID of the user for whom the stats are being updated",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BatchUpdateUserStatistics_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/statisticsBatchUpdateUserStatisticsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Statistics",
+        "tags" : [ "StatisticsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/statistics/segments/{segment_name}/users/{user_id}" : {
+      "get" : {
+        "description" : "Checks if user is in segment or not",
+        "operationId" : "IsUserInSegment",
+        "parameters" : [ {
+          "description" : "Name of the segment",
+          "explode" : false,
+          "in" : "path",
+          "name" : "segment_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/statisticsIsUserInSegmentResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Segment",
+        "tags" : [ "StatisticsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/statistics/settings/user-stats/{user_id}" : {
+      "get" : {
+        "description" : "Get all user statistics for user or stat",
+        "operationId" : "GetUserStatistics",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/statisticsGetUserStatisticsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Statistics",
+        "tags" : [ "StatisticsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/statistics/user-stats/{user_id}/{key}" : {
+      "get" : {
+        "description" : "Gets a specific user statistic by user id and stat key",
+        "operationId" : "GetUserStatistic",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of the user statistic",
+          "explode" : false,
+          "in" : "path",
+          "name" : "key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/statisticsUserStatistic"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Statistic",
+        "tags" : [ "StatisticsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "patch" : {
+        "description" : "Increments a user statistic",
+        "operationId" : "IncrementUserStatistic",
+        "parameters" : [ {
+          "description" : "User ID of the user who's stats are being requested",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of the user statistic",
+          "explode" : false,
+          "in" : "path",
+          "name" : "key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/IncrementUserStatistic_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/statisticsUserStatistic"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Statistic",
+        "tags" : [ "StatisticsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Sets a user statistic",
+        "operationId" : "SetUserStatistic",
+        "parameters" : [ {
+          "description" : "User ID of the user who's stats are being requested",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of the user statistic",
+          "explode" : false,
+          "in" : "path",
+          "name" : "key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetUserStatistic_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/statisticsUserStatistic"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Statistic",
+        "tags" : [ "StatisticsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "BatchUpdateUserStatistics_request" : {
+        "properties" : {
+          "data" : {
+            "description" : "Array of operations to be performed",
+            "items" : {
+              "$ref" : "#/components/schemas/statisticsBatchUpdateUserStatisticsItem"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "data" ],
+        "type" : "object"
+      },
+      "IncrementUserStatistic_request" : {
+        "properties" : {
+          "delta" : {
+            "description" : "Value to increment the statistic by. Use negative to decrement",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "delta" ],
+        "type" : "object"
+      },
+      "SetUserStatistic_request" : {
+        "properties" : {
+          "value" : {
+            "description" : "Value to set the statistic to",
+            "type" : "string"
+          }
+        },
+        "required" : [ "value" ],
+        "type" : "object"
+      },
+      "statisticsBatchGetUserStatisticsResponse" : {
+        "properties" : {
+          "responses" : {
+            "items" : {
+              "$ref" : "#/components/schemas/statisticsBatchGetUserStatisticsSingleResponse"
+            },
+            "type" : "array"
+          },
+          "users_statistics" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/statisticsMultiUserStatistics"
+            },
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "statisticsBatchGetUserStatisticsSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/statisticsGetUserStatisticsRequest"
+          },
+          "response" : {
+            "items" : {
+              "$ref" : "#/components/schemas/statisticsUserStatistic"
+            },
+            "type" : "array"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "statisticsBatchIncrementUserStatisticsRequest" : {
+        "properties" : {
+          "requests" : {
+            "description" : "Array of operations to be performed",
+            "items" : {
+              "$ref" : "#/components/schemas/statisticsIncrementUserStatisticRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "requests" ],
+        "type" : "object"
+      },
+      "statisticsBatchIncrementUserStatisticsResponse" : {
+        "properties" : {
+          "responses" : {
+            "items" : {
+              "$ref" : "#/components/schemas/statisticsBatchIncrementUserStatisticsSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "statisticsBatchIncrementUserStatisticsSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/statisticsIncrementUserStatisticRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/statisticsUserStatistic"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "statisticsBatchSetUserStatisticsRequest" : {
+        "properties" : {
+          "requests" : {
+            "description" : "Array of operations to be performed",
+            "items" : {
+              "$ref" : "#/components/schemas/statisticsSetUserStatisticRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "requests" ],
+        "type" : "object"
+      },
+      "statisticsBatchSetUserStatisticsResponse" : {
+        "properties" : {
+          "responses" : {
+            "items" : {
+              "$ref" : "#/components/schemas/statisticsBatchSetUserStatisticsSingleResponse"
+            },
+            "type" : "array"
+          },
+          "user_statistics" : {
+            "items" : {
+              "$ref" : "#/components/schemas/statisticsUserStatistic"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "statisticsBatchSetUserStatisticsSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/statisticsSetUserStatisticRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/statisticsUserStatistic"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "statisticsBatchUpdateUserStatisticsItem" : {
+        "properties" : {
+          "idx" : {
+            "description" : "Index used to determine the order in which operations are executed",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "key" : {
+            "description" : "Name of the user statistic",
+            "type" : "string"
+          },
+          "operation" : {
+            "description" : "Operation to be performed (increment / set)",
+            "type" : "string"
+          },
+          "value" : {
+            "description" : "Value that the statistic should be set to / incremented by",
+            "type" : "string"
+          }
+        },
+        "required" : [ "idx", "key", "operation", "value" ],
+        "type" : "object"
+      },
+      "statisticsBatchUpdateUserStatisticsResponse" : {
+        "properties" : {
+          "user_statistics" : {
+            "items" : {
+              "$ref" : "#/components/schemas/statisticsUserStatistic"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "statisticsGetUserStatisticsRequest" : {
+        "properties" : {
+          "user_id" : {
+            "description" : "User ID of the user",
+            "type" : "string"
+          }
+        },
+        "required" : [ "user_id" ],
+        "type" : "object"
+      },
+      "statisticsGetUserStatisticsResponse" : {
+        "properties" : {
+          "user_statistics" : {
+            "items" : {
+              "$ref" : "#/components/schemas/statisticsUserStatistic"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "statisticsIncrementUserStatisticRequest" : {
+        "properties" : {
+          "delta" : {
+            "description" : "Value to increment the statistic by. Use negative to decrement",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "key" : {
+            "description" : "Name of the user statistic",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "User ID of the user who's stats are being requested",
+            "type" : "string"
+          }
+        },
+        "required" : [ "delta", "key", "user_id" ],
+        "type" : "object"
+      },
+      "statisticsIsUserInSegmentResponse" : {
+        "properties" : {
+          "userInSegment" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "statisticsMultiUserStatistics" : {
+        "properties" : {
+          "user_statistics" : {
+            "items" : {
+              "$ref" : "#/components/schemas/statisticsUserStatistic"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "statisticsSetUserStatisticRequest" : {
+        "properties" : {
+          "key" : {
+            "description" : "Name of the user statistic",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "User ID of the user who's stats are being requested",
+            "type" : "string"
+          },
+          "value" : {
+            "description" : "Value to set the statistic to",
+            "type" : "string"
+          }
+        },
+        "required" : [ "key", "user_id", "value" ],
+        "type" : "object"
+      },
+      "statisticsUserStatistic" : {
+        "properties" : {
+          "key" : {
+            "type" : "string"
+          },
+          "user_id" : {
+            "type" : "string"
+          },
+          "value" : {
+            "type" : "string"
+          }
+        },
+        "title" : "Message Types and Enums",
+        "type" : "object"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

@@ -1,0 +1,50 @@
+export const description = 'Cluster Sync'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Cluster Settings Sync
+
+A typical live app or game has a lot of active configuration powering the app. This includes things like the storage blob names, authentication connectors, In-app purchase secrets, etc. In addition, if a app has a live cadence there are a lot of changes that happen to the experimentation, segmentation, analytics configurations etc.
+
+Keeping these configurations in sync across multiple environments is a challenge. Snapend solves this problem by providing a way to sync these configurations across multiple clusters.
+
+<Warning>
+  This tool is only available for Premium tier customers.
+</Warning>
+
+## Tool Location
+
+You can find the Cluster sync tool under the **Tools** of the home page of your snapend.
+
+![Snapend Pic](/images/docs/snapend-sync-tool.png)
+
+## Sync Algorithm
+
+The sync is a total replace. This means that the configurations from the source cluster are blindly replacing the configuration in the destination cluster. There are some exceptions to this rule. Some settings like Auth connectors, IAP connectors etc are implicitly multi env aware. This means that the same connector can be used in multiple environments. In such cases the sync tool will replace the configuration by taking into account the env of the source and destination snapends.
+
+![Snapend Pic](/images/docs/snapend-sync-final-config.png)
+
+### Selective Snaps
+
+You can chose to copy over configurations from the Snaps you want from the destination cluster. Eg: If you have 3 snaps in your destination cluster and you want to copy over the configurations from only 2 of them, you can do that by using the toggle next to the snap name. The sync tool will only copy over the configurations for the snaps that are toggled on.
+
+## Manual Configuration
+You can also chose to manually edit the configuration for a snap. Click on the **Diff** button to see the configuration diff for the snap.
+
+![Snapend Pic](/images/docs/snapend-sync-auth-edit.png)
+
+You can then edit the configuration and click on the **Validate & Save** button to update the configuration for the snap.
+
+![Snapend Pic](/images/docs/snapend-sync-auth-edit-done.png)
+
+### Limitation
+
+#### Full replace only
+At the moment you can only copy entire configuration Snapshots. Eg: Cluster A has 3 experiments and Cluster B has 2 experiments. You can chose to copy all 3 experiments from Cluster A to Cluster B or none of them. You cannot chose to copy just 2 experiments from Cluster A to Cluster B.
+
+#### No user data copy
+
+Only the tool configuration data is getting copied here. No user data. User data remains isolated between environments.

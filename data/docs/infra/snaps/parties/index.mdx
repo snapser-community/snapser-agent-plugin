@@ -1,0 +1,3260 @@
+export const description = 'Parties'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Parties
+
+The Parties snap provides games with the ability to create ephemeral user groups. These groups are
+
+## Party Types
+
+The Party snap supports the following party visibility types:
+
+1. **Public**: As the name suggests, any user can choose to join these type of parties at any time, as long as they still have available slots.
+2. **Private**: Users cannot join private parties directly. They have to request membership to private parties, which are visible to the party owner. The party owner can then decide to add them to the party, or to reject their request.
+
+## Ownership and Permissions
+
+Party owners are the users who created the party. They have the ability to update the party, approve or reject membership requests, and delete the party.
+
+If a party owner leaves the party, party ownership is transferred to another party member.
+
+### Any user can
+
+- Join public parties
+- Search for public parties
+- Leave their party
+
+### But only party owners can
+
+- Approve requests to join the party
+- Ban / kick / un-ban members from the party
+- Update the party configuration and meta
+- Delete the party
+
+## Party Metadata
+
+Each Party has a **metadata** property that can
+store an arbitrary JSON object. The party owner is allowed to update the **metadata** of the party.
+
+Further, each party member also has a **metadata** JSON object that can be defined when the player joins the party.
+
+## Tools
+
+The [Parties tool](/docs/snapend/tools/parties) lets you search parties on a Snapend and manage their
+players, invites, join requests and bans from the web portal.
+
+## Snaps Integration
+
+Parties snap is integrated with the following snaps:
+
+### Matchmaking
+
+Parties Snap is now integrated with the Matchmaking Snap. Users can queue up for matchmaking as a party (`matchmaking.CreateTicketsForParty`) and ensure that
+all party members are matched into the same game. Additionally, we've improved the Parties integration with our websocket
+gateway to emit several new events about the lifecycle of a Party and its players.
+
+#### Latency Rules
+
+If a matchmaking profile wants to use a Latency Rule as well as Party matchmaking, then the player latencies must be added to the player's metadata when they join the party. 
+Then, when `matchmaking.CreateTicketsForParty` is called, the correct latencies will be used for each player in the party. Optionally, the party owner can also set a 
+default latency for the party, which will be used if a player does not have a latency set in their metadata.
+
+<Note>
+  The Parties Snap is a work in progress. We are working on adding more
+  integrations like chat, social graph, and voice.
+</Note>
+
+## APIs
+
+The `Parties` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name                  | HTTP Method | API Description                                                                                        |
+| ------------------------- | ----------- | ------------------------------------------------------------------------------------------------------ |
+| [PartiesCreateParty](#partiescreateparty-api)               | POST        | Creates a party                                                                                       |
+| [PartiesAcceptInvite](#partiesacceptinvite-api)              | POST        | Accepts a party invite                                                                                 |
+| [PartiesDeclineInvite](#partiesdeclineinvite-api)              | POST        | Decline a party invite                                                                                 |
+| [PartiesApprovePartyRequest](#partiesapprovepartyrequest-api)       | POST        | Approves a party request. Only the party owner can approve requests.                                   |
+| [PartiesSearchParties](#partiessearchparties-api)             | POST        | Searches for parties                                                                                   |
+| [PartiesListPartiesForUser](#partieslistpartiesforuser-api)        | GET         | Lists all parties a user is a part of                                                                  |
+| [PartiesDeleteParty](#partiesdeleteparty-api)               | DELETE      | Deletes a party. Only the party owner can delete the party.                                            |
+| [PartiesGetParty](#partiesgetparty-api)                  | GET         | Creates a party                                                                                        |
+| [PartiesUpdateParty](#partiesupdateparty-api)               | PUT         | Updates a party                                                                                        |
+| [PartiesBanUser](#partiesbanuser-api)                   | POST        | Bans a user from a party. Only the party owner can ban users.                                          |
+| [PartiesListPartyInvites](#partieslistpartyinvites-api)          | GET         | Lists party invites                                                                                    |
+| [PartiesInviteUser](#partiesinviteuser-api)                | POST        | Invites a user to a party                                                                              |
+| [PartiesJoinParty](#partiesjoinparty-api)                 | POST        | Joins a party                                                                                          |
+| [PartiesKickUser](#partieskickuser-api)                  | POST        | Kicks a user from a party. Only the party owner can kick users                                         |
+| [PartiesLeaveParty](#partiesleaveparty-api)                | POST        | Leaves a party. If the party owner leaves, the party ownership is transferred to another party member. |
+| [PartiesUpdatePartyPlayerMetadata](#partiesupdatepartyplayermetadata-api) | POST        | Updates a player's metadata in a party                                                                 |
+| [PartiesListPartyRequests](#partieslistpartyrequests-api)         | GET         | Lists party requests                                                                                   |
+| [PartiesRequestToJoinParty](#partiesrequesttojoinparty-api)        | POST        | Requests to join a party                                                                               |
+| [PartiesUnbanUser](#partiesunbanuser-api)                 | POST        | Unbans a user from a party. Only the party owner can unban users                                       |
+| [PartiesTransferOwnership](#partiestransferownership-api) | POST        | Transfers ownership of a party to another member. Only the current owner can transfer ownership.       |
+</div>
+
+### Usage
+#### PartiesCreateParty API
+<CodeGroup title="Creates a party" tag="POST" label="PartiesCreateParty">
+```csharp
+/// <summary>
+/// Create Party Creates a party.
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>PartiesCreatePartyResponse</returns>
+public PartiesCreatePartyResponse PartiesCreateParty(string token, PartiesCreatePartyRequest body)
+{
+    Snapser.Client.ApiResponse<PartiesCreatePartyResponse> localVarResponse = PartiesCreatePartyWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesCreatePartyRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesCreatePartyRequest" /> class.
+/// </summary>
+/// <param name="maxPlayers">The max number of players to allow in the party.</param>
+/// <param name="metadata">A Json document of metadata to be stored with the party.</param>
+/// <param name="ownerId">The owner of the party. If using auth, this must match the user_id in the auth token.</param>
+/// <param name="ownerMetadata">A Json document of metadata to be stored with the player that created the party.</param>
+/// <param name="partyName">Name of the party.</param>
+/// <param name="searchProperties">A Json document that will be indexed for full text searching.</param>
+/// <param name="settings">settings.</param>
+/// <param name="status">The status of the party. Defaults to open. Valid names: PARTY_STATUS_OPEN, PARTY_STATUS_FULL, PARTY_STATUS_IN_GAME.</param>
+/// <param name="visibility">The visibility of the party. Defaults to private. Valid names: PARTY_VISIBILITY_PUBLIC, PARTY_VISIBILITY_PRIVATE, PARTY_VISIBILITY_INVITE_ONLY, PARTY_VISIBILITY_FRIENDS_ONLY.</param>
+public PartiesCreatePartyRequest(long maxPlayers = default(long), Object metadata = default(Object), string ownerId = default(string), Object ownerMetadata = default(Object), string partyName = default(string), Object searchProperties = default(Object), PartiesPartySettings settings = default(PartiesPartySettings), string status = default(string), string visibility = default(string))
+{
+    this.MaxPlayers = maxPlayers;
+    this.Metadata = metadata;
+    this.OwnerId = ownerId;
+    this.OwnerMetadata = ownerMetadata;
+    this.PartyName = partyName;
+    this.SearchProperties = searchProperties;
+    this.Settings = settings;
+    this.Status = status;
+    this.Visibility = visibility;
+}
+
+/// Snapser.Model for PartiesCreatePartyResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesCreatePartyResponse" /> class.
+/// </summary>
+/// <param name="party">party.</param>
+public PartiesCreatePartyResponse(PartiesParty party = default(PartiesParty))
+{
+    this.Party = party;
+}
+
+/// Snapser.Model for PartiesParty
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesParty" /> class.
+/// </summary>
+/// <param name="bannedPlayers">bannedPlayers.</param>
+/// <param name="connectionString">connectionString.</param>
+/// <param name="createdAt">createdAt.</param>
+/// <param name="id">id.</param>
+/// <param name="maxPlayers">maxPlayers.</param>
+/// <param name="metadata">metadata.</param>
+/// <param name="owner">owner.</param>
+/// <param name="partyName">partyName.</param>
+/// <param name="players">players.</param>
+/// <param name="searchProperties">searchProperties.</param>
+/// <param name="settings">settings.</param>
+/// <param name="status">status.</param>
+/// <param name="type">type.</param>
+/// <param name="updatedAt">updatedAt.</param>
+/// <param name="visibility">visibility.</param>
+public PartiesParty(Dictionary<string, Object> bannedPlayers = default(Dictionary<string, Object>), string connectionString = default(string), string createdAt = default(string), string id = default(string), string maxPlayers = default(string), Object metadata = default(Object), string owner = default(string), string partyName = default(string), Dictionary<string, Object> players = default(Dictionary<string, Object>), Object searchProperties = default(Object), PartiesPartySettings settings = default(PartiesPartySettings), PartiesPartyStatus? status = default(PartiesPartyStatus?), string type = default(string), string updatedAt = default(string), PartiesPartyVisibility? visibility = default(PartiesPartyVisibility?))
+{
+    this.BannedPlayers = bannedPlayers;
+    this.ConnectionString = connectionString;
+    this.CreatedAt = createdAt;
+    this.Id = id;
+    this.MaxPlayers = maxPlayers;
+    this.Metadata = metadata;
+    this.Owner = owner;
+    this.PartyName = partyName;
+    this.Players = players;
+    this.SearchProperties = searchProperties;
+    this.Settings = settings;
+    this.Status = status;
+    this.Type = type;
+    this.UpdatedAt = updatedAt;
+    this.Visibility = visibility;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesCreatePartyRequest : public Request
+{
+public:
+    virtual ~PartiesCreatePartyRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserPartiesCreatePartyRequest Body;
+};
+
+class SNAPSER_API SnapserPartiesCreatePartyRequest : public Model
+{
+public:
+    virtual ~SnapserPartiesCreatePartyRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* The max number of players to allow in the party */
+    TOptional<int64> MaxPlayers;
+    /* A Json document of metadata to be stored with the party */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* The owner of the party. If using auth, this must match the user_id in the auth token */
+    TOptional<FString> OwnerId;
+    /* A Json document of metadata to be stored with the player that created the party */
+    TOptional<TSharedPtr<FJsonObject>> OwnerMetadata;
+    /* Name of the party */
+    TOptional<FString> PartyName;
+    /* A Json document that will be indexed for full text searching */
+    TOptional<TSharedPtr<FJsonObject>> SearchProperties;
+    TOptional<SnapserPartiesPartySettings> Settings;
+    /* The status of the party. Defaults to open. Valid names: PARTY_STATUS_OPEN, PARTY_STATUS_FULL, PARTY_STATUS_IN_GAME */
+    TOptional<FString> Status;
+    /* The visibility of the party. Defaults to private. Valid names: PARTY_VISIBILITY_PUBLIC, PARTY_VISIBILITY_PRIVATE, PARTY_VISIBILITY_INVITE_ONLY, PARTY_VISIBILITY_FRIENDS_ONLY */
+    TOptional<FString> Visibility;
+};
+
+class SNAPSER_API SnapserPartiesPartySettings : public Model
+{
+public:
+    virtual ~SnapserPartiesPartySettings() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* AllowMemberJoinInGame indicates if party members can join the party while the party is in a game. */
+    TOptional<bool> AllowMemberJoinInGame;
+    /* AllowMemberMatchmaking indicates if party members can queue/dequeue on behalf of the party. */
+    TOptional<bool> AllowMemberMatchmaking;
+    /* AllowPartyUpdatesInGame indicates if the party can be updated while the party is in a game. */
+    TOptional<bool> AllowPartyUpdatesInGame;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesCreatePartyResponse : public Response
+{
+public:
+    virtual ~PartiesCreatePartyResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesCreatePartyResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesCreatePartyResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesCreatePartyResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserPartiesParty> Party;
+};
+
+class SNAPSER_API SnapserPartiesParty : public Model
+{
+public:
+    virtual ~SnapserPartiesParty() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TMap<FString, TSharedPtr<FJsonObject>>> BannedPlayers;
+    TOptional<FString> ConnectionString;
+    TOptional<FString> CreatedAt;
+    TOptional<FString> Id;
+    TOptional<FString> MaxPlayers;
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    TOptional<FString> Owner;
+    TOptional<FString> PartyName;
+    TOptional<TMap<FString, TSharedPtr<FJsonObject>>> Players;
+    TOptional<TSharedPtr<FJsonObject>> SearchProperties;
+    TOptional<SnapserPartiesPartySettings> Settings;
+    TOptional<SnapserPartiesPartyStatus> Status;
+    TOptional<FString> Type;
+    TOptional<FString> UpdatedAt;
+    TOptional<SnapserPartiesPartyVisibility> Visibility;
+};
+
+class SNAPSER_API SnapserPartiesPartySettings : public Model
+{
+public:
+    virtual ~SnapserPartiesPartySettings() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* AllowMemberJoinInGame indicates if party members can join the party while the party is in a game. */
+    TOptional<bool> AllowMemberJoinInGame;
+    /* AllowMemberMatchmaking indicates if party members can queue/dequeue on behalf of the party. */
+    TOptional<bool> AllowMemberMatchmaking;
+    /* AllowPartyUpdatesInGame indicates if the party can be updated while the party is in a game. */
+    TOptional<bool> AllowPartyUpdatesInGame;
+};
+
+class SNAPSER_API SnapserPartiesPartyStatus : public Model
+{
+public:
+    virtual ~SnapserPartiesPartyStatus() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        Unknown,
+        Open,
+        Full,
+        InGame,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserPartiesPartyVisibility : public Model
+{
+public:
+    virtual ~SnapserPartiesPartyVisibility() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        Unknown,
+        _Public,
+        _Private,
+        InviteOnly,
+        FriendsOnly,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### PartiesAcceptInvite API
+<CodeGroup title="Accepts a party invite" tag="POST" label="PartiesAcceptInvite">
+```csharp
+/// <summary>
+/// Accept Party Invite Accepts a party invite
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="inviteId">ID of the invite</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>PartiesAcceptInviteResponse</returns>
+public PartiesAcceptInviteResponse PartiesAcceptInvite(string inviteId, string token, PartiesServiceAcceptInviteBody body)
+{
+    Snapser.Client.ApiResponse<PartiesAcceptInviteResponse> localVarResponse = PartiesAcceptInviteWithHttpInfo(inviteId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesServiceAcceptInviteBody
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesServiceAcceptInviteBody" /> class.
+/// </summary>
+/// <param name="userId">ID of the user approving the request. The user must be the owner to approve. If using auth, this must match the user_id in the auth token.</param>
+public PartiesServiceAcceptInviteBody(string userId = default(string))
+{
+    this.UserId = userId;
+}
+
+/// Snapser.Model for PartiesAcceptInviteResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesAcceptInviteResponse" /> class.
+/// </summary>
+/// <param name="success">success.</param>
+public PartiesAcceptInviteResponse(bool success = default(bool))
+{
+    this.Success = success;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesAcceptInviteRequest : public Request
+{
+public:
+    virtual ~PartiesAcceptInviteRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the invite */
+    FString InviteId;
+    /* User session token */
+    FString Token;
+    SnapserPartiesServiceAcceptInviteBody Body;
+};
+
+class SNAPSER_API SnapserPartiesServiceAcceptInviteBody : public Model
+{
+public:
+    virtual ~SnapserPartiesServiceAcceptInviteBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* ID of the user approving the request. The user must be the owner to approve. If using auth, this must match the user_id in the auth token */
+    TOptional<FString> UserId;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesAcceptInviteResponse : public Response
+{
+public:
+    virtual ~PartiesAcceptInviteResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesAcceptInviteResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesAcceptInviteResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesAcceptInviteResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<bool> Success;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### PartiesDeclineInvite API
+<CodeGroup title="Decline a party invite" tag="POST" label="PartiesDeclineInvite">
+```csharp
+/// <summary>
+/// Party Member Declines a party invite
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="inviteId">ID of the invite</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>PartiesDeclineInviteResponse</returns>
+public PartiesDeclineInviteResponse PartiesDeclineInvite(string inviteId, string token, PartiesServiceDeclineInviteBody body)
+{
+    Snapser.Client.ApiResponse<PartiesDeclineInviteResponse> localVarResponse = PartiesDeclineInviteWithHttpInfo(inviteId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesServiceDeclineInviteBody
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesServiceDeclineInviteBody" /> class.
+/// </summary>
+/// <param name="userId">ID of the user declining the request. The user must be the owner to decline. If using auth, this must match the user_id in the auth token.</param>
+public PartiesServiceDeclineInviteBody(string userId = default(string))
+{
+    this.UserId = userId;
+}
+
+/// Snapser.Model for PartiesDeclineInviteResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesDeclineInviteResponse" /> class.
+/// </summary>
+/// <param name="success">success.</param>
+public PartiesDeclineInviteResponse(bool success = default(bool))
+{
+    this.Success = success;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesDeclineInviteRequest : public Request
+{
+public:
+    virtual ~PartiesDeclineInviteRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the invite */
+    FString InviteId;
+    /* User session token */
+    FString Token;
+    SnapserPartiesServiceDeclineInviteBody Body;
+};
+
+class SNAPSER_API SnapserPartiesServiceDeclineInviteBody : public Model
+{
+public:
+    virtual ~SnapserPartiesServiceDeclineInviteBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* ID of the user declining the request. The user must be the owner to decline. If using auth, this must match the user_id in the auth token */
+    TOptional<FString> UserId;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesDeclineInviteResponse : public Response
+{
+public:
+    virtual ~PartiesDeclineInviteResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesDeclineInviteResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesDeclineInviteResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesDeclineInviteResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<bool> Success;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### PartiesApprovePartyRequest API
+<CodeGroup title="Approves a party request" tag="POST" label="PartiesApprovePartyRequest">
+```csharp
+/// <summary>
+/// Approve Party Request Approves a party request. Only the party owner can approve requests.
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="requestId">ID of the request</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>PartiesApprovePartyRequestResponse</returns>
+public PartiesApprovePartyRequestResponse PartiesApprovePartyRequest(string requestId, string token, PartiesServiceApprovePartyRequestBody body)
+{
+    Snapser.Client.ApiResponse<PartiesApprovePartyRequestResponse> localVarResponse = PartiesApprovePartyRequestWithHttpInfo(requestId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesServiceApprovePartyRequestBody
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesServiceApprovePartyRequestBody" /> class.
+/// </summary>
+/// <param name="userId">ID of the user approving the request. The user must be the owner to approve. If using auth, this must match the user_id in the auth token.</param>
+public PartiesServiceApprovePartyRequestBody(string userId = default(string))
+{
+    this.UserId = userId;
+}
+
+/// Snapser.Model for PartiesApprovePartyRequestResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesApprovePartyRequestResponse" /> class.
+/// </summary>
+/// <param name="success">success.</param>
+public PartiesApprovePartyRequestResponse(bool success = default(bool))
+{
+    this.Success = success;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesApprovePartyRequestRequest : public Request
+{
+public:
+    virtual ~PartiesApprovePartyRequestRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the request */
+    FString RequestId;
+    /* User session token */
+    FString Token;
+    SnapserPartiesServiceApprovePartyRequestBody Body;
+};
+
+class SNAPSER_API SnapserPartiesServiceApprovePartyRequestBody : public Model
+{
+public:
+    virtual ~SnapserPartiesServiceApprovePartyRequestBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* ID of the user approving the request. The user must be the owner to approve. If using auth, this must match the user_id in the auth token */
+    TOptional<FString> UserId;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesApprovePartyRequestResponse : public Response
+{
+public:
+    virtual ~PartiesApprovePartyRequestResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesApprovePartyRequestResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesApprovePartyRequestResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesApprovePartyRequestResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<bool> Success;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### PartiesSearchParties API
+<CodeGroup title="Searches for parties" tag="POST" label="PartiesSearchParties">
+```csharp
+/// <summary>
+/// Search Parties Searches for parties
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>PartiesSearchPartiesResponse</returns>
+public PartiesSearchPartiesResponse PartiesSearchParties(string token, PartiesSearchPartiesRequest body)
+{
+    Snapser.Client.ApiResponse<PartiesSearchPartiesResponse> localVarResponse = PartiesSearchPartiesWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesSearchPartiesRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesSearchPartiesRequest" /> class.
+/// </summary>
+/// <param name="limit">Number of results returned. The maximum allowed is 50, defaults to 10 if not provided..</param>
+/// <param name="metadataFilters">Metadata filters. IMPORTANT: Only populate value or a single strongly typed value field (bool_value, int_value, double_value, string_value) inside each filter to ensure correct behavior..</param>
+/// <param name="offset">Number of results to skip from the start of the result set.</param>
+/// <param name="sort">sort.</param>
+public PartiesSearchPartiesRequest(long limit = default(long), List<PartiesMetadataFilter> metadataFilters = default(List<PartiesMetadataFilter>), long offset = default(long), PartiesSortParams sort = default(PartiesSortParams))
+{
+    this.Limit = limit;
+    this.MetadataFilters = metadataFilters;
+    this.Offset = offset;
+    this.Sort = sort;
+}
+
+/// Snapser.Model for PartiesMetadataFilter
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesMetadataFilter" /> class.
+/// </summary>
+/// <param name="boolValue">Strongly typed boolean value for comparison, use instead of value for type safety.</param>
+/// <param name="doubleValue">Strongly typed double value for comparison, use instead of value for type safety.</param>
+/// <param name="intValue">Strongly typed integer value for comparison, use instead of value for type safety.</param>
+/// <param name="key">Field inside metadata to be filtered on.</param>
+/// <param name="op">Operator for the comparison. Valid values - LIKE, &#x3D;, &gt;, &lt;.</param>
+/// <param name="stringValue">Strongly typed string value for comparison, use instead of value for type safety.</param>
+/// <param name="value">value.</param>
+public PartiesMetadataFilter(bool boolValue = default(bool), double doubleValue = default(double), long intValue = default(long), string key = default(string), string op = default(string), string stringValue = default(string), AnyValue value = default(AnyValue))
+{
+    this.BoolValue = boolValue;
+    this.DoubleValue = doubleValue;
+    this.IntValue = intValue;
+    this.Key = key;
+    this.Op = op;
+    this.StringValue = stringValue;
+    this.Value = value;
+}
+
+/// Snapser.Model for PartiesSortParams
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesSortParams" /> class.
+/// </summary>
+/// <param name="field">Field on which the results are to be sorted.</param>
+/// <param name="order">Order of sorting. Valid values - asc, desc.</param>
+public PartiesSortParams(string field = default(string), string order = default(string))
+{
+    this.Field = field;
+    this.Order = order;
+}
+
+/// Snapser.Model for PartiesSearchPartiesResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesSearchPartiesResponse" /> class.
+/// </summary>
+/// <param name="parties">parties.</param>
+public PartiesSearchPartiesResponse(List<PartiesParty> parties = default(List<PartiesParty>))
+{
+    this.Parties = parties;
+}
+
+/// Snapser.Model for PartiesParty
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesParty" /> class.
+/// </summary>
+/// <param name="bannedPlayers">bannedPlayers.</param>
+/// <param name="connectionString">connectionString.</param>
+/// <param name="createdAt">createdAt.</param>
+/// <param name="id">id.</param>
+/// <param name="maxPlayers">maxPlayers.</param>
+/// <param name="metadata">metadata.</param>
+/// <param name="owner">owner.</param>
+/// <param name="partyName">partyName.</param>
+/// <param name="players">players.</param>
+/// <param name="searchProperties">searchProperties.</param>
+/// <param name="settings">settings.</param>
+/// <param name="status">status.</param>
+/// <param name="type">type.</param>
+/// <param name="updatedAt">updatedAt.</param>
+/// <param name="visibility">visibility.</param>
+public PartiesParty(Dictionary<string, Object> bannedPlayers = default(Dictionary<string, Object>), string connectionString = default(string), string createdAt = default(string), string id = default(string), string maxPlayers = default(string), Object metadata = default(Object), string owner = default(string), string partyName = default(string), Dictionary<string, Object> players = default(Dictionary<string, Object>), Object searchProperties = default(Object), PartiesPartySettings settings = default(PartiesPartySettings), PartiesPartyStatus? status = default(PartiesPartyStatus?), string type = default(string), string updatedAt = default(string), PartiesPartyVisibility? visibility = default(PartiesPartyVisibility?))
+{
+    this.BannedPlayers = bannedPlayers;
+    this.ConnectionString = connectionString;
+    this.CreatedAt = createdAt;
+    this.Id = id;
+    this.MaxPlayers = maxPlayers;
+    this.Metadata = metadata;
+    this.Owner = owner;
+    this.PartyName = partyName;
+    this.Players = players;
+    this.SearchProperties = searchProperties;
+    this.Settings = settings;
+    this.Status = status;
+    this.Type = type;
+    this.UpdatedAt = updatedAt;
+    this.Visibility = visibility;
+}
+
+/// Snapser.Model for PartiesPartySettings
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesPartySettings" /> class.
+/// </summary>
+/// <param name="allowMemberJoinInGame">AllowMemberJoinInGame indicates if party members can join the party while the party is in a game..</param>
+/// <param name="allowMemberMatchmaking">AllowMemberMatchmaking indicates if party members can queue/dequeue on behalf of the party..</param>
+/// <param name="allowPartyUpdatesInGame">AllowPartyUpdatesInGame indicates if the party can be updated while the party is in a game..</param>
+public PartiesPartySettings(bool allowMemberJoinInGame = default(bool), bool allowMemberMatchmaking = default(bool), bool allowPartyUpdatesInGame = default(bool))
+{
+    this.AllowMemberJoinInGame = allowMemberJoinInGame;
+    this.AllowMemberMatchmaking = allowMemberMatchmaking;
+    this.AllowPartyUpdatesInGame = allowPartyUpdatesInGame;
+}
+
+/// Snapser.Model for PartiesPartyStatus
+/// <summary>
+/// PartyStatus represents the status of a party.   - PARTY_STATUS_UNKNOWN: PARTY_STATUS_UNKNOWN indicates an unknown status.  - PARTY_STATUS_OPEN: PARTY_STATUS_OPEN indicates the party is open for anyone to join.  - PARTY_STATUS_FULL: PARTY_STATUS_FULL indicates the party is full and cannot accept new members.  - PARTY_STATUS_IN_GAME: PARTY_STATUS_IN_GAME indicates the party is currently in a game.
+/// </summary>
+/// <value>PartyStatus represents the status of a party.   - PARTY_STATUS_UNKNOWN: PARTY_STATUS_UNKNOWN indicates an unknown status.  - PARTY_STATUS_OPEN: PARTY_STATUS_OPEN indicates the party is open for anyone to join.  - PARTY_STATUS_FULL: PARTY_STATUS_FULL indicates the party is full and cannot accept new members.  - PARTY_STATUS_IN_GAME: PARTY_STATUS_IN_GAME indicates the party is currently in a game.</value>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum PartiesPartyStatus
+{
+    /// <summary>
+    /// Enum UNKNOWN for value: PARTY_STATUS_UNKNOWN
+    /// </summary>
+    [EnumMember(Value = "PARTY_STATUS_UNKNOWN")] UNKNOWN = 1,
+
+    /// <summary>
+    /// Enum OPEN for value: PARTY_STATUS_OPEN
+    /// </summary>
+    [EnumMember(Value = "PARTY_STATUS_OPEN")] OPEN = 2,
+
+    /// <summary>
+    /// Enum FULL for value: PARTY_STATUS_FULL
+    /// </summary>
+    [EnumMember(Value = "PARTY_STATUS_FULL")] FULL = 3,
+
+    /// <summary>
+    /// Enum INGAME for value: PARTY_STATUS_IN_GAME
+    /// </summary>
+    [EnumMember(Value = "PARTY_STATUS_IN_GAME")] INGAME = 4
+}
+
+/// Snapser.Model for PartiesPartyVisibility
+/// <summary>
+/// PartyVisibility represents the visibility level of a party.   - PARTY_VISIBILITY_UNKNOWN: PARTY_VISIBILITY_UNKNOWN indicates an unknown visibility.  - PARTY_VISIBILITY_PUBLIC: PARTY_VISIBILITY_PUBLIC indicates the party is visible to everyone.  - PARTY_VISIBILITY_PRIVATE: PARTY_VISIBILITY_PRIVATE indicates the party is private.  - PARTY_VISIBILITY_INVITE_ONLY: PARTY_VISIBILITY_INVITE_ONLY indicates the party is visible by invite only.  - PARTY_VISIBILITY_FRIENDS_ONLY: PARTY_VISIBILITY_FRIENDS_ONLY indicates the party is only visible to friends.
+/// </summary>
+/// <value>PartyVisibility represents the visibility level of a party.   - PARTY_VISIBILITY_UNKNOWN: PARTY_VISIBILITY_UNKNOWN indicates an unknown visibility.  - PARTY_VISIBILITY_PUBLIC: PARTY_VISIBILITY_PUBLIC indicates the party is visible to everyone.  - PARTY_VISIBILITY_PRIVATE: PARTY_VISIBILITY_PRIVATE indicates the party is private.  - PARTY_VISIBILITY_INVITE_ONLY: PARTY_VISIBILITY_INVITE_ONLY indicates the party is visible by invite only.  - PARTY_VISIBILITY_FRIENDS_ONLY: PARTY_VISIBILITY_FRIENDS_ONLY indicates the party is only visible to friends.</value>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum PartiesPartyVisibility
+{
+    /// <summary>
+    /// Enum UNKNOWN for value: PARTY_VISIBILITY_UNKNOWN
+    /// </summary>
+    [EnumMember(Value = "PARTY_VISIBILITY_UNKNOWN")] UNKNOWN = 1,
+
+    /// <summary>
+    /// Enum PUBLIC for value: PARTY_VISIBILITY_PUBLIC
+    /// </summary>
+    [EnumMember(Value = "PARTY_VISIBILITY_PUBLIC")] PUBLIC = 2,
+
+    /// <summary>
+    /// Enum PRIVATE for value: PARTY_VISIBILITY_PRIVATE
+    /// </summary>
+    [EnumMember(Value = "PARTY_VISIBILITY_PRIVATE")] PRIVATE = 3,
+
+    /// <summary>
+    /// Enum INVITEONLY for value: PARTY_VISIBILITY_INVITE_ONLY
+    /// </summary>
+    [EnumMember(Value = "PARTY_VISIBILITY_INVITE_ONLY")] INVITEONLY = 4,
+
+    /// <summary>
+    /// Enum FRIENDSONLY for value: PARTY_VISIBILITY_FRIENDS_ONLY
+    /// </summary>
+    [EnumMember(Value = "PARTY_VISIBILITY_FRIENDS_ONLY")] FRIENDSONLY = 5
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesSearchPartiesRequest : public Request
+{
+public:
+    virtual ~PartiesSearchPartiesRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserPartiesSearchPartiesRequest Body;
+};
+
+class SNAPSER_API SnapserPartiesSearchPartiesRequest : public Model
+{
+public:
+    virtual ~SnapserPartiesSearchPartiesRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Number of results returned. The maximum allowed is 50, defaults to 10 if not provided. */
+    TOptional<int64> Limit;
+    /* Metadata filters */
+    TOptional<TArray<SnapserPartiesMetadataFilter>> MetadataFilters;
+    /* Returns guilds that have the name matching this field */
+    TOptional<FString> Name;
+    /* Number of results to skip from the start of the result set */
+    TOptional<int64> Offset;
+    TOptional<SnapserPartiesSortParams> Sort;
+};
+
+class SNAPSER_API SnapserPartiesMetadataFilter : public Model
+{
+public:
+    virtual ~SnapserPartiesMetadataFilter() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Strongly typed boolean value for comparison, use instead of value for type safety */
+    TOptional<bool> BoolValue;
+    /* Strongly typed double value for comparison, use instead of value for type safety */
+    TOptional<double> DoubleValue;
+    /* Strongly typed integer value for comparison, use instead of value for type safety */
+    TOptional<int64> IntValue;
+    /* Field inside metadata to be filtered on */
+    TOptional<FString> Key;
+    /* Operator for the comparison. Valid values - LIKE, =, >, < */
+    TOptional<FString> Op;
+    /* Strongly typed string value for comparison, use instead of value for type safety */
+    TOptional<FString> StringValue;
+    TOptional<SnapserAnyValue> Value;
+};
+
+class SNAPSER_API SnapserPartiesSortParams : public Model
+{
+public:
+    virtual ~SnapserPartiesSortParams() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Field on which the results are to be sorted */
+    TOptional<FString> Field;
+    /* Order of sorting. Valid values - asc, desc */
+    TOptional<FString> Order;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesSearchPartiesResponse : public Response
+{
+public:
+    virtual ~PartiesSearchPartiesResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesSearchPartiesResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesSearchPartiesResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesSearchPartiesResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserPartiesParty>> Parties;
+};
+
+class SNAPSER_API SnapserPartiesParty : public Model
+{
+public:
+    virtual ~SnapserPartiesParty() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TMap<FString, TSharedPtr<FJsonObject>>> BannedPlayers;
+    TOptional<FString> ConnectionString;
+    TOptional<FString> CreatedAt;
+    TOptional<FString> Id;
+    TOptional<FString> MaxPlayers;
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    TOptional<FString> Owner;
+    TOptional<FString> PartyName;
+    TOptional<TMap<FString, TSharedPtr<FJsonObject>>> Players;
+    TOptional<TSharedPtr<FJsonObject>> SearchProperties;
+    TOptional<SnapserPartiesPartySettings> Settings;
+    TOptional<SnapserPartiesPartyStatus> Status;
+    TOptional<FString> Type;
+    TOptional<FString> UpdatedAt;
+    TOptional<SnapserPartiesPartyVisibility> Visibility;
+};
+
+class SNAPSER_API SnapserPartiesPartySettings : public Model
+{
+public:
+    virtual ~SnapserPartiesPartySettings() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* AllowMemberJoinInGame indicates if party members can join the party while the party is in a game. */
+    TOptional<bool> AllowMemberJoinInGame;
+    /* AllowMemberMatchmaking indicates if party members can queue/dequeue on behalf of the party. */
+    TOptional<bool> AllowMemberMatchmaking;
+    /* AllowPartyUpdatesInGame indicates if the party can be updated while the party is in a game. */
+    TOptional<bool> AllowPartyUpdatesInGame;
+};
+
+class SNAPSER_API SnapserPartiesPartyStatus : public Model
+{
+public:
+    virtual ~SnapserPartiesPartyStatus() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        Unknown,
+        Open,
+        Full,
+        InGame,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserPartiesPartyVisibility : public Model
+{
+public:
+    virtual ~SnapserPartiesPartyVisibility() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        Unknown,
+        _Public,
+        _Private,
+        InviteOnly,
+        FriendsOnly,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### PartiesListPartiesForUser API
+<CodeGroup title="Lists all parties a user is a part of" tag="GET" label="PartiesListPartiesForUser">
+```csharp
+/// <summary>
+/// List Parties for User Lists all parties a user is a part of
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">ID of the user</param>
+/// <param name="token">User session token</param>
+/// <returns>PartiesListPartiesForUserResponse</returns>
+public PartiesListPartiesForUserResponse PartiesListPartiesForUser(string userId, string token)
+{
+    Snapser.Client.ApiResponse<PartiesListPartiesForUserResponse> localVarResponse = PartiesListPartiesForUserWithHttpInfo(userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesListPartiesForUserResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesListPartiesForUserResponse" /> class.
+/// </summary>
+/// <param name="parties">parties.</param>
+public PartiesListPartiesForUserResponse(List<PartiesParty> parties = default(List<PartiesParty>))
+{
+    this.Parties = parties;
+}
+
+/// Snapser.Model for PartiesParty
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesParty" /> class.
+/// </summary>
+/// <param name="bannedPlayers">bannedPlayers.</param>
+/// <param name="connectionString">connectionString.</param>
+/// <param name="createdAt">createdAt.</param>
+/// <param name="id">id.</param>
+/// <param name="maxPlayers">maxPlayers.</param>
+/// <param name="metadata">metadata.</param>
+/// <param name="owner">owner.</param>
+/// <param name="partyName">partyName.</param>
+/// <param name="players">players.</param>
+/// <param name="searchProperties">searchProperties.</param>
+/// <param name="settings">settings.</param>
+/// <param name="status">status.</param>
+/// <param name="type">type.</param>
+/// <param name="updatedAt">updatedAt.</param>
+/// <param name="visibility">visibility.</param>
+public PartiesParty(Dictionary<string, Object> bannedPlayers = default(Dictionary<string, Object>), string connectionString = default(string), string createdAt = default(string), string id = default(string), string maxPlayers = default(string), Object metadata = default(Object), string owner = default(string), string partyName = default(string), Dictionary<string, Object> players = default(Dictionary<string, Object>), Object searchProperties = default(Object), PartiesPartySettings settings = default(PartiesPartySettings), PartiesPartyStatus? status = default(PartiesPartyStatus?), string type = default(string), string updatedAt = default(string), PartiesPartyVisibility? visibility = default(PartiesPartyVisibility?))
+{
+    this.BannedPlayers = bannedPlayers;
+    this.ConnectionString = connectionString;
+    this.CreatedAt = createdAt;
+    this.Id = id;
+    this.MaxPlayers = maxPlayers;
+    this.Metadata = metadata;
+    this.Owner = owner;
+    this.PartyName = partyName;
+    this.Players = players;
+    this.SearchProperties = searchProperties;
+    this.Settings = settings;
+    this.Status = status;
+    this.Type = type;
+    this.UpdatedAt = updatedAt;
+    this.Visibility = visibility;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesListPartiesForUserRequest : public Request
+{
+public:
+    virtual ~PartiesListPartiesForUserRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesListPartiesForUserResponse : public Response
+{
+public:
+    virtual ~PartiesListPartiesForUserResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesListPartiesForUserResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesListPartiesForUserResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesListPartiesForUserResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserPartiesParty>> Parties;
+};
+
+class SNAPSER_API SnapserPartiesParty : public Model
+{
+public:
+    virtual ~SnapserPartiesParty() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TMap<FString, TSharedPtr<FJsonObject>>> BannedPlayers;
+    TOptional<FString> ConnectionString;
+    TOptional<FString> CreatedAt;
+    TOptional<FString> Id;
+    TOptional<FString> MaxPlayers;
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    TOptional<FString> Owner;
+    TOptional<FString> PartyName;
+    TOptional<TMap<FString, TSharedPtr<FJsonObject>>> Players;
+    TOptional<TSharedPtr<FJsonObject>> SearchProperties;
+    TOptional<SnapserPartiesPartySettings> Settings;
+    TOptional<SnapserPartiesPartyStatus> Status;
+    TOptional<FString> Type;
+    TOptional<FString> UpdatedAt;
+    TOptional<SnapserPartiesPartyVisibility> Visibility;
+};
+
+class SNAPSER_API SnapserPartiesPartySettings : public Model
+{
+public:
+    virtual ~SnapserPartiesPartySettings() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* AllowMemberJoinInGame indicates if party members can join the party while the party is in a game. */
+    TOptional<bool> AllowMemberJoinInGame;
+    /* AllowMemberMatchmaking indicates if party members can queue/dequeue on behalf of the party. */
+    TOptional<bool> AllowMemberMatchmaking;
+    /* AllowPartyUpdatesInGame indicates if the party can be updated while the party is in a game. */
+    TOptional<bool> AllowPartyUpdatesInGame;
+};
+
+class SNAPSER_API SnapserPartiesPartyStatus : public Model
+{
+public:
+    virtual ~SnapserPartiesPartyStatus() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        Unknown,
+        Open,
+        Full,
+        InGame,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserPartiesPartyVisibility : public Model
+{
+public:
+    virtual ~SnapserPartiesPartyVisibility() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        Unknown,
+        _Public,
+        _Private,
+        InviteOnly,
+        FriendsOnly,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### PartiesDeleteParty API
+<CodeGroup title="Deletes a party" tag="DELETE" label="PartiesDeleteParty">
+```csharp
+/// <summary>
+/// Edit Party APIs Deletes a party. Only the party owner can delete the party.
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="partyId">ID of the party</param>
+/// <param name="token">User session token</param>
+/// <param name="ownerId">ID of the owner of the party. If using auth, this must match the user_id in the auth token (optional)</param>
+/// <returns>PartiesDeletePartyResponse</returns>
+public PartiesDeletePartyResponse PartiesDeleteParty(string partyId, string token, string ownerId = default(string))
+{
+    Snapser.Client.ApiResponse<PartiesDeletePartyResponse> localVarResponse = PartiesDeletePartyWithHttpInfo(partyId, token, ownerId);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesDeletePartyResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesDeletePartyResponse" /> class.
+/// </summary>
+/// <param name="success">success.</param>
+public PartiesDeletePartyResponse(bool success = default(bool))
+{
+    this.Success = success;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesDeletePartyRequest : public Request
+{
+public:
+    virtual ~PartiesDeletePartyRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the party */
+    FString PartyId;
+    /* User session token */
+    FString Token;
+    /* ID of the owner of the party. If using auth, this must match the user_id in the auth token */
+    TOptional<FString> OwnerId;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesDeletePartyResponse : public Response
+{
+public:
+    virtual ~PartiesDeletePartyResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesDeletePartyResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesDeletePartyResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesDeletePartyResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<bool> Success;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### PartiesGetParty API
+<CodeGroup title="Creates a party" tag="GET" label="PartiesGetParty">
+```csharp
+/// <summary>
+/// Edit Party APIs Creates a party
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="partyId"></param>
+/// <param name="token">User session token</param>
+/// <returns>PartiesGetPartyResponse</returns>
+public PartiesGetPartyResponse PartiesGetParty(string partyId, string token)
+{
+    Snapser.Client.ApiResponse<PartiesGetPartyResponse> localVarResponse = PartiesGetPartyWithHttpInfo(partyId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesGetPartyResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesGetPartyResponse" /> class.
+/// </summary>
+/// <param name="party">party.</param>
+public PartiesGetPartyResponse(PartiesParty party = default(PartiesParty))
+{
+    this.Party = party;
+}
+
+/// Snapser.Model for PartiesParty
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesParty" /> class.
+/// </summary>
+/// <param name="bannedPlayers">bannedPlayers.</param>
+/// <param name="connectionString">connectionString.</param>
+/// <param name="createdAt">createdAt.</param>
+/// <param name="id">id.</param>
+/// <param name="maxPlayers">maxPlayers.</param>
+/// <param name="metadata">metadata.</param>
+/// <param name="owner">owner.</param>
+/// <param name="partyName">partyName.</param>
+/// <param name="players">players.</param>
+/// <param name="searchProperties">searchProperties.</param>
+/// <param name="settings">settings.</param>
+/// <param name="status">status.</param>
+/// <param name="type">type.</param>
+/// <param name="updatedAt">updatedAt.</param>
+/// <param name="visibility">visibility.</param>
+public PartiesParty(Dictionary<string, Object> bannedPlayers = default(Dictionary<string, Object>), string connectionString = default(string), string createdAt = default(string), string id = default(string), string maxPlayers = default(string), Object metadata = default(Object), string owner = default(string), string partyName = default(string), Dictionary<string, Object> players = default(Dictionary<string, Object>), Object searchProperties = default(Object), PartiesPartySettings settings = default(PartiesPartySettings), PartiesPartyStatus? status = default(PartiesPartyStatus?), string type = default(string), string updatedAt = default(string), PartiesPartyVisibility? visibility = default(PartiesPartyVisibility?))
+{
+    this.BannedPlayers = bannedPlayers;
+    this.ConnectionString = connectionString;
+    this.CreatedAt = createdAt;
+    this.Id = id;
+    this.MaxPlayers = maxPlayers;
+    this.Metadata = metadata;
+    this.Owner = owner;
+    this.PartyName = partyName;
+    this.Players = players;
+    this.SearchProperties = searchProperties;
+    this.Settings = settings;
+    this.Status = status;
+    this.Type = type;
+    this.UpdatedAt = updatedAt;
+    this.Visibility = visibility;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesGetPartyRequest : public Request
+{
+public:
+    virtual ~PartiesGetPartyRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    FString PartyId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesGetPartyResponse : public Response
+{
+public:
+    virtual ~PartiesGetPartyResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesGetPartyResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesGetPartyResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesGetPartyResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserPartiesParty> Party;
+};
+
+class SNAPSER_API SnapserPartiesParty : public Model
+{
+public:
+    virtual ~SnapserPartiesParty() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TMap<FString, TSharedPtr<FJsonObject>>> BannedPlayers;
+    TOptional<FString> ConnectionString;
+    TOptional<FString> CreatedAt;
+    TOptional<FString> Id;
+    TOptional<FString> MaxPlayers;
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    TOptional<FString> Owner;
+    TOptional<FString> PartyName;
+    TOptional<TMap<FString, TSharedPtr<FJsonObject>>> Players;
+    TOptional<TSharedPtr<FJsonObject>> SearchProperties;
+    TOptional<SnapserPartiesPartySettings> Settings;
+    TOptional<SnapserPartiesPartyStatus> Status;
+    TOptional<FString> Type;
+    TOptional<FString> UpdatedAt;
+    TOptional<SnapserPartiesPartyVisibility> Visibility;
+};
+
+class SNAPSER_API SnapserPartiesPartySettings : public Model
+{
+public:
+    virtual ~SnapserPartiesPartySettings() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* AllowMemberJoinInGame indicates if party members can join the party while the party is in a game. */
+    TOptional<bool> AllowMemberJoinInGame;
+    /* AllowMemberMatchmaking indicates if party members can queue/dequeue on behalf of the party. */
+    TOptional<bool> AllowMemberMatchmaking;
+    /* AllowPartyUpdatesInGame indicates if the party can be updated while the party is in a game. */
+    TOptional<bool> AllowPartyUpdatesInGame;
+};
+
+class SNAPSER_API SnapserPartiesPartyStatus : public Model
+{
+public:
+    virtual ~SnapserPartiesPartyStatus() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        Unknown,
+        Open,
+        Full,
+        InGame,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserPartiesPartyVisibility : public Model
+{
+public:
+    virtual ~SnapserPartiesPartyVisibility() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        Unknown,
+        _Public,
+        _Private,
+        InviteOnly,
+        FriendsOnly,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### PartiesUpdateParty API
+<CodeGroup title="Updates a party" tag="PUT" label="PartiesUpdateParty">
+```csharp
+/// <summary>
+/// Edit Party APIs Updates a party
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="partyId">ID of the party</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>PartiesUpdatePartyResponse</returns>
+public PartiesUpdatePartyResponse PartiesUpdateParty(string partyId, string token, PartiesServiceUpdatePartyBody body)
+{
+    Snapser.Client.ApiResponse<PartiesUpdatePartyResponse> localVarResponse = PartiesUpdatePartyWithHttpInfo(partyId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesServiceUpdatePartyBody
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesServiceUpdatePartyBody" /> class.
+/// </summary>
+/// <param name="maxPlayers">The max number of players to allow in the party.</param>
+/// <param name="metadata">A Json document of metadata to be stored with the party.</param>
+/// <param name="ownerId">The owner of the party. If using auth, this must match the user_id in the auth token.</param>
+/// <param name="partyName">Name of the party.</param>
+/// <param name="searchProperties">A Json document that will be indexed for full text searching.</param>
+/// <param name="settings">settings.</param>
+/// <param name="status">The status of the party. Defaults to open. Valid names: PARTY_STATUS_OPEN, PARTY_STATUS_FULL, PARTY_STATUS_IN_GAME.</param>
+/// <param name="visibility">The visibility of the party. Defaults to private. Valid names: PARTY_VISIBILITY_PUBLIC, PARTY_VISIBILITY_PRIVATE, PARTY_VISIBILITY_INVITE_ONLY, PARTY_VISIBILITY_FRIENDS_ONLY.</param>
+public PartiesServiceUpdatePartyBody(long maxPlayers = default(long), Object metadata = default(Object), string ownerId = default(string), string partyName = default(string), Object searchProperties = default(Object), PartiesPartySettings settings = default(PartiesPartySettings), string status = default(string), string visibility = default(string))
+{
+    this.MaxPlayers = maxPlayers;
+    this.Metadata = metadata;
+    this.OwnerId = ownerId;
+    this.PartyName = partyName;
+    this.SearchProperties = searchProperties;
+    this.Settings = settings;
+    this.Status = status;
+    this.Visibility = visibility;
+}
+
+/// Snapser.Model for PartiesUpdatePartyResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesUpdatePartyResponse" /> class.
+/// </summary>
+/// <param name="success">success.</param>
+public PartiesUpdatePartyResponse(bool success = default(bool))
+{
+    this.Success = success;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesUpdatePartyRequest : public Request
+{
+public:
+    virtual ~PartiesUpdatePartyRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the party */
+    FString PartyId;
+    /* User session token */
+    FString Token;
+    SnapserPartiesServiceUpdatePartyBody Body;
+};
+
+class SNAPSER_API SnapserPartiesServiceUpdatePartyBody : public Model
+{
+public:
+    virtual ~SnapserPartiesServiceUpdatePartyBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* The max number of players to allow in the party */
+    TOptional<int64> MaxPlayers;
+    /* A Json document of metadata to be stored with the party */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* The owner of the party. If using auth, this must match the user_id in the auth token */
+    TOptional<FString> OwnerId;
+    /* Name of the party */
+    TOptional<FString> PartyName;
+    /* A Json document that will be indexed for full text searching */
+    TOptional<TSharedPtr<FJsonObject>> SearchProperties;
+    TOptional<SnapserPartiesPartySettings> Settings;
+    /* The status of the party. Defaults to open. Valid names: PARTY_STATUS_OPEN, PARTY_STATUS_FULL, PARTY_STATUS_IN_GAME */
+    TOptional<FString> Status;
+    /* The visibility of the party. Defaults to private. Valid names: PARTY_VISIBILITY_PUBLIC, PARTY_VISIBILITY_PRIVATE, PARTY_VISIBILITY_INVITE_ONLY, PARTY_VISIBILITY_FRIENDS_ONLY */
+    TOptional<FString> Visibility;
+};
+
+class SNAPSER_API SnapserPartiesPartySettings : public Model
+{
+public:
+    virtual ~SnapserPartiesPartySettings() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* AllowMemberJoinInGame indicates if party members can join the party while the party is in a game. */
+    TOptional<bool> AllowMemberJoinInGame;
+    /* AllowMemberMatchmaking indicates if party members can queue/dequeue on behalf of the party. */
+    TOptional<bool> AllowMemberMatchmaking;
+    /* AllowPartyUpdatesInGame indicates if the party can be updated while the party is in a game. */
+    TOptional<bool> AllowPartyUpdatesInGame;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesUpdatePartyResponse : public Response
+{
+public:
+    virtual ~PartiesUpdatePartyResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesUpdatePartyResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesUpdatePartyResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesUpdatePartyResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<bool> Success;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### PartiesBanUser API
+<CodeGroup title="Bans a user from a party" tag="POST" label="PartiesBanUser">
+```csharp
+/// <summary>
+/// Ban User Bans a user from a party. Only the party owner can ban users.
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="partyId">ID of the party</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>PartiesBanUserResponse</returns>
+public PartiesBanUserResponse PartiesBanUser(string partyId, string token, PartiesServiceBanUserBody body)
+{
+    Snapser.Client.ApiResponse<PartiesBanUserResponse> localVarResponse = PartiesBanUserWithHttpInfo(partyId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesServiceBanUserBody
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesServiceBanUserBody" /> class.
+/// </summary>
+/// <param name="metadata">A Json document of metadata to be stored with the banned player.</param>
+/// <param name="ownerId">ID of the owner of the party. If using auth, this must match the user_id in the auth token.</param>
+/// <param name="userId">ID of the user to ban (required).</param>
+public PartiesServiceBanUserBody(Object metadata = default(Object), string ownerId = default(string), string userId = default(string))
+{
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for PartiesServiceBanUserBody and cannot be null");
+    }
+    this.UserId = userId;
+    this.Metadata = metadata;
+    this.OwnerId = ownerId;
+}
+
+/// Snapser.Model for PartiesBanUserResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesBanUserResponse" /> class.
+/// </summary>
+/// <param name="success">success.</param>
+public PartiesBanUserResponse(bool success = default(bool))
+{
+    this.Success = success;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesBanUserRequest : public Request
+{
+public:
+    virtual ~PartiesBanUserRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the party */
+    FString PartyId;
+    /* User session token */
+    FString Token;
+    SnapserPartiesServiceBanUserBody Body;
+};
+
+class SNAPSER_API SnapserPartiesServiceBanUserBody : public Model
+{
+public:
+    virtual ~SnapserPartiesServiceBanUserBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* A Json document of metadata to be stored with the banned player */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* ID of the owner of the party. If using auth, this must match the user_id in the auth token */
+    TOptional<FString> OwnerId;
+    /* ID of the user to ban */
+    FString UserId;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesBanUserResponse : public Response
+{
+public:
+    virtual ~PartiesBanUserResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesBanUserResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesBanUserResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesBanUserResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<bool> Success;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### PartiesListPartyInvites API
+<CodeGroup title="Lists party invites" tag="GET" label="PartiesListPartyInvites">
+```csharp
+/// <summary>
+/// Party Invite APIs Lists party invites
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="partyId">ID of the party</param>
+/// <param name="token">User session token</param>
+/// <param name="userId">ID of the user making the request. The user must be in the party to list invites of the party. If using auth, this must match the user_id in the auth token (optional)</param>
+/// <returns>PartiesListPartyInvitesResponse</returns>
+public PartiesListPartyInvitesResponse PartiesListPartyInvites(string partyId, string token, string userId = default(string))
+{
+    Snapser.Client.ApiResponse<PartiesListPartyInvitesResponse> localVarResponse = PartiesListPartyInvitesWithHttpInfo(partyId, token, userId);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesListPartyInvitesResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesListPartyInvitesResponse" /> class.
+/// </summary>
+/// <param name="invites">invites.</param>
+public PartiesListPartyInvitesResponse(List<PartiesRequest> invites = default(List<PartiesRequest>))
+{
+    this.Invites = invites;
+}
+
+/// Snapser.Model for PartiesRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesRequest" /> class.
+/// </summary>
+/// <param name="channel">channel.</param>
+/// <param name="createdAt">createdAt.</param>
+/// <param name="id">id.</param>
+/// <param name="inviteeId">inviteeId.</param>
+/// <param name="metadata">metadata.</param>
+/// <param name="partyId">partyId.</param>
+/// <param name="requesterId">requesterId.</param>
+/// <param name="senderId">senderId.</param>
+/// <param name="status">status.</param>
+/// <param name="type">type.</param>
+public PartiesRequest(PartiesRequestChannel? channel = default(PartiesRequestChannel?), string createdAt = default(string), string id = default(string), string inviteeId = default(string), Object metadata = default(Object), string partyId = default(string), string requesterId = default(string), string senderId = default(string), PartiesRequestStatus? status = default(PartiesRequestStatus?), string type = default(string))
+{
+    this.Channel = channel;
+    this.CreatedAt = createdAt;
+    this.Id = id;
+    this.InviteeId = inviteeId;
+    this.Metadata = metadata;
+    this.PartyId = partyId;
+    this.RequesterId = requesterId;
+    this.SenderId = senderId;
+    this.Status = status;
+    this.Type = type;
+}
+
+/// Snapser.Model for PartiesRequestChannel
+public enum PartiesRequestChannel
+{
+    /// <summary>
+    /// Enum REQUESTCHANNELUNKNOWN for value: REQUEST_CHANNEL_UNKNOWN
+    /// </summary>
+    [EnumMember(Value = "REQUEST_CHANNEL_UNKNOWN")] REQUESTCHANNELUNKNOWN = 1
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesListPartyInvitesRequest : public Request
+{
+public:
+    virtual ~PartiesListPartyInvitesRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the party */
+    FString PartyId;
+    /* User session token */
+    FString Token;
+    /* ID of the user making the request. The user must be in the party to list invites of the party. If using auth, this must match the user_id in the auth token */
+    TOptional<FString> UserId;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesListPartyInvitesResponse : public Response
+{
+public:
+    virtual ~PartiesListPartyInvitesResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesListPartyInvitesResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesListPartyInvitesResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesListPartyInvitesResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserPartiesRequest>> Invites;
+};
+
+class SNAPSER_API SnapserPartiesRequest : public Model
+{
+public:
+    virtual ~SnapserPartiesRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserPartiesRequestChannel> Channel;
+    TOptional<FString> CreatedAt;
+    TOptional<FString> Id;
+    TOptional<FString> InviteeId;
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    TOptional<FString> PartyId;
+    TOptional<FString> RequesterId;
+    TOptional<FString> SenderId;
+    TOptional<SnapserPartiesRequestStatus> Status;
+    TOptional<FString> Type;
+};
+
+class SNAPSER_API SnapserPartiesRequestChannel : public Model
+{
+public:
+    virtual ~SnapserPartiesRequestChannel() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        RequestChannelUnknown,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserPartiesRequestStatus : public Model
+{
+public:
+    virtual ~SnapserPartiesRequestStatus() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        Unknown,
+        Pending,
+        Accepted,
+        Declined,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### PartiesInviteUser API
+<CodeGroup title="Invites a user to a party" tag="POST" label="PartiesInviteUser">
+```csharp
+/// <summary>
+/// Party Invite APIs Invites a user to a party
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="partyId">ID of the party</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>PartiesInviteUserResponse</returns>
+public PartiesInviteUserResponse PartiesInviteUser(string partyId, string token, PartiesServiceInviteUserBody body)
+{
+    Snapser.Client.ApiResponse<PartiesInviteUserResponse> localVarResponse = PartiesInviteUserWithHttpInfo(partyId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesServiceInviteUserBody
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesServiceInviteUserBody" /> class.
+/// </summary>
+/// <param name="inviteeId">ID of the user to invite.</param>
+/// <param name="userId">ID of the user in the party creating the invite. If using auth, this must match the user_id in the auth token.</param>
+public PartiesServiceInviteUserBody(string inviteeId = default(string), string userId = default(string))
+{
+    this.InviteeId = inviteeId;
+    this.UserId = userId;
+}
+
+/// Snapser.Model for PartiesInviteUserResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesInviteUserResponse" /> class.
+/// </summary>
+/// <param name="invite">invite.</param>
+/// <param name="success">success.</param>
+public PartiesInviteUserResponse(PartiesRequest invite = default(PartiesRequest), bool success = default(bool))
+{
+    this.Invite = invite;
+    this.Success = success;
+}
+
+/// Snapser.Model for PartiesRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesRequest" /> class.
+/// </summary>
+/// <param name="channel">channel.</param>
+/// <param name="createdAt">createdAt.</param>
+/// <param name="id">id.</param>
+/// <param name="inviteeId">inviteeId.</param>
+/// <param name="metadata">metadata.</param>
+/// <param name="partyId">partyId.</param>
+/// <param name="requesterId">requesterId.</param>
+/// <param name="senderId">senderId.</param>
+/// <param name="status">status.</param>
+/// <param name="type">type.</param>
+public PartiesRequest(PartiesRequestChannel? channel = default(PartiesRequestChannel?), string createdAt = default(string), string id = default(string), string inviteeId = default(string), Object metadata = default(Object), string partyId = default(string), string requesterId = default(string), string senderId = default(string), PartiesRequestStatus? status = default(PartiesRequestStatus?), string type = default(string))
+{
+    this.Channel = channel;
+    this.CreatedAt = createdAt;
+    this.Id = id;
+    this.InviteeId = inviteeId;
+    this.Metadata = metadata;
+    this.PartyId = partyId;
+    this.RequesterId = requesterId;
+    this.SenderId = senderId;
+    this.Status = status;
+    this.Type = type;
+}
+
+/// Snapser.Model for PartiesRequestChannel
+public enum PartiesRequestChannel
+{
+    /// <summary>
+    /// Enum REQUESTCHANNELUNKNOWN for value: REQUEST_CHANNEL_UNKNOWN
+    /// </summary>
+    [EnumMember(Value = "REQUEST_CHANNEL_UNKNOWN")] REQUESTCHANNELUNKNOWN = 1
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesInviteUserRequest : public Request
+{
+public:
+    virtual ~PartiesInviteUserRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the party */
+    FString PartyId;
+    /* User session token */
+    FString Token;
+    SnapserPartiesServiceInviteUserBody Body;
+};
+
+class SNAPSER_API SnapserPartiesServiceInviteUserBody : public Model
+{
+public:
+    virtual ~SnapserPartiesServiceInviteUserBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* ID of the user to invite */
+    TOptional<FString> InviteeId;
+    /* ID of the user in the party creating the invite. If using auth, this must match the user_id in the auth token */
+    TOptional<FString> UserId;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesInviteUserResponse : public Response
+{
+public:
+    virtual ~PartiesInviteUserResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesInviteUserResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesInviteUserResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesInviteUserResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserPartiesRequest> Invite;
+    TOptional<bool> Success;
+};
+
+class SNAPSER_API SnapserPartiesRequest : public Model
+{
+public:
+    virtual ~SnapserPartiesRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserPartiesRequestChannel> Channel;
+    TOptional<FString> CreatedAt;
+    TOptional<FString> Id;
+    TOptional<FString> InviteeId;
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    TOptional<FString> PartyId;
+    TOptional<FString> RequesterId;
+    TOptional<FString> SenderId;
+    TOptional<SnapserPartiesRequestStatus> Status;
+    TOptional<FString> Type;
+};
+
+class SNAPSER_API SnapserPartiesRequestChannel : public Model
+{
+public:
+    virtual ~SnapserPartiesRequestChannel() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        RequestChannelUnknown,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserPartiesRequestStatus : public Model
+{
+public:
+    virtual ~SnapserPartiesRequestStatus() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        Unknown,
+        Pending,
+        Accepted,
+        Declined,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### PartiesJoinParty API
+<CodeGroup title="Joins a party" tag="POST" label="PartiesJoinParty">
+```csharp
+/// <summary>
+/// Join Party Joins a party
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="partyId">ID of the party</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>PartiesJoinPartyResponse</returns>
+public PartiesJoinPartyResponse PartiesJoinParty(string partyId, string token, PartiesServiceJoinPartyBody body)
+{
+    Snapser.Client.ApiResponse<PartiesJoinPartyResponse> localVarResponse = PartiesJoinPartyWithHttpInfo(partyId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesServiceJoinPartyBody
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesServiceJoinPartyBody" /> class.
+/// </summary>
+/// <param name="metadata">A Json document of metadata to be stored with player.</param>
+/// <param name="userId">ID of the user joining the party. If using auth, this must match the user_id in the auth token.</param>
+public PartiesServiceJoinPartyBody(Object metadata = default(Object), string userId = default(string))
+{
+    this.Metadata = metadata;
+    this.UserId = userId;
+}
+
+/// Snapser.Model for PartiesJoinPartyResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesJoinPartyResponse" /> class.
+/// </summary>
+/// <param name="party">party.</param>
+/// <param name="success">success.</param>
+public PartiesJoinPartyResponse(PartiesParty party = default(PartiesParty), bool success = default(bool))
+{
+    this.Party = party;
+    this.Success = success;
+}
+
+/// Snapser.Model for PartiesParty
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesParty" /> class.
+/// </summary>
+/// <param name="bannedPlayers">bannedPlayers.</param>
+/// <param name="connectionString">connectionString.</param>
+/// <param name="createdAt">createdAt.</param>
+/// <param name="id">id.</param>
+/// <param name="maxPlayers">maxPlayers.</param>
+/// <param name="metadata">metadata.</param>
+/// <param name="owner">owner.</param>
+/// <param name="partyName">partyName.</param>
+/// <param name="players">players.</param>
+/// <param name="searchProperties">searchProperties.</param>
+/// <param name="settings">settings.</param>
+/// <param name="status">status.</param>
+/// <param name="type">type.</param>
+/// <param name="updatedAt">updatedAt.</param>
+/// <param name="visibility">visibility.</param>
+public PartiesParty(Dictionary<string, Object> bannedPlayers = default(Dictionary<string, Object>), string connectionString = default(string), string createdAt = default(string), string id = default(string), string maxPlayers = default(string), Object metadata = default(Object), string owner = default(string), string partyName = default(string), Dictionary<string, Object> players = default(Dictionary<string, Object>), Object searchProperties = default(Object), PartiesPartySettings settings = default(PartiesPartySettings), PartiesPartyStatus? status = default(PartiesPartyStatus?), string type = default(string), string updatedAt = default(string), PartiesPartyVisibility? visibility = default(PartiesPartyVisibility?))
+{
+    this.BannedPlayers = bannedPlayers;
+    this.ConnectionString = connectionString;
+    this.CreatedAt = createdAt;
+    this.Id = id;
+    this.MaxPlayers = maxPlayers;
+    this.Metadata = metadata;
+    this.Owner = owner;
+    this.PartyName = partyName;
+    this.Players = players;
+    this.SearchProperties = searchProperties;
+    this.Settings = settings;
+    this.Status = status;
+    this.Type = type;
+    this.UpdatedAt = updatedAt;
+    this.Visibility = visibility;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesJoinPartyRequest : public Request
+{
+public:
+    virtual ~PartiesJoinPartyRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the party */
+    FString PartyId;
+    /* User session token */
+    FString Token;
+    SnapserPartiesServiceJoinPartyBody Body;
+};
+
+class SNAPSER_API SnapserPartiesServiceJoinPartyBody : public Model
+{
+public:
+    virtual ~SnapserPartiesServiceJoinPartyBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* A Json document of metadata to be stored with player */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* ID of the user joining the party. If using auth, this must match the user_id in the auth token */
+    TOptional<FString> UserId;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesJoinPartyResponse : public Response
+{
+public:
+    virtual ~PartiesJoinPartyResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesJoinPartyResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesJoinPartyResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesJoinPartyResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserPartiesParty> Party;
+    TOptional<bool> Success;
+};
+
+class SNAPSER_API SnapserPartiesParty : public Model
+{
+public:
+    virtual ~SnapserPartiesParty() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TMap<FString, TSharedPtr<FJsonObject>>> BannedPlayers;
+    TOptional<FString> ConnectionString;
+    TOptional<FString> CreatedAt;
+    TOptional<FString> Id;
+    TOptional<FString> MaxPlayers;
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    TOptional<FString> Owner;
+    TOptional<FString> PartyName;
+    TOptional<TMap<FString, TSharedPtr<FJsonObject>>> Players;
+    TOptional<TSharedPtr<FJsonObject>> SearchProperties;
+    TOptional<SnapserPartiesPartySettings> Settings;
+    TOptional<SnapserPartiesPartyStatus> Status;
+    TOptional<FString> Type;
+    TOptional<FString> UpdatedAt;
+    TOptional<SnapserPartiesPartyVisibility> Visibility;
+};
+
+class SNAPSER_API SnapserPartiesPartySettings : public Model
+{
+public:
+    virtual ~SnapserPartiesPartySettings() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* AllowMemberJoinInGame indicates if party members can join the party while the party is in a game. */
+    TOptional<bool> AllowMemberJoinInGame;
+    /* AllowMemberMatchmaking indicates if party members can queue/dequeue on behalf of the party. */
+    TOptional<bool> AllowMemberMatchmaking;
+    /* AllowPartyUpdatesInGame indicates if the party can be updated while the party is in a game. */
+    TOptional<bool> AllowPartyUpdatesInGame;
+};
+
+class SNAPSER_API SnapserPartiesPartyStatus : public Model
+{
+public:
+    virtual ~SnapserPartiesPartyStatus() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        Unknown,
+        Open,
+        Full,
+        InGame,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserPartiesPartyVisibility : public Model
+{
+public:
+    virtual ~SnapserPartiesPartyVisibility() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        Unknown,
+        _Public,
+        _Private,
+        InviteOnly,
+        FriendsOnly,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### PartiesKickUser API
+<CodeGroup title="Kicks a user from a party" tag="POST" label="PartiesKickUser">
+```csharp
+/// <summary>
+/// Kick User Kicks a user from a party. Only the party owner can kick users
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="partyId">ID of the party</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>PartiesKickUserResponse</returns>
+public PartiesKickUserResponse PartiesKickUser(string partyId, string token, PartiesServiceKickUserBody body)
+{
+    Snapser.Client.ApiResponse<PartiesKickUserResponse> localVarResponse = PartiesKickUserWithHttpInfo(partyId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesServiceKickUserBody
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesServiceKickUserBody" /> class.
+/// </summary>
+/// <param name="ownerId">ID of the owner of the party. If using auth, this must match the user_id in the auth token.</param>
+/// <param name="userId">ID of the user to kick (required).</param>
+public PartiesServiceKickUserBody(string ownerId = default(string), string userId = default(string))
+{
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for PartiesServiceKickUserBody and cannot be null");
+    }
+    this.UserId = userId;
+    this.OwnerId = ownerId;
+}
+
+/// Snapser.Model for PartiesKickUserResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesKickUserResponse" /> class.
+/// </summary>
+/// <param name="success">success.</param>
+public PartiesKickUserResponse(bool success = default(bool))
+{
+    this.Success = success;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesKickUserRequest : public Request
+{
+public:
+    virtual ~PartiesKickUserRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the party */
+    FString PartyId;
+    /* User session token */
+    FString Token;
+    SnapserPartiesServiceKickUserBody Body;
+};
+
+class SNAPSER_API SnapserPartiesServiceKickUserBody : public Model
+{
+public:
+    virtual ~SnapserPartiesServiceKickUserBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* ID of the owner of the party. If using auth, this must match the user_id in the auth token */
+    TOptional<FString> OwnerId;
+    /* ID of the user to kick */
+    FString UserId;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesKickUserResponse : public Response
+{
+public:
+    virtual ~PartiesKickUserResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesKickUserResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesKickUserResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesKickUserResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<bool> Success;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### PartiesLeaveParty API
+<CodeGroup title="Leaves a party" tag="POST" label="PartiesLeaveParty">
+```csharp
+/// <summary>
+/// Leave Party Leaves a party. If the party owner leaves, the party ownership is transferred to another party member.
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="partyId">ID of the party</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>PartiesLeavePartyResponse</returns>
+public PartiesLeavePartyResponse PartiesLeaveParty(string partyId, string token, PartiesServiceLeavePartyBody body)
+{
+    Snapser.Client.ApiResponse<PartiesLeavePartyResponse> localVarResponse = PartiesLeavePartyWithHttpInfo(partyId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesServiceLeavePartyBody
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesServiceLeavePartyBody" /> class.
+/// </summary>
+/// <param name="userId">ID of the user leaving the party. If using auth, this must match the user_id in the auth token.</param>
+public PartiesServiceLeavePartyBody(string userId = default(string))
+{
+    this.UserId = userId;
+}
+
+/// Snapser.Model for PartiesLeavePartyResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesLeavePartyResponse" /> class.
+/// </summary>
+/// <param name="success">success.</param>
+public PartiesLeavePartyResponse(bool success = default(bool))
+{
+    this.Success = success;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesLeavePartyRequest : public Request
+{
+public:
+    virtual ~PartiesLeavePartyRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the party */
+    FString PartyId;
+    /* User session token */
+    FString Token;
+    SnapserPartiesServiceLeavePartyBody Body;
+};
+
+class SNAPSER_API SnapserPartiesServiceLeavePartyBody : public Model
+{
+public:
+    virtual ~SnapserPartiesServiceLeavePartyBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* ID of the user leaving the party. If using auth, this must match the user_id in the auth token */
+    TOptional<FString> UserId;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesLeavePartyResponse : public Response
+{
+public:
+    virtual ~PartiesLeavePartyResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesLeavePartyResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesLeavePartyResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesLeavePartyResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<bool> Success;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### PartiesUpdatePartyPlayerMetadata API
+<CodeGroup title="Updates a player's metadata in a party" tag="POST" label="PartiesUpdatePartyPlayerMetadata">
+```csharp
+/// <summary>
+/// Edit Party APIs Updates a player&#39;s metadata in a party
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="partyId">ID of the party</param>
+/// <param name="userId">ID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>PartiesUpdatePartyPlayerMetadataResponse</returns>
+public PartiesUpdatePartyPlayerMetadataResponse PartiesUpdatePartyPlayerMetadata(string partyId, string userId, string token, PartiesServiceUpdatePartyPlayerMetadataBody body)
+{
+    Snapser.Client.ApiResponse<PartiesUpdatePartyPlayerMetadataResponse> localVarResponse = PartiesUpdatePartyPlayerMetadataWithHttpInfo(partyId, userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesServiceUpdatePartyPlayerMetadataBody
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesServiceUpdatePartyPlayerMetadataBody" /> class.
+/// </summary>
+/// <param name="metadata">A Json document of metadata to be stored with the player (required).</param>
+public PartiesServiceUpdatePartyPlayerMetadataBody(Object metadata = default(Object))
+{
+    // to ensure "metadata" is required (not null)
+    if (metadata == null)
+    {
+        throw new ArgumentNullException("metadata is a required property for PartiesServiceUpdatePartyPlayerMetadataBody and cannot be null");
+    }
+    this.Metadata = metadata;
+}
+
+/// Snapser.Model for PartiesUpdatePartyPlayerMetadataResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesUpdatePartyPlayerMetadataResponse" /> class.
+/// </summary>
+/// <param name="success">success.</param>
+public PartiesUpdatePartyPlayerMetadataResponse(bool success = default(bool))
+{
+    this.Success = success;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesUpdatePartyPlayerMetadataRequest : public Request
+{
+public:
+    virtual ~PartiesUpdatePartyPlayerMetadataRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the party */
+    FString PartyId;
+    /* ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserPartiesServiceUpdatePartyPlayerMetadataBody Body;
+};
+
+class SNAPSER_API SnapserPartiesServiceUpdatePartyPlayerMetadataBody : public Model
+{
+public:
+    virtual ~SnapserPartiesServiceUpdatePartyPlayerMetadataBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* A Json document of metadata to be stored with the player */
+    TSharedPtr<FJsonObject> Metadata;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesUpdatePartyPlayerMetadataResponse : public Response
+{
+public:
+    virtual ~PartiesUpdatePartyPlayerMetadataResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesUpdatePartyPlayerMetadataResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesUpdatePartyPlayerMetadataResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesUpdatePartyPlayerMetadataResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<bool> Success;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### PartiesListPartyRequests API
+<CodeGroup title="Lists party requests" tag="GET" label="PartiesListPartyRequests">
+```csharp
+/// <summary>
+/// Party Request APIs Lists party requests
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="partyId">ID of the party</param>
+/// <param name="token">User session token</param>
+/// <param name="userId">ID of the user making the request. The user must be in the party to list requests of the party. If using auth, this must match the user_id in the auth token (optional)</param>
+/// <returns>PartiesListPartyRequestsResponse</returns>
+public PartiesListPartyRequestsResponse PartiesListPartyRequests(string partyId, string token, string userId = default(string))
+{
+    Snapser.Client.ApiResponse<PartiesListPartyRequestsResponse> localVarResponse = PartiesListPartyRequestsWithHttpInfo(partyId, token, userId);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesListPartyRequestsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesListPartyRequestsResponse" /> class.
+/// </summary>
+/// <param name="requests">requests.</param>
+public PartiesListPartyRequestsResponse(List<PartiesRequest> requests = default(List<PartiesRequest>))
+{
+    this.Requests = requests;
+}
+
+/// Snapser.Model for PartiesRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesRequest" /> class.
+/// </summary>
+/// <param name="channel">channel.</param>
+/// <param name="createdAt">createdAt.</param>
+/// <param name="id">id.</param>
+/// <param name="inviteeId">inviteeId.</param>
+/// <param name="metadata">metadata.</param>
+/// <param name="partyId">partyId.</param>
+/// <param name="requesterId">requesterId.</param>
+/// <param name="senderId">senderId.</param>
+/// <param name="status">status.</param>
+/// <param name="type">type.</param>
+public PartiesRequest(PartiesRequestChannel? channel = default(PartiesRequestChannel?), string createdAt = default(string), string id = default(string), string inviteeId = default(string), Object metadata = default(Object), string partyId = default(string), string requesterId = default(string), string senderId = default(string), PartiesRequestStatus? status = default(PartiesRequestStatus?), string type = default(string))
+{
+    this.Channel = channel;
+    this.CreatedAt = createdAt;
+    this.Id = id;
+    this.InviteeId = inviteeId;
+    this.Metadata = metadata;
+    this.PartyId = partyId;
+    this.RequesterId = requesterId;
+    this.SenderId = senderId;
+    this.Status = status;
+    this.Type = type;
+}
+
+/// Snapser.Model for PartiesRequestChannel
+public enum PartiesRequestChannel
+{
+    /// <summary>
+    /// Enum REQUESTCHANNELUNKNOWN for value: REQUEST_CHANNEL_UNKNOWN
+    /// </summary>
+    [EnumMember(Value = "REQUEST_CHANNEL_UNKNOWN")] REQUESTCHANNELUNKNOWN = 1
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesListPartyRequestsRequest : public Request
+{
+public:
+    virtual ~PartiesListPartyRequestsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the party */
+    FString PartyId;
+    /* User session token */
+    FString Token;
+    /* ID of the user making the request. The user must be in the party to list requests of the party. If using auth, this must match the user_id in the auth token */
+    TOptional<FString> UserId;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesListPartyRequestsResponse : public Response
+{
+public:
+    virtual ~PartiesListPartyRequestsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesListPartyRequestsResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesListPartyRequestsResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesListPartyRequestsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserPartiesRequest>> Requests;
+};
+
+class SNAPSER_API SnapserPartiesRequest : public Model
+{
+public:
+    virtual ~SnapserPartiesRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserPartiesRequestChannel> Channel;
+    TOptional<FString> CreatedAt;
+    TOptional<FString> Id;
+    TOptional<FString> InviteeId;
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    TOptional<FString> PartyId;
+    TOptional<FString> RequesterId;
+    TOptional<FString> SenderId;
+    TOptional<SnapserPartiesRequestStatus> Status;
+    TOptional<FString> Type;
+};
+
+class SNAPSER_API SnapserPartiesRequestChannel : public Model
+{
+public:
+    virtual ~SnapserPartiesRequestChannel() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        RequestChannelUnknown,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserPartiesRequestStatus : public Model
+{
+public:
+    virtual ~SnapserPartiesRequestStatus() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        Unknown,
+        Pending,
+        Accepted,
+        Declined,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### PartiesRequestToJoinParty API
+<CodeGroup title="Requests to join a party" tag="POST" label="PartiesRequestToJoinParty">
+```csharp
+/// <summary>
+/// Party Request APIs Requests to join a party
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="partyId">ID of the party</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>PartiesRequestToJoinPartyResponse</returns>
+public PartiesRequestToJoinPartyResponse PartiesRequestToJoinParty(string partyId, string token, PartiesServiceRequestToJoinPartyBody body)
+{
+    Snapser.Client.ApiResponse<PartiesRequestToJoinPartyResponse> localVarResponse = PartiesRequestToJoinPartyWithHttpInfo(partyId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesServiceRequestToJoinPartyBody
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesServiceRequestToJoinPartyBody" /> class.
+/// </summary>
+/// <param name="metadata">A Json document of metadata to be stored with player.</param>
+/// <param name="userId">ID of the user joining the party. If using auth, this must match the user_id in the auth token.</param>
+public PartiesServiceRequestToJoinPartyBody(Object metadata = default(Object), string userId = default(string))
+{
+    this.Metadata = metadata;
+    this.UserId = userId;
+}
+
+/// Snapser.Model for PartiesRequestToJoinPartyResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesRequestToJoinPartyResponse" /> class.
+/// </summary>
+/// <param name="request">request.</param>
+/// <param name="success">success.</param>
+public PartiesRequestToJoinPartyResponse(PartiesRequest request = default(PartiesRequest), bool success = default(bool))
+{
+    this.Request = request;
+    this.Success = success;
+}
+
+/// Snapser.Model for PartiesRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesRequest" /> class.
+/// </summary>
+/// <param name="channel">channel.</param>
+/// <param name="createdAt">createdAt.</param>
+/// <param name="id">id.</param>
+/// <param name="inviteeId">inviteeId.</param>
+/// <param name="metadata">metadata.</param>
+/// <param name="partyId">partyId.</param>
+/// <param name="requesterId">requesterId.</param>
+/// <param name="senderId">senderId.</param>
+/// <param name="status">status.</param>
+/// <param name="type">type.</param>
+public PartiesRequest(PartiesRequestChannel? channel = default(PartiesRequestChannel?), string createdAt = default(string), string id = default(string), string inviteeId = default(string), Object metadata = default(Object), string partyId = default(string), string requesterId = default(string), string senderId = default(string), PartiesRequestStatus? status = default(PartiesRequestStatus?), string type = default(string))
+{
+    this.Channel = channel;
+    this.CreatedAt = createdAt;
+    this.Id = id;
+    this.InviteeId = inviteeId;
+    this.Metadata = metadata;
+    this.PartyId = partyId;
+    this.RequesterId = requesterId;
+    this.SenderId = senderId;
+    this.Status = status;
+    this.Type = type;
+}
+
+/// Snapser.Model for PartiesRequestChannel
+public enum PartiesRequestChannel
+{
+    /// <summary>
+    /// Enum REQUESTCHANNELUNKNOWN for value: REQUEST_CHANNEL_UNKNOWN
+    /// </summary>
+    [EnumMember(Value = "REQUEST_CHANNEL_UNKNOWN")] REQUESTCHANNELUNKNOWN = 1
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesRequestToJoinPartyRequest : public Request
+{
+public:
+    virtual ~PartiesRequestToJoinPartyRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the party */
+    FString PartyId;
+    /* User session token */
+    FString Token;
+    SnapserPartiesServiceRequestToJoinPartyBody Body;
+};
+
+class SNAPSER_API SnapserPartiesServiceRequestToJoinPartyBody : public Model
+{
+public:
+    virtual ~SnapserPartiesServiceRequestToJoinPartyBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* A Json document of metadata to be stored with player */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* ID of the user joining the party. If using auth, this must match the user_id in the auth token */
+    TOptional<FString> UserId;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesRequestToJoinPartyResponse : public Response
+{
+public:
+    virtual ~PartiesRequestToJoinPartyResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesRequestToJoinPartyResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesRequestToJoinPartyResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesRequestToJoinPartyResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserPartiesRequest> Request;
+    TOptional<bool> Success;
+};
+
+class SNAPSER_API SnapserPartiesRequest : public Model
+{
+public:
+    virtual ~SnapserPartiesRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserPartiesRequestChannel> Channel;
+    TOptional<FString> CreatedAt;
+    TOptional<FString> Id;
+    TOptional<FString> InviteeId;
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    TOptional<FString> PartyId;
+    TOptional<FString> RequesterId;
+    TOptional<FString> SenderId;
+    TOptional<SnapserPartiesRequestStatus> Status;
+    TOptional<FString> Type;
+};
+
+class SNAPSER_API SnapserPartiesRequestChannel : public Model
+{
+public:
+    virtual ~SnapserPartiesRequestChannel() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        RequestChannelUnknown,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserPartiesRequestStatus : public Model
+{
+public:
+    virtual ~SnapserPartiesRequestStatus() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        Unknown,
+        Pending,
+        Accepted,
+        Declined,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### PartiesUnbanUser API
+<CodeGroup title="Unbans a user from a party" tag="POST" label="PartiesUnbanUser">
+```csharp
+/// <summary>
+/// Unban User Unbans a user from a party. Only the party owner can unban users
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="partyId">ID of the party</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>PartiesUnbanUserResponse</returns>
+public PartiesUnbanUserResponse PartiesUnbanUser(string partyId, string token, PartiesServiceUnbanUserBody body)
+{
+    Snapser.Client.ApiResponse<PartiesUnbanUserResponse> localVarResponse = PartiesUnbanUserWithHttpInfo(partyId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PartiesServiceUnbanUserBody
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesServiceUnbanUserBody" /> class.
+/// </summary>
+/// <param name="ownerId">ID of the owner of the party. If using auth, this must match the user_id in the auth token.</param>
+/// <param name="userId">ID of the user to ban (required).</param>
+public PartiesServiceUnbanUserBody(string ownerId = default(string), string userId = default(string))
+{
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for PartiesServiceUnbanUserBody and cannot be null");
+    }
+    this.UserId = userId;
+    this.OwnerId = ownerId;
+}
+
+/// Snapser.Model for PartiesUnbanUserResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesUnbanUserResponse" /> class.
+/// </summary>
+/// <param name="success">success.</param>
+public PartiesUnbanUserResponse(bool success = default(bool))
+{
+    this.Success = success;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesUnbanUserRequest : public Request
+{
+public:
+    virtual ~PartiesUnbanUserRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the party */
+    FString PartyId;
+    /* User session token */
+    FString Token;
+    SnapserPartiesServiceUnbanUserBody Body;
+};
+
+class SNAPSER_API SnapserPartiesServiceUnbanUserBody : public Model
+{
+public:
+    virtual ~SnapserPartiesServiceUnbanUserBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* ID of the owner of the party. If using auth, this must match the user_id in the auth token */
+    TOptional<FString> OwnerId;
+    /* ID of the user to ban */
+    FString UserId;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesUnbanUserResponse : public Response
+{
+public:
+    virtual ~PartiesUnbanUserResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesUnbanUserResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesUnbanUserResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesUnbanUserResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<bool> Success;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### PartiesTransferOwnership API
+<CodeGroup title="Transfers ownership of a party to another member" tag="POST" label="PartiesTransferOwnership">
+```csharp
+/// <summary>
+/// Party Transfers ownership of a party to another member. Only the current owner can transfer ownership.
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="partyId">Unique identifier of the party</param>
+/// <param name="newOwner">User id of the user to be the new owner</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>PartiesTransferOwnershipResponse</returns>
+public PartiesTransferOwnershipResponse PartiesTransferOwnership(string partyId, string newOwner, string token, TransferOwnershipRequest body)
+{
+    Snapser.Client.ApiResponse<PartiesTransferOwnershipResponse> localVarResponse = PartiesTransferOwnershipWithHttpInfo(partyId, newOwner, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for TransferOwnershipRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="TransferOwnershipRequest" /> class.
+/// </summary>
+/// <param name="currentOwner">User id of the current owner (required).</param>
+public TransferOwnershipRequest(string currentOwner = default)
+{
+    // to ensure "currentOwner" is required (not null)
+    if (currentOwner == null)
+    {
+        throw new ArgumentNullException("currentOwner is a required property for TransferOwnershipRequest and cannot be null");
+    }
+    this.CurrentOwner = currentOwner;
+}
+
+/// Snapser.Model for PartiesTransferOwnershipResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesTransferOwnershipResponse" /> class.
+/// </summary>
+/// <param name="party">party.</param>
+public PartiesTransferOwnershipResponse(PartiesParty party = default)
+{
+    this.Party = party;
+}
+
+/// Snapser.Model for Party
+/// <summary>
+/// Initializes a new instance of the <see cref="PartiesParty" /> class.
+/// </summary>
+/// <param name="bannedPlayers">bannedPlayers.</param>
+/// <param name="connectionString">connectionString.</param>
+/// <param name="createdAt">createdAt.</param>
+/// <param name="id">id.</param>
+/// <param name="maxPlayers">maxPlayers.</param>
+/// <param name="metadata">metadata.</param>
+/// <param name="owner">owner.</param>
+/// <param name="partyName">partyName.</param>
+/// <param name="players">players.</param>
+/// <param name="searchProperties">searchProperties.</param>
+/// <param name="settings">settings.</param>
+/// <param name="status">status.</param>
+/// <param name="type">type.</param>
+/// <param name="updatedAt">updatedAt.</param>
+/// <param name="visibility">visibility.</param>
+public PartiesParty(Dictionary<string, Object> bannedPlayers = default, string connectionString = default, string createdAt = default, string id = default, string maxPlayers = default, Object metadata = default, string owner = default, string partyName = default, Dictionary<string, Object> players = default, Object searchProperties = default, PartiesPartySettings settings = default, PartiesPartyStatus? status = default, string type = default, string updatedAt = default, PartiesPartyVisibility? visibility = default)
+{
+    this.BannedPlayers = bannedPlayers;
+    this.ConnectionString = connectionString;
+    this.CreatedAt = createdAt;
+    this.Id = id;
+    this.MaxPlayers = maxPlayers;
+    this.Metadata = metadata;
+    this.Owner = owner;
+    this.PartyName = partyName;
+    this.Players = players;
+    this.SearchProperties = searchProperties;
+    this.Settings = settings;
+    this.Status = status;
+    this.Type = type;
+    this.UpdatedAt = updatedAt;
+    this.Visibility = visibility;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserPartiesServiceApi::PartiesTransferOwnershipRequest : public Request
+{
+public:
+    virtual ~PartiesTransferOwnershipRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Unique identifier of the party */
+    FString PartyId;
+    /* User id of the user to be the new owner */
+    FString NewOwner;
+    /* User session token */
+    FString Token;
+    SnapserTransferOwnershipRequest Body;
+};
+
+class SNAPSER_API SnapserTransferOwnershipRequest : public Model
+{
+public:
+    virtual ~SnapserTransferOwnershipRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* User id of the current owner */
+    FString CurrentOwner;
+};
+
+// Response
+class SNAPSER_API SnapserPartiesServiceApi::PartiesTransferOwnershipResponse : public Response
+{
+public:
+    virtual ~PartiesTransferOwnershipResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserPartiesTransferOwnershipResponse Content;
+};
+
+class SNAPSER_API SnapserPartiesTransferOwnershipResponse : public Model
+{
+public:
+    virtual ~SnapserPartiesTransferOwnershipResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserPartiesParty> Party;
+};
+
+class SNAPSER_API SnapserPartiesParty : public Model
+{
+public:
+    virtual ~SnapserPartiesParty() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TMap<FString, TSharedPtr<FJsonObject>>> BannedPlayers;
+    TOptional<FString> ConnectionString;
+    TOptional<FString> CreatedAt;
+    TOptional<FString> Id;
+    TOptional<FString> MaxPlayers;
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    TOptional<FString> Owner;
+    TOptional<FString> PartyName;
+    TOptional<TMap<FString, TSharedPtr<FJsonObject>>> Players;
+    TOptional<TSharedPtr<FJsonObject>> SearchProperties;
+    TOptional<SnapserPartiesPartySettings> Settings;
+    TOptional<SnapserPartiesPartyStatus> Status;
+    TOptional<FString> Type;
+    TOptional<FString> UpdatedAt;
+    TOptional<SnapserPartiesPartyVisibility> Visibility;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/parties-api.png)
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code  | Variable                       | Message                                    | HTTP | gRPC               |
+| ----- | ------------------------------ | ------------------------------------------ | ---- | ------------------ |
+| 13001 | ErrPartyNotFound               | Party not found                            | 404  | NotFound           |
+| 13002 | ErrPartyFull                   | Party is full                              | 403  | FailedPrecondition |
+| 13003 | ErrPartyUpdateNotOwner         | Cannot edit party if you're not the owner  | 403  | PermissionDenied   |
+| 13004 | ErrPartyBanOwner               | Cannot ban the party owner                 | 403  | PermissionDenied   |
+| 13005 | ErrPartyUserBanned             | User is banned from the party              | 403  | PermissionDenied   |
+| 13006 | ErrCannotRequestPublicParty    | Cannot request to join a public party      | 403  | FailedPrecondition |
+| 13007 | ErrPlayerAlreadyInParty        | Player is already in party                 | 400  | InvalidArgument    |
+| 13008 | ErrPlayerNotInParty            | Player is not in party                     | 403  | FailedPrecondition |
+| 13009 | ErrUpdateFailedAfterMaxRetries | Failed to update party after max retries   | 500  | Internal           |
+| 13010 | ErrPartyKickOwner              | Cannot kick the party owner                | 403  | PermissionDenied   |
+| 13011 | ErrNotInvited                  | You are not invited to this party          | 403  | PermissionDenied   |
+| 13012 | ErrInviteNotFound              | Invite not found                           | 404  | NotFound           |
+| 13013 | ErrRequestNotFound             | Request not found                          | 404  | NotFound           |
+| 13014 | ErrPartyStatusInvalid          | Invalid party status                       | 400  | InvalidArgument    |
+| 13015 | ErrPartyVisibilityInvalid      | Invalid party visibility                   | 400  | InvalidArgument    |
+| 13016 | ErrPartyNotOpen                | Party is not open                          | 403  | FailedPrecondition |
+| 13017 | ErrSettingsReadFailure         | Failed to read settings                    | 409  | AlreadyExists      |
+| 13018 | ErrSettingsUpdateFailure       | Failed to update settings                  | 409  | AlreadyExists      |
+| 13019 | ErrPartyJoin                   | Cannot join party                          | 403  | PermissionDenied   |
+| 13020 | ErrPartyUpdate                 | Cannot update party                        | 403  | PermissionDenied   |
+| 13021 | ErrPartyNotPublic              | Party visibility is not public             | 403  | FailedPrecondition |
+| 13022 | ErrNewOwnerNotInParty          | New owner is not a member of the party     | 400  | InvalidArgument    |
+</div>
+
+### Websocket Events emitted by snap
+
+When [Web sockets](/docs/infra/snaps/hermes) are enabled on your snapends gateway, this snap can broadcast specific events related to statistics changes directly to the game clients.
+These events are targeted to the appropriate user. Each event is uniquely identified by an enum, and the event payload is a well-structured protobuf message.
+These protobuf messages can be downloaded from the Downloads page.
+
+| Event Id | Event Name    | Description                            | Payload Message   |
+| -------- | ------------- | -------------------------------------- | ----------------- |
+| 1        | PARTY_JOINED  | Published when a user joins the party  | EventPartyJoined  |
+| 2        | PARTY_LEFT    | Published when a user leaves the party | EventPartyLeft    |
+| 3        | PARTY_DELETED | Published when a party is deleted      | EventPartyDeleted |
+| 4        | PARTY_PLAYER_METADATA_UPDATED | Party member metadata updated       | EventPartyPlayerMetadataUpdated |
+| 5        | PARTY_UPDATED | Party has been updated       | EventPartyUpdated |
+| 6        | PARTY_USER_INVITED | Party user invite sent       | EventPartyUserInvited |
+| 7        | PARTY_INVITE_ACCEPTED | Party invite has been accepted       | EventPartyInviteAccepted |
+| 8        | PARTY_INVITE_DECLINED | Party invite has been declined       | EventPartyInviteDeclined |
+| 9        | PARTY_MEMBER_KICKED   | Party member has been kicked         | EventPartyMemberKicked   |
+| 10       | PARTY_CREATED | Party has been created       | EventPartyCreated |
+
+## Additional Details
+
+### Data Stores
+
+Couchbase
+
+### Service Dependencies
+
+The parties service does not depend on any other Snap.
+
+### Upcoming enhancements
+
+Lots of stuff! We're working on adding more features to the parties service, including:
+
+- Party x Matchmaking integration
+- Party x Chat integration
+- Party x Social Graph integration
+- Party x Voice integration

@@ -1,0 +1,63 @@
+# Sequence Settings
+
+This tool allows you to add, edit and delete sequences.
+
+To get started:
+
+1. Click on `Sequences` from the side Nav.
+2. Click on the `Add a Sequence` button.
+3. You will then see a form where you can add or update your configuration.
+
+## Sequence Details
+
+1. **Name** - Name of the sequence. This should be unique. The string should be alphanumeric without spaces.
+
+## Sequence Chain
+
+This is where you add the APIs to your sequence. You can add up to 10 APIs to
+your sequence. You can also add variables that you want to use in subsequent
+APIs in the sequence.
+
+### HTTP Action
+
+This button allows you to add an API to your sequence. Clicking on this button opens a drawer
+that shows you all the snaps in your Snapend. You can then select the Snap you want to add an API from.
+Once you select the Snap you can then pick the API you want to add to your sequence.
+
+<Note>
+  The first API in a sequence can have its variables passed via the payload
+  of the Sequencer API call. Use the `{{.variable}}` syntax to pass variables.
+</Note>
+
+Update the API parameters and hit save. This will add the API to your chain. You will also see the expected
+output of the API call. This allows you to expose the variables that you can use in subsequent APIs.
+You can continue to add APIs to your sequence by clicking on the **Add a HTTP Action** button.
+
+### Chain variables
+
+If you want to use variables from the response of any API in the next
+API call. You do this by clicking on the **Add Variable** button.
+
+1. **Key** - This is the variable name you want to use in subsequent APIs. You chose the name for this.
+2. **Value** - This is the path to the data in the response of the API call.
+
+### Example of adding a variable
+
+Say you are making a login API call and the response is going to be a dictionary with a key called **user**.
+You can add:
+
+- **Key** - `user_id` This becomes a variable you can use in subsequent APIs.
+- **Value** - `user.id` This tells the Sequencer snap to look for the value of `id` in the `user`
+  dictionary in the response.
+
+<Note>
+  **Response Path** essentially gives the sequencer snap the path to find the
+  data from the results of the previous API call. For dicts you can use the dot
+  notation to traverse the dict. For lists you can use the index.
+</Note>
+
+## Sequence Termination
+
+You can choose to stop the sequence on the first error. This means that if any
+API in the sequence fails the entire sequence will stop. You can do this by
+clicking on the **Stop sequence on first error?** checkbox while setting up your sequence.

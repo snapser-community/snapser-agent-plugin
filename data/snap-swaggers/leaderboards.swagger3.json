@@ -1,0 +1,731 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Leaderboards in a snapser cluster",
+    "title" : "Leaderboards",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "LeaderboardsService"
+  } ],
+  "paths" : {
+    "/v1/leaderboards/batch/leaderboards" : {
+      "get" : {
+        "description" : "Gets the standings within a leaderboard for multiple users",
+        "operationId" : "BatchGetScores",
+        "parameters" : [ {
+          "description" : "List of user IDs for which scores are requested",
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_ids",
+          "required" : true,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Name of the leaderboard",
+          "explode" : true,
+          "in" : "query",
+          "name" : "leaderboard_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/leaderboardsBatchGetScoresResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Score",
+        "tags" : [ "LeaderboardsService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      },
+      "patch" : {
+        "description" : "Increments the leaderboard scores for multiple users",
+        "operationId" : "BatchIncrementScore",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/leaderboardsBatchIncrementScoreRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/leaderboardsBatchIncrementScoreResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Score",
+        "tags" : [ "LeaderboardsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Updates the score on the leaderboard for the logged in user (only non 'counter' leaderboards)",
+        "operationId" : "BatchSetScore",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/leaderboardsBatchSetScoreRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/leaderboardsBatchSetScoreResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Score",
+        "tags" : [ "LeaderboardsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/leaderboards/leaderboards/{leaderboard_name}" : {
+      "get" : {
+        "description" : "Gets the standings within a leaderboard",
+        "operationId" : "GetScores",
+        "parameters" : [ {
+          "description" : "Name of the leaderboard",
+          "explode" : false,
+          "in" : "path",
+          "name" : "leaderboard_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Optional user ID for the user who's standing is requested",
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Range of the leaderboard requested: 'top', 'bottom' or 'around' the user specified",
+          "explode" : true,
+          "in" : "query",
+          "name" : "range",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Number of rankings to be displayed",
+          "explode" : true,
+          "in" : "query",
+          "name" : "count",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "For recurring leaderboards, the offset from the latest occurrence of the leaderboard",
+          "explode" : true,
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Whether the user metadata should be included with the request",
+          "explode" : true,
+          "in" : "query",
+          "name" : "with_metadata",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Name of the tier to get the top scores from. Only applicable for tiered leaderboards",
+          "explode" : true,
+          "in" : "query",
+          "name" : "tier_name",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/leaderboardsGetScoresResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Standings",
+        "tags" : [ "LeaderboardsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/leaderboards/leaderboards/{leaderboard_name}/users/{user_id}/score" : {
+      "patch" : {
+        "description" : "Increments the leaderboard score for the user",
+        "operationId" : "IncrementScore",
+        "parameters" : [ {
+          "description" : "Name of the leaderboard",
+          "explode" : false,
+          "in" : "path",
+          "name" : "leaderboard_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User ID for the user who's score is being updated",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/IncrementScore_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/leaderboardsIncrementScoreResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Score",
+        "tags" : [ "LeaderboardsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Updates the leaderboard score for the user (only non 'counter' leaderboards)",
+        "operationId" : "SetScore",
+        "parameters" : [ {
+          "description" : "Name of the leaderboard",
+          "explode" : false,
+          "in" : "path",
+          "name" : "leaderboard_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User ID for the user who's score is being updated",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetScore_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/leaderboardsSetScoreResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Score",
+        "tags" : [ "LeaderboardsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "IncrementScore_request" : {
+        "properties" : {
+          "delta" : {
+            "description" : "The delta of the score to increment",
+            "format" : "double",
+            "type" : "number"
+          },
+          "tier_name" : {
+            "description" : "Name of the tier",
+            "type" : "string"
+          },
+          "user_metadata" : {
+            "description" : "Metadata to be stored with the user",
+            "type" : "object"
+          }
+        },
+        "required" : [ "delta" ],
+        "type" : "object"
+      },
+      "SetScore_request" : {
+        "properties" : {
+          "score" : {
+            "description" : "New score to be inserted",
+            "format" : "double",
+            "type" : "number"
+          },
+          "tier_name" : {
+            "description" : "Name of the tier",
+            "type" : "string"
+          },
+          "user_metadata" : {
+            "description" : "Metadata to be stored with the user",
+            "type" : "object"
+          }
+        },
+        "required" : [ "score" ],
+        "type" : "object"
+      },
+      "leaderboardsBatchGetScoresResponse" : {
+        "properties" : {
+          "responses" : {
+            "description" : "List of responses with the latest scores",
+            "items" : {
+              "$ref" : "#/components/schemas/leaderboardsBatchGetScoresSingleResponse"
+            },
+            "type" : "array"
+          },
+          "user_scores" : {
+            "items" : {
+              "$ref" : "#/components/schemas/leaderboardsTieredUserScore"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "leaderboardsBatchGetScoresSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/leaderboardsGetScoresRequest"
+          },
+          "response" : {
+            "items" : {
+              "$ref" : "#/components/schemas/leaderboardsTieredUserScore"
+            },
+            "type" : "array"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "leaderboardsBatchIncrementScoreRequest" : {
+        "properties" : {
+          "increment_score_requests" : {
+            "description" : "List of requests with their scores to be incremented",
+            "items" : {
+              "$ref" : "#/components/schemas/leaderboardsIncrementScoreRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "increment_score_requests" ],
+        "type" : "object"
+      },
+      "leaderboardsBatchIncrementScoreResponse" : {
+        "properties" : {
+          "increment_score_responses" : {
+            "items" : {
+              "$ref" : "#/components/schemas/leaderboardsIncrementScoreResponse"
+            },
+            "type" : "array"
+          },
+          "responses" : {
+            "description" : "List of responses for each user ID",
+            "items" : {
+              "$ref" : "#/components/schemas/leaderboardsBatchIncrementScoreSingleResponse"
+            },
+            "type" : "array"
+          },
+          "scores_failed" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "scores_incremented" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "leaderboardsBatchIncrementScoreSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/leaderboardsIncrementScoreRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/leaderboardsIncrementScoreResponse"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "leaderboardsBatchSetScoreRequest" : {
+        "properties" : {
+          "set_score_requests" : {
+            "description" : "List of requests with their scores to be inserted",
+            "items" : {
+              "$ref" : "#/components/schemas/leaderboardsSetScoreRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "set_score_requests" ],
+        "type" : "object"
+      },
+      "leaderboardsBatchSetScoreResponse" : {
+        "properties" : {
+          "responses" : {
+            "description" : "List of responses for each user ID",
+            "items" : {
+              "$ref" : "#/components/schemas/leaderboardsBatchSetScoreSingleResponse"
+            },
+            "type" : "array"
+          },
+          "score_responses" : {
+            "items" : {
+              "$ref" : "#/components/schemas/leaderboardsSetScoreResponse"
+            },
+            "type" : "array"
+          },
+          "scores_failed" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "scores_set" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "leaderboardsBatchSetScoreSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/leaderboardsSetScoreRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/leaderboardsSetScoreResponse"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "leaderboardsGetScoresRequest" : {
+        "properties" : {
+          "count" : {
+            "description" : "Number of rankings to be displayed",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "leaderboard_name" : {
+            "description" : "Name of the leaderboard",
+            "type" : "string"
+          },
+          "offset" : {
+            "description" : "For recurring leaderboards, the offset from the latest occurrence of the leaderboard",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "range" : {
+            "description" : "Range of the leaderboard requested: 'top', 'bottom' or 'around' the user specified",
+            "enum" : [ "top", "bottom", "around" ],
+            "type" : "string"
+          },
+          "tier_name" : {
+            "description" : "Name of the tier to get the top scores from. Only applicable for tiered leaderboards",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "Optional user ID for the user who's standing is requested",
+            "type" : "string"
+          },
+          "with_metadata" : {
+            "description" : "Whether the user metadata should be included with the request",
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "count", "leaderboard_name", "range" ],
+        "title" : "Service Requests & Responses",
+        "type" : "object"
+      },
+      "leaderboardsGetScoresResponse" : {
+        "properties" : {
+          "tier" : {
+            "$ref" : "#/components/schemas/leaderboardsTier"
+          },
+          "user_scores" : {
+            "description" : "List of users in the order defined by the leaderboard",
+            "items" : {
+              "$ref" : "#/components/schemas/leaderboardsUserScore"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "leaderboardsIncrementScoreRequest" : {
+        "properties" : {
+          "delta" : {
+            "description" : "The delta of the score to increment",
+            "format" : "double",
+            "type" : "number"
+          },
+          "leaderboard_name" : {
+            "description" : "Name of the leaderboard",
+            "type" : "string"
+          },
+          "tier_name" : {
+            "description" : "Name of the tier",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "User ID for the user who's score is being updated",
+            "type" : "string"
+          },
+          "user_metadata" : {
+            "description" : "Metadata to be stored with the user",
+            "type" : "object"
+          }
+        },
+        "required" : [ "delta", "leaderboard_name", "user_id" ],
+        "type" : "object"
+      },
+      "leaderboardsIncrementScoreResponse" : {
+        "properties" : {
+          "rank" : {
+            "description" : "Latest rank to be returned",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "score" : {
+            "description" : "Incremented score to be returned",
+            "format" : "double",
+            "type" : "number"
+          },
+          "tier" : {
+            "$ref" : "#/components/schemas/leaderboardsTier"
+          },
+          "user_id" : {
+            "description" : "User ID of the user",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "leaderboardsSetScoreRequest" : {
+        "properties" : {
+          "leaderboard_name" : {
+            "description" : "Name of the leaderboard",
+            "type" : "string"
+          },
+          "score" : {
+            "description" : "New score to be inserted",
+            "format" : "double",
+            "type" : "number"
+          },
+          "tier_name" : {
+            "description" : "Name of the tier",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "User ID for the user who's score is being updated",
+            "type" : "string"
+          },
+          "user_metadata" : {
+            "description" : "Metadata to be stored with the user",
+            "type" : "object"
+          }
+        },
+        "required" : [ "leaderboard_name", "score", "user_id" ],
+        "type" : "object"
+      },
+      "leaderboardsSetScoreResponse" : {
+        "properties" : {
+          "rank" : {
+            "description" : "Latest rank to be returned",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "score" : {
+            "description" : "Latest score to be returned",
+            "format" : "double",
+            "type" : "number"
+          },
+          "tier" : {
+            "$ref" : "#/components/schemas/leaderboardsTier"
+          },
+          "user_id" : {
+            "description" : "User ID of the user",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "leaderboardsTier" : {
+        "properties" : {
+          "bucket_size" : {
+            "description" : "Maximum number of users per bucket within this tier",
+            "format" : "uint64",
+            "type" : "integer"
+          },
+          "description" : {
+            "description" : "Human-readable description of the tier",
+            "type" : "string"
+          },
+          "name" : {
+            "description" : "Name of the tier, unique within the leaderboard",
+            "type" : "string"
+          },
+          "single_bucket" : {
+            "description" : "When true, the tier uses one bucket regardless of user count",
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "leaderboardsTieredUserScore" : {
+        "properties" : {
+          "tier" : {
+            "description" : "Name of the tier",
+            "type" : "string"
+          },
+          "user_score" : {
+            "$ref" : "#/components/schemas/leaderboardsUserScore"
+          }
+        },
+        "type" : "object"
+      },
+      "leaderboardsUserScore" : {
+        "properties" : {
+          "rank" : {
+            "description" : "User's rank starting with 1",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "score" : {
+            "description" : "User's score",
+            "format" : "double",
+            "type" : "number"
+          },
+          "user_id" : {
+            "description" : "User ID of the user",
+            "type" : "string"
+          },
+          "user_metadata" : {
+            "description" : "User metadata",
+            "type" : "object"
+          }
+        },
+        "title" : "Message Types and Enums",
+        "type" : "object"
+      },
+      "protobufNullValue" : {
+        "default" : "NULL_VALUE",
+        "description" : "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value.",
+        "enum" : [ "NULL_VALUE" ],
+        "type" : "string"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

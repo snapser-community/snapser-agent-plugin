@@ -1,0 +1,286 @@
+
+
+export const description = 'Events'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Events
+
+The Events Snap unlocks the ability to schedule and run in-app events. They are perfect for Live Ops, where you can run events like holiday specials, weekend challenges, or special events. Events are a great way to increase user engagement and retention.
+
+<Warning>
+  This is a Premium snap. You will need to be on a Premium plan to use it.
+</Warning>
+
+## About
+
+With the events Snap you can create in game/app events for your digital experience. This Snap is basically an orchestration tool that allows you to schedule triggers on milestones of an event. These triggers can be push notification blasts, remote config overrides, quests activation or deactivation.
+
+<Warning>
+If your Snapend does not have Remote Config, Notifications or Quests snaps, you will have no use for the Events Snap.
+</Warning>
+
+Events can be setup as one-time or recurring, day, week or monthly events. Each event can also be broken down into milestones.
+
+## Event Milestones
+
+Milestones are a way to break the event into sub parts. Each event can have up to 10 milestones.
+
+<u>Example</u>: Say you want to have an event for Christmas that lasts for 10 days. You can break this down into 2 milestones, milestone 1 for 5 days and milestone 2 for 5 days. The admin tool allows you to schedule triggers on these milestones.
+
+<Note>
+  The decision to make these milestones user facing or internal is completely up to you.
+</Note>
+
+## Integration with Snaps
+
+The Events Snap integrates with the following Snaps:
+
+1. Notifications
+2. Remote Config
+3. Quests
+4. Statistics and Segmentation Snap
+
+For every milestone of an event, you can set up automated PN/Email blasts. These can be scheduled either before or after a specific milestone's start or end time. You can also automatically schedule remote config overrides for a particular segment of your users and schedule quest activation and deactivation for specific milestones.
+
+### Notification Snap
+
+When you have a major event coming up in your game or app, it's a good idea to notify your users a few days in advance. Using the Events Snap, you can schedule these notifications. Additionally, as the event nears its conclusion, you might want to send another notification to remind users that the event is ending soon.
+
+### Remote Config Snap
+
+The Remote Config Snap allows you to provide a curated experience for your users through overrides set for specific segments. The Events Snap can be used to schedule these overrides to activate or deactivate during particular milestones of an event. For example, you can activate a new theme for your users during a specific milestone and deactivate it once the milestone is over.
+
+### Quests Snap
+
+Quests are a great way to increase user engagement. You can use the Events Snap to activate a quest in milestone 1 and then deactivate the quest at the end of the last milestone. This way, you can offer a series of rare or special quests that are only available during a particular event.
+
+### Statistics & Segmentation Snap
+The segments that create under the statistics snap can be used to target users for notifications, remote config overrides and quests.
+
+<Note>
+At the moment, the Events Snap is integrated with the Notifications, Remote Config, and Quests Snaps. If you need to integrate with other Snaps, please reach out to us.
+</Note>
+
+## Snap Configuration Tools
+Once you have snapped the events snap to your snapend follow the next steps to get started:
+1. Click on the Snaps Configuration from under quick links.
+2. Select the Events Snap from the left Nav bar.
+
+### 1. Events
+This tool is used to create and schedule your in-app events. You can create one-time or recurring events.
+You can also break down your events into milestones.
+
+To get started:
+1. Click on events from the left hand nav and then click on the **Add an event** button
+2. This will open up a form where you can add a new event.
+
+The following snapshot shows you an example of creating an event.
+
+![Admin Pic](/images/docs/events-admin.png)
+
+#### Event details
+- **Name** - Give your event a unique name. This can be an alphanumeric string.
+- **Description** - Give your event a description.
+Both the fields are mandatory.
+
+#### Schedule
+- **Start Time** - Pick the time when you want the event to start. You can use the calendar to pick the date.
+- **End Interval** - From the start time you can pick the number of minutes, hours or days you want the event to last.
+- **Schedule Type** - This will either be cron or one-time. If you select cron, you can set the cron expression.
+  Snapser provides a special cron expression builder to help you with this.
+
+#### Milestones
+Each event needs at least one milestone. You can add up to 10 milestones for an event.
+- **Name** - Give your milestone a unique name. This can be an alphanumeric string.
+- **Start Interval** - This can be number of minutes, hours or days from the start of the event or the previous milestone.
+- **End Interval** - This can be number of minutes, hours or days when you want this milestone to end.
+    <Note>
+    It it important to note that Start and End intervals are relative to the start of the event.
+
+    Example: Say event starts on January 1st at 12:00 AM and you have a milestone with start interval of 0 day and end interval of 2 days. This means the milestone will start on January 1st at 12:00 AM and end on January 3rd at 12:00 AM.
+    </Note>
+
+##### Notifications Setup
+You can schedule multiple notification blasts for each milestone. You can schedule a notification before or after the milestone starts or ends.
+
+- **Audience Type** - This can be either segment, all users or specific users. "Specific users" type is mainly used for testing.
+- **Notification Type** - This can be either push notification or email. You have to pick the template for the notification. If you have not created a template already, head to the notifications snap to create one.
+- **Variables** - You can add variables to the notification template. These variables will be replaced with actual values when the notification is sent.
+- **Metadata** - The metadata is used to track the notification. You can add any key-value pairs here.
+- **Trigger Instance & Start Interval** - This can either be beginning or end. If you select beginning,
+  the notification will be sent at the beginning of the milestone. If you select end, the notification
+  will be sent at the end of the milestone. The start interval is the number of minutes, hours or days
+  from the beginning or end of the milestone when you want the notification to be sent. Use a negative start interval to send the notification before the milestone starts or ends.
+
+##### Remote Config Setup
+Remote config snap exposes overrides that can be ramped up and down. You can schedule these overrides for each milestone and decide on a ramp %.
+
+- **Override name** - Pick the override name that you have added in the remote config snap. If you have not added an override, head to the remote config snap to add one.
+- **Ramp %** - This is the percentage of qualified users that you want to apply the override to.
+- **Revert at milestone end - This is a boolean field. If you select this, the override will be reverted at the end of the milestone to the original value.
+
+##### Quests Setup
+You can activate and deactivate quests for each milestone.
+
+- **Quest name** - Pick the quest name that you have added in the quests snap. If you have not added a quest, head to the quests snap to add one.
+- **Enable or Disable** - Pick whether you want to enable or disable the quest for this milestone.
+- **Revert at milestone end - This is a boolean field. If you select this, the quest enable or disable state will be reverted at the end of the milestone to the original value.
+
+<Note>
+Once the event is created You wont be able to update any timers or milestones start and end intervals. You can only update the event description and update the notification, remote config and quest settings.
+</Note>
+
+## APIs
+
+The `Events` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name       | HTTP Method | API Description        |
+| -------------- | ----------- | ---------------------- |
+| [EventsGetEventStatus](#eventsgeteventstatus-api) | GET         | Gets status for events |
+</div>
+
+### Usage
+#### EventsGetEventStatus API
+<CodeGroup title="Gets status for events" tag="GET" label="EventsGetEventStatus">
+```csharp
+/// <summary>
+/// Events Status Gets status for events
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="onlyActive">Whether to only include active events (optional)</param>
+/// <param name="names">Comma separated list of event names to filter by (optional)</param>
+/// <returns>EventsGetEventStatusResponse</returns>
+public EventsGetEventStatusResponse EventsGetEventStatus(string token, bool? onlyActive = default(bool?), string names = default(string))
+{
+    Snapser.Client.ApiResponse<EventsGetEventStatusResponse> localVarResponse = EventsGetEventStatusWithHttpInfo(token, onlyActive, names);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for EventsGetEventStatusResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="EventsGetEventStatusResponse" /> class.
+/// </summary>
+/// <param name="events">Events array.</param>
+public EventsGetEventStatusResponse(List<EventsEventStatus> events = default(List<EventsEventStatus>))
+{
+    this.Events = events;
+}
+
+/// Snapser.Model for EventsEventStatus
+/// <summary>
+/// Initializes a new instance of the <see cref="EventsEventStatus" /> class.
+/// </summary>
+/// <param name="endTime">endTime.</param>
+/// <param name="isActive">isActive.</param>
+/// <param name="milestones">milestones.</param>
+/// <param name="name">name.</param>
+/// <param name="startTime">startTime.</param>
+/// <param name="timeLeft">timeLeft.</param>
+public EventsEventStatus(string endTime = default(string), bool isActive = default(bool), List<EventsMilestoneStatus> milestones = default(List<EventsMilestoneStatus>), string name = default(string), string startTime = default(string), string timeLeft = default(string))
+{
+    this.EndTime = endTime;
+    this.IsActive = isActive;
+    this.Milestones = milestones;
+    this.Name = name;
+    this.StartTime = startTime;
+    this.TimeLeft = timeLeft;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserEventsServiceApi::EventsGetEventStatusRequest : public Request
+{
+public:
+    virtual ~EventsGetEventStatusRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    /* Whether to only include active events */
+    TOptional<bool> OnlyActive;
+    /* Comma separated list of event names to filter by */
+    TOptional<FString> Names;
+};
+
+// Response
+class SNAPSER_API SnapserEventsServiceApi::EventsGetEventStatusResponse : public Response
+{
+public:
+    virtual ~EventsGetEventStatusResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserEventsGetEventStatusResponse Content;
+};
+
+class SNAPSER_API SnapserEventsGetEventStatusResponse : public Model
+{
+public:
+    virtual ~SnapserEventsGetEventStatusResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Events array */
+    TOptional<TArray<SnapserEventsEventStatus>> Events;
+};
+
+class SNAPSER_API SnapserEventsEventStatus : public Model
+{
+public:
+    virtual ~SnapserEventsEventStatus() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> EndTime;
+    TOptional<bool> IsActive;
+    TOptional<TArray<SnapserEventsMilestoneStatus>> Milestones;
+    TOptional<FString> Name;
+    TOptional<FString> StartTime;
+    TOptional<FString> TimeLeft;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code  | Variable              | Message              | HTTP | gRPC          |
+| ----- | --------------------- | -------------------- | ---- | ------------- |
+| 11000 | ErrEventNotFound      | Event not found      | 404  | NotFound      |
+| 11001 | ErrEventAlreadyExists | Event already exists | 409  | AlreadyExists |
+</div>
+
+
+## Additional Details
+
+### Data Stores
+
+POSTGRES
+
+### Service Dependencies
+
+The Events service depends on scheduler snap mainly but interact with other
+notification, remote-config and quests services.
+
+### Upcoming enhancements
+
+We will be expanding the events snap to integrate with more snaps.

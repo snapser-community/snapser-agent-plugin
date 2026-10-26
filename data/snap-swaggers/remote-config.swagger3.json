@@ -1,0 +1,114 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Set up and apply dynamic configuration for your players",
+    "title" : "Remote Config",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "RemoteConfigService"
+  } ],
+  "paths" : {
+    "/v1/remote-config/app-config/{version}" : {
+      "get" : {
+        "description" : "Returns the config for the app",
+        "operationId" : "GetAppConfig",
+        "parameters" : [ {
+          "description" : "version of the app",
+          "explode" : false,
+          "in" : "path",
+          "name" : "version",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/remote_configGetAppConfigResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Get App Config",
+        "tags" : [ "RemoteConfigService" ],
+        "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/remote-config/user-config/{user_id}" : {
+      "get" : {
+        "description" : "Returns the config for the user",
+        "operationId" : "GetUserConfig",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/remote_configGetUserConfigResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Get User Config",
+        "tags" : [ "RemoteConfigService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "protobufNullValue" : {
+        "default" : "NULL_VALUE",
+        "description" : "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value.",
+        "enum" : [ "NULL_VALUE" ],
+        "type" : "string"
+      },
+      "remote_configGetAppConfigResponse" : {
+        "properties" : {
+          "config" : {
+            "description" : "Config for the app",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "remote_configGetUserConfigResponse" : {
+        "properties" : {
+          "config" : {
+            "description" : "Config for the user",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

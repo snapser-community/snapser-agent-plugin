@@ -1,0 +1,34 @@
+# Party Settings
+
+This tool allows you to set the settings for a party. You can set the base settings and allocation settings for the lobby.
+
+To get started:
+
+1. Click on `Settings` from the side Nav.
+2. You will see a form with all the settings that you can set for the party.
+
+## Player Settings
+
+1. **Max Players**: The maximum number of players that can be in a party. The default value is 16 and you can have minimum of 1 and a maximum of 100.
+		Note this value can be overridden when creating a party using the Create Party API.
+
+## TTL Settings
+
+1. **Invite Timeout**: The time to live for the invite in seconds. The invite will be deleted after this time.
+2. **Party Timeout**: The time to live for the party in seconds. The party will be deleted after this time.
+3. **Request Timeout**: The time to live for the duration for an active request to join a party. The request will be deleted after this time.
+
+## Membership Settings
+1. **Enforce single membership**: Toggle to enforce that a user can only be a member of one party at a time. If enabled, users will be removed from their current party when they join a new one. By default, users can only be a member of one party at a time. Multi-party membership setups come with their own set of challenges and so disable this setting with caution.
+
+## Disconnect Settings
+
+1. **Kick Users On Disconnect**: Toggle to automatically remove a member from their party when their Snapser websocket connection disconnects.
+   <Note>
+     You need to enable **Web Socket** on your gateway to use this feature.
+   </Note>
+
+## Matchmaking Settings
+
+1. **Dequeue On Leave**: Toggle to automatically dequeue a party from matchmaking when the party leaves.
+2. **Dequeue On Join**: Toggle to automatically dequeue a party from matchmaking when the party joins.

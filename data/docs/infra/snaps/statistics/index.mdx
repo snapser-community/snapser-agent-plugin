@@ -1,0 +1,1084 @@
+export const description = 'Statistics'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Statistics and Segmentation
+
+The Statistics and Segmentation snap is two services clubbed into one. The
+statistics part of the service allows game and app dev teams to set up real-time
+statistics for their user base that they can quickly increment and update from
+the client code. Using segmentation, they can create user cohorts based on
+their statistics. Segmentation enables games and apps to give their users a unique
+experience by combining others snaps like Remote Config and Experiments.
+
+<Note>
+  The Statistics snap should not be confused with the Analytics service. For example, in a traditional game use case, the
+  user statistics service is used to store game stats for a user, whereas,
+  Analytics is mainly for game-level analysis.
+</Note>
+
+## Quick Tour
+<Video src="https://www.youtube.com/embed/8rPGyEN_ddY" title="Snapser - Statistics and Segmentation Snap" />
+
+## Statistics
+
+A Statistic is a unique metric that you want to store for every user. Each
+user can have a stat incremented. The segmentation part of this Snap uses
+these user statistics to create user cohorts.
+
+### Statistic Types
+
+Currently, there are three types of statistics:
+
+1. **Counter**: number that can be set or incremented.
+2. **Timestamp**: Unix timestamp.
+3. **String**: any string.
+
+### Statistic Scope
+
+The scope describes the access level of the statistic. There are two types of scopes:
+
+1. **External**: App clients, cluster services, and servers having the snapend API key can modify these stats.
+2. **Internal**: Only other snaps within your cluster can modify these stats. This is to prevent cheating. These stats can be updated using app auth as well.
+
+## Segments
+
+Segments are cohorts of the game or app user population based on user statistics. Users will enter or exit segments as their specific user stat increases or decreases.
+
+### Predicates
+Segments are setup as a combination of predicates. Predicates are rules that are evaluated against the user statistics. Segments can have multiple predicates and can be inclusive or exclusive.
+
+#### Predicate Example
+For example, a game may want to target and reward players logged in 1000 times. To handle this, you can create a statistic for "logins" in the admin tool and a segment with the rule: logins ≥ 1000. Once you setup this rule, when a players "login" stat reaches 1000, they automatically "enter" the segment. Using other snaps like remote config and or experiments you can now update your game experience for the user. Also you may now trigger an action to grant the user an achievement and reward them some currency on entering the segment.
+
+<Note>
+  Presently, you can have 20 predicates per segment.
+</Note>
+
+## Snap Integrations
+The Statistics and Segments you create with this snap can be used with other snaps like Events, Experiments, Inventory, Notifications, Remote Config, and Trackables.
+This allows you to create a unique app experience for your users based on their statistics and segments.
+
+### Analytics on Segments
+Additionally, if you have the analytics snap as part of your snapend, this snap automatically forwards the
+segmentation data to the analytics snap. This allows you to analyze the user segments in the analytics tool
+in real-time. The table that is created in the analytics tool is named `user_snap_segments`.
+
+## APIs & Emitters
+
+The `Statistics & Segmentation` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name                  | HTTP Method | API Description                                           |
+| ------------------------- | ----------- | --------------------------------------------------------- |
+| [StatisticsIsUserInSegment](#statisticsisuserinsegment-api)           | GET         | Returns true/false if user is in segment or not           |
+| [StatisticsGetUserStatistics](#statisticsgetuserstatistics-api)         | GET         | Fetches all user-statistics for user or stat              |
+| [StatisticsGetUserStatistic](#statisticsgetuserstatistic-api)          | GET         | Fetches a specific user statistic by user id and stat key |
+| [StatisticsIncrementUserStatistic](#statisticsincrementuserstatistic-api)    | PATCH       | Increments a user-statistic                               |
+| [StatisticsBatchUpdateUserStatistics](#statisticsbatchupdateuserstatistics-api) | PUT         | Increments user statistics in bulk                           |
+| [StatisticsSetUserStatistic](#statisticssetuserstatistic-api)          | PUT         | Sets a user statistic to exact value provided             |
+| [StatisticsBatchSetUserStatistics](#statisticsbatchsetuserstatistics-api)          | PUT         | Sets user statistics in bulk for multiple users             |
+| [StatisticsBatchGetUserStatistics](#statisticsbatchgetuserstatistics-api)          | GET         | Fetches all user-statistics for multiple users             |
+</div>
+
+### Usage
+#### StatisticsIsUserInSegment API
+<CodeGroup title="Returns true/false if user is in segment or not" tag="GET" label="StatisticsIsUserInSegment">
+```csharp
+/// <summary>
+/// User Segment Lookup Returns true/false if user is in segment or not
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="name">Name of the segment</param>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <returns>StatisticsIsUserInSegmentResponse</returns>
+public StatisticsIsUserInSegmentResponse StatisticsIsUserInSegment(string name, string userId, string token)
+{
+    Snapser.Client.ApiResponse<StatisticsIsUserInSegmentResponse> localVarResponse = StatisticsIsUserInSegmentWithHttpInfo(name, userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StatisticsIsUserInSegmentResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsIsUserInSegmentResponse" /> class.
+/// </summary>
+/// <param name="userInSegment">userInSegment.</param>
+public StatisticsIsUserInSegmentResponse(bool userInSegment = default(bool))
+{
+    this.UserInSegment = userInSegment;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStatisticsServiceApi::StatisticsIsUserInSegmentRequest : public Request
+{
+public:
+    virtual ~StatisticsIsUserInSegmentRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Name of the segment */
+    FString Name;
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserStatisticsServiceApi::StatisticsIsUserInSegmentResponse : public Response
+{
+public:
+    virtual ~StatisticsIsUserInSegmentResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStatisticsIsUserInSegmentResponse Content;
+};
+
+class SNAPSER_API SnapserStatisticsIsUserInSegmentResponse : public Model
+{
+public:
+    virtual ~SnapserStatisticsIsUserInSegmentResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<bool> UserInSegment;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### StatisticsGetUserStatistics API
+<CodeGroup title="Fetches all user-statistics for user or stat" tag="GET" label="StatisticsGetUserStatistics">
+```csharp
+/// <summary>
+/// User Statistics (App Auth) Fetches all user-statistics for multiple users
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">ID(s) of the user(s) to get statistics for</param>
+/// <param name="token">(app auth only)</param>
+/// <returns>StatisticsBatchGetUserStatisticsResponse</returns>
+public StatisticsBatchGetUserStatisticsResponse StatisticsBatchGetUserStatistics(List<string> userId, string token)
+{
+    Snapser.Client.ApiResponse<StatisticsBatchGetUserStatisticsResponse> localVarResponse = StatisticsBatchGetUserStatisticsWithHttpInfo(userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StatisticsBatchGetUserStatisticsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsBatchGetUserStatisticsResponse" /> class.
+/// </summary>
+/// <param name="usersStatistics">usersStatistics.</param>
+public StatisticsBatchGetUserStatisticsResponse(Dictionary<string, StatisticsMultiUserStatistics> usersStatistics = default(Dictionary<string, StatisticsMultiUserStatistics>))
+{
+    this.UsersStatistics = usersStatistics;
+}
+
+/// Snapser.Model for StatisticsMultiUserStatistics
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsMultiUserStatistics" /> class.
+/// </summary>
+/// <param name="userStatistics">userStatistics.</param>
+public StatisticsMultiUserStatistics(List<StatisticsUserStatistic> userStatistics = default(List<StatisticsUserStatistic>))
+{
+    this.UserStatistics = userStatistics;
+}
+
+/// Snapser.Model for StatisticsUserStatistic
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsUserStatistic" /> class.
+/// </summary>
+/// <param name="key">key.</param>
+/// <param name="userId">userId.</param>
+/// <param name="value">value.</param>
+public StatisticsUserStatistic(string key = default(string), string userId = default(string), string value = default(string))
+{
+    this.Key = key;
+    this.UserId = userId;
+    this.Value = value;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStatisticsServiceApi::StatisticsGetUserStatisticsRequest : public Request
+{
+public:
+    virtual ~StatisticsGetUserStatisticsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserStatisticsServiceApi::StatisticsGetUserStatisticsResponse : public Response
+{
+public:
+    virtual ~StatisticsGetUserStatisticsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStatisticsGetUserStatisticsResponse Content;
+};
+
+class SNAPSER_API SnapserStatisticsGetUserStatisticsResponse : public Model
+{
+public:
+    virtual ~SnapserStatisticsGetUserStatisticsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserStatisticsUserStatistic>> UserStatistics;
+};
+
+class SNAPSER_API SnapserStatisticsUserStatistic : public Model
+{
+public:
+    virtual ~SnapserStatisticsUserStatistic() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Key;
+    TOptional<FString> UserId;
+    TOptional<FString> Value;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### StatisticsBatchUpdateUserStatistics API
+<CodeGroup title="Updates user statistics in bulk" tag="PUT" label="StatisticsBatchUpdateUserStatistics">
+```csharp
+/// <summary>
+/// User Statistics Batch Update API Updates user statistics in bulk
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user for whom the stats are being updated</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>StatisticsBatchUpdateUserStatisticsResponse</returns>
+public StatisticsBatchUpdateUserStatisticsResponse StatisticsBatchUpdateUserStatistics(string userId, string token, StatisticsServiceBatchUpdateUserStatisticsBody body)
+{
+    Snapser.Client.ApiResponse<StatisticsBatchUpdateUserStatisticsResponse> localVarResponse = StatisticsBatchUpdateUserStatisticsWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StatisticsServiceBatchUpdateUserStatisticsBody
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsServiceBatchUpdateUserStatisticsBody" /> class.
+/// </summary>
+/// <param name="data">Array of operations to be performed (required).</param>
+public StatisticsServiceBatchUpdateUserStatisticsBody(List<StatisticsBatchUpdateUserStatisticsItem> data = default(List<StatisticsBatchUpdateUserStatisticsItem>))
+{
+    // to ensure "data" is required (not null)
+    if (data == null)
+    {
+        throw new ArgumentNullException("data is a required property for StatisticsServiceBatchUpdateUserStatisticsBody and cannot be null");
+    }
+    this.Data = data;
+}
+
+/// Snapser.Model for StatisticsBatchUpdateUserStatisticsItem
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsBatchUpdateUserStatisticsResponse" /> class.
+/// </summary>
+/// <param name="userStatistics">userStatistics.</param>
+public StatisticsBatchUpdateUserStatisticsResponse(List<StatisticsUserStatistic> userStatistics = default(List<StatisticsUserStatistic>))
+{
+    this.UserStatistics = userStatistics;
+}
+
+/// Snapser.Model for StatisticsUserStatistic
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsUserStatistic" /> class.
+/// </summary>
+/// <param name="key">key.</param>
+/// <param name="userId">userId.</param>
+/// <param name="value">value.</param>
+public StatisticsUserStatistic(string key = default(string), string userId = default(string), string value = default(string))
+{
+    this.Key = key;
+    this.UserId = userId;
+    this.Value = value;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStatisticsServiceApi::StatisticsBatchUpdateUserStatisticsRequest : public Request
+{
+public:
+    virtual ~StatisticsBatchUpdateUserStatisticsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user for whom the stats are being updated */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserStatisticsServiceBatchUpdateUserStatisticsBody Body;
+};
+
+class SNAPSER_API SnapserStatisticsServiceBatchUpdateUserStatisticsBody : public Model
+{
+public:
+    virtual ~SnapserStatisticsServiceBatchUpdateUserStatisticsBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Array of operations to be performed */
+    TArray<SnapserStatisticsBatchUpdateUserStatisticsItem> Data;
+};
+
+class SNAPSER_API SnapserStatisticsBatchUpdateUserStatisticsItem : public Model
+{
+public:
+    virtual ~SnapserStatisticsBatchUpdateUserStatisticsItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Index used to determine the order in which operations are executed */
+    int64 Idx = 0;
+    /* Name of the user statistic */
+    FString Key;
+    /* Operation to be performed (increment / set) */
+    FString Operation;
+    /* Value that the statistic should be set to / incremented by */
+    FString Value;
+};
+
+// Response
+class SNAPSER_API SnapserStatisticsServiceApi::StatisticsBatchUpdateUserStatisticsResponse : public Response
+{
+public:
+    virtual ~StatisticsBatchUpdateUserStatisticsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStatisticsBatchUpdateUserStatisticsResponse Content;
+};
+
+class SNAPSER_API SnapserStatisticsBatchUpdateUserStatisticsResponse : public Model
+{
+public:
+    virtual ~SnapserStatisticsBatchUpdateUserStatisticsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserStatisticsUserStatistic>> UserStatistics;
+};
+
+class SNAPSER_API SnapserStatisticsUserStatistic : public Model
+{
+public:
+    virtual ~SnapserStatisticsUserStatistic() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Key;
+    TOptional<FString> UserId;
+    TOptional<FString> Value;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### StatisticsGetUserStatistic API
+<CodeGroup title="Fetches a specific user statistic by user id and stat key" tag="GET" label="StatisticsGetUserStatistic">
+```csharp
+/// <summary>
+/// User Statistic Fetches a specific user statistic by user id and stat key
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="key">Name of the user statistic</param>
+/// <param name="token">User session token</param>
+/// <returns>StatisticsUserStatistic</returns>
+public StatisticsUserStatistic StatisticsGetUserStatistic(string userId, string key, string token)
+{
+    Snapser.Client.ApiResponse<StatisticsUserStatistic> localVarResponse = StatisticsGetUserStatisticWithHttpInfo(userId, key, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StatisticsUserStatistic
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsUserStatistic" /> class.
+/// </summary>
+/// <param name="key">key.</param>
+/// <param name="userId">userId.</param>
+/// <param name="value">value.</param>
+public StatisticsUserStatistic(string key = default(string), string userId = default(string), string value = default(string))
+{
+    this.Key = key;
+    this.UserId = userId;
+    this.Value = value;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStatisticsServiceApi::StatisticsGetUserStatisticRequest : public Request
+{
+public:
+    virtual ~StatisticsGetUserStatisticRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* Name of the user statistic */
+    FString Key;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserStatisticsServiceApi::StatisticsGetUserStatisticResponse : public Response
+{
+public:
+    virtual ~StatisticsGetUserStatisticResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStatisticsUserStatistic Content;
+};
+
+class SNAPSER_API SnapserStatisticsUserStatistic : public Model
+{
+public:
+    virtual ~SnapserStatisticsUserStatistic() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Key;
+    TOptional<FString> UserId;
+    TOptional<FString> Value;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### StatisticsIncrementUserStatistic API
+<CodeGroup title="Increments a user-statistic" tag="PATCH" label="StatisticsIncrementUserStatistic">
+```csharp
+/// <summary>
+/// User Statistic Increments a user-statistic
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user who&#39;s stats are being requested</param>
+/// <param name="key">Name of the user statistic</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>StatisticsUserStatistic</returns>
+public StatisticsUserStatistic StatisticsIncrementUserStatistic(string userId, string key, string token, StatisticsServiceIncrementUserStatisticBody body)
+{
+    Snapser.Client.ApiResponse<StatisticsUserStatistic> localVarResponse = StatisticsIncrementUserStatisticWithHttpInfo(userId, key, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StatisticsServiceIncrementUserStatisticBody
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsServiceIncrementUserStatisticBody" /> class.
+/// </summary>
+/// <param name="delta">Value to increment the statistic by. Use negative to decrement (required).</param>
+public StatisticsServiceIncrementUserStatisticBody(long delta = default(long))
+{
+    this.Delta = delta;
+}
+
+/// Snapser.Model for StatisticsUserStatistic
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsUserStatistic" /> class.
+/// </summary>
+/// <param name="key">key.</param>
+/// <param name="userId">userId.</param>
+/// <param name="value">value.</param>
+public StatisticsUserStatistic(string key = default(string), string userId = default(string), string value = default(string))
+{
+    this.Key = key;
+    this.UserId = userId;
+    this.Value = value;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStatisticsServiceApi::StatisticsIncrementUserStatisticRequest : public Request
+{
+public:
+    virtual ~StatisticsIncrementUserStatisticRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user who's stats are being requested */
+    FString UserId;
+    /* Name of the user statistic */
+    FString Key;
+    /* User session token */
+    FString Token;
+    SnapserStatisticsServiceIncrementUserStatisticBody Body;
+};
+
+class SNAPSER_API SnapserStatisticsServiceIncrementUserStatisticBody : public Model
+{
+public:
+    virtual ~SnapserStatisticsServiceIncrementUserStatisticBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Value to increment the statistic by. Use negative to decrement */
+    int64 Delta = 0;
+};
+
+// Response
+class SNAPSER_API SnapserStatisticsServiceApi::StatisticsIncrementUserStatisticResponse : public Response
+{
+public:
+    virtual ~StatisticsIncrementUserStatisticResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStatisticsUserStatistic Content;
+};
+
+class SNAPSER_API SnapserStatisticsUserStatistic : public Model
+{
+public:
+    virtual ~SnapserStatisticsUserStatistic() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Key;
+    TOptional<FString> UserId;
+    TOptional<FString> Value;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### StatisticsSetUserStatistic API
+<CodeGroup title="Sets a user statistic to exact value provided" tag="PUT" label="StatisticsSetUserStatistic">
+```csharp
+/// <summary>
+/// User Statistic Sets a user statistic to exact value provided
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user who&#39;s stats are being requested</param>
+/// <param name="key">Name of the user statistic</param>
+/// <param name="userId2">User ID of the user</param>
+/// <param name="body"></param>
+/// <returns>StatisticsUserStatistic</returns>
+public StatisticsUserStatistic StatisticsSetUserStatistic(string userId, string key, string userId2, StatisticsServiceSetUserStatisticBody body)
+{
+    Snapser.Client.ApiResponse<StatisticsUserStatistic> localVarResponse = StatisticsSetUserStatisticWithHttpInfo(userId, key, userId2, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StatisticsServiceSetUserStatisticBody
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsServiceSetUserStatisticBody" /> class.
+/// </summary>
+/// <param name="value">Value to set the statistic to (required).</param>
+public StatisticsServiceSetUserStatisticBody(string value = default(string))
+{
+    // to ensure "value" is required (not null)
+    if (value == null)
+    {
+        throw new ArgumentNullException("value is a required property for StatisticsServiceSetUserStatisticBody and cannot be null");
+    }
+    this.Value = value;
+}
+
+/// Snapser.Model for StatisticsUserStatistic
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsUserStatistic" /> class.
+/// </summary>
+/// <param name="key">key.</param>
+/// <param name="userId">userId.</param>
+/// <param name="value">value.</param>
+public StatisticsUserStatistic(string key = default(string), string userId = default(string), string value = default(string))
+{
+    this.Key = key;
+    this.UserId = userId;
+    this.Value = value;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStatisticsServiceApi::StatisticsSetUserStatisticRequest : public Request
+{
+public:
+    virtual ~StatisticsSetUserStatisticRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user who's stats are being requested */
+    FString UserId;
+    /* Name of the user statistic */
+    FString Key;
+    /* User ID of the user */
+    FString UserId2;
+    SnapserStatisticsServiceSetUserStatisticBody Body;
+};
+
+class SNAPSER_API SnapserStatisticsServiceSetUserStatisticBody : public Model
+{
+public:
+    virtual ~SnapserStatisticsServiceSetUserStatisticBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Value to set the statistic to */
+    FString Value;
+};
+
+// Response
+class SNAPSER_API SnapserStatisticsServiceApi::StatisticsSetUserStatisticResponse : public Response
+{
+public:
+    virtual ~StatisticsSetUserStatisticResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStatisticsUserStatistic Content;
+};
+
+class SNAPSER_API SnapserStatisticsUserStatistic : public Model
+{
+public:
+    virtual ~SnapserStatisticsUserStatistic() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Key;
+    TOptional<FString> UserId;
+    TOptional<FString> Value;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### StatisticsBatchSetUserStatistics API
+<CodeGroup title="Sets user statistics in bulk for multiple users" tag="PUT" label="StatisticsBatchSetUserStatistics">
+```csharp
+/// <summary>
+/// User Statistics (App Auth) Sets user statistics in bulk for multiple users
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="body"></param>
+/// <returns>StatisticsBatchSetUserStatisticsResponse</returns>
+public StatisticsBatchSetUserStatisticsResponse StatisticsBatchSetUserStatistics(string userId, StatisticsBatchSetUserStatisticsRequest body)
+{
+    Snapser.Client.ApiResponse<StatisticsBatchSetUserStatisticsResponse> localVarResponse = StatisticsBatchSetUserStatisticsWithHttpInfo(userId, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StatisticsBatchSetUserStatisticsRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsBatchSetUserStatisticsRequest" /> class.
+/// </summary>
+/// <param name="requests">Array of operations to be performed (required).</param>
+public StatisticsBatchSetUserStatisticsRequest(List<StatisticsSetUserStatisticRequest> requests = default(List<StatisticsSetUserStatisticRequest>))
+{
+    // to ensure "requests" is required (not null)
+    if (requests == null)
+    {
+        throw new ArgumentNullException("requests is a required property for StatisticsBatchSetUserStatisticsRequest and cannot be null");
+    }
+    this.Requests = requests;
+}
+
+/// Snapser.Model for StatisticsSetUserStatisticRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsBatchSetUserStatisticsResponse" /> class.
+/// </summary>
+/// <param name="responses">responses.</param>
+/// <param name="userStatistics">userStatistics.</param>
+public StatisticsBatchSetUserStatisticsResponse(List<StatisticsBatchSetUserStatisticsSingleResponse> responses = default(List<StatisticsBatchSetUserStatisticsSingleResponse>), List<StatisticsUserStatistic> userStatistics = default(List<StatisticsUserStatistic>))
+{
+    this.Responses = responses;
+    this.UserStatistics = userStatistics;
+}
+
+/// Snapser.Model for StatisticsBatchSetUserStatisticsSingleResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsBatchSetUserStatisticsSingleResponse" /> class.
+/// </summary>
+/// <param name="message">message.</param>
+/// <param name="request">request.</param>
+/// <param name="response">response.</param>
+/// <param name="success">success.</param>
+public StatisticsBatchSetUserStatisticsSingleResponse(string message = default(string), StatisticsSetUserStatisticRequest request = default(StatisticsSetUserStatisticRequest), StatisticsUserStatistic response = default(StatisticsUserStatistic), bool success = default(bool))
+{
+    this.Message = message;
+    this.Request = request;
+    this.Response = response;
+    this.Success = success;
+}
+
+/// Snapser.Model for StatisticsSetUserStatisticRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsUserStatistic" /> class.
+/// </summary>
+/// <param name="key">key.</param>
+/// <param name="userId">userId.</param>
+/// <param name="value">value.</param>
+public StatisticsUserStatistic(string key = default(string), string userId = default(string), string value = default(string))
+{
+    this.Key = key;
+    this.UserId = userId;
+    this.Value = value;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStatisticsServiceApi::StatisticsBatchSetUserStatisticsRequest : public Request
+{
+public:
+    virtual ~StatisticsBatchSetUserStatisticsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    SnapserStatisticsBatchSetUserStatisticsRequest Body;
+};
+
+class SNAPSER_API SnapserStatisticsBatchSetUserStatisticsRequest : public Model
+{
+public:
+    virtual ~SnapserStatisticsBatchSetUserStatisticsRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Array of operations to be performed */
+    TArray<SnapserStatisticsSetUserStatisticRequest> Requests;
+};
+
+class SNAPSER_API SnapserStatisticsSetUserStatisticRequest : public Model
+{
+public:
+    virtual ~SnapserStatisticsSetUserStatisticRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Name of the user statistic */
+    FString Key;
+    /* User ID of the user who's stats are being requested */
+    FString UserId;
+    /* Value to set the statistic to */
+    FString Value;
+};
+
+// Response
+class SNAPSER_API SnapserStatisticsServiceApi::StatisticsBatchSetUserStatisticsResponse : public Response
+{
+public:
+    virtual ~StatisticsBatchSetUserStatisticsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStatisticsBatchSetUserStatisticsResponse Content;
+};
+
+class SNAPSER_API SnapserStatisticsBatchSetUserStatisticsResponse : public Model
+{
+public:
+    virtual ~SnapserStatisticsBatchSetUserStatisticsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserStatisticsBatchSetUserStatisticsSingleResponse>> Responses;
+    TOptional<TArray<SnapserStatisticsUserStatistic>> UserStatistics;
+};
+
+class SNAPSER_API SnapserStatisticsBatchSetUserStatisticsSingleResponse : public Model
+{
+public:
+    virtual ~SnapserStatisticsBatchSetUserStatisticsSingleResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Message;
+    TOptional<SnapserStatisticsSetUserStatisticRequest> Request;
+    TOptional<SnapserStatisticsUserStatistic> Response;
+    TOptional<bool> Success;
+};
+
+class SNAPSER_API SnapserStatisticsSetUserStatisticRequest : public Model
+{
+public:
+    virtual ~SnapserStatisticsSetUserStatisticRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Name of the user statistic */
+    FString Key;
+    /* User ID of the user who's stats are being requested */
+    FString UserId;
+    /* Value to set the statistic to */
+    FString Value;
+};
+
+class SNAPSER_API SnapserStatisticsUserStatistic : public Model
+{
+public:
+    virtual ~SnapserStatisticsUserStatistic() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Key;
+    TOptional<FString> UserId;
+    TOptional<FString> Value;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+### StatisticsBatchGetUserStatistics API
+<CodeGroup title="Fetches all user-statistics for multiple users" tag="GET" label="StatisticsBatchGetUserStatistics">
+```csharp
+/// <summary>
+/// User Statistics (App Auth) Fetches all user-statistics for multiple users
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">ID(s) of the user(s) to get statistics for</param>
+/// <param name="userId2">User ID of the user</param>
+/// <returns>StatisticsBatchGetUserStatisticsResponse</returns>
+public StatisticsBatchGetUserStatisticsResponse StatisticsBatchGetUserStatistics(List<string> userId, string userId2)
+{
+    Snapser.Client.ApiResponse<StatisticsBatchGetUserStatisticsResponse> localVarResponse = StatisticsBatchGetUserStatisticsWithHttpInfo(userId, userId2);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for StatisticsBatchGetUserStatisticsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsBatchGetUserStatisticsResponse" /> class.
+/// </summary>
+/// <param name="responses">responses.</param>
+/// <param name="usersStatistics">usersStatistics.</param>
+public StatisticsBatchGetUserStatisticsResponse(List<StatisticsBatchGetUserStatisticsSingleResponse> responses = default(List<StatisticsBatchGetUserStatisticsSingleResponse>), Dictionary<string, StatisticsMultiUserStatistics> usersStatistics = default(Dictionary<string, StatisticsMultiUserStatistics>))
+{
+    this.Responses = responses;
+    this.UsersStatistics = usersStatistics;
+}
+
+/// Snapser.Model for StatisticsBatchGetUserStatisticsSingleResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsBatchGetUserStatisticsSingleResponse" /> class.
+/// </summary>
+/// <param name="message">message.</param>
+/// <param name="request">request.</param>
+/// <param name="response">response.</param>
+/// <param name="success">success.</param>
+public StatisticsBatchGetUserStatisticsSingleResponse(string message = default(string), StatisticsGetUserStatisticsRequest request = default(StatisticsGetUserStatisticsRequest), List<StatisticsUserStatistic> response = default(List<StatisticsUserStatistic>), bool success = default(bool))
+{
+    this.Message = message;
+    this.Request = request;
+    this.Response = response;
+    this.Success = success;
+}
+
+/// Snapser.Model for StatisticsGetUserStatisticsRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsMultiUserStatistics" /> class.
+/// </summary>
+/// <param name="userStatistics">userStatistics.</param>
+public StatisticsMultiUserStatistics(List<StatisticsUserStatistic> userStatistics = default(List<StatisticsUserStatistic>))
+{
+    this.UserStatistics = userStatistics;
+}
+
+/// Snapser.Model for StatisticsSetUserStatisticRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="StatisticsUserStatistic" /> class.
+/// </summary>
+/// <param name="key">key.</param>
+/// <param name="userId">userId.</param>
+/// <param name="value">value.</param>
+public StatisticsUserStatistic(string key = default(string), string userId = default(string), string value = default(string))
+{
+    this.Key = key;
+    this.UserId = userId;
+    this.Value = value;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserStatisticsServiceApi::StatisticsBatchGetUserStatisticsRequest : public Request
+{
+public:
+    virtual ~StatisticsBatchGetUserStatisticsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID(s) of the user(s) to get statistics for */
+    TArray<FString> UserId;
+    /* User ID of the user */
+    FString UserId2;
+};
+
+// Response
+class SNAPSER_API SnapserStatisticsServiceApi::StatisticsBatchGetUserStatisticsResponse : public Response
+{
+public:
+    virtual ~StatisticsBatchGetUserStatisticsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserStatisticsBatchGetUserStatisticsResponse Content;
+};
+
+class SNAPSER_API SnapserStatisticsBatchGetUserStatisticsResponse : public Model
+{
+public:
+    virtual ~SnapserStatisticsBatchGetUserStatisticsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserStatisticsBatchGetUserStatisticsSingleResponse>> Responses;
+    TOptional<TMap<FString, SnapserStatisticsMultiUserStatistics>> UsersStatistics;
+};
+
+class SNAPSER_API SnapserStatisticsBatchGetUserStatisticsSingleResponse : public Model
+{
+public:
+    virtual ~SnapserStatisticsBatchGetUserStatisticsSingleResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Message;
+    TOptional<SnapserStatisticsGetUserStatisticsRequest> Request;
+    TOptional<TArray<SnapserStatisticsUserStatistic>> Response;
+    TOptional<bool> Success;
+};
+
+class SNAPSER_API SnapserStatisticsGetUserStatisticsRequest : public Model
+{
+public:
+    virtual ~SnapserStatisticsGetUserStatisticsRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* User ID of the user */
+    FString UserId;
+};
+
+class SNAPSER_API SnapserStatisticsUserStatistic : public Model
+{
+public:
+    virtual ~SnapserStatisticsUserStatistic() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Key;
+    TOptional<FString> UserId;
+    TOptional<FString> Value;
+};
+
+class SNAPSER_API SnapserStatisticsMultiUserStatistics : public Model
+{
+public:
+    virtual ~SnapserStatisticsMultiUserStatistics() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserStatisticsUserStatistic>> UserStatistics;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/stats-api.png)
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code | Variable                     | Message                      | HTTP | gRPC            |
+| ---- | ---------------------------- | ---------------------------- | ---- | --------------- |
+| 4000 | ErrStatisticNotFound         | Statistic key not found      | 404  | NotFound        |
+| 4001 | ErrStatisticAlreadyExists    | Statistic key already exists | 409  | AlreadyExists   |
+| 4002 | ErrInvalidStatisticType      | Wrong statistic type         | 400  | InvalidArgument |
+| 4003 | ErrSegmentNotFound           | Segment not found            | 404  | NotFound        |
+| 4004 | ErrInvalidPredicateParameter | Wrong predicate parameter    | 400  | InvalidArgument |
+| 4005 | ErrInvalidSegmentType        | Wrong segment type           | 400  | InvalidArgument |
+| 4006 | ErrStatisticInUse            | Statistic key in use         | 400  | InvalidArgument |
+</div>
+
+### Websocket Events emitted by snap
+
+When [Web sockets](/docs/infra/snaps/hermes) are enabled on your snapends gateway, this snap can broadcast specific events related to statistics changes directly to the app clients.
+These events are targeted to the appropriate user. Each event is uniquely identified by an enum, and the event payload is a well-structured protobuf message.
+These protobuf messages can be downloaded from the Downloads page.
+
+You can choose to enable/disable events from the `Emitters` tab in Statistics Admin tool.
+
+| Event Id | Event Name                 | Description                                  | Payload Message               |
+| -------- | -------------------------- | -------------------------------------------- | ----------------------------- |
+| 1        | STATISTICS_UPDATED         | Published when a user's statistic is updated | EventStatisticsUpdated        |
+| 2        | STATISTICS_SEGMENT_UPDATED | Published when a user's segment changes      | EventStatisticsSegmentUpdated |
+
+## Additional Details
+
+### Data Stores
+
+Couchbase and POSTGRES
+
+### Service Dependencies
+
+The statistics and segmentation service is independent of any other Snap.
+
+### Recommended Services
+
+The statistics and segmentation service works best with the Auth snap.
+
+### Upcoming enhancements
+
+#### Automatic actions on segments
+
+This feature is not available yet but will be coming soon!

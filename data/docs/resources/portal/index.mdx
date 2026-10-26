@@ -1,0 +1,79 @@
+export const description = 'Web App'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Snapser Portal
+
+The Snapser Web Application is the UI layer that helps you manage your Snapser account and infrastructure. It provides an intuitive interface to streamline your operations without needing to interact directly with backend systems.
+
+## Portal Organization
+
+The entire Web App is organized into 3 main sections:
+
+1. **Company View** - This is the first view you see when you login to the Web App. It shows you a list of all the apps you have access to. You can click on any app to see the app details.
+2. **App View** - Clicking on the app widget takes you to the app view. This view shows you all the app details. You can also see a list of all the servers, organized by _Dev_, _Staging_ and _Production_ environments.
+3. **Snapend View** - Clicking on a snapend widget takes you to the snapend view. Here you will see all the tools for your Snapend, including admin, API Explorer, Fleet tools as well as Infra monitoring and logs.
+
+<Note>
+  The App and the Snapend UI/UX is different for different studio functions. The
+  studio function is assigned to you by your company administrator.
+</Note>
+
+![web-app](/images/docs/web-app.png)
+
+## Onboarding
+
+During onboarding, the individual who originally created your Snapser company account becomes the **Company Administrator**.
+
+The Company Administrator can then invite additional team members using the Access tool, assigning them two things:
+1. **Studio Function**:
+    - Defines how the Web App UI is customized for each user.
+    - Examples: Engineering, Business, Customer Support, Design, Product, Production, QA.
+    - This setting only affects what tools and views are highlighted for that user persona — it does not impact permissions.
+2. **Access Role**:
+    - Controls what parts of the Snapser Portal a user can actually access.
+    - Types of roles:
+        - **company-***: Full access to all tools across the Snapser Portal.
+        - **app-***: Access to all tools within the app view.
+        - **cluster-***: Access to all tools within the cluster view.
+        - **cluster-service-***: Access to all tools within the snapend view.
+        - **cluster-service-user-***: Access to the User Manager tool only, for a single Snap.
+
+>  **Quick way to think about it**:
+>
+>  Studio function controls the user experience.
+>
+>  Access role controls the user permissions.
+
+Once invited, users receive an email with a one-time passcode. They can log in to the Snapser Web App by entering their email address and the provided passcode.
+
+## Inviting users
+
+You can find the **Access** tool in the left navigation bar. Once you are in the tool, you can click on the **Invite User** button. This will show you a form where you can enter their email, the company function you want to assign to the user and a default role.
+
+It should also be noted that the **Invite User** tool is available at all the three levels of the Web App. This means that you can invite users to have access to one or more of company, app, snapend or even a particular Snap.
+
+<Note>
+  You can add comma separated emails to invite multiple users at once. We currently support inviting up to 10 users at once.
+</Note>
+
+![snapser-invites](/images/docs/team-invite.png)
+
+<Note>
+  Each user can have any number of studio functions. For example, a user can be a **Product Manager** and an **Engineer** at the same time and so you can assign this user both the company functions.
+</Note>
+
+Once you invite the user, you will see an entry for them in the Table. Depending on the permissions you have, you may be able to update their **Studio function** or delete the user altogether.
+
+<Note>
+  You can only edit and delete users who have a lower level of permissions than you.
+</Note>
+
+## Bookmarks
+
+Every single page on Snapser is deep linkable. This means you can bookmark any page and share it with your team. To create a custom sharable link for a page, click on the **Link** icon in the top navigation bar, which will automatically copy the link to your clipboard.
+
+![snapser-bookmark](/images/docs/portal-bookmark.png)

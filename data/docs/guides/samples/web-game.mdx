@@ -1,0 +1,487 @@
+
+export const description =
+  'This guide will help you set up a Web project with Snapser.'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Web Game
+This guide will help you set up a Web game with Snapser. This is a simple single player - racing game, that uses Snapser’s authentication, storage and leaderboard snaps. You can use this example to understand how to integrate Snapser into your own game.
+
+## Prerequisites
+<div className="parent">
+  <div className="servicesBox">
+    # Install Node and NPM
+
+    Make sure you have installed Node and NPM from [npm website](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
+
+    <div>
+      <DocsButton href={'https://docs.npmjs.com/downloading-and-installing-node-js-and-npm'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Download Node & NPM</DocsButton>
+    </div>
+  </div>
+</div>
+
+<Checkpoint step={0}>
+  You are now ready to begin the tutorial.
+</Checkpoint>
+
+## Step 1: Set up your game
+
+To integrate Snapser features into your game, you need to create an account and add your game to it. This section demonstrates how to do that.
+
+<Note>
+  If you have already created a game in Snapser, you can skip this step and proceed to the next one.
+</Note>
+
+1. **Log in to your Snapser account** at https://snapser.com/login.
+2. Navigate to the **Apps dashboard** and click on the **New App** button located in the upper right corner.
+3. **Enter the name of your app** in the designated field. It's advisable to use a name that closely matches your applications title to avoid confusion among your team members. Click **Add** when done.
+    ![Add new game name](/images/docs/tutorials/create-snapend-add-game.png)
+    <Note>
+    Avoid adding prefixes like "dev", "staging", or "prod". Snapser supports multiple environments for each game, allowing you to create a separate custom backend for each stage of your development.
+    </Note>
+
+<Checkpoint step={1}>
+  Shortly after, your app will appear in the Apps dashboard, ready for you to build your first custom backend.
+</Checkpoint>
+
+
+## Step 2: Create a Snapend
+
+1. In the **Apps dashboard**, click on the game you have added. This action brings up a view that shows the development, staging, and production environments. Since there are currently no Snapends, let's add one.
+![GameClick](/images/docs/tutorials/create-snapend-game.png)
+1. In the Development environment, click on **Create a Snapend**.
+![GameClick](/images/docs/tutorials/create-snapend-game-home.png)
+1. **Enter the name of your Snapend** in the **Name your Snapend** field and click **Continue**.
+    ![Name your Snapend](/images/docs/quick-start/name-your-snapend.png)
+1. On the next page, select the following snaps:
+   1. Authentication
+   2. Leaderboard
+   3. Storage
+    ![Cluster](/images/docs/tutorials/web-game-snapend.png)
+1. Click **Customize** to continue to the next step. In this tutorial, we are not doing any customization and so click the **Review** button to go to the final step.
+1. At the final step you can review your Snapend details. Next, click the **Snap It** button. A pop-up window will appear showing you the state of creating your cluster, which takes a moment or two to complete.
+1. As Snapser finishes setting up the Snapser cluster in Kubernetes (which includes infrastructure, configuration of Snaps, network and security, and generating your Snapend), click the **App** button to wait for your Snapend to be operational.
+1. Once the Snapend is ready, you will see a green dot mark on the Snapend widget. This indicates that your Snapend is ready to use.
+![Snap Dashboard](/images/docs/tutorials/create-snapend-cluster-ready.png)
+1. Click on the Snapend widget to go to the Snapend dashboard.
+![Snapend Dashboard](/images/docs/tutorials/web-game-snapend-dashboard.png)
+
+<Checkpoint step={2}>
+  You now have a backend setup. We can now proceed toward downloading our custom SDK, configuring our snaps for our game and then putting it altogether.
+</Checkpoint>
+
+## Step 3: Configure Snaps
+On your Snapend homepage look for Quick links. Click the **Snaps Configuration** button under **Quick Links** to go to the Snaps configuration home page. Now, lets configure the Snaps one by one.
+
+### A. Authentication Configuration
+<Note>
+    In our Web game, we want the user to start playing the game using username and password as a means to authenticate. This is why we are going to add the `Username password` connector. To add the connector, please follow the instructions below.
+</Note>
+
+1. Click on the **Authentication** widget to open the Auth snaps configuration page.
+1. Select the `Authentication > Connectors` tool from the tool navigation and then click on the **Add a connector** button. You will see quite a few connectors in the menu but lets select **Username Password** and press Save.
+![Add Username Password Authentication](/images/docs/tutorials/snapend-create-admin-auth-uname-password.png)
+1. Add a generic regex pattern for now. Allowing the user to enter any password. But do note you should have a strong password policy in production.
+    - `Password Settings` - `^[\s\S]*$`
+1. Click Save.
+1. Then click the back button to go back to the configuration home page.
+
+
+### B. Leaderboard Configuration
+<Note>
+    In our Web game, we are going to track laps_completed by every user and then show them a leaderboard of users who have completed the most laps. To add the leaderboards, please follow the instructions below.
+</Note>
+1. Click on the **Leaderboards** widget to open the Leaderboards snaps configuration page.
+1. Here we are going to create one leaderboard: `laps_completed`
+1. To create a leaderboard, click on the `Leaderboards` tool from the tool navigation and click on the **+ Leaderboard** button. This will open up a form, where you can add the new leaderboard details. Add the following leaderboards and click save.
+   1. `Name` - `laps_completed`
+   1. `Description` - `Laps completed by the player`
+   1. `Behavior` - `counter` - This is because we want to store counts per player.
+   1. `Period - Start time` - Use the date picker to select the current date time, such that the leaderboard is active.
+   1. `Period - Type` - `non-recurring` - This is because we want to keep the leaderboard running indefinitely.
+    1. `Type` - `global` - This is because we want to have a single leaderboard for all players.
+![Leaderboard Config](/images/docs/tutorials/web-game-leaderboard.png)
+1. Click Save.
+1. Then click the back button to go back to the configuration home page.
+
+### C. Storage Configuration
+<Note>
+    Storage snap allows you to store any non-structured or structured data for your game. In our case we want to store the fastest time taken by the player to complete the race. We will use a JSON blob to store this data.
+</Note>
+1. Click on the **Storage** widget to open the Storage snaps configuration page.
+1. Select the `Blob Keys` tool from the tool navigation and then click on the **+ Blob Key** button. This will open up a form, where you can add the new blob key. Add the following details in the form and click save.
+   1. `Blob Keys` - `user_data`
+   1. `Type` - `json`
+1. Keep the default values for the rest of the fields.
+    ![Storage Config](/images/docs/tutorials/web-game-storage.png)
+
+<Checkpoint step={3}>
+  We have configured the Authentication, Leaderboard, and Storage snaps. Our Snapend is now ready to integrate with our game.
+</Checkpoint>
+
+## Step 4: Download the Snapser SDK
+1. On the Snapend home page scroll down to the SDK download widget called **Game Client SDKs**.
+    - Select **Web - Typescript** for the platform
+    - Select **Fetch** for the HTTP library
+    - Click Generate
+![Web SDK](/images/docs/tutorials/web-game-sdk.png)
+1. In a few minutes you will see a pop up of a Zip file. Download the zip file and extract it.
+1. You will see a folder structure like this:
+```bash
+  ├── sdk-typescript-fetch-web/ (👈 You will copy the contents of this folder)
+    │   ├── api/
+    │   ├── index.ts
+    │   ├── models/
+    │   ├── runtime.ts
+    │       └── Snapser/
+    │       └── link.xml
+    │       └── Snapser.asmdef
+```
+
+<Checkpoint step={4}>
+  You now have a SDK that is going to be integrated into your Web project. Lets move on to the next step.
+</Checkpoint>
+
+## Step 5: Download the Web Game
+1. Talk to Snapser support to get access to this [repo](https://github.com/snapser-community/snapser-demo-web-sp).
+2. Clone or download this example project.
+
+## Step 6: Install Dependencies
+<Note>
+    The Web project comes with a `package.json` file. We need to install the dependencies using npm. To do that, open a terminal and navigate to the root of the project and run the following command:
+    ```bash
+    cd snapser-demo-web-sp
+    npm install
+    ```
+</Note>
+{/* Reached till here */}
+
+## Step 7: Understand the Code
+1. To understand the usage, you should look at `/src/services/SnapserManager.cs`. This class acts as the link between the game logic and the Snapser sdk.
+1. Here you will see stub methods for the following functionalities:
+   1. User authentication
+   2. Get leaderboard scores
+   3. Save number of laps completed to global leaderboard
+   4. Save fastest time for three laps to user's personal data
+   5. Get user's personal data including fastest time
+```typescript
+
+// SnapserManager.ts - Backend integration stubs
+// TODO: Implement actual backend connections
+
+export interface User {
+  id: string;
+  username: string;
+}
+
+export interface LeaderboardEntry {
+  userId: string;
+  username: string;
+  lapsCompleted: number;
+}
+
+export interface UserData {
+  fastestThreeLapTime?: number;
+}
+
+export class SnapserManager {
+  // User authentication
+  static async login(username: string, password: string): Promise<User | null> {
+    // TODO: Implement user login with backend authentication
+    // Should validate credentials and return user object or null
+    console.log('TODO: Implement login for', username);
+
+    // Temporary stub - return a mock user for demo purposes
+    return {
+      id: `user_${Date.now()}`,
+      username: username
+    };
+  }
+
+  // Get leaderboard scores
+  static async getLeaderboard(): Promise<LeaderboardEntry[]> {
+    // TODO: Implement fetching leaderboard from backend
+    // Should return array of users with their lap counts
+    console.log('TODO: Implement getLeaderboard');
+
+    // Temporary stub - return mock data
+    return [
+      { userId: 'user1', username: 'SpeedRacer', lapsCompleted: 15 },
+      { userId: 'user2', username: 'TurboDriver', lapsCompleted: 12 },
+      { userId: 'user3', username: 'RaceChamp', lapsCompleted: 8 }
+    ];
+  }
+
+  // Save number of laps completed to global leaderboard
+  static async saveLapsCompleted(userId: string, lapsCompleted: number): Promise<void> {
+    // TODO: Implement saving lap count to global leaderboard backend
+    // Should update or create entry for user with their total laps
+    console.log('TODO: Implement saveLapsCompleted for user', userId, 'with', lapsCompleted, 'laps');
+  }
+
+  // Save fastest time for three laps to user's personal data
+  static async saveFastestTime(userId: string, timeInSeconds: number): Promise<void> {
+    // TODO: Implement saving fastest time to user_data storage backend
+    // Should store personal best time for the logged in user
+    console.log('TODO: Implement saveFastestTime for user', userId, 'with time', timeInSeconds, 'seconds');
+  }
+
+  // Get user's personal data including fastest time
+  static async getUserData(userId: string): Promise<UserData> {
+    // TODO: Implement fetching user's personal data from backend
+    // Should return user's stored data including fastest time
+    console.log('TODO: Implement getUserData for user', userId);
+
+    // Temporary stub - return empty data
+    return {};
+  }
+}
+```
+We will be implementing these methods in the next step.
+
+## Step 8: Update the Code
+- Copy the downloaded SDK contents into the `src/snapser-sdk` folder. If there is an existing folder in the repo, you can delete it and replace it with the new SDK code.
+```bash
+  ├── sdk-typescript-fetch-web/ (👈 You will copy the contents of this folder)
+    │   ├── api/
+    │   ├── index.ts
+    │   ├── models/
+    │   ├── runtime.ts
+    │       └── Snapser/
+    │       └── link.xml
+    │       └── Snapser.asmdef
+```
+
+<Note>
+You will be copying the contents `sdk-typescript-fetch-web` folder into your Web projects `src/snapser-sdk`folder. You will have to create the `snapser-sdk` folder if it does not exist.
+</Note>
+
+- Open **SnapserManager.ts** in the `src/services/` folder and update its contents with the following.
+```typescript
+import {
+  AuthServiceApi,
+  LeaderboardsServiceApi,
+  StorageServiceApi,
+  AuthUsernamePasswordLoginOperationRequest,
+  LeaderboardsGetScoresRequest,
+  LeaderboardsIncrementScoreRequest,
+  StorageGetJsonBlobRequest,
+  StorageReplaceJsonBlobRequest
+} from '@/snapser-sdk/apis';
+
+import {
+  AuthUsernamePasswordLoginRequest,
+  AuthUsernamePasswordLoginResponse,
+  LeaderboardsGetScoresResponse,
+  IncrementScoreRequest,
+  StorageGetJsonBlobResponse,
+  LeaderboardsGetScoresRequestRangeEnum,
+  StorageGetJsonBlobRequestAccessTypeEnum,
+  StorageReplaceJsonBlobRequestAccessTypeEnum,
+  ReplaceJsonBlobRequest,
+} from '@/snapser-sdk/models';
+
+export interface User {
+  id: string;
+  username: string;
+}
+
+export interface LeaderboardEntry {
+  userId: string;
+  username: string;
+  lapsCompleted: number;
+}
+
+export interface UserData {
+  fastestThreeLapTime?: number;
+}
+
+export class SnapserManager {
+  private static authApi = new AuthServiceApi();
+  private static leaderboardsApi = new LeaderboardsServiceApi();
+  private static storageApi = new StorageServiceApi();
+  private static sessionToken: string | null = null;
+
+  // User authentication
+  static async login(username: string, password: string): Promise<User | null> {
+    try {
+      const loginBody: AuthUsernamePasswordLoginRequest = {
+        username: username,
+        password: password,
+        createUser: true
+      };
+
+      const request: AuthUsernamePasswordLoginOperationRequest = {
+        body: loginBody
+      };
+
+      const response: AuthUsernamePasswordLoginResponse = await this.authApi.authUsernamePasswordLogin(request);
+
+      if (response.user) {
+        this.sessionToken = response.user.sessionToken || null;
+        return {
+          id: response.user.id || '',
+          username: username
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Login failed:', error);
+      return null;
+    }
+  }
+
+  // Get leaderboard scores
+  static async getLeaderboard(): Promise<LeaderboardEntry[]> {
+    if (!this.sessionToken) {
+      console.error('No session token available');
+      return [];
+    }
+
+    try {
+      const request: LeaderboardsGetScoresRequest = {
+        leaderboardName: 'laps_completed',
+        range: LeaderboardsGetScoresRequestRangeEnum.Top,
+        count: 100,
+        token: this.sessionToken
+      };
+
+      const response: LeaderboardsGetScoresResponse = await this.leaderboardsApi.leaderboardsGetScores(request);
+
+      return response.userScores?.map(score => ({
+        userId: score.userId || '',
+        username: score.userId || 'Unknown', // Would need to fetch usernames separately
+        lapsCompleted: score.score || 0
+      })) || [];
+    } catch (error) {
+      console.error('Failed to get leaderboard:', error);
+      return [];
+    }
+  }
+
+  // Save number of laps completed to global leaderboard
+  static async saveLapsCompleted(userId: string, lapsCompleted: number): Promise<void> {
+    if (!this.sessionToken) {
+      console.error('No session token available');
+      return;
+    }
+
+    try {
+      const incrementBody: IncrementScoreRequest = {
+        delta: lapsCompleted
+      };
+
+      const request: LeaderboardsIncrementScoreRequest = {
+        leaderboardName: 'laps_completed',
+        userId: userId,
+        token: this.sessionToken,
+        body: incrementBody
+      };
+
+      await this.leaderboardsApi.leaderboardsIncrementScore(request);
+    } catch (error) {
+      console.error('Failed to save laps completed:', error);
+    }
+  }
+
+  // Save fastest time for three laps to user's personal data
+  static async saveFastestTime(userId: string, timeInSeconds: number): Promise<void> {
+    if (!this.sessionToken) {
+      console.error('No session token available');
+      return;
+    }
+
+    try {
+      const userData = { fastestThreeLapTime: timeInSeconds };
+
+      const replaceBody: ReplaceJsonBlobRequest = {
+        value: userData,
+        create: true
+      };
+
+      const request: StorageReplaceJsonBlobRequest = {
+        ownerId: userId,
+        accessType: StorageReplaceJsonBlobRequestAccessTypeEnum.Protected,
+        jsonBlobKey: 'user_data',
+        token: this.sessionToken,
+        body: replaceBody
+      };
+
+      await this.storageApi.storageReplaceJsonBlob(request);
+    } catch (error) {
+      console.error('Failed to save fastest time:', error);
+    }
+  }
+
+  // Get user's personal data including fastest time
+  static async getUserData(userId: string): Promise<UserData> {
+    if (!this.sessionToken) {
+      console.error('No session token available');
+      return {};
+    }
+
+    try {
+      const request: StorageGetJsonBlobRequest = {
+        ownerId: userId,
+        accessType: StorageGetJsonBlobRequestAccessTypeEnum.Protected,
+        jsonBlobKey: 'user_data',
+        token: this.sessionToken
+      };
+
+      const response: StorageGetJsonBlobResponse = await this.storageApi.storageGetJsonBlob(request);
+
+      return (response.value as UserData) || {};
+    } catch (error) {
+      console.error('Failed to get user data:', error);
+      return {};
+    }
+  }
+}
+```
+
+<Note>
+  We highly recommend you to go through the code and understand how the Snapser SDK is being used.
+</Note>
+
+<Checkpoint step={8}>
+  At this point, try compiling the game and it should work without any errors. If you see any errors, please check the console and make sure you have installed the dependencies correctly.
+</Checkpoint>
+
+## Step 9: Run the game
+1. Go to the root of your web code and run.
+```bash
+npm run dev
+```
+
+2. Go to the browser and open `http://localhost:8080`. You should see the game running.
+![alt_text](/images/docs/web/web-demo-1.png)
+    <Note>
+      Since we have enabled username and password authentication, you can enter any username and password to start playing the game. The first time you enter a username, it will create a new user for you.
+    </Note>
+
+![alt_text](/images/docs/web/web-demo-2.png)
+    <Note>
+    You should see a successful login request. The 400 error you see, if because the first time the user tries to fetch their personal data, it does not exist. This is expected behavior.
+    </Note>
+
+
+![alt_text](/images/docs/web/web-demo-3.png)
+    <Note>
+      After completing 3 laps, you see how our frontend has been able to save the number of laps completed to the global leaderboard and also save the fastest time to the user's personal data.
+    </Note>
+
+<Checkpoint step={9}>
+  You should be able to play the game and see the leaderboard and your personal best time being saved.
+</Checkpoint>
+
+## Step 10: Validate the data in Snapser
+- You can go to your Snapend home page, under quick links click on the `User Manager Tool`.
+- Enter the username you used to login to the game and click search.
+- You should see the user you just created and see their details including the number of laps completed in the leaderboard snap and their personal data including fastest time in the storage snap.
+
+<Checkpoint step={10}>
+  Congratulations! You should have a fully working web game that is integrated with the backend we just created.
+</Checkpoint>

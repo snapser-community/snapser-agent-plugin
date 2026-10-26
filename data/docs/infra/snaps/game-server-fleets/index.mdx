@@ -1,0 +1,715 @@
+export const description = 'Snapser Fleet.'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Game Server Fleets
+
+The Game Server Fleet Snap equips each Snapend with a control plane to manage and monitor
+your global game server fleets, seamlessly. A fleet is a unified collection of game servers managed as
+a single entity. With the Fleet Snap, you gain access to a comprehensive dashboard where you
+can monitor server health, view detailed logs, and configure server settings, all in one place.
+
+<Note>
+  Each Snapend can have a maximum of 5 fleets. But each fleet can have an unlimited number of servers.
+</Note>
+
+## Pre-requisites
+
+### Enabling Snapser Fleet
+
+While creating a Snapend, search for the Game Server Fleet Snap. Selecting that will unlock the control plane for your game servers.
+Once you have snapped the Game Server Fleet Snap and your Snapend is up, you can go to the Snaps Configuration tool and select the Game Server Fleet Snap from the left Nav bar.
+There you will find the fleet tool to create and manage your fleets.
+
+### Game Server Upload
+You will need at least one game server uploaded to Snapser to create a fleet.
+
+<Note>
+  Please take a look at our [Bring Your Own Game Server](/docs/custom/bring-your-own-server) (BYOGS)
+  documentation to learn more about how to publish a game server on Snapser.
+</Note>
+
+#### Agones SDK
+You will need to integrate the Agones SDK with your game server code. This will allow you to manage the lifecycle of your game server in your Snapser fleet.
+
+## Architecture
+Your Snapser Fleets and your game services are all part of the same network. This means that your game servers can communicate with your game services and vice versa.
+![Fleet Matchmaking](/images/docs/fleet-mm.png)
+
+## Fleet Regions
+Presently Snapser supports the following game server fleet regions. Every region is
+published twice — a standard region, and a **protected** sibling carrying a `-ga` suffix:
+
+| Region | Standard | Protected |
+| --- | --- | --- |
+| Oregon (USA) | `oregon` | `oregon-ga` |
+| N. Virginia (USA) | `nvirginia` | `nvirginia-ga` |
+| Frankfurt (Germany) | `frankfurt` | `frankfurt-ga` |
+| Sao Paulo (Brazil) | `saopaulo` | `saopaulo-ga` |
+| Singapore (Singapore) | `singapore` | `singapore-ga` |
+
+Both flavors run the same game server image on the same global compute. See
+[Protected Fleet Regions](#protected-fleet-regions) for what the `-ga` sibling changes.
+
+More regions will be added in the future.
+
+## Protected Fleet Regions
+
+The difference between a standard region and its protected sibling is how your users' traffic
+reaches your game server.
+
+In a **standard** region, your game server is reachable directly on the public internet. In a
+**protected** region, it sits behind Snapser's global edge network. Your user connects to the
+nearest edge location and their traffic travels a private backbone for the rest of the journey
+to the region your fleet runs in. The edge network and your fleet are both Snapser, so your
+server's real address is never public.
+
+### Why pick a protected region
+
+- **Always on DDoS protection** — volumetric denial-of-service traffic is absorbed at the edge
+  before it can reach your game. There is nothing to provision, size or tune, and nothing to
+  switch on once an attack has already started.
+- **Stays up under attack** — attack traffic never reaches your fleet, so your servers keep
+  serving real users instead of falling over. A match in progress stays a match in progress.
+- **Lower, steadier latency** — traffic travels a private backbone for most of the journey
+  instead of the open internet, which reduces latency and jitter. The further a user is from
+  the server region, the more this shows up as a steadier connection in game.
+- **Your servers stay private** — your servers' real addresses are never public, so a leaked
+  address stops being a way in.
+- **No code changes** — your game server still gets a hostname and a port, and your Agones
+  lifecycle is untouched. Clients connect the way they always did, so there is nothing to
+  rewrite in your build.
+
+### Picking a protected region
+
+Protected regions appear in the same **Regions** dropdown as standard ones when you create or
+edit a fleet, and you pick them per environment. To run your fleet in protected Frankfurt,
+select `frankfurt-ga` instead of `frankfurt`.
+
+You can mix the two. Selecting `frankfurt` for Development and `frankfurt-ga` for Production is
+a normal setup — keep a plain region for pre-production and protect the environment your users
+are actually on.
+
+<Warning>
+  A fleet with even one protected region must use **7777** as its ingress port and **7778** as
+  its debug port. Ports are a fleet level setting rather than a per environment one, so this
+  applies to every region the fleet runs in, including its standard ones. The Portal pins both
+  values and locks the fields the moment you pick a protected region — see
+  [Server Ports](/docs/infra/snaps/game-server-fleets/config-tools/fleets#server-ports).
+</Warning>
+
+<Note>
+  A protected region is a distinct region id everywhere Snapser reports one. A fleet running in
+  `frankfurt-ga` reports `frankfurt-ga` in its fleet deployments, in the Control Plane, in the
+  Matchmaking `latency_args` map and `snap_matchmaking_region`, and in the `region` field when
+  you start a Lobby. Always pass the suffixed id, never the base one.
+</Note>
+
+<Note>
+  Running in a protected region adds data transfer out (DTO) charges for traffic through the
+  edge network, on top of your fleet's compute cost. See the [Pricing](/pricing) page for more
+  details.
+</Note>
+
+## UDP Ping Endpoints
+
+Before submitting a matchmaking ticket, clients should measure their round-trip time (RTT) to each fleet region. Snapser provides dedicated UDP ping servers in every region on port **50000** for this purpose.
+
+| Region | Hostname | Port |
+| --- | --- | --- |
+| Oregon | `ping.oregon.stratos.snapser.com` | 50000 |
+| Oregon (Protected) | `ping.oregon-ga.stratos.snapser.com` | 50000 |
+| N. Virginia | `ping.nvirginia.stratos.snapser.com` | 50000 |
+| N. Virginia (Protected) | `ping.nvirginia-ga.stratos.snapser.com` | 50000 |
+| Frankfurt | `ping.frankfurt.stratos.snapser.com` | 50000 |
+| Frankfurt (Protected) | `ping.frankfurt-ga.stratos.snapser.com` | 50000 |
+| Sao Paulo | `ping.saopaulo.stratos.snapser.com` | 50000 |
+| Sao Paulo (Protected) | `ping.saopaulo-ga.stratos.snapser.com` | 50000 |
+| Singapore | `ping.singapore.stratos.snapser.com` | 50000 |
+| Singapore (Protected) | `ping.singapore-ga.stratos.snapser.com` | 50000 |
+
+<Note>
+  Ping the sibling your fleet actually runs in. A protected region's ping traverses the same
+  edge and backbone path your game traffic will take, so its RTT is usually lower and steadier
+  than the standard region sitting in the same place. Measuring `frankfurt` and then allocating
+  into `frankfurt-ga` will hand your matchmaker the wrong number.
+</Note>
+
+You can verify connectivity to any endpoint using `nping`:
+
+```
+sudo nping --udp -p 50000 ping.oregon.stratos.snapser.com
+```
+
+### Protected Region Ping Endpoints
+
+Snapser protected (`-ga`) regions run behind Snapser's global accelerator and have their own UDP ping servers. Unlike the standard endpoints, each protected region listens on its own port, so make sure you send the probe to the port listed for that region.
+
+| Region | Hostname | Port |
+| --- | --- | --- |
+| Singapore | `ping-ga.singapore-ga.stratos.snapser.com` | 50001 |
+| Frankfurt | `ping-ga.frankfurt-ga.stratos.snapser.com` | 50002 |
+| Sao Paulo | `ping-ga.saopaulo-ga.stratos.snapser.com` | 50003 |
+| N. Virginia | `ping-ga.nvirginia-ga.stratos.snapser.com` | 50004 |
+
+```
+sudo nping --udp -p 50001 ping-ga.singapore-ga.stratos.snapser.com
+```
+
+Pass the measured latencies to the `latency_args` field when calling the Matchmaking [CreateTicket](/docs/infra/snaps/matchmaking#create-a-ticket-with-latency) API.
+
+## Lifecycle
+
+Snapser Fleet uses Agones under the hood to orchestrate your game servers. We require you to integrate the [Agones SDK](https://agones.dev/site/docs/guides/client-sdks/) with the game server code.
+This will allow you to use the Agones SDK to manage the lifecycle of your game server in your Snapser fleet.
+Check out the documentation in the [Bring Your Own Game](/docs/custom/bring-your-own-server#agones_sdk) (BYOGS) to learn more about how to integrate the Agones SDK with your game server and how to manage the lifecycle of your game server.
+
+## Getting the Game Server's Hostname and Port
+
+At times, a headless game server needs to know its own hostname and port — for example, to register itself with an external service like Photon Fusion. Agones exposes this information via `GetGameServer()`, which returns the game server's current status, including its public address and port assignments.
+
+### Retrieving hostname and port from the Agones SDK
+
+**Unity (C#)**
+
+```csharp
+var gameServer = await sdk.GameServer();
+string hostname = gameServer.Status.Address;
+int port = gameServer.Status.Ports[0].Port;
+```
+
+**Unreal (C++)**
+
+```cpp
+UAgonesSubsystem& AgonesSubsystem = UAgonesSubsystem::Get(GetWorld());
+AgonesSubsystem.GetGameServer(
+    FAgonesGameServerSuccessDelegate::CreateLambda([](const FGameServerResponse& Response) {
+        FString Hostname = Response.Status.Address;
+        int32 Port = Response.Status.Ports[0].Port;
+    }),
+    FAgonesErrorDelegate::CreateLambda([](const FAgonesError& Error) {
+        UE_LOG(LogTemp, Error, TEXT("GetGameServer failed: %s"), *Error.Message);
+    }));
+```
+
+<Note>
+  Snapser runs on AWS, so the hostname returned by Agones often resembles
+  `ec2-52-1-2-3.compute-1.amazonaws.com`, which embeds the public IP in the
+  hostname. While it may be tempting to parse the IP directly from the hostname,
+  this format is not guaranteed across all AWS configurations. Always prefer
+  resolving the hostname via DNS to get a stable IP address.
+</Note>
+
+### Resolving a hostname to an IP address
+
+If your game server needs to pass an IP address (rather than a hostname) to an external service, you will need to resolve the hostname via DNS. The examples below show how to do this, with a fallback to an external IP-lookup service.
+
+<Note>
+  The external-service fallback makes HTTPS requests from your game server. This
+  requires a valid CA certificate bundle to be included in your server build. See
+  the Snapser certificate documentation for how to add certs to your server image.
+</Note>
+
+**Unity (C#)**
+
+```csharp
+using System;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading.Tasks;
+using UnityEngine;
+using UnityEngine.Networking;
+
+public class NetworkUtilities
+{
+    public static async Task<string> ResolveHostnameAsync(string hostname)
+    {
+        try
+        {
+            IPAddress[] addresses = await Dns.GetHostAddressesAsync(hostname);
+
+            foreach (var ip in addresses)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork) // IPv4
+                    return ip.ToString();
+            }
+
+            return null; // no IPv4
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError(e.Message);
+            return null;
+        }
+    }
+
+    public static async Task<string> TryGetFromExternalService()
+    {
+        string[] services = {
+            "https://api.ipify.org",
+            "https://ifconfig.me/ip",
+            "https://icanhazip.com",
+        };
+
+        foreach (string url in services)
+        {
+            Debug.Log($"NetworkUtilities::TryGetFromExternalService:{url}");
+
+            try
+            {
+                string ip = (await GetStringWithUnityWebRequest(url, 5)).Trim();
+                if (IPAddress.TryParse(ip, out _))
+                {
+                    Debug.Log($"Agones: Got public IP from {url}: {ip}");
+                    return ip;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"Agones: Failed to reach {url}: {ex.Message}");
+            }
+        }
+
+        return null;
+    }
+
+    private static async Task<string> GetStringWithUnityWebRequest(string url, int timeoutSeconds)
+    {
+        using var request = UnityWebRequest.Get(url);
+        request.timeout = timeoutSeconds;
+        request.SetRequestHeader("User-Agent", "Unity-GameServer/1.0");
+
+        var operation = request.SendWebRequest();
+        while (!operation.isDone)
+        {
+            await Task.Yield();
+        }
+
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            throw new Exception(request.error);
+        }
+
+        return request.downloadHandler.text;
+    }
+}
+```
+
+**Unreal (C++)**
+
+```cpp
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Interfaces/IHttpRequest.h"
+#include "Interfaces/IHttpResponse.h"
+#include "HttpModule.h"
+#include "SocketSubsystem.h"
+#include "IPAddress.h"
+
+class FNetworkUtilities
+{
+public:
+    /** Synchronous DNS lookup. Returns the first IPv4 address for Hostname, or an empty string on failure. */
+    static FString ResolveHostname(const FString& Hostname)
+    {
+        ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
+        if (!SocketSubsystem)
+        {
+            return FString();
+        }
+
+        FAddressInfoResult Result = SocketSubsystem->GetAddressInfo(
+            *Hostname, nullptr,
+            EAddressInfoFlags::Default,
+            NAME_None,
+            SOCKTYPE_Datagram);
+
+        for (const FAddressInfoResultData& Entry : Result.Results)
+        {
+            if (Entry.Address->GetProtocolType() == FNetworkProtocolTypes::IPv4)
+            {
+                FString IPString;
+                Entry.Address->ToString(IPString, false); // false = exclude port
+                return IPString;
+            }
+        }
+
+        return FString();
+    }
+
+    /**
+     * Async fallback: queries public IP-lookup services in sequence.
+     * Callback is called on the game thread with the IP string, or an empty string on failure.
+     */
+    static void TryGetFromExternalService(TFunction<void(const FString&)> Callback)
+    {
+        static const TArray<FString> Services = {
+            TEXT("https://api.ipify.org"),
+            TEXT("https://ifconfig.me/ip"),
+            TEXT("https://icanhazip.com"),
+        };
+        TSharedPtr<int32> ServiceIndex = MakeShared<int32>(0);
+        TryNextService(Services, ServiceIndex, Callback);
+    }
+
+private:
+    static void TryNextService(
+        const TArray<FString>& Services,
+        TSharedPtr<int32> IndexPtr,
+        TFunction<void(const FString&)> Callback)
+    {
+        if (*IndexPtr >= Services.Num())
+        {
+            Callback(FString());
+            return;
+        }
+
+        const FString& URL = Services[*IndexPtr];
+        UE_LOG(LogTemp, Log, TEXT("FNetworkUtilities::TryGetFromExternalService: %s"), *URL);
+
+        TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+        Request->SetURL(URL);
+        Request->SetVerb(TEXT("GET"));
+        Request->SetHeader(TEXT("User-Agent"), TEXT("UnrealGameServer/1.0"));
+        Request->SetTimeout(5.0f);
+
+        Request->OnProcessRequestComplete().BindLambda(
+            [Services, IndexPtr, Callback](FHttpRequestPtr /*Req*/, FHttpResponsePtr Response, bool bSuccess) {
+                if (bSuccess && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
+                {
+                    FString IP = Response->GetContentAsString().TrimStartAndEnd();
+                    // Validate that the response is actually an IP address
+                    FIPv4Address Parsed;
+                    if (FIPv4Address::Parse(IP, Parsed))
+                    {
+                        UE_LOG(LogTemp, Log, TEXT("FNetworkUtilities: Got public IP from %s: %s"),
+                               *Services[*IndexPtr], *IP);
+                        Callback(IP);
+                        return;
+                    }
+                }
+                // Try next service
+                ++(*IndexPtr);
+                TryNextService(Services, IndexPtr, Callback);
+            });
+
+        Request->ProcessRequest();
+    }
+};
+```
+
+## Allocation
+The Game Server Fleets Snap is integrated with the Matchmaking and Lobbies snaps. This allows you to automatically allocated a server on a successful match or when a lobby is ready to start their game.
+
+#### Matchmaking Snap
+Go to the Matchmaking admin tool and click on Create a Profile. You can also chose to update an existing profile. Once you have created a fleet,
+you will see an option to select your fleet in the profile creation UI.
+
+![Fleet Matchmaking Admin](/images/docs/fleet-mm-admin.png)
+
+#### Lobbies Snap
+The Lobbies snap takes in a fleet name while starting a lobby for your game. The leader of the lobby can
+chose to start a game and the Lobbies snap will automatically allocate a game server for your fleet.
+
+#### Parties Snaps
+The Parties snap allows you to indirectly allocate a game server via the Matchmaking snap.
+You can create a party and then move on to the Matchmaking snap to create a match for the party.
+
+## Control Plane
+Each fleet that you create comes with its own control plane. You can access the control plane by going to the
+Fleet admin tool and clicking on the Manage button for the fleet you want to manage. This will take you to the Fleet
+Control Plane UI. Here you will be able to see all your allocated and ready game servers.
+The UI also allows you to manually allocate a new game server for your fleet and get a dedicated URL and Port.
+![Fleet Control](/images/docs/fleet-control.png)
+
+### Monitoring and Logs
+Your Snapend Monitor and Logs tool comes with a dedicated section for your fleet. You can see the logs and metrics for your fleet.
+However, you can also go to the Control Plane, click on a particular server and see the logs and metrics for that server.
+
+## Game Server to other Snaps
+Snapser provides with a way to communicate with your Snaps via HTTP or gRPC.
+Please check the [Intra Snapend Networking](/docs/snapend/networking/intra-snapend) documentation.
+
+## APIs
+The `Game Server Fleets` Snap supports the following APIs:
+<div className="apisTable">
+| API Name                | HTTP Method | API Description                                                                         |
+| ----------------------- | ----------- | --------------------------------------------------------------------------------------- |
+| [GameServerFleetsAllocateGameServer](#gameserverfleetsallocategameserver-api) | POST | Allocate game server (Internal) |
+</div>
+
+### Usage
+#### GameServerFleetsAllocateGameServer API
+<CodeGroup title="Allocate game server" tag="POST" label="GameServerFleetsAllocateGameServer">
+```csharp
+/// <summary>
+/// Game Server Allocate a game server
+/// </summary>
+/// <exception cref="SnapserInternal.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="fleetName"></param>
+/// <param name="gateway">Gateway</param>
+/// <param name="body"></param>
+/// <returns>GameServerFleetsAllocateGameServerResponse</returns>
+public GameServerFleetsAllocateGameServerResponse GameServerFleetsAllocateGameServer(string fleetName, string gateway, AllocateGameServerRequest body)
+{
+    SnapserInternal.Client.ApiResponse<GameServerFleetsAllocateGameServerResponse> localVarResponse = GameServerFleetsAllocateGameServerWithHttpInfo(fleetName, gateway, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AllocateGameServerRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AllocateGameServerRequest" /> class.
+/// </summary>
+/// <param name="matchPlayers">matchPlayers.</param>
+/// <param name="maxPlayers">maxPlayers.</param>
+/// <param name="metadata">metadata.</param>
+/// <param name="minPlayers">minPlayers.</param>
+/// <param name="region">Region for the game server allocation (required).</param>
+public AllocateGameServerRequest(List<string> matchPlayers = default, string maxPlayers = default, Dictionary<string, string> metadata = default, string minPlayers = default, string region = default)
+{
+    // to ensure "region" is required (not null)
+    if (region == null)
+    {
+        throw new ArgumentNullException("region is a required property for AllocateGameServerRequest and cannot be null");
+    }
+    this.Region = region;
+    this.MatchPlayers = matchPlayers;
+    this.MaxPlayers = maxPlayers;
+    this.Metadata = metadata;
+    this.MinPlayers = minPlayers;
+}
+
+/// Snapser.Model for GameServerFleetsAllocateGameServerResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="GameServerFleetsAllocateGameServerResponse" /> class.
+/// </summary>
+/// <param name="gameServer">gameServer.</param>
+public GameServerFleetsAllocateGameServerResponse(GameServerFleetsGameServer gameServer = default)
+{
+    this.GameServer = gameServer;
+}
+
+/// Snapser.Model for GameServerFleetsGameServer
+/// <summary>
+/// Initializes a new instance of the <see cref="GameServerFleetsGameServer" /> class.
+/// </summary>
+/// <param name="address">address.</param>
+/// <param name="debugPort">debugPort.</param>
+/// <param name="fleetName">fleetName.</param>
+/// <param name="id">id.</param>
+/// <param name="imageTag">imageTag.</param>
+/// <param name="metadata">metadata.</param>
+/// <param name="port">port.</param>
+/// <param name="region">region.</param>
+/// <param name="state">state.</param>
+public GameServerFleetsGameServer(string address = default, int debugPort = default, string fleetName = default, string id = default, string imageTag = default, Dictionary<string, string> metadata = default, int port = default, string region = default, GameServerState? state = default)
+{
+    this.Address = address;
+    this.DebugPort = debugPort;
+    this.FleetName = fleetName;
+    this.Id = id;
+    this.ImageTag = imageTag;
+    this.Metadata = metadata;
+    this.Port = port;
+    this.Region = region;
+    this.State = state;
+}
+
+/// <summary>
+/// Defines GameServerState
+/// </summary>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum GameServerState
+{
+    /// <summary>
+    /// Enum UNSPECIFIEDSTATE for value: UNSPECIFIED_STATE
+    /// </summary>
+    [EnumMember(Value = "UNSPECIFIED_STATE")] UNSPECIFIEDSTATE = 1,
+
+    /// <summary>
+    /// Enum REQUESTREADY for value: REQUEST_READY
+    /// </summary>
+    [EnumMember(Value = "REQUEST_READY")] REQUESTREADY = 2,
+
+    /// <summary>
+    /// Enum READY for value: READY
+    /// </summary>
+    [EnumMember(Value = "READY")] READY = 3,
+
+    /// <summary>
+    /// Enum SCHEDULED for value: SCHEDULED
+    /// </summary>
+    [EnumMember(Value = "SCHEDULED")] SCHEDULED = 4,
+
+    /// <summary>
+    /// Enum ALLOCATED for value: ALLOCATED
+    /// </summary>
+    [EnumMember(Value = "ALLOCATED")] ALLOCATED = 5,
+
+    /// <summary>
+    /// Enum PENDING for value: PENDING
+    /// </summary>
+    [EnumMember(Value = "PENDING")] PENDING = 6,
+
+    /// <summary>
+    /// Enum FAILED for value: FAILED
+    /// </summary>
+    [EnumMember(Value = "FAILED")] FAILED = 7,
+
+    /// <summary>
+    /// Enum TERMINATING for value: TERMINATING
+    /// </summary>
+    [EnumMember(Value = "TERMINATING")] TERMINATING = 8
+}
+```
+```cpp
+// Request
+class SNAPSERINTERNAL_API SnapserInternalGameServerFleetsServiceApi::GameServerFleetsAllocateGameServerRequest : public Request
+{
+public:
+    virtual ~GameServerFleetsAllocateGameServerRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    FString FleetName;
+    /* Gateway */
+    FString Gateway = TEXT("internal");
+    SnapserInternalAllocateGameServerRequest Body;
+};
+
+class SNAPSERINTERNAL_API SnapserInternalAllocateGameServerRequest : public Model
+{
+public:
+    virtual ~SnapserInternalAllocateGameServerRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<FString>> MatchPlayers;
+    TOptional<FString> MaxPlayers;
+    TOptional<TMap<FString, FString>> Metadata;
+    TOptional<FString> MinPlayers;
+    /* Region for the game server allocation */
+    FString Region;
+};
+
+// Response
+class SNAPSERINTERNAL_API SnapserInternalGameServerFleetsServiceApi::GameServerFleetsAllocateGameServerResponse : public Response
+{
+public:
+    virtual ~GameServerFleetsAllocateGameServerResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInternalGameServerFleetsAllocateGameServerResponse Content;
+};
+
+class SNAPSERINTERNAL_API SnapserInternalGameServerFleetsAllocateGameServerResponse : public Model
+{
+public:
+    virtual ~SnapserInternalGameServerFleetsAllocateGameServerResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserInternalGameServerFleetsGameServer> GameServer;
+};
+
+class SNAPSERINTERNAL_API SnapserInternalGameServerFleetsGameServer : public Model
+{
+public:
+    virtual ~SnapserInternalGameServerFleetsGameServer() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Address;
+    TOptional<int32> DebugPort;
+    TOptional<FString> FleetName;
+    TOptional<FString> Id;
+    TOptional<FString> ImageTag;
+    TOptional<TMap<FString, FString>> Metadata;
+    TOptional<int32> Port;
+    TOptional<FString> Region;
+    TOptional<SnapserInternalGameServerState> State;
+};
+
+class SNAPSERINTERNAL_API SnapserInternalGameServerState : public Model
+{
+public:
+    virtual ~SnapserInternalGameServerState() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedState,
+        RequestReady,
+        Ready,
+        Scheduled,
+        Allocated,
+        Pending,
+        Failed,
+        Terminating,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+## Pricing
+Fleet pricing is based on the CPU and Memory requirements of your game servers.
+Please check out the [Pricing](/pricing) page for more details.
+
+Fleets running in a [protected region](#protected-fleet-regions) also incur data transfer out
+(DTO) charges for the traffic that flows through the edge network, on top of that compute cost.
+
+## FAQs
+
+### Are these dedicated servers?
+
+To keep your costs low we do not spin up dedicated servers for your Fleet.
+
+### Can a Snapend have more than 1 fleet?
+
+Yes, each Snapend can have upto 5 server fleets.
+
+<Note>Heads up, you get charged for the usage of servers in your fleet.</Note>
+
+
+### What happens if my fleet server has hit the maximum sever count?
+
+In this case the matchmaking snap or lobby snap will fail to allocate a new server for your fleet and return an error.
+You can always chose to increase the maximum server count by editing your Snapend and increasing the maximum server count.
+
+### What is the protocol to use to connect to my fleet server?
+
+Currently Game Servers support UDP.
+
+### Should I use a protected region?
+
+For any fleet your users actually connect to, yes. A [protected region](#protected-fleet-regions)
+gives you always-on DDoS protection and a private backbone path for no code changes, and the
+only thing you give up is the ability to choose your own ports. The usual reason to keep a
+standard region around is pre-production — a Development fleet that only your team connects to
+does not need the edge network, and leaving it standard lets you keep whatever port your local
+tooling already expects.
+
+### Why can't I change my fleet's port?
+
+Because one of the regions on the fleet is a [protected region](#protected-fleet-regions).
+Protected regions run behind Snapser's global edge network, which only forwards traffic on
+**7777** and **7778**, so the Portal pins those two values and locks the fields. Ports are a
+fleet level setting rather than a per environment one, so a single `-ga` region in any one
+environment locks the ports for the whole fleet. Remove every protected region from every
+environment and the fields unlock.

@@ -1,0 +1,240 @@
+export const description = 'Alert Manager'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Alert Manager
+
+## Concept
+
+Snapser continuously evaluates the health of every Snapend you run — CPU,
+memory, error rate, pod restarts and more. When a condition trips, Snapser
+fires a **platform alert**. The Alert Manager is where you decide _where_
+those alerts get delivered and _which_ snapends you care about.
+
+Alert Manager is a game-level tool. Channels and subscriptions live at the
+app level and can fan out across any Snapend in that app — dev, staging or
+production.
+
+If you instead want to see the alerts that are firing **right now** on a
+single Snapend, head to the [Snapend Alerts](/docs/snapend/alerts) viewer.
+
+<Note>
+  Alerts are catalog-driven. You can subscribe to any alert in the Snapser
+  catalog but you cannot author custom alerts from the portal today — reach
+  out to support if there's a signal you'd like us to surface.
+</Note>
+
+## Want alerts on the Snapser web portal?
+
+By default, the [Snapend Alerts](/docs/snapend/alerts) viewer in
+**Infrastructure → Alerts** is **empty** — even if alerts are firing on
+your snapend. To make alerts show up there, you need to:
+
+1. Create a **Portal** channel from the Alert Manager (zero configuration
+   — just hit **+ Channel**, leave the type on `Portal`, and save).
+2. Create a **Subscription** that ties the Portal channel to the snapends
+   and catalog alerts you care about.
+
+Without these two steps, the in-product Alerts viewer stays empty and the
+snapend-header alert badge will never light up. You can still receive
+alerts via Slack, Email or PagerDuty without a Portal channel — those
+delivery paths are independent.
+
+## Pre-requisites
+
+You need at least the `game-view` role to open the Alert Manager. To create
+or edit channels and subscriptions, you need a role that grants `PUT` on the
+game scope (`game-edit` or higher). Users without write access still see the
+page but in a read-only view with a banner explaining the restriction.
+
+## Tool Location
+
+From your app home page, open the left nav and click **Tools → Alert
+Manager**. The page opens on the **Subscriptions** tab by default — once
+setup is done that's the screen you'll come back to most often.
+
+![Alert Manager](/images/docs/alert-manager-overview.png)
+
+Both `+ Channel` and `+ Subscription` are visible in the top-right at all
+times. `+ Subscription` is disabled until you've created at least one
+channel — there has to be somewhere for alerts to land before a subscription
+makes sense.
+
+## Channels
+
+A **channel** is a destination Snapser pushes alerts to. Channels are
+configured once per game and reused across any number of subscriptions.
+Snapser supports four types today:
+
+| Type | What you provide | Verification |
+|------|------------------|--------------|
+| **Portal** | Nothing — zero configuration. Subscribing a snapend to a Portal channel makes its alerts appear in the in-product Alerts viewer | None — auto-verified at creation |
+| **Slack** | A Slack Web API URL (defaults to `https://slack.com/api/chat.postMessage`), a bot token and a comma-separated list of channel names | None — works as soon as you hit Test |
+| **PagerDuty** | A PagerDuty integration key | None — works as soon as you hit Test |
+| **Email** | A destination email address | Verified manually by Snapser staff before alerts can be delivered |
+
+<Note>
+  Adding a second Portal channel does the same thing as the first — the
+  form will nudge you toward editing the existing one rather than creating
+  a duplicate. (We don't block the create; the warning is informational.)
+</Note>
+
+### Adding a channel
+
+Click **+ Channel**. The inline form drops in between the header and the
+tabs. Pick a type, fill in the fields and hit **Save**. The channel
+appears in the **Channels** table.
+
+![Add Channel](/images/docs/alert-manager-add-channel.png)
+
+### Verified vs Enabled
+
+Channels carry two independent flags:
+
+1. **Verified** — Snapser confirms this channel is allowed to receive
+   alerts. Portal, Slack and PagerDuty are auto-verified at creation;
+   email channels start unverified and need manual approval by Snapser
+   staff.
+2. **Enabled** — _you_ control whether this channel is currently
+   delivering. Turn it off to pause without deleting the configuration.
+
+Both flags must be true for an alert to be delivered. The Channels table
+shows a chip for each so you can see at a glance why a channel isn't firing.
+
+<Note>
+  The two flags are deliberately decoupled. You can leave a verified
+  channel disabled while you migrate destinations, and an unverified email
+  channel can still be marked enabled in advance — alerts will start
+  flowing the moment Snapser flips Verified to true.
+</Note>
+
+### Testing a channel
+
+Each row in the Channels table has a **Test** action that sends a synthetic
+alert to that channel only. Use it whenever you change a destination, key
+or token. The button is disabled until the channel is both verified and
+enabled.
+
+<Note>
+  Portal channels don't expose a Test action — there's no remote
+  destination to confirm, so testing is a no-op. The first real alert
+  that fires on a subscribed snapend will show up in
+  **Infrastructure → Alerts** on its own.
+</Note>
+
+## Subscriptions
+
+A **subscription** ties three things together:
+
+1. One or more **channels** — where the alert is delivered.
+2. One or more **snapends** — which clusters the subscription applies to.
+3. One or more **catalog alerts** — which signals you care about.
+
+A single alert firing on a covered snapend will be delivered to every
+channel in every matching subscription. There's no priority or override
+system — every match fires.
+
+### Adding a subscription
+
+Click **+ Subscription**. The form exposes three multi-select pickers
+(Channels, Snapends, Alerts) plus two toggles:
+
+- **Notify on resolve** — send a follow-up message when the alert clears.
+  Off by default to keep low-severity noise down.
+- **Enabled** — global on/off switch for the subscription. Same semantics
+  as the channel flag — leave a subscription configured but paused.
+
+![Add Subscription](/images/docs/alert-manager-add-subscription.png)
+
+Each picker has a **Select all** shortcut next to it.
+
+<Note>
+  All three pickers stay open while you tick boxes, so you can pick several
+  values without having to re-open the dropdown each time.
+</Note>
+
+### Filtering subscriptions
+
+When a game has many snapends, the Subscriptions table can get noisy. Use
+the filter icon in the **Snapends** column header to narrow the table down
+to subscriptions covering a specific cluster (or set of clusters). Long
+chip lists in any cell collapse to a `+N` button that opens the full list
+in a popover on click.
+
+## Severity model
+
+Catalog alerts carry one of three severities:
+
+| Severity | What it means |
+|----------|---------------|
+| `critical` | Customer-impacting — a snap or pod is down, hot, or hitting an unrecoverable error |
+| `warning` | Something to look at soon — elevated error rates, restart counts, latency drift |
+| `info` | Informational — useful telemetry, not actionable on its own |
+
+Severity flows through to the Snapend Alerts viewer and to the badge on
+the Snapend header so the highest active severity always wins the color
+treatment.
+
+## Lifecycle
+
+Once an alert fires, Snapser stores it in a short-lived buffer so the
+[Snapend Alerts](/docs/snapend/alerts) viewer can show it without having
+to re-query Grafana. Entries auto-clear after 30 minutes and re-appear
+automatically if the underlying issue is still active. Channel delivery
+is independent of this buffer — the subscription fires on every Grafana
+evaluation cycle that produces a `firing` event.
+
+## FAQs
+
+### Why didn't I get notified?
+
+Walk down this checklist:
+
+1. Is the channel both **verified** and **enabled**?
+2. Is there a subscription that covers the snapend the alert fired on?
+3. Is the subscription **enabled**?
+4. Is the catalog alert that fired in the subscription's alert list?
+
+If all four are true and you're still not getting notifications, contact
+support — we can replay the delivery from the server-side log.
+
+### Can I silence a single alert temporarily?
+
+Yes — either disable the subscription, or remove the specific catalog
+alert from the subscription's alert list. There's no time-bound silence
+feature today.
+
+### Can I author my own alert rules?
+
+Not from the portal. The catalog is curated by Snapser. If you'd like a
+signal added, reach out to support with a description of the condition
+and severity you want.
+
+### Do channels work across environments?
+
+Yes — channels are game-scoped and can be subscribed to from dev, staging
+or production snapends through the **Snapends** picker on a subscription.
+
+### What happens if Snapser staff rejects my email channel?
+
+The channel stays in the table with `verified: false` and a tooltip
+explaining the rejection. You can edit the destination and try again.
+
+### My snapend Alerts viewer is empty — why?
+
+The viewer only displays alerts for snapends that are subscribed to a
+**Portal** channel. If you haven't created a Portal channel yet, or you
+have one but no subscription routes this snapend to it, the viewer will
+stay empty even while alerts are firing. Head to the Alert Manager,
+create a Portal channel if you don't have one, and add (or edit) a
+subscription that covers this snapend.
+
+### Can I have more than one Portal channel?
+
+Yes — the create form will warn you that a second Portal channel is
+redundant (it delivers to the same in-product viewer as the first), but
+it won't block the create. In most cases the simpler thing is to edit
+or disable the existing Portal channel rather than make a new one.

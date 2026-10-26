@@ -1,0 +1,151 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "quago_services.proto",
+    "version" : "version not set"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "QuagoService"
+  } ],
+  "paths" : {
+    "/v1/quago/users/{user_id}" : {
+      "get" : {
+        "description" : "Get details about a user from Quago",
+        "operationId" : "GetQuagoUserInfo",
+        "parameters" : [ {
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/quagoQuagoGetUserResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User",
+        "tags" : [ "QuagoService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "quagoQuagoGetUserResponse" : {
+        "properties" : {
+          "avg_daily_playtime_hours" : {
+            "description" : "Average daily playtime in hours",
+            "format" : "float",
+            "type" : "number"
+          },
+          "avg_session_playtime_minutes" : {
+            "description" : "Average session playtime in minutes",
+            "format" : "float",
+            "type" : "number"
+          },
+          "cnt_device_ids" : {
+            "description" : "The count of unique device IDs used by the user",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "cnt_inauth_days" : {
+            "description" : "Count of days the user was recorded inauthentic",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "cnt_ips" : {
+            "description" : "The count of unique IP addresses associated with the user",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "countries" : {
+            "description" : "The country or countries from which the user's sessions were accessed",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "device_model" : {
+            "description" : "The model(s) of the device(s) used by the user, e.g., “iPhone12,1”",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "emu_models" : {
+            "description" : "The model(s) of the emulator(s) used by the user, e.g., “virtual_box”",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "emu_playtime_percentage" : {
+            "description" : "Percentage of emulator playtime since the user was first seen",
+            "format" : "float",
+            "type" : "number"
+          },
+          "inauth_playtime_percentage" : {
+            "description" : "Percentage of inauthentic playtime since the user was first seen",
+            "format" : "float",
+            "type" : "number"
+          },
+          "input_devices_found" : {
+            "description" : "The types of input devices used by the user, e.g., “MOUSE, CONTROLLER”",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "last_inauth_timestamp" : {
+            "description" : "The timestamp of the user's last recorded inauthentic activity, in Unix seconds",
+            "type" : "integer"
+          },
+          "last_seen_timestamp" : {
+            "description" : "The timestamp of the user's last recorded activity, in Unix seconds",
+            "type" : "integer"
+          },
+          "platforms" : {
+            "description" : "The platform(s) on which the activity was recorded",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "system_version" : {
+            "description" : "The operating system version(s) of the user's device(s), e.g., “17.1.2”",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "total_motion_hours" : {
+            "description" : "Total motion hours since the user was first seen",
+            "format" : "float",
+            "type" : "number"
+          },
+          "total_playtime_hours" : {
+            "description" : "Total playtime hours since the user was first seen",
+            "format" : "float",
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

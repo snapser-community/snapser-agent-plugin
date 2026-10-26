@@ -1,0 +1,105 @@
+export const description = 'Team & Invites'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Studio Functions
+At Snapser, we advocate for providing each individual within an organization with specialized tools tailored to their respective roles. Snapser Web App is not just a tool for the engineers but the entire company. You can invite users to Snapser and assign them a **Studio Function**. This function determines the UI/UX of the Web App for that user. The Studio Function is a way to customize the Web App for each user based on their role in the orgnaization.
+
+<Warning>
+Persona based UX is only available to the Premium Tier.
+</Warning>
+
+> **IMPORTANT**:
+>
+> It should be noted that just assigning someone a studio function does not give them access to the tools. The access role is what gives them access to the tools. The studio function is just a way to customize the UI/UX of the Web App for that user.
+>
+
+
+## Engineering
+The default function. The UI is tailored to show all tools relevant to the engineering team, with full access across Snapser.
+
+   ![snapserPersonas](/images/docs/studio-function-engineering.png)
+
+## Business
+The UI highlights tools relevant to the business team, including App Metrics, Business Intelligence, and Release Logs.
+
+   <Note>
+   **Restriction**: Only production Snapends are shown to the business team.
+   </Note>
+
+   ![snapserPersonas](/images/docs/studio-function-business.png)
+
+## Customer Support
+Designed for the customer support team, with primary access to the User Manager tool.
+
+   <Note>
+   **Restriction**: Only production Snapends are shown to the customer support team.
+   </Note>
+
+   <Note>
+   Pair this studio function with a **cluster-service-user-\*** [access role](/docs/resources/portal/access) for the relevant Snap, so the user gets the User Manager tool without also getting access to that Snap's configuration tools.
+   </Note>
+
+   ![snapserPersonas](/images/docs/studio-function-cs.png)
+
+## Design
+Focused on the design team. The UI shows Snap configuration tools and Live Ops tools, along with counters for app metrics like the number of quests, telemetry events, campaigns, and segments.
+
+   ![snapserPersonas](/images/docs/studio-function-design.png)
+
+## Product
+Similar to Design, but tuned for the product team. Snap configuration tools, Live Ops tools, and counters for key app metrics are available.
+
+   ![snapserPersonas](/images/docs/studio-function-product.png)
+
+## Production
+Tailored for the production team. The UI highlights Snap configuration tools and Business Intelligence tools.
+
+   ![snapserPersonas](/images/docs/studio-function-production.png)
+
+## QA
+Customized for QA teams. The UI includes Snap configuration tools, the User Manager tool, and counters showing key app metrics.
+
+   ![snapserPersonas](/images/docs/studio-function-qa.png)
+
+
+## Viewing your Studio Function
+To see the studio function/s associated with your Snapser account, click on the avatar in the top right corner of the Web App. This opens a menu where you can access your **User account** tool. Clicking on it, will show you a list of the personas associated with your account. Selecting a studio function restarts the entire Web app and updates the UI/UX to suit the persona.
+![snapser-personas](/images/docs/about-personas.png)
+
+<Note>
+  The studio function is assigned to you by your company administrator. You can
+  activate the one you want by going to the **User Account** tool.
+</Note>
+
+
+## FAQs
+
+### What is the default access role for?
+
+Invites to the web app is a high level construct. You are essentially assigning them a studio function and getting them
+access to Snapser. Roles is a way to really fine tune the permissions for a user. We take a default access role during the invite
+because without which the user will be able to log in to the web app, but will not be able to do anything. The default access role
+is a way to get the user started with the web app. You can always change the access role later.
+
+### Under Accounts, why can I edit and delete some users but not others?
+
+In the Snapser web portal, users who have higher level permissions can access your resources, 
+your app or your Snapend. However, since they have a higher level permission the logged in user
+may not have the permissions to delete or edit them. Hence the web app restricts the logged in user
+from editing or deleting them.
+
+### What is the default studio function for a user?
+
+The default studio for a user is the engineering persona.
+
+### Can I invite people outside my company?
+
+Yes, you can invite people outside your company, such as investors, contractors etc. However, make sure you pick the right access role for them.
+
+### I am not seeing the Persona UI/UX, why is that?
+
+Persona based UX is only available in the Standard and Premium tiers.

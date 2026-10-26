@@ -1,0 +1,262 @@
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Bring your own Game Server - Basic
+
+BYOGS or Bring your own Game Server is a Snapser feature that allows you to bring your own custom game server code to Snapser and deploy it to the Snapser global network. BYOGS uses Agones to run your game server code. BYOGS can be written in any language and can be customized to your game's needs.
+
+<Warning>
+  For non-Premium tier customers a credit card is required to upload custom BYOGame Servers. You will not be able to proceed with this tutorial without adding a credit card to your account.
+</Warning>
+
+
+## Introduction
+This guide will walk you through deploying a sample open-source game [Super Tux Kart](https://supertuxkart.net/Main_Page) to the Snapser Global compute via a Snap called **Game Server Fleets**. By the end, of this tutorial you will have a working game server in one of the global locations of Snapser, where you and your friends can connect to and play the game.
+
+## Step 0: Prerequisites
+
+### A. Understanding Agones
+Agones is an open source platform, for deploying, hosting, scaling, and orchestrating dedicated game servers for large scale multiplayer games, built on top of the industry standard, distributed system platform Kubernetes.
+
+Snapser uses Agones under the hood and replaces bespoke or proprietary cluster management and game server scaling solutions with a managed solution - so that you can focus on the important aspects of building a multiplayer game, rather than developing the infrastructure to support it.
+
+Built with both Cloud and on-premises infrastructure in mind, Snapser fleets can adjust its strategies as needed for Fleet management, autoscaling, and more to ensure the resources being used to host dedicated game servers are cost optimal for the environment that they are in.
+
+<Note>
+  Every Game server that is hosted on Snapser fleets needs to have the [Agones SDK](https://0-8-0.agones.dev/site/docs/guides/client-sdks/) installed.
+</Note>
+
+
+### B. Snapser CLI
+Before you begin, make sure you have access to use the Snapser CLI tool.
+
+<div className="parent">
+  <div className="tutorialBox">
+    # Setup Snapser CLI
+
+    You can go through the Setup Snapser CLI tutorial to install and configure Snapctl.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/setup-snapctl'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div>
+</div>
+
+<Checkpoint step={0}>
+  You are now ready to begin the tutorial.
+</Checkpoint>
+
+## Step 1: Check out the example code
+Check out the snapser-community BYOGS [supertuxkart repo](https://github.com/snapser-community/snapser-byogs/tree/main/basic).
+
+<Note>
+  This example is a fork of the original STK example on the Agones repo.
+</Note>
+
+```bash
+# For HTTPS based cloning
+git clone https://github.com/snapser-community/snapser-byogs.git
+# For SSH based cloning
+git@github.com:snapser-community/snapser-byogs.git
+```
+
+- In the repo, there is a folder called **basic/**. Inside this folder, you will find the
+  BYOGS example code for STK. The folder structure is as follows:
+  ```bash
+  ├── basic/
+  │   ├── supertuxkart/
+  ```
+- The **supertuxkart/** folder contains the game server code for STK. The game server code is written in Go and uses the Agones SDK to communicate with the Snapser fleet.
+
+<Checkpoint step={1}>
+  We are now ready to deploy our game server code to Snapser.
+</Checkpoint>
+
+## Step 2: Deploy the BYOGS code
+
+We are going to use the code that comes with the repo as is and deploy it to Snapser. To deploy, your game server to Snapser you need the following:
+- **Tag**: Pick any short string to tag your code. Most developers chose semantic versioning like $version=`v1.0.0` for their tags.
+- **Code Path**: Copy the full path to the root of your code directory. Eg: `/Users/aj/snapser-byogs/basic/supertuxkart`.
+
+Replace the variables below with your custom values and run the command to deploy your BYOSnap.
+
+<CodeGroup title="Deploy BYOSnap" tag="bash" >
+```bash
+# $tag = Tag your Game Server code. Recommended to use semantic versioning. Eg: v1.0.0
+# $path = Path to the directory where your supertuxkart code resides.
+snapctl byogs publish --tag $tag --path $codePath
+```
+</CodeGroup>
+<Note>
+  The publish command is making your BYOGS available to other devs in your organization.
+  Every subsequent publish you will have to update the tag and hence the recommendation to use semantic versioning.
+</Note>
+
+
+You will see the output from the Snapctl tool as it deploys your BYOGS to Snapser. Once the deployment is
+complete, you will see a success message.
+```bash
+Success BYOGS upload successful
+Success BYOGS publish successful
+```
+
+<Checkpoint step={2}>
+  We now have a BYOGS deployed to Snapser that Snapser fleets can use to create game servers. Next, step is to create a Snapend with the Game Server Fleets snap.
+</Checkpoint>
+
+## Step 3: Create a Snapend
+For this tutorial, we are going to create a Snapend with Auth and Game Server Fleet snaps.
+
+For this tutorial, we have two options. You can either create the Snapend manually or use a helper script to create the Snapend. If this is your first time, we highly recommend going through the manual
+process.
+
+### A. Manual Cluster Creation
+
+#### a. Set up your game
+
+Note: Proceed to the next step, if you already have a game set up.
+
+1. **Log in to your Snapser account** at https://snapser.com/login.
+2. Navigate to the **Games dashboard** and click on the **New Game** button located in the upper right corner.
+3. **Enter the name of your game** (1) in the designated field. It's advisable to use a name similar to your game's title to avoid confusion among your team members. Click **Add** (2) when done naming your game.
+    ![Add new game name](/images/docs/tutorials/create-snapend-add-game.png)
+4. You will now see an entry for your game in the **Games dashboard**. Click on the game name to view its details.
+    ![Add new game](/images/docs/tutorials/create-snapend-game.png)
+
+#### b. Snapend Creation
+
+1. In the Development environment, click on the **+ Snapend** button.
+    ![Add new snapend](/images/docs/tutorials/create-snapend-game-home.png)
+1. **Enter the name of your snapend** (1) in the **Name your Snapend** field and click **Continue** (2).
+    ![Name your snapend](/images/docs/quick-start/name-your-snapend.png)
+1. For this tutorial, select the **Authentication** (1) and the **Game Server Fleet** (2) snaps by clicking **Add** for each snap and then click **Continue**.
+  ![Auth and GSF Snaps](/images/docs/tutorials/byogs-basic-snapend-create.png)
+1. Click **Customize** and then **Review** until you reach the final step, then click the **Snap it** button. A pop-up window will appear showing you the state of creating your cluster, which takes a moment or two to complete.
+  ![Spinning up cluster](/images/docs/quick-start/spinning-up-cluster.png)
+1. As Snapser finishes setting up the Snapend in Kubernetes (which includes infrastructure, configuration of snaps, network and security, and generating your snapend), click the **App** button to wait for your snapend to be operational.
+
+#### c. Game Server Fleet Configuration
+
+After your snapend is ready, you will see its widget under the game Snapends section. Clicking on this widget will take you to your Snapend home page.
+
+For this demo, we want to first go to the Game Server Fleet Snaps configuration tool. To do this, follow these steps:
+1. On your Snapend homepage look for Quick links and click the **Fleets** button.
+![Snapend Dashboard](/images/docs/tutorials/byogs-basic-snapend-home.png)
+1. You will be taken to the **Fleets** configuration page. This is where you can add and update your global game server fleets.
+
+#### d. Create a Fleet
+1. Click on the **+ Fleet** button to start creating your first fleet.
+    ![Snapend Dashboard](/images/docs/tutorials/byogs-inter-fleet-home.png)
+
+2. You will now see a form to create a fleet. Fill in the following details:
+    - **Name**: Give your fleet any name.
+    - **Description**: Give your fleet any description.
+    - **Image Selector**: Pick the tag that we just uploaded in the previous step.
+        <Note>
+          This is the same tag that you used to publish your BYOGS using snapctl.
+        </Note>
+    -  **Configuration**: This section allows you to configure setups for dev, stage and prod environments at once. But we will just select the environment tab that represents the current Snapend (Shown with a Checkmark)
+        - **Regions**: Snapser supports multiple regions. Pick one or more regions from this list. For this tutorial pick a **standard** region — a region id ending in `-ga` is a [protected region](/docs/infra/snaps/game-server-fleets#protected-fleet-regions) and will lock the Server Ports below to `7777` and `7778`.
+        - **Allocation Settings**: Here you can pick your min, max and buffer server counts. For this tutorial, lets stick to 1 for all three.
+        - **Hardware Settings**: This is where you can pick the memory and CPU requirements for your server. For this tutorial, keep the defaults.
+        - **Optional Settings**: This is where you can add custom commands, arguments and environment variables. Leave this as blank for the tutorial.
+    - **Server Ports**: This is the last section in the form, below the Configuration tabs. Add **8080** as the Ingress port and leave Debug port as 0.
+3. Scroll back up and hit save. This will tell Snapser's global compute to spin up a fleet and keep game servers ready to be allocated.
+![Snapend Dashboard](/images/docs/tutorials/byogs-basic-fleet-creation.png)
+
+### B. Automated Cluster Creation
+<Note>
+  If you have already completed the manual **Create a Cluster** steps, you can ignore this.
+</Note>
+
+We have also provided a helper script to create a cluster with the exact end state if you had followed the manual instructions. The script uses Snapctl under the hood.
+To run this command you will need the $companyId, $gameId, and the $tag of the BYOGS you deployed.
+1. Go to the [Game Management](https://snapser.com/games) page on Snapser. Click the Copy Icon you see next to **ID** to copy the $companyId.
+1. Click on the game you want to create your Snapend under. This will take you to the Game home page. Click the Copy Icon you see next to **ID** to copy the $gameId.
+1. The $tag is what you tagged your BYOGS deploy with.
+
+```bash
+python snapend_create.py $companyId $gameId $tag
+```
+
+You will see the output from the Snapctl tool as it creates your Snapend. Once the creation is
+complete, you will see a success message.
+
+```bash
+Success Updated your snapend. Your snapend is Live.
+Success Snapend clone successful. Do not forget to download the latest manifest.
+Your Snapend is created successfully with Snaps: auth and game-server-fleets.
+```
+
+<Checkpoint step={3}>
+  You now have a configured Snapend with Auth and Game Server Fleets with your game server code deployed to a global location. You are now ready to allocate a game server and play the game.
+</Checkpoint>
+
+## Step 4: Allocate a Game Server
+1. Once your game servers are ready, you will see a green check next to the chip that has the name of the region you had picked during the fleet setup. (For the automated setup, you will see a fleet created in Oregon, USA).
+1. When your fleet is ready, hover over the fleet row and you will see a menu, where you can click the **Control Plane** of the fleet.
+1. This will take you to a view that shows you all the servers that are available to you for allocation.
+1. For this tutorial, click the **+ Allocate** button on the top of the table and Snapser will assign a URL and port to your server. You will see the server state change to **Allocated**.
+    ![Fleet Control Pane](/images/docs/tutorials/byogs-basic-fleet-allocate.png)
+1. Copy the **$url** and **$port** of this server as you will need it in Step 5 to play the game.
+    ![Fleet Control Pane URL Port](/images/docs/tutorials/byogs-basic-fleet-allocate-url-port.png)
+<Note>
+It should be noted that, you do not have to manually allocate servers in Snapser fleets. The Snapser fleet snap has integrations with Snapser snaps like Matchmaking, Parties and Lobbies. This allows you to automate your server allocation workflows. For this tutorial, we are going to keep it simple and manually allocate a server.
+</Note>
+
+<Checkpoint step={4}>
+  With a game server allocated, we are ready to play the game. You will need to download the Super Tux Kart client and connect to the server.
+</Checkpoint>
+
+## Step 5: Play the Game
+1. Download the SuperTuxKart [client](https://supertuxkart.net/Download). This is an actual game that can run on your Windows, Mac or Linux machine. Once its done downloading, start the app.
+1. Click on the **Online** button on the main screen.
+   ![STK Start](/images/docs/tux-kart-start.png)
+1. Then click on **Enter server address**.
+   ![STK Select](/images/docs/tux-kart-find.png)
+1. This is where you should enter the **$url:$port** Eg: ec2-44-244-0-103.us-west-2.compute.amazonaws.com:7023
+    <Note>
+    You may have to manually enter this string in the Tux Kart game. Tux Kart game client, does not support clipboard paste on certain platforms.
+    </Note>
+    ![STK Server](/images/docs/tux-kart-server.png)
+1. You will now be taken to a lobby. You can ask some of your friends to download this game client and actually play the game with you. If they also follow the steps above, you will see them in the lobby. Once you are ready click the **Start Race** button. You will be taken to a screen where you can pick your car and track and start racing!
+    ![STK Game](/images/docs/tux-kart-game.png)
+
+There you have it you are actually playing Super Tux Kart on a game server orchestrated by Snapser fleet.
+
+<Note>
+It should be noted, that as soon as the game ends, Snapser fleet will receive a command from the Agones SDK telling it to shut down the server.
+</Note>
+
+
+<Checkpoint step={5}>
+  Congratulations! You have successfully completed the BYOGS tutorial. You have
+  learned how to deploy a game server to the Snapser Global fleet and play a game running on it.
+</Checkpoint>
+
+## Next Steps
+
+You are now, ready to proceed to the intermediate tutorial for BYOGs.
+
+<div className="parent">
+  <div className="servicesBox">
+    # BYOGame Server Intermediate
+
+    Check out the intermediate tutorial for your BYOSnap where you can learn how to integrate your BYOGS with other Snaps in your Snapend.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/byogs-intermediate'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div>
+  {/* <div className="resourcesBox">
+    # BYOGame Server Advanced Tutorial
+
+    Check out the advanced tutorial for your BYOSnap where you will integrate with the Matchmaker to automatically allocate servers.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/byosnap-advanced'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div> */}
+</div>

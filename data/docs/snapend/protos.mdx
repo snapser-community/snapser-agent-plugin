@@ -1,0 +1,43 @@
+export const description = 'Protos'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Protos
+Protos are the language-agnostic way to interact with your Snapend. Protos can be used to send payloads to your Snapend via Snapser Websocket or to make API calls to your Snapend from your custom code or game servers.
+
+## Languages
+You can use the Protos download widget to download protobufs in a particular language or raw protobufs to integrate directly with your app or game code.
+1. **C#**
+2. **C++**
+3. **Go**
+4. **Raw**
+
+<Note>
+  Sometimes language specific protos are very sensitive to the language version eg: C++ (Unreal). If you are facing issues with the language specific protos, try using the raw protos and then compiling them yourself with the language specific compiler.
+</Note>
+
+## Categories
+Snapser provides two categories of protos:
+1. **messages**: The messages category is typically useful for client devices to send payloads to the Snapend via web socket.
+2. **services**: The services category is typically useful for RPC servers and clients. To make API calls to your Snapend from your custom code or game servers.
+
+## Snapser CLI
+You can use the Snapser CLI tool to generate Protos for your Snapend. To download a Protos, you can use the following command:
+
+<CodeGroup title="Download Protos">
+```bash
+# Download Snapend Protos
+# snapend_id: The id of the Snapend you want to download the manifest for
+# format = One of the supported formats: go, csharp, cpp, raw
+# type: One of the supported types: messages, services
+# out_path: The path where you want to save the manifest. Including the file name
+snapctl snapend download --snapend-id $snapend_id --category protos --format $format --type $type  --out-path $out_path
+```
+</CodeGroup>
+
+## Usage
+Once you download the Protos, you can use them in your app or game code or custom code. The Protos are generated in a way that they can be used directly in your code.
+You can use the Protos to send payloads to your Snapend via Snapser Websocket or to make API calls to your Snapend from your custom code or game servers. You can also use them to listen to events from your Snapend.

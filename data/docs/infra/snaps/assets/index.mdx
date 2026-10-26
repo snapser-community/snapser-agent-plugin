@@ -1,0 +1,873 @@
+export const description = 'Assets'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Assets
+
+The **Assets Snap** allows you to upload app/game and user-generated assets to Snapser's backend and view them through a Content Delivery Network (CDN). This service provides an easy and efficient way to manage assets, while ensuring that they are securely stored and delivered.
+
+<Warning>
+  This is presently a Premium snap. We plan to soon make it available on all plans. If you want early access, please reach out to us on Discord.
+</Warning>
+
+## Buckets
+The Assets Snap uses buckets to organize assets. A bucket is a container that holds assets. Each bucket has a unique name and can be of type **User** or **App**.
+1. **User Buckets**: User buckets are meant to store assets that are user generated.
+2. **App Buckets**: App buckets are meant for storing app assets, uploaded by the developer, that can be pulled by all the game/app clients.
+
+Each upload takes in the following parameters:
+1. **Bucket Name**: The name of the bucket where the asset will be stored.
+2. **File Path**: The path inside the bucket where the asset will be stored.
+3. **Filename Override**: The name of the file to be stored.
+4. **Obfuscate Filename**: Whether to obfuscate the filename.
+5. **Replace**: Whether to replace the existing asset with the same name.
+6. **Visibility**: The visibility of the asset. For App assets the visibility is always public.
+
+<Note>
+	**IMPORTANT**: Deleting a bucket will result in the deletion of all assets stored in the bucket. Please exercise caution when deleting buckets.
+</Note>
+
+### Bucket Name
+The bucket name is a unique identifier for the bucket. The bucket name should be created before uploading assets to the bucket. You can do this using the Snap Configuration Tool.
+
+<Note>
+	Snapser creates a bucket called **user** of type **User** by default. This bucket is used to store user-generated assets.
+</Note>
+
+### File Path
+The file path is the path inside the bucket where the asset will be stored. The file path is completely upto the developer to decide how they want to organize their assets.
+
+#### Example
+If you have a bucket named **user-crafting-uploads** and you want to store a assets stored by the user according to the arena they are in, you can use the following file path:
+```text
+user-crafting-uploads/arena-1
+```
+
+### Filename Override
+The filename override is the name of the file to be stored. If the filename override is not provided, the original name of the file will be used.
+
+### Obfuscate Filename
+The obfuscate filename parameter is used to obfuscate the filename. When the filename is obfuscated, the filename is replaced with a random string. This is useful when you want to prevent users from figuring out the paths and mine the assets.
+
+<Note>
+	This is a soft security measure that you can take advantage of.
+</Note>
+
+### Replace
+The replace parameter is used to replace the existing asset with the same name. If the replace parameter is set to true, the existing asset will be replaced with the new asset. If the replace parameter is set to false, the upload will fail if an asset with the same name already exists.
+
+### Visibility
+The visibility parameter is used to set the visibility of the asset. The visibility can be set to public or private. If the visibility is set to public, the asset can be accessed by anyone. If the visibility is set to private, the asset can only be accessed by the caller who uploaded the asset.
+
+For, App assets the visibility is always public.
+
+## Automating App Asset Uploads
+You can automate the process of uploading assets to the Assets Snaps > App bucket using the Snapser Server SDK. The SDK provides a an **UploadAsset** API that you can use.
+
+<Note>
+	You will need the Auth Snap and a API Key to use the SDK.
+</Note>
+
+## APIs
+
+The `Assets` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name              | HTTP Method | API Description                        |
+| --------------------- | ----------- | -------------------------------------- |
+| [AssetsDeleteAppAssets](#assetsdeleteappassets-api) | DELETE        | Delete app assets                |
+| [AssetsDeleteAssets](#assetsdeleteassets-api)        | DELETE        | Delete assets for a user                 |
+| [AssetsGetAppAssets](#assetsgetappassets-api)         | GET         | Get app assets |
+| [AssetsGetAssets](#assetsgetassets-api)         | GET         | Get assets for a user |
+| [AssetsUploadAppAsset](#assetsuploadappasset-api)       | POST        | Upload app asset                |
+| [AssetsUploadAsset](#assetsuploadasset-api)       | POST        | Upload asset for a user                |
+</div>
+
+## Usage
+
+### AssetsDeleteAppAssets API
+<CodeGroup title="Delete app assets" tag="DELETE" label="AssetsDeleteAppAssets">
+```csharp
+/// <summary>
+/// App Assets Delete app assets
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">(app auth only)</param>
+/// <param name="assetIds"> (optional)</param>
+/// <param name="skipInvalidation">Skip validation of asset IDs (optional)</param>
+/// <returns>AssetsDeleteAppAssetsResponse</returns>
+public AssetsDeleteAppAssetsResponse AssetsDeleteAppAssets(string token, List<int> assetIds = default(List<int>), bool? skipInvalidation = default(bool?))
+{
+    Snapser.Client.ApiResponse<AssetsDeleteAppAssetsResponse> localVarResponse = AssetsDeleteAppAssetsWithHttpInfo(token, assetIds, skipInvalidation);
+    return localVarResponse.Data;
+}
+
+// Snapser.Model for AssetsDeleteAppAssetsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AssetsDeleteAppAssetsResponse" /> class.
+/// </summary>
+/// <param name="deletedIds">deletedIds.</param>
+/// <param name="failedIds">failedIds.</param>
+public AssetsDeleteAppAssetsResponse(List<int> deletedIds = default(List<int>), List<int> failedIds = default(List<int>))
+{
+    this.DeletedIds = deletedIds;
+    this.FailedIds = failedIds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAssetsServiceApi::AssetsDeleteAppAssetsRequest : public Request
+{
+public:
+    virtual ~AssetsDeleteAppAssetsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* (app auth only) */
+    FString Token;
+    TOptional<TArray<int32>> AssetIds;
+    /* Skip validation of asset IDs */
+    TOptional<bool> SkipInvalidation;
+};
+
+// Response
+class SNAPSER_API SnapserAssetsServiceApi::AssetsDeleteAppAssetsResponse : public Response
+{
+public:
+    virtual ~AssetsDeleteAppAssetsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAssetsDeleteAppAssetsResponse Content;
+};
+
+class SNAPSER_API SnapserAssetsDeleteAppAssetsResponse : public Model
+{
+public:
+    virtual ~SnapserAssetsDeleteAppAssetsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<int32>> DeletedIds;
+    TOptional<TArray<int32>> FailedIds;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### AssetsDeleteAssets API
+<CodeGroup title="Delete assets for a user" tag="DELETE" label="AssetsDeleteAssets">
+```csharp
+/// <summary>
+/// User Assets Delete assets for a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">UserID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="assetIds">Asset IDs to delete (optional)</param>
+/// <param name="skipInvalidation">Skip validation of asset IDs (optional)</param>
+/// <returns>AssetsDeleteAssetsResponse</returns>
+public AssetsDeleteAssetsResponse AssetsDeleteAssets(string userId, string token, List<int> assetIds = default(List<int>), bool? skipInvalidation = default(bool?))
+{
+    Snapser.Client.ApiResponse<AssetsDeleteAssetsResponse> localVarResponse = AssetsDeleteAssetsWithHttpInfo(userId, token, assetIds, skipInvalidation);
+    return localVarResponse.Data;
+}
+
+// Snapser.Model for AssetsDeleteAssetsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AssetsDeleteAssetsResponse" /> class.
+/// </summary>
+/// <param name="deletedIds">Successfully deleted file names.</param>
+/// <param name="failedIds">Failed to delete file names.</param>
+public AssetsDeleteAssetsResponse(List<int> deletedIds = default(List<int>), List<int> failedIds = default(List<int>))
+{
+    this.DeletedIds = deletedIds;
+    this.FailedIds = failedIds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAssetsServiceApi::AssetsDeleteAssetsRequest : public Request
+{
+public:
+    virtual ~AssetsDeleteAssetsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* UserID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    /* Asset IDs to delete */
+    TOptional<TArray<int32>> AssetIds;
+    /* Skip validation of asset IDs */
+    TOptional<bool> SkipInvalidation;
+};
+
+// Response
+class SNAPSER_API SnapserAssetsServiceApi::AssetsDeleteAssetsResponse : public Response
+{
+public:
+    virtual ~AssetsDeleteAssetsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAssetsDeleteAssetsResponse Content;
+};
+
+class SNAPSER_API SnapserAssetsDeleteAssetsResponse : public Model
+{
+public:
+    virtual ~SnapserAssetsDeleteAssetsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Successfully deleted file names */
+    TOptional<TArray<int32>> DeletedIds;
+    /* Failed to delete file names */
+    TOptional<TArray<int32>> FailedIds;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### AssetsGetAppAssets API
+<CodeGroup title="Get assets for a user" tag="GET" label="AssetsGetAssets">
+```csharp
+/// <summary>
+/// App Assets Get app assets
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">(app auth only)</param>
+/// <param name="fileNames">File names to retrieve, if empty all files are returned (optional)</param>
+/// <param name="bucketNames">Bucket names to retrieve, if empty all buckets are returned (optional)</param>
+/// <param name="filePaths">File paths to retrieve, if empty all files are returned (optional)</param>
+/// <param name="limit">Limit the number of files to retrieve (optional)</param>
+/// <param name="offset">Offset of the files to retrieve (optional)</param>
+/// <returns>AssetsGetAppAssetsResponse</returns>
+public AssetsGetAppAssetsResponse AssetsGetAppAssets(string token, List<string> fileNames = default(List<string>), List<string> bucketNames = default(List<string>), List<string> filePaths = default(List<string>), int? limit = default(int?), int? offset = default(int?))
+{
+    Snapser.Client.ApiResponse<AssetsGetAppAssetsResponse> localVarResponse = AssetsGetAppAssetsWithHttpInfo(token, fileNames, bucketNames, filePaths, limit, offset);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AssetsGetAppAssetsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AssetsGetAppAssetsResponse" /> class.
+/// </summary>
+/// <param name="assets">assets.</param>
+/// <param name="count">count.</param>
+public AssetsGetAppAssetsResponse(List<AssetsAsset> assets = default(List<AssetsAsset>), int count = default(int))
+{
+    this.Assets = assets;
+    this.Count = count;
+}
+
+/// Snapser.Model for AssetsAsset
+/// <summary>
+/// Initializes a new instance of the <see cref="AssetsAsset" /> class.
+/// </summary>
+/// <param name="bucketName">Bucket name.</param>
+/// <param name="bucketType">Bucket type.</param>
+/// <param name="createdAt">Creation timestamp.</param>
+/// <param name="fileName">File name.</param>
+/// <param name="filePath">File path.</param>
+/// <param name="fileSizeBytes">File size in bytes.</param>
+/// <param name="fileSizeKb">File size in KB.</param>
+/// <param name="fileUrl">File URL.</param>
+/// <param name="id">Asset ID.</param>
+/// <param name="updatedAt">Update timestamp.</param>
+/// <param name="visibility">Visibility of the asset.</param>
+public AssetsAsset(string bucketName = default(string), string bucketType = default(string), string createdAt = default(string), string fileName = default(string), string filePath = default(string), long fileSizeBytes = default(long), int fileSizeKb = default(int), string fileUrl = default(string), int id = default(int), string updatedAt = default(string), string visibility = default(string))
+{
+    this.BucketName = bucketName;
+    this.BucketType = bucketType;
+    this.CreatedAt = createdAt;
+    this.FileName = fileName;
+    this.FilePath = filePath;
+    this.FileSizeBytes = fileSizeBytes;
+    this.FileSizeKb = fileSizeKb;
+    this.FileUrl = fileUrl;
+    this.Id = id;
+    this.UpdatedAt = updatedAt;
+    this.Visibility = visibility;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAssetsServiceApi::AssetsGetAppAssetsRequest : public Request
+{
+public:
+    virtual ~AssetsGetAppAssetsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* (app auth only) */
+    FString Token;
+    /* File names to retrieve, if empty all files are returned */
+    TOptional<TArray<FString>> FileNames;
+    /* Bucket names to retrieve, if empty all buckets are returned */
+    TOptional<TArray<FString>> BucketNames;
+    /* File paths to retrieve, if empty all files are returned */
+    TOptional<TArray<FString>> FilePaths;
+    /* Limit the number of files to retrieve */
+    TOptional<int32> Limit;
+    /* Offset of the files to retrieve */
+    TOptional<int32> Offset;
+};
+
+// Response
+class SNAPSER_API SnapserAssetsServiceApi::AssetsGetAppAssetsResponse : public Response
+{
+public:
+    virtual ~AssetsGetAppAssetsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAssetsGetAppAssetsResponse Content;
+};
+
+class SNAPSER_API SnapserAssetsGetAppAssetsResponse : public Model
+{
+public:
+    virtual ~SnapserAssetsGetAppAssetsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserAssetsAsset>> Assets;
+    TOptional<int32> Count;
+};
+
+class SNAPSER_API SnapserAssetsAsset : public Model
+{
+public:
+    virtual ~SnapserAssetsAsset() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Bucket name */
+    TOptional<FString> BucketName;
+    /* Bucket type */
+    TOptional<FString> BucketType;
+    /* Creation timestamp */
+    TOptional<FString> CreatedAt;
+    /* File name */
+    TOptional<FString> FileName;
+    /* File path */
+    TOptional<FString> FilePath;
+    /* File size in bytes */
+    TOptional<int64> FileSizeBytes;
+    /* File size in KB */
+    TOptional<int32> FileSizeKb;
+    /* File URL */
+    TOptional<FString> FileUrl;
+    /* Asset ID */
+    TOptional<int32> Id;
+    /* Update timestamp */
+    TOptional<FString> UpdatedAt;
+    /* Visibility of the asset */
+    TOptional<FString> Visibility;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### AssetsGetAssets API
+<CodeGroup title="Get assets for a user" tag="GET" label="AssetsGetAssets">
+```csharp
+/// <summary>
+/// User Assets Get assets for a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">UserID of the user</param>
+/// <param name="token">Logged in user&#39;s session token</param>
+/// <param name="fileNames">File names to retrieve, if empty all files are returned (optional)</param>
+/// <param name="bucketNames">Bucket names to retrieve, if empty all buckets are returned (optional)</param>
+/// <param name="filePaths">File paths to retrieve, if empty all files are returned (optional)</param>
+/// <param name="limit">Limit the number of files to retrieve (optional)</param>
+/// <param name="offset">Offset of the files to retrieve (optional)</param>
+/// <returns>AssetsGetAssetsResponse</returns>
+public AssetsGetAssetsResponse AssetsGetAssets(string userId, string token, List<string> fileNames = default(List<string>), List<string> bucketNames = default(List<string>), List<string> filePaths = default(List<string>), int? limit = default(int?), int? offset = default(int?))
+{
+    Snapser.Client.ApiResponse<AssetsGetAssetsResponse> localVarResponse = AssetsGetAssetsWithHttpInfo(userId, token, fileNames, bucketNames, filePaths, limit, offset);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AssetsGetAssetsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AssetsGetAssetsResponse" /> class.
+/// </summary>
+/// <param name="assets">assets.</param>
+/// <param name="count">count.</param>
+public AssetsGetAssetsResponse(List<AssetsAsset> assets = default(List<AssetsAsset>), int count = default(int))
+{
+    this.Assets = assets;
+    this.Count = count;
+}
+
+/// Snapser.Model for AssetsAsset
+/// <summary>
+/// Initializes a new instance of the <see cref="AssetsAsset" /> class.
+/// </summary>
+/// <param name="bucketName">Bucket name.</param>
+/// <param name="bucketType">Bucket type.</param>
+/// <param name="createdAt">Creation timestamp.</param>
+/// <param name="fileName">File name.</param>
+/// <param name="filePath">File path.</param>
+/// <param name="fileSizeBytes">File size in bytes.</param>
+/// <param name="fileSizeKb">File size in KB.</param>
+/// <param name="fileUrl">File URL.</param>
+/// <param name="id">Asset ID.</param>
+/// <param name="updatedAt">Update timestamp.</param>
+/// <param name="visibility">Visibility of the asset.</param>
+public AssetsAsset(string bucketName = default(string), string bucketType = default(string), string createdAt = default(string), string fileName = default(string), string filePath = default(string), long fileSizeBytes = default(long), int fileSizeKb = default(int), string fileUrl = default(string), int id = default(int), string updatedAt = default(string), string visibility = default(string))
+{
+    this.BucketName = bucketName;
+    this.BucketType = bucketType;
+    this.CreatedAt = createdAt;
+    this.FileName = fileName;
+    this.FilePath = filePath;
+    this.FileSizeBytes = fileSizeBytes;
+    this.FileSizeKb = fileSizeKb;
+    this.FileUrl = fileUrl;
+    this.Id = id;
+    this.UpdatedAt = updatedAt;
+    this.Visibility = visibility;
+}
+```
+```cpp
+// Request
+/* Asset APIs
+ *
+ * Get assets for a user
+ */
+class SNAPSER_API SnapserAssetsServiceApi::AssetsGetAssetsRequest : public Request
+{
+public:
+    virtual ~AssetsGetAssetsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* UserID of the user */
+    FString UserId;
+    /* Logged in user's session token */
+    FString Token;
+    /* File names to retrieve, if empty all files are returned */
+    TOptional<TArray<FString>> FileNames;
+    /* Bucket names to retrieve, if empty all buckets are returned */
+    TOptional<TArray<FString>> BucketNames;
+    /* File paths to retrieve, if empty all files are returned */
+    TOptional<TArray<FString>> FilePaths;
+    /* Limit the number of files to retrieve */
+    TOptional<int32> Limit;
+    /* Offset of the files to retrieve */
+    TOptional<int32> Offset;
+};
+
+// Response
+class SNAPSER_API SnapserAssetsServiceApi::AssetsGetAssetsResponse : public Response
+{
+public:
+    virtual ~AssetsGetAssetsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAssetsGetAssetsResponse Content;
+};
+
+class SNAPSER_API SnapserAssetsGetAssetsResponse : public Model
+{
+public:
+    virtual ~SnapserAssetsGetAssetsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserAssetsAsset>> Assets;
+    TOptional<int32> Count;
+};
+
+class SNAPSER_API SnapserAssetsAsset : public Model
+{
+public:
+    virtual ~SnapserAssetsAsset() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Bucket name */
+    TOptional<FString> BucketName;
+    /* Bucket type */
+    TOptional<FString> BucketType;
+    /* Creation timestamp */
+    TOptional<FString> CreatedAt;
+    /* File name */
+    TOptional<FString> FileName;
+    /* File path */
+    TOptional<FString> FilePath;
+    /* File size in bytes */
+    TOptional<int64> FileSizeBytes;
+    /* File size in KB */
+    TOptional<int32> FileSizeKb;
+    /* File URL */
+    TOptional<FString> FileUrl;
+    /* Asset ID */
+    TOptional<int32> Id;
+    /* Update timestamp */
+    TOptional<FString> UpdatedAt;
+    /* Visibility of the asset */
+    TOptional<FString> Visibility;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### AssetsUploadAppAsset API
+<CodeGroup title="Upload asset for a user" tag="POST" label="AssetsUploadAppAsset">
+```csharp
+/// <summary>
+/// App Asset Upload app asset
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">(app auth only)</param>
+/// <param name="file">The file to be uploaded</param>
+/// <param name="bucketName">The bucket name to save the file (optional)</param>
+/// <param name="filePath">The path to save the file (optional)</param>
+/// <param name="filenameOverride">The name of the file (optional: to override original name) (optional)</param>
+/// <param name="replace">Replace the existing asset with the same name; defaults to false. (optional)</param>
+/// <returns>AssetsUploadAssetResponse</returns>
+public AssetsUploadAssetResponse AssetsUploadAppAsset(string token, FileParameter file, string bucketName = default(string), string filePath = default(string), string filenameOverride = default(string), bool? replace = default(bool?))
+{
+    Snapser.Client.ApiResponse<AssetsUploadAssetResponse> localVarResponse = AssetsUploadAppAssetWithHttpInfo(token, file, bucketName, filePath, filenameOverride, replace);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AssetsUploadAssetResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AssetsUploadAssetResponse" /> class.
+/// </summary>
+/// <param name="asset">asset.</param>
+public AssetsUploadAssetResponse(AssetsAsset asset = default(AssetsAsset))
+{
+    this.Asset = asset;
+}
+
+/// Snapser.Model for AssetsAsset
+/// <summary>
+/// Initializes a new instance of the <see cref="AssetsAsset" /> class.
+/// </summary>
+/// <param name="bucketName">Bucket name.</param>
+/// <param name="bucketType">Bucket type.</param>
+/// <param name="createdAt">Creation timestamp.</param>
+/// <param name="fileName">File name.</param>
+/// <param name="filePath">File path.</param>
+/// <param name="fileSizeBytes">File size in bytes.</param>
+/// <param name="fileSizeKb">File size in KB.</param>
+/// <param name="fileUrl">File URL.</param>
+/// <param name="id">Asset ID.</param>
+/// <param name="updatedAt">Update timestamp.</param>
+/// <param name="visibility">Visibility of the asset.</param>
+public AssetsAsset(string bucketName = default(string), string bucketType = default(string), string createdAt = default(string), string fileName = default(string), string filePath = default(string), long fileSizeBytes = default(long), int fileSizeKb = default(int), string fileUrl = default(string), int id = default(int), string updatedAt = default(string), string visibility = default(string))
+{
+    this.BucketName = bucketName;
+    this.BucketType = bucketType;
+    this.CreatedAt = createdAt;
+    this.FileName = fileName;
+    this.FilePath = filePath;
+    this.FileSizeBytes = fileSizeBytes;
+    this.FileSizeKb = fileSizeKb;
+    this.FileUrl = fileUrl;
+    this.Id = id;
+    this.UpdatedAt = updatedAt;
+    this.Visibility = visibility;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAssetsServiceApi::AssetsUploadAppAssetRequest : public Request
+{
+public:
+    virtual ~AssetsUploadAppAssetRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* (app auth only) */
+    FString Token;
+    /* The file to be uploaded */
+    HttpFileInput File;
+    /* The bucket name to save the file */
+    TOptional<FString> BucketName;
+    /* The path to save the file */
+    TOptional<FString> FilePath;
+    /* The name of the file (optional: to override original name) */
+    TOptional<FString> FilenameOverride;
+    /* Replace the existing asset with the same name; defaults to false. */
+    TOptional<bool> Replace;
+};
+
+// Response
+class SNAPSER_API SnapserAssetsServiceApi::AssetsUploadAppAssetResponse : public Response
+{
+public:
+    virtual ~AssetsUploadAppAssetResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAssetsUploadAssetResponse Content;
+};
+
+class SNAPSER_API SnapserAssetsUploadAssetResponse : public Model
+{
+public:
+    virtual ~SnapserAssetsUploadAssetResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAssetsAsset> Asset;
+};
+
+class SNAPSER_API SnapserAssetsAsset : public Model
+{
+public:
+    virtual ~SnapserAssetsAsset() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Bucket name */
+    TOptional<FString> BucketName;
+    /* Bucket type */
+    TOptional<FString> BucketType;
+    /* Creation timestamp */
+    TOptional<FString> CreatedAt;
+    /* File name */
+    TOptional<FString> FileName;
+    /* File path */
+    TOptional<FString> FilePath;
+    /* File size in bytes */
+    TOptional<int64> FileSizeBytes;
+    /* File size in KB */
+    TOptional<int32> FileSizeKb;
+    /* File URL */
+    TOptional<FString> FileUrl;
+    /* Asset ID */
+    TOptional<int32> Id;
+    /* Update timestamp */
+    TOptional<FString> UpdatedAt;
+    /* Visibility of the asset */
+    TOptional<FString> Visibility;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### AssetsUploadAsset API
+<CodeGroup title="Upload asset for a user" tag="POST" label="AssetsUploadAsset">
+```csharp
+/// <summary>
+/// User Asset Upload asset for a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">UserID of the user</param>
+/// <param name="token">User ID of the user</param>
+/// <param name="file">The file to be uploaded</param>
+/// <param name="obfuscateFilename">Obfuscate the filename; defaults to true.</param>
+/// <param name="visibility">Asset visibility: public for all users, private for the uploader.</param>
+/// <param name="bucketName">The bucket name to save the file (optional)</param>
+/// <param name="filePath">The path to save the file (optional)</param>
+/// <param name="filenameOverride">The name of the file (optional: to override original name) (optional)</param>
+/// <param name="replace">Replace the existing asset with the same name; defaults to false. (optional)</param>
+/// <returns>AssetsUploadAssetResponse</returns>
+public AssetsUploadAssetResponse AssetsUploadAsset(string userId, string token, FileParameter file, bool obfuscateFilename, string visibility, string bucketName = default(string), string filePath = default(string), string filenameOverride = default(string), bool? replace = default(bool?))
+{
+    Snapser.Client.ApiResponse<AssetsUploadAssetResponse> localVarResponse = AssetsUploadAssetWithHttpInfo(userId, token, file, obfuscateFilename, visibility, bucketName, filePath, filenameOverride, replace);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AssetsUploadAssetResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AssetsUploadAssetResponse" /> class.
+/// </summary>
+/// <param name="asset">asset.</param>
+public AssetsUploadAssetResponse(AssetsAsset asset = default(AssetsAsset))
+{
+    this.Asset = asset;
+}
+
+/// Snapser.Model for AssetsAsset
+/// <summary>
+/// Initializes a new instance of the <see cref="AssetsAsset" /> class.
+/// </summary>
+/// <param name="bucketName">Bucket name.</param>
+/// <param name="bucketType">Bucket type.</param>
+/// <param name="createdAt">Creation timestamp.</param>
+/// <param name="fileName">File name.</param>
+/// <param name="filePath">File path.</param>
+/// <param name="fileSizeBytes">File size in bytes.</param>
+/// <param name="fileSizeKb">File size in KB.</param>
+/// <param name="fileUrl">File URL.</param>
+/// <param name="id">Asset ID.</param>
+/// <param name="updatedAt">Update timestamp.</param>
+/// <param name="visibility">Visibility of the asset.</param>
+public AssetsAsset(string bucketName = default(string), string bucketType = default(string), string createdAt = default(string), string fileName = default(string), string filePath = default(string), long fileSizeBytes = default(long), int fileSizeKb = default(int), string fileUrl = default(string), int id = default(int), string updatedAt = default(string), string visibility = default(string))
+{
+    this.BucketName = bucketName;
+    this.BucketType = bucketType;
+    this.CreatedAt = createdAt;
+    this.FileName = fileName;
+    this.FilePath = filePath;
+    this.FileSizeBytes = fileSizeBytes;
+    this.FileSizeKb = fileSizeKb;
+    this.FileUrl = fileUrl;
+    this.Id = id;
+    this.UpdatedAt = updatedAt;
+    this.Visibility = visibility;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAssetsServiceApi::AssetsUploadAssetRequest : public Request
+{
+public:
+    virtual ~AssetsUploadAssetRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* UserID of the user */
+    FString UserId;
+    /* User ID of the user */
+    FString Token;
+    /* The file to be uploaded */
+    HttpFileInput File;
+    /* Obfuscate the filename; defaults to true. */
+    bool ObfuscateFilename = false;
+    enum class VisibilityEnum
+    {
+        _Public,
+        _Private,
+    };
+
+    static FString EnumToString(const VisibilityEnum& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, VisibilityEnum& EnumValue);
+    /* Asset visibility: public for all users, private for the uploader. */
+    VisibilityEnum Visibility;
+    /* The bucket name to save the file */
+    TOptional<FString> BucketName;
+    /* The path to save the file */
+    TOptional<FString> FilePath;
+    /* The name of the file (optional: to override original name) */
+    TOptional<FString> FilenameOverride;
+    /* Replace the existing asset with the same name; defaults to false. */
+    TOptional<bool> Replace;
+};
+
+// Response
+class SNAPSER_API SnapserAssetsServiceApi::AssetsUploadAssetResponse : public Response
+{
+public:
+    virtual ~AssetsUploadAssetResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAssetsUploadAssetResponse Content;
+};
+
+class SNAPSER_API SnapserAssetsUploadAssetResponse : public Model
+{
+public:
+    virtual ~SnapserAssetsUploadAssetResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAssetsAsset> Asset;
+};
+
+class SNAPSER_API SnapserAssetsAsset : public Model
+{
+public:
+    virtual ~SnapserAssetsAsset() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Bucket name */
+    TOptional<FString> BucketName;
+    /* Bucket type */
+    TOptional<FString> BucketType;
+    /* Creation timestamp */
+    TOptional<FString> CreatedAt;
+    /* File name */
+    TOptional<FString> FileName;
+    /* File path */
+    TOptional<FString> FilePath;
+    /* File size in bytes */
+    TOptional<int64> FileSizeBytes;
+    /* File size in KB */
+    TOptional<int32> FileSizeKb;
+    /* File URL */
+    TOptional<FString> FileUrl;
+    /* Asset ID */
+    TOptional<int32> Id;
+    /* Update timestamp */
+    TOptional<FString> UpdatedAt;
+    /* Visibility of the asset */
+    TOptional<FString> Visibility;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+### Error Codes
+
+This Snap only returns [generic errors](../generic-errors)
+
+## Additional Details
+
+### Data Stores
+
+POSTGRES
+
+### Service Dependencies
+
+The Assets service does not depend on any other Snap.
+
+### Recommended Services
+
+The Assets service works best when paired with the Auth service.
+
+### Upcoming enhancements
+
+None planned at the moment.

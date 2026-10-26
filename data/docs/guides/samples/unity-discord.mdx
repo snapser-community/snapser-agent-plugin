@@ -1,0 +1,467 @@
+
+export const description =
+  'This beginner-friendly guide assists users new to Snapser in constructing their initial customized Discord Activity that is powered by Unity.'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Discord Activity using Unity
+Activities are multiplayer games and social experiences that can be launched in Discord. Activities can integrate with Discord features like user identity, voice and chat, profile data like Rich Presence, and native monetization.
+
+Under the hood, Activities are single page web apps hosted in an iframe and use the [Embedded App SDK](https://discord.com/developers/docs/activities/overview#embedded-app-sdk) to communicate with Discord clients.
+
+## Introduction
+Activities can be built as simple web apps or as complex games using game engines like Unity. This guide will show you how to build a simple Activity using Unity and the Embedded App SDK that is wrapped by [Dissonity](https://github.com/snapser-community/Dissonity). The Unity game will have the Snapser SDK integrated into it, allowing you to use Snapser features like authentication, inventory, storage and more. At the end of this tutorial, you will have a working activity that runs locally on your computer and can be launched in Discord.
+
+## Step 0: Pre-requisites
+Before you begin, ensure you have access to the Snapser CLI tool and a basic Snapend with the Authentication Snap and Anonymous connector enabled. The following tutorials will assist you:
+
+
+<div className="parent">
+  <div className="conceptBox">
+    # Create a Discord App
+
+    Create a Discord app and make sure you have the client ID and client Secret of your app with you. **Note**: You just have to go through **Creating an App** step from the Discord Tutorial.
+
+    <div>
+      <DocsButton href={'https://discord.com/developers/docs/activities/building-an-activity#step-2-creating-an-app'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Creating a Discord App</DocsButton>
+    </div>
+  </div>
+  <div className="tutorialBox">
+    # Create a Snapend
+
+    Check out the tutorial to create a Snapend with the Authentication snap with the Anonymous Connector enabled.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/create-snapend'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div>
+</div>
+<div className="parent">
+  <div className="servicesBox">
+    # Install Unity
+
+    Make sure you have Unity installed on your computer. You can download the latest version of Unity from the [Unity website](https://unity.com/products/unity-personal).
+
+    <Warning>
+      This tutorial has been tested with Unity 6. If you are using a different version of Unity, you might have to make some changes to the code.
+    </Warning>
+
+
+    <div>
+      <DocsButton href={'https://unity.com/products/unity-personal'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Download Unity</DocsButton>
+    </div>
+  </div>
+
+  <div className="resourcesBox">
+    # Understand Dissonity
+
+    Dissonity is a Unity SDK that allows you to develop, test and release Discord activities. It simplifies communication with Discord and offers a testing environment within Unity, allowing you to focus on creating your app.
+
+    <div>
+      <DocsButton href={'https://dissonity.dev'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Dissonity Docs</DocsButton>
+    </div>
+  </div>
+</div>
+
+<Checkpoint step={0}>
+  You are now ready to begin the tutorial.
+</Checkpoint>
+
+## Step 1: Check out the example code
+Check out the example code from the Snapser community repository.
+
+```bash
+# For HTTPS based cloning
+git clone https://github.com/snapser-community/snapser-demo-discord-unity.git
+# For SSH based cloning
+git@github.com:snapser-community/snapser-demo-discord-unity.git
+```
+
+- The folder structure is as follows:
+  ```bash
+  ├── snapser-discord-spa/ (👈 The SPA that we will deploy)
+  ├── SnapserUnityWeb/ (👈 Unity game)
+  ├── client_dev/ (👈 You can ignore this folder for this tutorial)
+  ```
+- **snapser-discord-spa/**: This folder contains the scaffolded code for the SPA. It has a simple HTML page that uses Dissonity and loads the Unity WebGL build. Under ths hood, it used the Discord Embedded App SDK and your Snapser backend to authenticate the user and get the user data.
+- **SnapserUnityWeb/**: This folder contains the Unity project that will be used to build the Activity. Its a simple project that has a screen called Example Screen, which has an authenticate button. Clicking on authenticate, the code first uses Dissonity to get the users Discord Id and then uses that to authenticate the user with Snapser.
+
+<Note>
+  You will see another folder called `client_dev`. This can be used to run your SPA locally if you want.
+</Note>
+
+<Checkpoint step={1}>
+  You now have the example code on your computer. You can open the Unity project in Unity Hub.
+</Checkpoint>
+
+## Step 2: Setup Dissonity
+### A. Add the Dissonity package
+1. Go to Window > Package Manager > Add package from git URL
+2. Install the package from https://github.com/snapser-community/Dissonity.git?path=/unity#main
+3. In the hierarchy window, you will see a new folder called **Dissonity**. This folder contains the Dissonity package.
+
+### B. Add the Dissonity Bridge
+1. Right click in the hierarchy. And you will see a new item there called `Dissonity`. Select it and now you will see `Dissonity > Discord Bridge`. Click on `Discord Bridge` which adds the bridge to the main scene.
+![DissonityBridge](/images/docs/tutorials/unity-dissonity-bridge.png)
+
+### C. Add Dissonity dependencies
+1. Go to Window > Package Manager > Add package from git URL
+1. Install package from https://github.com/GlitchEnzo/NuGetForUnity.git?path=/src/NuGetForUnity
+1. You will now see the NuGet button the the top menu
+1. Click on the NuGet package manager
+1. Search for the following packages:
+    - Newtonsoft.Json
+    <Note>
+      Newtonsoft.Json is also a Snapser SDK dependency. So you are good to go if you have it already installed.
+    </Note>
+    - Unity Test Framework (Only if you want to add tests)
+
+<Checkpoint step={2}>
+  You now have the Dissonity package installed in your Unity project. Its time to add the Snapser SDK to your Unity project.
+</Checkpoint>
+
+## Step 3: Setup Snapser SDK
+<Note>
+  This step assumes, you have followed the pre-requisites and have a Snapend with the Authentication snap and Anonymous connector enabled. If you do not have a Snapend, please follow the [Create a Snapend](/docs/guides/tutorials/create-snapend) tutorial.
+</Note>
+
+### A. Download the Snapser SDK
+1. Go to your Snapend home page and look for the **SDKs** section.
+2. Select Unity C# for the Platform and pick **Unity Web Request** for the HTTP type. Click generate.
+4. You will now get a Zip file that you should save it to your machine.
+
+### B. Integrate the Snapser SDK
+1. After opening the Zip file you should see a `src/Snapser` folder.
+1. Copy the `src/Snapser` folder and paste it inside Unity repo roots `Assets/Scripts` folder.
+1. The folder structure should look like this:
+    ```bash
+    ├── Assets/
+    │   ├── Scripts/
+    │   │   ├── Snapser/ (👈 This folder is copied from the zip src/Snapser folder)
+    │   │   │   ├── Api/
+    │   │   │   ├── Client/
+    │   │   │   ├── Model/
+    ```
+
+### C. Check out the Example code
+1. Go to the `SnapserUnityWeb/Assets/Scripts/Screens/` folder and open the `ExampleScreen.cs` file.
+2. You will see a class called `ExampleScreen`. This is where the action happens.
+3. There are three main things you need to look at:
+    - The `Awake` method which is used to override the **basePath** in the Snapser SDK.
+    - The `ConnectToSnapserSocket` method where we have to also override the Snapser WebSocket URL.
+    - The `OnAuthenticateClicked` method which is used to authenticate the user with Discord and Snapser.
+3. The `Authenticate` method uses the Snapser Dissonity SDK to get the users Discord Id and then uses that to authenticate the user with Snapser's Discord Login API. The code looks like this:
+```csharp
+using System;
+using TMPro;
+using UnityEngine;
+using static Dissonity.Api;
+using Snapser.Api;
+using Snapser.Client;
+using Snapser.Model;
+using NativeWebSocket;
+
+public class ExampleScreen : BaseScreen
+{
+    public TextMeshProUGUI DiscordText;
+
+    public TextMeshProUGUI SnapserText;
+
+    // 👋 Replace with your Discord app ID
+    private const string discordId = "mydiscordid";
+    private Configuration _snapserConfig;
+
+    private WebSocket websocket;
+
+    private void Awake()
+    {
+        Configuration config = new Configuration();
+#if DISCORD_BUILD
+#if UNITY_EDITOR
+        // Assuming you might want to log or do something specific when in Editor for Discord build
+        Debug.Log("Using the Discord build in Editor");
+#else
+        // 👋 IMPORTANT: You need to override the base Path of the Snapser SDK
+        //   this is how calls from your code, will get routed via the Discord proxy
+        //   and making its way to the Snapser backend
+        config.BasePath = string.Format("https://{0}.discordsays.com/.proxy/", discordId);
+        Debug.Log("Using the Discord build in Production");
+        Debug.Log("Snapser URL via Discord is: " + config.BasePath);
+#endif
+#else
+        Debug.Log("Not using the Discord build");
+#endif
+        _snapserConfig = config;
+    }
+
+    private void Update()
+    {
+#if !UNITY_WEBGL || UNITY_EDITOR
+        websocket?.DispatchMessageQueue();
+#endif
+    }
+
+    private async void OnApplicationQuit()
+    {
+        if (websocket != null)
+            await websocket.Close();
+    }
+
+    private async void ConnectToSnapserSocket(string sessionToken = "")
+    {
+        if (websocket != null)
+        {
+            Debug.LogWarning("WebSocket already connected. Closing the existing connection.");
+            await websocket.Close();
+        }
+
+        // 👋 IMPORTANT: You need to override the base Path of the Websocket URL as well
+        string snapserSocketUrl = $"wss://{discordId}.discordsays.com/.proxy/v1/hermes/ws?token={sessionToken}";
+        websocket = new WebSocket(snapserSocketUrl);
+
+        websocket.OnOpen += () =>
+        {
+            Debug.Log("Connection open!");
+            SnapserText.text += "\nWebSocket connected!";
+        };
+
+        websocket.OnError += (e) =>
+        {
+            Debug.LogError("WebSocket Error: " + e);
+            SnapserText.text += $"\nWebSocket error: {e}";
+        };
+
+        websocket.OnClose += (e) =>
+        {
+            Debug.LogWarning("WebSocket closed with code: " + e);
+            SnapserText.text += $"\nWebSocket closed: {e}";
+        };
+
+        websocket.OnMessage += (bytes) =>
+        {
+            string message = System.Text.Encoding.UTF8.GetString(bytes);
+            Debug.Log("WebSocket Message: " + message);
+            SnapserText.text += $"\nWS: {message}";
+        };
+
+        await websocket.Connect();
+    }
+
+    public override void Show()
+    {
+        base.Show();
+    }
+
+    public void OnBackClicked()
+    {
+        UIManager.Instance.ShowScreen(UIManager.Instance.MainMenuScreen);
+    }
+
+    public async void OnAuthenticateClicked()
+    {
+        if (SnapserText == null || DiscordText == null)
+        {
+            Debug.LogError("SnapserText or DiscordText is not assigned in the inspector.");
+            return;
+        }
+        SnapserText.text = "";
+        if (DiscordText != null)
+        {
+            DiscordText.text = "Authenticating with Discord...";
+        }
+
+        // Get the Discord User Id and the Access token from Snapser Dissonity
+        string userId = await GetUserId();
+        string userAccessToken = await GetAccessToken();
+        Debug.Log($"[Unity 6] Discord id is {userId}");
+        Debug.Log($"[Unity 6] Discord access token is {userAccessToken}");
+        // Create a short version of the userId and userAccessToken
+        string shortUserId = userId.Length >= 3 ? userId[..3] : userId;
+        string shortUserAccessToken = userAccessToken.Length >= 3 ? userAccessToken[..3] : userAccessToken;
+        // Set the text
+        DiscordText.text = $"Id: {shortUserId}... Token: {shortUserAccessToken}...";
+
+#if DISCORD_BUILD
+#if UNITY_EDITOR
+        Debug.Log("Using the Discord build in Editor. OnAuthenticateClicked() method.");
+#else
+        // Initialize the Snapser API client for authenticating with Discord
+        SnapserText.text = "Authenticating with Snapser...";
+        var apiInstance = new AuthServiceApi(_snapserConfig);
+        var discordLoginRequest = new AuthDiscordLoginRequest(accessToken: userAccessToken, code: "", createUser: true);
+        try
+        {
+            AuthDiscordLoginResponse result = await apiInstance.DiscordLoginAsync(discordLoginRequest);
+            // You now have a Snapser Identity that is tied to Discord
+            // You can now use User.Id and User.SessionToken to hit any other APIs
+            Debug.Log($"[Unity 6] Snapser id is {result.User.Id}");
+            Debug.Log($"[Unity 6] Snapser session token is {result.User.SessionToken}");
+            SnapserText.text = result.User.Id;
+            // Connect to the Snapser WebSocket
+            ConnectToSnapserSocket(result.User.SessionToken);
+            // You can now use the WebSocket to send and receive messages
+            Debug.Log("Done!");
+        }
+        catch (ApiException e)
+        {
+            Debug.LogError("Exception when calling AuthServiceApi.DiscordLogin: " + e.Message);
+            Debug.LogError("Status Code: " + e.ErrorCode);
+            Debug.LogError(e.StackTrace);
+            SnapserText.text = "Unable to login";
+        }
+#endif
+#else
+        Debug.Log("Not using the Discord build. OnAuthenticateClicked() method.");
+#endif
+    }
+}
+```
+<Checkpoint step={3}>
+  Your Unity project is now capable of communicating with the Discord embedded SDK and your Snapend. Now, lets proceed to build the Unity project for WebGL.
+</Checkpoint>
+
+## Step 4: Unity WebGl Build Settings
+You have to make sure that your Unity project is set up to build for WebGL. To do this, follow these steps:
+
+<Note>
+  For your convenience, the starter project already had these three things done. But we recommend you to go through the steps to understand what is happening.
+</Note>
+
+### A. Set the build target
+1. Go to File > Build Settings
+2. Select WebGL as the platform
+![UnityWebGlBuild](/images/docs/tutorials/unity-webgl-build.png)
+
+### B. Update the Project Settings
+1. Under the Build Settings window, click the **Player Settings** button which opens the Player Settings window.
+2. In the Player Settings window, select **Player** from the navigation bar.
+3. You now, need to update the following settings:
+    - Under the **Resolution and Presentation** section, select the **Minimal** option under the **WebGL Template** dropdown.
+    ![UnityWebGlMinimal](/images/docs/tutorials/unity-webgl-settings-template.png)
+    - Under the **Other Settings** section, scroll down to the section called **Script Compilation** and add a new symbol named **DISCORD_BUILD**.
+    ![UnityWebGlSymbol](/images/docs/tutorials/unity-webgl-settings-symbol.png)
+
+### C. Code Stripping
+1. We want to avoid WebGL builds from aggressively trying to code strip. It has been observed that some WebGL builds end up stripping some methods from Newtonsoft. Hence go ahead and add a file named `link.xml` to the `Assets/` folder.
+```xml
+<linker>
+    <assembly fullname="Newtonsoft.Json">
+        <type fullname="Newtonsoft.Json.*" preserve="all"/>
+    </assembly>
+</linker>
+```
+
+<Checkpoint step={3}>
+  You are now ready to build your Unity project for WebGL. You can now start building your Unity project for WebGL.
+</Checkpoint>
+
+## Step 5: Build the Unity project
+1. Go to File > Build Settings
+2. Select WebGL as the platform
+3. Click the **Build** button and select a folder to save the build.
+4. After a few minutes, the build will be complete. You should see a folder with the following structure:
+```bash
+├── index.html
+├── Build/
+│   ├── snapser-discord-activity.data.br
+│   ├── snapser-discord-activity.framework.js.br
+│   ├── snapser-discord-activity.loader.js
+│   ├── snapser-discord-activity.wasm.br
+```
+
+
+<Checkpoint step={5}>
+  You now have a WebGL build that you can copy into your Node server. You can now start building your Node server.
+</Checkpoint>
+
+## Step 6: Single Page Application (SPA)
+### A. Move the Unity build to the SPA Code
+1. Copy the Unity build folder from the previous step and paste it inside the `snapser-discord-spa/nested` folder.
+2. The folder structure should look like this:
+```bash
+│── nested/
+│   │── index.html (👈 This file is coming from the Unity build output)
+│   │── Build/     (👈 This folder and its contents are coming from the Unity build output)
+│   │   │── snapser-discord-activity.data.br
+│   │   │── snapser-discord-activity.framework.js.br
+│   │   │── snapser-discord-activity.loader.js
+│   │   │── snapser-discord-activity.wasm.br
+│── index.html
+│── index.js
+│── netlify.toml
+```
+### B. Update the index.js file
+1. Open the `index.js` file in the `snapser-discord-spa/` folder and search for `setupSdk`
+2. You will see a line that looks like this. Replace the `$discordClientId` with the Client Id of your Discord app.
+```javascript
+window.addEventListener("DOMContentLoaded", () => {
+  setupSdk({
+    clientId: "$discordClientId",
+    scope: ["identify"],
+    tokenRoute: "/v1/auth/discord/login",
+    method: "PUT",
+  });
+});
+```
+
+### C. Upload the SPA to a Website hosting service
+1. You can use any website hosting service to host the SPA. For this tutorial, we will use [Netlify](https://www.netlify.com/).
+2. Go to the Netlify website and create an account.
+3. After creating an account, scroll down on their home page where you see a manual deploy option.
+![Netlify](/images/docs/tutorials/netlify-upload.png)
+4. Drag and drop the `snapser-discord-spa` folder into the Netlify website.
+5. After a few seconds, the website will be deployed and you will see a URL like this:
+```bash
+https://snapser-discord-spa.netlify.app/
+```
+
+<Checkpoint step={6}>
+  You now have a working SPA that is hosted on the internet. You can now configure your Discord app to use this URL.
+</Checkpoint>
+
+## Step 7: Enable the Discord Connector in Snapser
+1. Go to your Snapend home page and copy the **Snapend ID** from the top of the page. The Snapend ID should look something like this `t3hhuknq`. You are going to need this in the next step.
+1. Next, click on the **Snaps Configuration** under **Quick Links**.
+1. On the Configuration home page, click on **Authentication** from the tool navigation bar.
+1. Then, select the `Authentication > Connectors` tool and then click on **+ Connectors** and select **Discord** from the list.
+1. You will see a pop up asking for the Client Id and Client Secret of your Discord app.
+1. Enter the values and click on **Save**.
+![DiscordConnector](/images/docs/tutorials/discord-connector-setup.png)
+
+## Step 8: Configure the Discord app
+1. Go to the Discord developer portal and select your app.
+2. Go to the `URL Mappings` tab and add the following URL:
+    - Prefix: `/v1` and Target: `gateway-accel.snapser.com/$snapendId/v1`
+    <Note>
+      You should replace the `$snapendId` with your `Snapend ID`. You can find your Snapend ID in the Snapend home page.
+    </Note>
+    - Prefix: `/Build` and Target: `https://snapser-discord-spa.netlify.app/`
+    <Note>
+      You should replace the `https://snapser-discord-spa.netlify.app/` with the URL of your Netlify website.
+    </Note>
+    - Root Mapping: `/` and Target: `https://snapser-discord-spa.netlify.app/`
+    <Note>
+      You should replace the `https://snapser-discord-spa.netlify.app/` with the URL of your Netlify website.
+    </Note>
+    ![DiscordURLMapping](/images/docs/tutorials/discord-url-mapping.png)
+
+<Checkpoint step={8}>
+  You are now ready to run your Discord activity.
+</Checkpoint>
+
+## Step 9: Run the Discord Activity
+Now, go to the Installation tab and copy the Install link. Pasting this in the browser should take you to the Discord app where you can see your Discord activity.
+![DiscordActivity](/images/docs/tutorials/discord-activity.png)
+
+### Debugging on Discord
+Discord has a few nuances that you need to be aware of.
+1. You need a Discord Canary App to unlock the developer tools for debugging. You can download the Discord Canary app from the [Discord website](https://canary.discord.com).
+2. If you are rapidly developing, Discord canary app caches your code. Go to the following location to clear the cache:
+  - Windows: Open the Run dialog (Win + R), type `%appdata%`, and navigate to the `Discord` folder, then delete the `Cache`, `Code Cache`, and `GPUCache` folders.
+  - Open Finder, click "Go" > "Go to Folder...", type `~/Library/Application Support/discord`, and delete the `Cache`, `Code Cache`, and `GPUCache` folders.
+
+<Checkpoint step={9}>
+  Congratulations! You have successfully created a Discord activity using Unity and Snapser. We cant wait to see what you build with it. If you have any questions or feedback, please reach out to us on Discord or GitHub.
+</Checkpoint>

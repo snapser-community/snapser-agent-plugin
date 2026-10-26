@@ -1,0 +1,79 @@
+# API Key Manager
+This tool allows you to create special API keys, that you can use to make calls from trusted
+server code or your Snapser hosted game server code, to your backend. Additionally, you can nominate
+APIs that can be accessed by the API key, giving you fine grained control over the API key.
+
+You can check out the detailed documentation on API keys by clicking the button below.
+
+<Button variant="primary" href="/docs/snapend/networking/security#server-authentication">
+   Server Auth Docs
+</Button>
+
+To get started:
+1. Click on **API Key Manager** from the side Nav
+2. This will show you the tool UI, where you can create new API keys, and view your existing keys.
+3. To create a new API key, click on the "Api Key" button. You will need to add a few details
+about your key.
+
+## Api Key Environments
+1. <u>Environment</u> - This will always be pre-populated with the current environment of your Snapend.
+   However you can add other environments here, so that your key setup gets copied over. Eg: Say you
+   create a API Key for your Staging Snapend and add 50 APIs it has access to. Adding the Production
+   environment here will copy over the API key setup for you, saving you time.
+
+<Warning>When creating a new API key through multiple environments, the key settings will be applied across all selected environments. However, the active key will only be visible for your current environment. After spinning up clusters in other environments, make sure to rotate the keys to complete the setup.</Warning>
+
+
+## Api Key Details
+1. <u>Name</u> - Give your key any alphanumeric name
+2. <u>Description</u> - Give a description for your key.
+
+## Api Key Active
+You can toggle the status of the key to **Enabled** to start using the key. If you want to stop
+using the key, you can toggle this off and the key will immediately stop working.
+
+## Api Key Expiry
+You can set an expiry duration for the key. This is useful when you want to give a key to a third party
+for a limited time. The key will stop working after the expiry duration. If you want the key to never
+expire, you can disable the expiry slider.
+1. <u>Expiry Duration</u> - This is the number of seconds the key will be valid for. You can use the helper
+   widget to pick the duration unit: seconds, minutes, hours, days.
+
+## Api Key Length
+You can generate two types of keys. A 128 bit key or a 256 bit key.
+1. <u>Key Length</u> - You can pick between the two options.
+
+## Api Key Endpoints
+You can nominate the APIs that the key can access. This gives you fine grained control over the key.
+1. <u>Available Snaps</u> - You have to select the Snap that you want to give access to.
+2. <u>All APIs or Custom APIs</u> - Once you pick the snaps, you can pick between giving access to all
+   APIs or just a few APIs. If you pick Custom APIs, you will see a list of APIs that the Snap has and you
+   can use the API picker to select the APIs you want to give access to.
+   <Note>
+      In the API picker widget, do not forget to click the "Confirm" button to save your selection.
+   </Note>
+
+
+## Key Generation
+Once you have filled in all the details, you can click the "Save" button. This will generate
+the key and show you the key. You will only see the key this one time. Please copy the key
+and store it in a safe place. If you lose the key, you will have to create a new one.
+
+<Note>
+The tool can only generate a new Key for the environment of the Snapend you are currently on. Even if you
+add other environments in the Environment section, you will not be able to generate a key for them. All
+the tool does is copy over the key setup for you so that you do not have to do it manually.
+</Note>
+
+# Key Actions
+Once a key is generated you can take the following actions on the key.
+1. <u>Edit</u> - You can only update the description and the Endpoints the key has access to.
+2. <u>Delete</u> - You can delete the key. Once you delete the key, it will immediately stop working.
+3. <u>Clone</u> - This is useful to quickly copy the setup of one key to another. You can then edit the
+   cloned key to make it unique.
+4. <u>Enable or Disable</u> - You can toggle the key to be enabled or disabled. If you disable the key, it
+   will immediately stop working.
+5. <u>Rotate</u> - This is useful when you suspect the key has been leaked. You can rotate the key and
+   update your server code to start using the new key. The UI will give you an option to pick the
+   number of seconds the old key will be valid for. This is useful when you want to give your server
+   code some time to update to the new key.

@@ -1,0 +1,982 @@
+
+export const description =
+  'This guide will help you set up a Web app with Snapser.'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Mobile App - Social Network
+This guide will help you set up a Mobile app built using expo and Snapser as the backend.
+We will build a simple Social Network app that allows users to sign up, add friends, send them good vibes and manage their profile. We will use the Snapser Trackables energy system to replenish total vibes a user can send in a day. This basic app demonstrates how to use Snapser's Authentication system, Profiles snap for managing user profiles, Social graph snap for managing friends, Inbox to send user messages and Trackables snap for managing the energy system.
+
+<Warning>
+  This tutorial requires 6 snaps, which is one more than the free tier allows. You can buy additional snap or then just follow along without creating the snaps.
+</Warning>
+
+## Prerequisites
+<div className="parent">
+  <div className="servicesBox">
+    # Install Node and NPM
+
+    Make sure you have installed Node and NPM from [npm website](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
+
+    <div>
+      <DocsButton href={'https://docs.npmjs.com/downloading-and-installing-node-js-and-npm'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Download Node & NPM</DocsButton>
+    </div>
+  </div>
+  <div className="servicesBox">
+    # iOS Simulator
+
+    Install Xcode from the App Store. After installing Xcode, open it and go to Preferences > Components and install a simulator of your choice.
+
+    <div>
+      <DocsButton href={'https://apps.apple.com/us/app/xcode/id497799835?mt=12'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Install XCode</DocsButton>
+    </div>
+  </div>
+</div>
+<div className="parent">
+  <div className="servicesBox">
+    # Android Simulator
+
+    Install Android Studio from the [Android Studio website](https://developer.android.com/studio). After installing Android Studio, open it and go to AVD Manager and create a new virtual device.
+
+    <div>
+      <DocsButton href={'https://developer.android.com/studio'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Install Android Studio</DocsButton>
+    </div>
+  </div>
+</div>
+
+<Checkpoint step={0}>
+  You are now ready to begin the tutorial.
+</Checkpoint>
+
+## Step 1: Set up your app
+
+To integrate Snapser features into your app, you need to create an account and add your app to it. This section demonstrates how to do that.
+
+<Note>
+  If you have already created an app in Snapser, you can skip this step and proceed to the next one.
+</Note>
+
+1. **Log in to your Snapser account** at https://snapser.com/login.
+2. Navigate to the **Apps dashboard** and click on the **New App** button located in the upper right corner.
+3. **Enter the name of your app** in the designated field. It's advisable to use a name that closely matches your applications title to avoid confusion among your team members. Click **Add** when done.
+    ![Add new game name](/images/docs/tutorials/create-snapend-add-game.png)
+    <Note>
+    Avoid adding prefixes like "dev", "staging", or "prod". Snapser supports multiple environments for each app, allowing you to create a separate custom backend for each stage of your development.
+    </Note>
+
+<Checkpoint step={1}>
+  Shortly after, your app will appear in the Apps dashboard, ready for you to build your first custom backend.
+</Checkpoint>
+
+
+## Step 2: Create a Snapend
+
+1. In the **Apps dashboard**, click on the app you have added. This action brings up a view that shows the development, staging, and production environments. Since there are currently no Snapends, let's add one.
+![GameClick](/images/docs/tutorials/create-snapend-game.png)
+1. In the Development environment, click on **Create a Snapend**.
+![GameClick](/images/docs/tutorials/create-snapend-game-home.png)
+1. **Enter the name of your Snapend** in the **Name your Snapend** field and click **Continue**.
+    ![Name your Snapend](/images/docs/quick-start/name-your-snapend.png)
+1. On the next page, select the following snaps:
+   1. Authentication
+   2. Inbox
+   3. Profiles
+   4. Social graph
+   5. Statistics (Statistics is added as a dependency for Trackables)
+   6. Trackables
+    ![Cluster](/images/docs/tutorials/social-network-app-create-snapend.png)
+1. Click **Customize** to continue to the next step. In this tutorial, we are not doing any customization and so click the **Review** button to go to the final step.
+1. At the final step you can review your Snapend details. Next, click the **Snap It** button. A pop-up window will appear showing you the state of creating your cluster, which takes a moment or two to complete.
+1. As Snapser finishes setting up the Snapser cluster in Kubernetes (which includes infrastructure, configuration of Snaps, network and security, and generating your Snapend), click the **App** button to wait for your Snapend to be operational.
+1. Once the Snapend is ready, you will see a green dot mark on the Snapend widget. This indicates that your Snapend is ready to use.
+![Snap Dashboard](/images/docs/tutorials/social-app-view.png)
+1. Click on the Snapend widget to go to the Snapend dashboard.
+![Snapend Dashboard](/images/docs/tutorials/social-app-snapend.png)
+
+<Checkpoint step={2}>
+  You now have a backend setup. We can now proceed toward downloading our custom SDK, configuring our snaps for our app and then putting it altogether.
+</Checkpoint>
+
+## Step 3: Configure Snaps
+On your Snapend homepage look for Quick links. Click the **Snaps Configuration** button under **Quick Links** to go to the Snaps configuration home page. Now, lets configure the Snaps one by one.
+
+### A. Authentication Configuration
+<Note>
+    In our Web app, we want the user to start using the app using username and password as a means to authenticate. This is why we are going to add the `Username password` connector. To add the connector, please follow the instructions below.
+</Note>
+
+1. Click on the **Authentication** widget to open the Auth snaps configuration page.
+1. Select the `Authentication > Connectors` tool from the tool navigation and then click on the **Add a connector** button. You will see quite a few connectors in the menu but lets select **Username Password** and press Save.
+![Add Username Password Authentication](/images/docs/tutorials/social-app-auth-one.png)
+1. Click `Any Characters` for the password policy and then set the `Min` to `1` and `Max` to `64`.
+    <Note>
+      In real world applications, you should set a strong password policy. Here we are keeping it simple for demo purposes.
+    </Note>
+1. Click Save.
+1. Then click the back button to go back to the configuration home page.
+
+### B. Inbox Configuration
+<Note>
+    Inbox snap allows you to send messages between users. In our case we want to allow users to send "vibes" to their friends.
+</Note>
+1. Click on the **Inbox** widget to open the Inbox snaps configuration page.
+1. Select the `Inbox > Inbox Settings > User Messages` tool from the tool navigation.
+1. Toggle the `Enabled` button to active, to enable user messages.
+1. Click Save.
+![Inbox](/images/docs/tutorials/social-app-inbox-one.png)
+
+### C. Profiles Configuration
+<Note>
+    Profiles snap allows you to store user profile information. In our case we want to store the users first name, last name and profile pic.
+</Note>
+1. Click on the **Profiles** widget to open the Profiles snaps configuration page.
+1. Select the `Profiles > Attributes` tool from the tool navigation and then click on the **+ Profile Attribute** button. This will open up a form where you can add a profile field.
+1. Lets add a profile attribute to store the users first name, last name and profile picture.
+#### First Name
+   1. `Attribute Name` - `first_name`
+   1. `Category` - `Strictly Searchable`
+   1. `Type` - `text`
+   1. `Regex` - `Any Characters`, `Min` - `1`, `Max` - `100`
+   1. `Presence` - `Required`
+   1.  `Access` - `public`
+   1. Click Save.
+
+#### Last Name
+   1. `Attribute Name` - `last_name`
+   1. `Category` - `Strictly Searchable`
+   1. `Type` - `text`
+   1. `Regex` - `Any Characters`, `Min` - `1`, `Max` - `100`
+   1. `Presence` - `Required`
+   1.  `Access` - `public`
+   1. Click Save.
+
+#### Profile Picture
+   1. `Attribute Name` - `profile_pic`
+   1. `Category` - `Regular`
+   1. `Type` - `text`
+   1. `Regex` - `Any Characters`, `Min` - `1`, `Max` - `500`
+   1. `Presence` - `Required` - `Unchecked`
+   1.  `Access` - `public`
+   1. Click Save.
+    <Note>
+      In a real world application, you would want to store the profile picture in the assets snap. Here we are keeping it simple for demo purposes.
+    </Note>
+![Profile Attributes](/images/docs/tutorials/social-app-profile-one.png)
+
+
+### D. Trackables Configuration
+<Note>
+    Trackables snap allows you to create and manage trackable items. In our case we want to create a trackable item called "vibes" that replenishes every day.  Users can send vibes to their friends and the total number of vibes a user can send is limited by the number of vibes they have.
+</Note>
+1. Click on the **Trackables** widget to open the Trackables snaps configuration page.
+1. Select the `Trackables > Energy` tool from the tool navigation and then click on the **+ Energy** button. This will open up a form where you can add a trackable item.
+1. Lets add a trackable item for sending vibes.
+   1. `Name` - `good_vibes`
+   1. `Access > Scope` - `external`
+   1. `Parameters - Max Energy` - `500`
+   1. `Parameters - Seconds to Regenerate` - `3600`
+   1. `Default` - `5`
+   1. `Overflow - Allow overflow` - `disabled`
+   1. Click Save.
+![Trackable Attributes](/images/docs/tutorials/social-app-trackables-energy-one.png)
+
+<Checkpoint step={3}>
+  We have configured the Authentication, Inbox, Profiles and Trackables snaps. We can now proceed to download the SDK and integrate it into our app.
+</Checkpoint>
+
+
+## Step 4: Download the Snapser SDK
+1. On the Snapend home page scroll down to the SDK download widget called **Game Client SDKs**.
+    - Select **Web - Typescript** for the platform
+    - Select **Fetch** for the HTTP library
+    - Click Generate
+![Web SDK](/images/docs/tutorials/web-game-sdk.png)
+1. In a few minutes you will see a pop up of a Zip file. Download the zip file and extract it.
+1. You will see a folder structure like this:
+```bash
+  ├── sdk-typescript-fetch-web/ (👈 You will copy the contents of this folder)
+    │   ├── api/
+    │   ├── index.ts
+    │   ├── models/
+    │   ├── runtime.ts
+    │       └── Snapser/
+    │       └── link.xml
+    │       └── Snapser.asmdef
+```
+
+<Checkpoint step={4}>
+  You now have a SDK that is going to be integrated into your Web project. Lets move on to the next step.
+</Checkpoint>
+
+## Step 5: Download the Mobile App
+1. Talk to Snapser support to get access to this [repo](https://github.com/snapser-community/snapser-demo-mobile-social-network).
+2. Clone or download this example project.
+
+## Step 6: Install Dependencies
+<Note>
+    The Web project comes with a `package.json` file. We need to install the dependencies using npm. To do that, open a terminal and navigate to the root of the project and run the following command:
+    ```bash
+    cd snapser-demo-mobile-social-network
+    npm install
+    ```
+</Note>
+{/* Reached till here */}
+
+## Step 7: Understand the Code
+1. To understand the usage, you should look at `/src/services/SnapserManager.cs`. This class acts as the link between the app logic and the Snapser sdk.
+1. Here you will see stub methods for the following functionalities:
+   1. User authentication
+   2. Creating public and private todo lists
+   3. Updating the Todo list
+   4. Deleting the Todo list
+```typescript
+// services/SnapserManager.ts
+export type VibeCount = {
+  energy: number
+};
+
+export type VibeMessage = {
+  message_id: string
+  sender_id: string
+  category: 'user'
+  subject: string
+  content: string
+  received_at: string
+  read_status: 'UNREAD' | 'READ'
+}
+
+export type VibeMessages = VibeMessage[]
+
+export type FriendRequest = {
+  id: string
+  type: 'user'
+  timestamp: string
+  association_metadata: object
+}
+
+export type FriendRequests = FriendRequest[]
+
+export type Friend = {
+  id: string
+  type: 'user'
+  timestamp: string
+  association_metadata: object
+  first_name: string
+  last_name: string
+  profile_pic_url: string
+}
+
+export type Friends = {
+  friends: Friend[];
+};
+
+export type Profile = {
+  user_name: string;
+  profile_pic_url: string;
+  last_name: string;
+  first_name: string;
+}
+
+// Mock data for demonstration
+const mockVibes: VibeMessage[] = [
+  {
+    message_id: '1',
+    sender_id: 'user2',
+    category: 'user',
+    subject: 'Good Vibes',
+    content: 'Sending you positive energy! 🌟',
+    received_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+    read_status: 'UNREAD'
+  },
+  {
+    message_id: '2',
+    sender_id: 'user3',
+    category: 'user',
+    subject: 'Good Vibes',
+    content: 'Hope your day is amazing! ✨',
+    received_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
+    read_status: 'READ'
+  }
+];
+
+const mockFriends: Friend[] = [
+  {
+    id: 'user2',
+    type: 'user',
+    timestamp: new Date().toISOString(),
+    association_metadata: {},
+    first_name: 'Sarah',
+    last_name: 'Johnson',
+    profile_pic_url: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=200'
+  },
+  {
+    id: 'user3',
+    type: 'user',
+    timestamp: new Date().toISOString(),
+    association_metadata: {},
+    first_name: 'Mike',
+    last_name: 'Chen',
+    profile_pic_url: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=200'
+  },
+  {
+    id: 'user4',
+    type: 'user',
+    timestamp: new Date().toISOString(),
+    association_metadata: {},
+    first_name: 'Emma',
+    last_name: 'Davis',
+    profile_pic_url: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=200'
+  }
+];
+
+const mockProfile: Profile = {
+  user_name: 'john_doe',
+  profile_pic_url: 'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=200',
+  last_name: 'Doe',
+  first_name: 'John'
+};
+
+let currentVibeCount = 5;
+
+export class SnapserManager {
+  // TODO: wire to real backend auth later
+  async login(username: string, password: string): Promise<{ userId: string }> {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    if (username && password) {
+      return { userId: 'user1' };
+    }
+    throw new Error('Invalid credentials');
+  }
+
+  async signup(username: string, password: string): Promise<{ userId: string }> {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    if (username && password) {
+      return { userId: 'user1' };
+    }
+    throw new Error('Registration failed');
+  }
+
+  async logout(): Promise<boolean> {
+    // TODO implement
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return true;
+  }
+
+  // JSON blob getters (later will fetch from backend)
+  async getVibes(): Promise<VibeMessage[]> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return mockVibes;
+  }
+
+  async sendVibe(targetUserId: string): Promise<boolean> {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    if (currentVibeCount > 0) {
+      currentVibeCount--;
+      return true;
+    }
+    throw new Error('No vibes left for today');
+  }
+
+  async getVibeCount(): Promise<VibeCount> {
+    return { energy: currentVibeCount };
+  }
+
+  async markVibeAsRead(messageId: string): Promise<boolean> {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const vibe = mockVibes.find(v => v.message_id === messageId);
+    if (vibe) {
+      vibe.read_status = 'READ';
+      return true;
+    }
+    return false;
+  }
+
+  async searchUser(searchString: string): Promise<Profile[]> {
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    const searchResults: Profile[] = [
+      {
+        user_name: 'alex_smith',
+        profile_pic_url: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=200',
+        first_name: 'Alex',
+        last_name: 'Smith'
+      },
+      {
+        user_name: 'lisa_wong',
+        profile_pic_url: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=200',
+        first_name: 'Lisa',
+        last_name: 'Wong'
+      }
+    ];
+
+    return searchResults.filter(user =>
+      user.first_name.toLowerCase().includes(searchString.toLowerCase()) ||
+      user.last_name.toLowerCase().includes(searchString.toLowerCase())
+    );
+  }
+
+  async sendFriendRequest(targetUserId: string): Promise<boolean> {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return true;
+  }
+
+  async acceptFriendRequest(requestId: string): Promise<boolean> {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return true;
+  }
+
+  async getFriends(): Promise<Friends> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return { friends: mockFriends };
+  }
+
+  async getProfile(): Promise<Profile> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return mockProfile;
+  }
+
+  async updateProfile(profile: Partial<Profile>): Promise<boolean> {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    Object.assign(mockProfile, profile);
+    return true;
+  }
+}
+```
+
+We will be implementing these methods in the next step.
+
+## Step 8: Update the Code
+- Copy the downloaded SDK contents into the `src/snapser-sdk` folder. If there is an existing folder in the repo, you can delete it and replace it with the new SDK code.
+```bash
+  ├── sdk-typescript-fetch-web/ (👈 You will copy the contents of this folder)
+    │   ├── api/
+    │   ├── index.ts
+    │   ├── models/
+    │   ├── runtime.ts
+    │       └── Snapser/
+    │       └── link.xml
+    │       └── Snapser.asmdef
+```
+
+<Note>
+You will be copying the contents `sdk-typescript-fetch-web` folder into your Web projects `src/snapser-sdk`folder. You will have to create the `snapser-sdk` folder if it does not exist.
+</Note>
+
+- Open **SnapserManager.ts** in the `src/services/` folder and update its contents with the following.
+```typescript
+import { AuthLogoutRequest, AuthServiceApi, AuthUsernamePasswordLoginOperationRequest, AuthUsernamePasswordLoginRequest, AuthUsernamePasswordLoginResponse, InboxGetMessagesRequest, InboxGetMessagesResponse, InboxReadMessagesByIdsRequest, InboxSendInboxUserMessageRequest, InboxSendMessageResponse, InboxServiceApi, InboxUserMessage, ProfilesGetProfileRequest, ProfilesGetProfileResponse, ProfilesSearchProfilesOperationRequest, ProfilesSearchProfilesResponse, ProfilesServiceApi, ProfilesUpsertProfileRequest, SocialGraphAddFriendRequest, SocialGraphAssociationObject, SocialGraphGetFriendRequestsRequest, SocialGraphGetFriendRequestsResponse, SocialGraphGetFriendsRequest, SocialGraphGetFriendsResponse, SocialGraphSendFriendRequestRequest, SocialGraphServiceApi, TrackablesConsumeUserEnergyRequest, TrackablesGetEnergyRequest, TrackablesServiceApi, UpsertProfileRequest } from "@/snapser-sdk";
+
+// services/SnapserManager.ts
+export type VibeCount = number
+
+export type VibeMessage = Partial<InboxUserMessage>
+
+export type VibeMessages = VibeMessage[]
+
+export type FriendRequest = Partial<SocialGraphAssociationObject>
+
+export type FriendRequests = FriendRequest[]
+
+export type Friend = SocialGraphAssociationObject
+
+export type Friends = {
+  friends: Friend[];
+};
+
+export type Profile = {
+  id: string;
+  profile_pic: string;
+  last_name: string;
+  first_name: string;
+}
+
+export class SnapserManager {
+  private static authApi = new AuthServiceApi();
+  private static inboxApi = new InboxServiceApi();
+  private static profilesApi = new ProfilesServiceApi();
+  private static socialGraphApi = new SocialGraphServiceApi();
+  private static trackablesApi = new TrackablesServiceApi();
+
+  private static currentUserId: string | null = null;
+  private static sessionToken: string | null = null;
+  private static currentUserName: string | null = null;
+
+  // TODO: wire to real backend auth later
+  static async login(username: string, password: string): Promise<{ userId: string } | null> {
+    try {
+      const loginBody: AuthUsernamePasswordLoginRequest = {
+        username: username,
+        password: password,
+        createUser: false,
+      };
+
+      const request: AuthUsernamePasswordLoginOperationRequest = {
+        body: loginBody
+      };
+
+      const response: AuthUsernamePasswordLoginResponse = await this.authApi.authUsernamePasswordLogin(request);
+
+      if (response.user) {
+        //Save to local storage or memory
+        localStorage.setItem('sessionToken', response.user.sessionToken || '');
+        localStorage.setItem('currentUserId', response.user.id || '');
+        localStorage.setItem('currentUserName', username);
+        this.sessionToken = response.user.sessionToken || null;
+        this.currentUserId = response.user.id || null;
+        this.currentUserName = username;
+        return {
+          userId: response.user.id || '',
+        };
+      }
+      throw new Error("Invalid credentials");
+    } catch (error) {
+      console.error('Login failed:', error);
+      return null;
+    }
+  }
+
+  static async signup(username: string, password: string): Promise<{ userId: string } | null> {
+    try {
+      const loginBody: AuthUsernamePasswordLoginRequest = {
+        username: username,
+        password: password,
+        createUser: true,
+      };
+
+      const request: AuthUsernamePasswordLoginOperationRequest = {
+        body: loginBody
+      };
+
+      const response: AuthUsernamePasswordLoginResponse = await this.authApi.authUsernamePasswordLogin(request);
+
+      if (response.user) {
+        localStorage.setItem('sessionToken', response.user.sessionToken || '');
+        localStorage.setItem('currentUserId', response.user.id || '');
+        localStorage.setItem('currentUserName', username);
+        this.currentUserId = response.user.id || null;
+        this.sessionToken = response.user.sessionToken || null;
+        this.currentUserName = username;
+        return {
+          userId: response.user.id || '',
+        };
+      }
+      throw new Error("Invalid credentials");
+    } catch (error) {
+      console.error('Login failed:', error);
+      return null;
+    }
+  }
+
+  static getCurrentUserId(): string | null {
+    if (!this.currentUserId) {
+      this.currentUserId = localStorage.getItem('currentUserId');
+    }
+    if (!this.sessionToken) {
+      this.sessionToken = localStorage.getItem('sessionToken');
+    }
+    if (!this.currentUserName) {
+      this.currentUserName = localStorage.getItem('currentUserName');
+    }
+    return this.currentUserId;
+  }
+
+  static getCurrentUser(): { id: string | null; username: string | null } {
+    if (!this.currentUserId) {
+      this.currentUserId = localStorage.getItem('currentUserId');
+    }
+    if (!this.sessionToken) {
+      this.sessionToken = localStorage.getItem('sessionToken');
+    }
+    if (!this.currentUserName) {
+      this.currentUserName = localStorage.getItem('currentUserName');
+    }
+    return {
+      id: this.currentUserId,
+      username: this.currentUserName,
+    };
+  }
+
+  static async logout(): Promise<boolean> {
+    const authLogoutRequestData: AuthLogoutRequest = {
+      token: this.sessionToken || '',
+      token2: this.sessionToken || '',
+    };
+    await this.authApi.authLogout(authLogoutRequestData);
+    this.sessionToken = null;
+    this.currentUserId = null;
+    this.currentUserName = null;
+    localStorage.removeItem('sessionToken');
+    localStorage.removeItem('currentUserId');
+    localStorage.removeItem('currentUserName');
+    return true
+  }
+
+  // JSON blob getters (later will fetch from backend)
+  static async getVibes(markReadOnRetrieval: boolean = false): Promise<VibeMessage[]> {
+    if(!this.sessionToken || !this.currentUserId) {
+      return [];
+    }
+    try {
+      const inboxGetMessageRequest: InboxGetMessagesRequest = {
+        userId: this.currentUserId || '',
+        token: this.sessionToken || '',
+      }
+      const vibeMessagesResponse: InboxGetMessagesResponse = await this.inboxApi.inboxGetMessages(inboxGetMessageRequest)
+        if (vibeMessagesResponse.messages) {
+          if (markReadOnRetrieval) {
+            const unreadMessageIds = vibeMessagesResponse.messages.filter(msg => msg.readStatus === 'UNREAD').map(msg => msg.messageId || '').filter(id => id !== '');
+            if (unreadMessageIds.length > 0) {
+              await this.markVibeAsRead(unreadMessageIds);
+            }
+          }
+          return vibeMessagesResponse.messages;
+        }
+      // Mock delay to simulate network request
+      return [];
+    } catch (error) {
+      console.error('Error fetching vibes:', error);
+      return [];
+    }
+  }
+
+  static async markVibeAsRead(messageIds: string[]): Promise<boolean> {
+    if(!this.sessionToken || !this.currentUserId) {
+      return false;
+    }
+    try {
+      const readMessagesRequest: InboxReadMessagesByIdsRequest = {
+        userId: this.currentUserId || '',
+        token: this.sessionToken || '',
+        body: {
+          messageIds: messageIds,
+          readStatus: 'READ',
+        }
+      }
+      this.inboxApi.inboxReadMessagesByIds(readMessagesRequest)
+      return true;
+    } catch (error) {
+      console.error('Error marking vibes as read:', error);
+      return false;
+    }
+  }
+
+  static async sendVibe(targetUserId: string): Promise<boolean> {
+    if(!this.sessionToken || !this.currentUserId) {
+      return false;
+    }
+    try {
+      //TODO: Check for current vibe count from backend
+      const sendVibeRequest: InboxSendInboxUserMessageRequest = {
+        token: this.sessionToken || '',
+        body: {
+          category: 'user',
+          content: 'Sending you positive vibes! ✨',
+          receiverIds: [targetUserId],
+          senderId: this.currentUserId || '',
+          subject: 'Good Vibes',
+        }
+      }
+      const sendUserMessageResponse: InboxSendMessageResponse = await this.inboxApi.inboxSendInboxUserMessage(sendVibeRequest)
+      if(sendUserMessageResponse && sendUserMessageResponse.messageId) {
+        return true;
+
+      }
+      return false;
+    } catch (error) {
+      console.error('Error sending vibe:', error);
+      return false;
+    }
+  }
+
+  static async getVibeCount(): Promise<VibeCount> {
+    if(!this.sessionToken || !this.currentUserId) {
+      return 0;
+    }
+    try {
+      const currentVibeCountRequest: TrackablesGetEnergyRequest = {
+        name: ['good_vibes'],
+        token: this.sessionToken || '',
+      }
+      const currentVibeCountResponse = await this.trackablesApi.trackablesGetEnergy(currentVibeCountRequest)
+      let energy = currentVibeCountResponse.settings && currentVibeCountResponse.settings.length > 0 && currentVibeCountResponse.settings[0].defaultEnergy ? currentVibeCountResponse.settings[0].defaultEnergy : 0;
+      return energy;
+    } catch (error) {
+      console.error('Error fetching vibe count:', error);
+      return 0;
+    }
+  }
+
+  static async consumeVibe(delta: number = 1): Promise<VibeCount> {
+    if(!this.sessionToken || !this.currentUserId) {
+      return 0;
+    }
+    try {
+      const consumeVibeCountRequest: TrackablesConsumeUserEnergyRequest = {
+        userId: this.currentUserId || '',
+        energyName: 'good_vibes',
+        token: this.sessionToken || '',
+        body: {
+          delta: delta,
+        }
+      }
+      const consumeVibeCountResponse = await this.trackablesApi.trackablesConsumeUserEnergy(consumeVibeCountRequest)
+      const newEnergy = consumeVibeCountResponse.energy ? consumeVibeCountResponse.energy : 0;
+      return newEnergy;
+    } catch (error) {
+      console.error('Error consuming vibe:', error);
+      return 0;
+    }
+  }
+
+  static async searchUser(searchString: string): Promise<Profile[]> {
+    if(!this.sessionToken || !this.currentUserId) {
+      return [];
+    }
+    try {
+      const searchProfilesRequest: ProfilesSearchProfilesOperationRequest = {
+        token: this.sessionToken || '',
+        body: {
+          limit: 50,
+          offset: 0,
+          searchFields: [
+            {
+              key: 'first_name',
+              operator: 'CONTAINS',
+              value: searchString
+            }
+          ],
+        }
+      }
+      const searchUserResponse: ProfilesSearchProfilesResponse = await this.profilesApi.profilesSearchProfiles(searchProfilesRequest)
+      if (searchUserResponse.profiles) {
+        const profileIds: string[] = Object.keys(searchUserResponse.profiles);
+        const profiles: Profile[] = profileIds.filter(id => id !== this.currentUserId).map(id => {
+          const profileData = searchUserResponse.profiles ? searchUserResponse.profiles[id] : null;
+          return {
+            id: id,
+            profile_pic: (profileData && 'profile_pic' in profileData ? profileData.profile_pic as string : ''),
+            first_name: (profileData && 'first_name' in profileData ? profileData.first_name as string : ''),
+            last_name: (profileData && 'last_name' in profileData ? profileData.last_name as string : '')
+          };
+        });
+        return profiles;
+      }
+      return [];
+    } catch (error) {
+      console.error('Error searching users:', error);
+      return [];
+    }
+  }
+
+  static async sendFriendRequest(targetUserId: string): Promise<boolean> {
+    if(!this.sessionToken || !this.currentUserId) {
+      return false;
+    }
+    try {
+      const userProfileRequest: ProfilesGetProfileRequest = {
+        userId: this.currentUserId || '',
+        token: this.sessionToken || '',
+      }
+      const getUserProfileRequest: ProfilesGetProfileResponse = await this.profilesApi.profilesGetProfile(userProfileRequest)
+      if(!getUserProfileRequest || !getUserProfileRequest.profile) {
+        throw new Error("User profile not found");
+      }
+      const sendFriendRequestRequest: SocialGraphSendFriendRequestRequest = {
+        userId: this.currentUserId || '',
+        token: this.sessionToken || '',
+        body: {
+          targetUserId: targetUserId,
+          metadata: getUserProfileRequest.profile || {},
+        }
+      }
+      const sendFriendRequestResponse = await this.socialGraphApi.socialGraphSendFriendRequest(sendFriendRequestRequest)
+      if(sendFriendRequestResponse) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error sending friend request:', error);
+      return false;
+    }
+  }
+
+  static async getFriendRequests(): Promise<FriendRequests> {
+    if(!this.sessionToken || !this.currentUserId) {
+      return [];
+    }
+    try {
+      const getFriendRequestsRequest: SocialGraphGetFriendRequestsRequest = {
+        userId: this.currentUserId || '',
+        token: this.sessionToken || '',
+        limit: 50,
+        offset: 0,
+        type: 'received',
+      }
+      const getFriendRequestsResponse: SocialGraphGetFriendRequestsResponse = await this.socialGraphApi.socialGraphGetFriendRequests(getFriendRequestsRequest)
+      if(getFriendRequestsResponse && getFriendRequestsResponse.friendRequests) {
+        return getFriendRequestsResponse.friendRequests;
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching friend requests:', error);
+      return [];
+    }
+  }
+
+  static async acceptFriendRequest(friendRequest: FriendRequest): Promise<boolean> {
+      if (!this.sessionToken || !this.currentUserId) return false;
+
+      // Fetch *your* profile to store on your edge
+      const meReq: ProfilesGetProfileRequest = {
+        userId: this.currentUserId || '',
+        token: this.sessionToken || '',
+      };
+      const meRes = await this.profilesApi.profilesGetProfile(meReq);
+      const myProfile = meRes.profile || {};
+
+      const addFriendRequest: SocialGraphAddFriendRequest = {
+        userId: this.currentUserId || '',
+        token: this.sessionToken || '',
+        body: {
+          targetUserId: friendRequest.id || '',
+          metadata: myProfile,
+        },
+      };
+      await this.socialGraphApi.socialGraphAddFriend(addFriendRequest);
+      return true;
+    }
+
+  static async getFriends(): Promise<Friends> {
+    if(!this.sessionToken || !this.currentUserId) {
+      return {friends: []};
+    }
+    try {
+      const getFriendsRequest: SocialGraphGetFriendsRequest = {
+        userId: this.currentUserId || '',
+        token: this.sessionToken || '',
+        limit: 20,
+        offset: 0,
+      }
+      const getFriendsResponse: SocialGraphGetFriendsResponse = await this.socialGraphApi.socialGraphGetFriends(getFriendsRequest)
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return { friends: getFriendsResponse.friends || [] };
+    } catch (error) {
+      console.error('Error fetching friends:', error);
+      return { friends: [] };
+    }
+  }
+
+  static async getProfile(userId: string = this.currentUserId || ''): Promise<Profile | null> {
+    if(!this.sessionToken || !this.currentUserId) {
+      console.log("No session token or current user ID");
+      return null;
+    }
+    try {
+      const getProfileRequest: ProfilesGetProfileRequest = {
+        token: this.sessionToken || '',
+        userId: userId,
+      }
+      const currentProfile: ProfilesGetProfileResponse = await this.profilesApi.profilesGetProfile(getProfileRequest)
+      let userProfile: Profile = {
+        id: userId,
+        first_name: '',
+        last_name: '',
+        profile_pic: ''
+      };
+      if (currentProfile.profile) {
+        userProfile = {
+          id: userId,
+          first_name: 'first_name' in currentProfile.profile ? currentProfile.profile.first_name as string || '' : '',
+          last_name: 'last_name' in currentProfile.profile ? currentProfile.profile.last_name as string || '' : '',
+          profile_pic: 'profile_pic' in currentProfile.profile ? currentProfile.profile.profile_pic as string || '' : ''
+        }
+      }
+      // TODO implement
+      return userProfile
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      return {
+        id: '',
+        first_name: '',
+        last_name: '',
+        profile_pic: ''
+      };
+    }
+  }
+
+  static async updateProfile(profile: Partial<Profile>): Promise<boolean> {
+    if(!this.sessionToken || !this.currentUserId) {
+      return false;
+    }
+    try {
+      const upsertProfileRequestData: UpsertProfileRequest = {
+        profile: profile
+      }
+      const upsertProfileRequest: ProfilesUpsertProfileRequest = {
+        token: this.sessionToken || '',
+        userId: this.currentUserId || '',
+        body: upsertProfileRequestData
+      }
+      await this.profilesApi.profilesUpsertProfile(upsertProfileRequest)
+      return true;
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      return false;
+    }
+  }
+}
+```
+
+<Note>
+  We have added a commented out version of the code above in a file called `TODO_Update_SnapserManager.ts` in the same folder. You can copy the contents of that file and replace the contents of `SnapserManager.ts` file with it.
+  Additionally, we highly recommend you to go through the code and understand how the Snapser SDK is being used.
+</Note>
+
+<Checkpoint step={8}>
+  At this point, try compiling the app and it should work without any errors. If you see any errors, please check the console and make sure you have installed the dependencies correctly.
+</Checkpoint>
+
+## Step 9: Run the app
+1. Go to the root of your web code and run.
+    ```bash
+    npx expo start
+    ```
+1. This will show you a terminal output like this:
+    ![alt_text](/images/docs/tutorials/expo-output.png)
+1. From here you can run the app on an iOS simulator, Android simulator or on your physical device using the Expo Go app. You can also run it in the web browser for testing by pressing the `w` key.
+1. Go to the browser and open `http://localhost:8081`. You should see the app running.
+![alt_text](/images/docs/tutorials/social-app.png)
+    <Note>
+      Since we have enabled username and password authentication, you can enter any username and password to get into the app.
+    </Note>
+
+1. Update your profile with your first name, last name and add a profile picture URL.
+    <Note>
+      The repo has a folder called `data/profiles.json` which has some sample profile you can use.
+    </Note>
+1. Search for users and send them friend requests.
+1. Accept friend requests from other users.
+1. Send vibes to your friends.
+1. Check your inbox for vibes from other users.
+
+
+<Checkpoint step={9}>
+  You should now have a working social networking app.
+</Checkpoint>
+
+## Step 10: Validate the data in Snapser
+- You can go to your Snapend home page, under quick links click on the `User Manager Tool`.
+- Enter the username you used to login to the app and click search.
+- You should see the user you just created and see their details.
+
+<Checkpoint step={10}>
+  Congratulations! You should have a fully working social networking mobile app that is integrated with the backend we just created.
+</Checkpoint>

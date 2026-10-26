@@ -1,0 +1,19 @@
+# beta-0.42.1
+##### November 22, 2024
+
+## Bug Fixes
+
+### Quests
+- GetActiveQuests now returns task metadata and task rewards
+- Documentation for include_task_rewards improved
+
+### Trackables
+- Changed semantic of when a level is being considered progressed to being at the end of the current level, rather than the start of the next level. This fixes an issue where if the XP has a single level, the reward was never granted.
+- Internal scoped XP now correctly rejects incrementXP requests via user auth (App auth/internal continue to work).
+- Fixed a race condition where if multiple requests were incrementing the XP of the same user, the overflow was not counted properly for some of them.
+- Fixed a race condition where user could consume the last energy multiple times if requests to consume came in simultaneously.
+- IncrementXP and SetXP now allow don’t return 400 even if the user has completed the whole XP progression, instead return all of the extra as overflow.
+- Added a new app auth endpoint - BatchGetUserTrackables - that fetches all trackables for multiple users.
+
+### Matchmaking
+- Fixed a bug in team formation when matching with parties that would only add a single ticket of a team instead of the entire team

@@ -1,0 +1,61 @@
+# beta-0.40.0
+##### October 17, 2024
+
+## Upgrade Guide
+- If inventory is updated to 0.40.0 trackables must also be updated.
+
+## Breaking Changes
+- **Inventory**: Please update the `UpdateUserVirtualCurrency` method to `IncrementUserCurrency` in the Inventory Snap. The `UpdateUserVirtualCurrency` method will be deprecated in the upcoming release.
+
+## Snaps
+### Parties
+- Parties now supports an event on receiving an invite.
+
+### Inventory
+- Inventory now supports a new method, `IncrementUserCurrency` API.
+
+### Auth
+- Users of Email auth, can now see a preview of their custom HTML/CSS email templates in the Auth Configuration tool.
+
+### Trackables
+- IncrementUserEnergy now returns before and after values in the response.
+
+### Inbox
+- Inbox now emits an event when a user receives a message.
+
+### Storage
+- App Auth Batch endpoints for blobs, append-blobs, and counters have been added.
+
+### Leaderboards
+- App Auth get endpoints to fetch scores for multiple users added.
+
+### Game Server Fleets
+- You can make an API call to GameServerFleets to tell it your game server is indeed ready and it will fire an event to all players in the match.
+
+### Web Sockets
+- You can now make a `GetPresenceRequest` to Hermes (via websocket) and it will return presence information about the nodes and total presence count.
+
+## Web App
+- **Logs Tool**: The Logs tool got another upgrade. Now, if you are searching for a specific log,
+  the logs tool shows a `Show Context` button with every log. Clicking on that, shows you logs around the log you are interested in.
+  Allowing for better debugging.
+- **API Explorer**: The API Explorer History now supports `Smart Copy`. Its a way to click one button to copy the user ID and token.
+  Allowing you to use `Ctrl_Key+1+v` to paste the User Id and `Ctrl_Key+2+v` to paste the token.
+- **Pricing Page**: Minor UI update to the Pricing Usage calculator page.
+- Renamed `Live Ops Manager` tool to `User Manager` tool. This tool is used to manage users in the game.
+
+## Snapctl - CLI Tool
+- Snapctl now cleans up cached files from the Windows Credentials Manager, allowing for clean re-runs.
+
+## Bug Fixes
+- **Parties**: Fixed an error in `LeaveParty` and `GetParty` methods in the Parties Snap that sometimes resulted in an incorrect `404`.
+- **Inventory**: Inventory `OpenContainer` response now returns the before and after count for every item, currency, XP or energy granted.
+- **Auth**: We added a performance improvement to the Auth snap, resulting in lower response times.
+- **Web App**: Fixed a UI bug with Leaderboards Admin tool, where moving from tiered to global leaderboard would not update the UI.
+- **Fleets**: Fixed a UI bug that was incorrectly validating the min, max and buffer counts in a fleet.
+- **Monitor**: Fixed a bug where the time selector used to crash if a user clicked the Apply button without any time selection. Also fixed the first load issue.
+- **Logs Tool Download**: Fixed a bug where download of logs would only contain logs present on the page. Now, it downloads all logs.
+
+## Documentation
+- BYOSnap Documentation update to show the recommended way to log.
+- Added start match delay documentation for lobbies.

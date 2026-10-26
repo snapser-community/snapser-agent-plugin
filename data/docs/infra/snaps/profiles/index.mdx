@@ -1,0 +1,716 @@
+export const description = 'Profiles'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Profiles
+
+The Profile snap allows games and apps to set up profiles for their user
+base. Developers can configure profile attributes and set them up to be unique or searchable.
+Each profile attribute also comes with built-in access control.
+
+Plenty of games and apps develop a structure for a user profile and end up storing the
+data in a service like **storage**. While you
+can certainly go down that route, any updates to the profile properties become
+a nightmare to manage. The profile service makes all this a breeze for dev
+teams. You can set up user profile properties in your admin tool and have
+granular access control for every property you have added.
+
+## Unique and Searchability
+
+You can configure your profile attributes to be unique and or searchable. Unique attributes are
+guaranteed to be unique across your entire user base. Searchable attributes allow you to use
+the `ProfileSearch` API to search users based on the attribute. It should be noted that, unique
+attributes are by default searchable. On the other hand, if you can also configure an attribute
+to be non-unique and non-searchable. Profile snap stores these attributes and makes them
+available for standard retrieval.
+
+<Note>
+  [IMPORTANT]: You can have a maximum of 10 unique attributes and 10 purely
+  searchable attributes.
+</Note>
+
+## Attribute Types
+
+The profile snap supports text, number, timestamp, multi-select and single-select type of attributes.
+The service supports the following profile attribute types:
+
+## Access Control
+
+To understand access control, let's take an example. Say for the app or game you are
+building, you want to store a user profile with the following properties: **gamer tag**, their **first name**, and their **last name**. Also you decide that you do not want to
+expose the last name of users to anyone other than the owner. Therefore, you can
+set up **last name** in the admin tool as a private property. This ensures that only the owner can see the entry
+for the last name when visiting their profile. If another user visits the owner's profile, the **last name**
+will automatically be hidden.
+
+### Access Types
+
+There are some profile attributes that need to be private to a user. For example,
+most developers chose to take the last name as an input from the user during profile creation, \
+but not actually show the last name to other users in the app. Configuring an attribute to be `private`
+ensures that only the owner of the profile is able to retrieve that attribute. No one else sees a users
+private attribute.
+
+## APIs
+
+The `Profiles` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name       | HTTP Method | API Description                   |
+| -------------- | ----------- | --------------------------------- |
+| [ProfilesSearchProfiles](#profilessearchprofiles-api) | POST        | Searches for user profiles        |
+| [ProfilesDeleteProfile](#profilesdeleteprofile-api)  | DELETE      | Deletes a user's profile          |
+| [ProfilesGetProfile](#profilesgetprofile-api)     | GET         | Retrieves a user's profile        |
+| [ProfilesUpsertProfile](#profilesupsertprofile-api)  | PUT         | Insert or update a user's profile |
+| [ProfilesPatchProfile](#profilespatchprofile-api)    | PATCH       | Patch a user's profiles           |
+| [ProfilesBatchGetProfiles](#profilesbatchgetprofiles-api)  | GET         | Retrieves a list of user profiles |
+</div>
+
+### Usage
+#### ProfilesSearchProfiles API
+<CodeGroup title="Searches for user profiles" tag="POST" label="ProfilesSearchProfiles">
+```csharp
+/// <summary>
+/// User Profile Search Searches for user profiles
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>ProfilesSearchProfilesResponse</returns>
+public ProfilesSearchProfilesResponse ProfilesSearchProfiles(string token, ProfilesSearchProfilesRequest body)
+{
+    Snapser.Client.ApiResponse<ProfilesSearchProfilesResponse> localVarResponse = ProfilesSearchProfilesWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ProfilesSearchProfilesRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="ProfilesSearchProfilesRequest" /> class.
+/// </summary>
+/// <param name="limit">Maximum number of profiles to return.</param>
+/// <param name="offset">Number of profiles to skip before returning results.</param>
+/// <param name="searchFields">List of search fields to filter profiles by.</param>
+public ProfilesSearchProfilesRequest(int limit = default(int), int offset = default(int), List<ProfilesSearchField> searchFields = default(List<ProfilesSearchField>))
+{
+    this.Limit = limit;
+    this.Offset = offset;
+    this.SearchFields = searchFields;
+}
+
+/// Snapser.Model for ProfilesSearchField
+/// <summary>
+/// Initializes a new instance of the <see cref="ProfilesSearchField" /> class.
+/// </summary>
+/// <param name="key">Key of the field to search by.</param>
+/// <param name="varOperator">varOperator.</param>
+/// <param name="value">Value of the field to search by.</param>
+public ProfilesSearchField(string key = default(string), SearchFieldOperator? varOperator = default(SearchFieldOperator?), string value = default(string))
+{
+    this.Key = key;
+    this.VarOperator = varOperator;
+    this.Value = value;
+}
+
+/// Snapser.Model for ProfilesSearchProfilesResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="ProfilesSearchProfilesResponse" /> class.
+/// </summary>
+/// <param name="profiles">Map of user IDs to their respective profiles.</param>
+public ProfilesSearchProfilesResponse(Dictionary<string, Object> profiles = default(Dictionary<string, Object>))
+{
+    this.Profiles = profiles;
+}
+
+/// <summary>
+/// Defines SearchFieldOperator
+/// </summary>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum SearchFieldOperator
+{
+    /// <summary>
+    /// Enum UNSPECIFIEDOPERATOR for value: UNSPECIFIED_OPERATOR
+    /// </summary>
+    [EnumMember(Value = "UNSPECIFIED_OPERATOR")] UNSPECIFIEDOPERATOR = 1,
+
+    /// <summary>
+    /// Enum EQUALS for value: EQUALS
+    /// </summary>
+    [EnumMember(Value = "EQUALS")] EQUALS = 2,
+
+    /// <summary>
+    /// Enum NOTEQUALS for value: NOT_EQUALS
+    /// </summary>
+    [EnumMember(Value = "NOT_EQUALS")] NOTEQUALS = 3,
+
+    /// <summary>
+    /// Enum CONTAINS for value: CONTAINS
+    /// </summary>
+    [EnumMember(Value = "CONTAINS")] CONTAINS = 4
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserProfilesServiceApi::ProfilesSearchProfilesRequest : public Request
+{
+public:
+    virtual ~ProfilesSearchProfilesRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserProfilesSearchProfilesRequest Body;
+};
+
+class SNAPSER_API SnapserProfilesSearchProfilesRequest : public Model
+{
+public:
+    virtual ~SnapserProfilesSearchProfilesRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Maximum number of profiles to return */
+    TOptional<int32> Limit;
+    /* Number of profiles to skip before returning results */
+    TOptional<int32> Offset;
+    /* List of search fields to filter profiles by */
+    TOptional<TArray<SnapserProfilesSearchField>> SearchFields;
+};
+
+class SNAPSER_API SnapserProfilesSearchField : public Model
+{
+public:
+    virtual ~SnapserProfilesSearchField() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Key of the field to search by */
+    TOptional<FString> Key;
+    TOptional<SnapserSearchFieldOperator> _Operator;
+    /* Value of the field to search by */
+    TOptional<FString> Value;
+};
+
+class SNAPSER_API SnapserSearchFieldOperator : public Model
+{
+public:
+    virtual ~SnapserSearchFieldOperator() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedOperator,
+        Equals,
+        NotEquals,
+        Contains,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+// Response
+class SNAPSER_API SnapserProfilesServiceApi::ProfilesSearchProfilesResponse : public Response
+{
+public:
+    virtual ~ProfilesSearchProfilesResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserProfilesSearchProfilesResponse Content;
+};
+
+class SNAPSER_API SnapserProfilesSearchProfilesResponse : public Model
+{
+public:
+    virtual ~SnapserProfilesSearchProfilesResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Map of user IDs to their respective profiles */
+    TOptional<TMap<FString, TSharedPtr<FJsonObject>>> Profiles;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### ProfilesDeleteProfile API
+<CodeGroup title="Deletes a user's profile" tag="DELETE" label="ProfilesDeleteProfile">
+```csharp
+/// <summary>
+/// User Profile Deletes a user&#39;s profile
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user who&#39;s profile is being deleted</param>
+/// <param name="token">User session token</param>
+/// <returns>Object</returns>
+public Object ProfilesDeleteProfile(string userId, string token)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = ProfilesDeleteProfileWithHttpInfo(userId, token);
+    return localVarResponse.Data;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserProfilesServiceApi::DeleteProfileRequest : public Request
+{
+public:
+    virtual ~DeleteProfileRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user who's profile is being deleted */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserProfilesServiceApi::ProfilesDeleteProfileResponse : public Response
+{
+public:
+    virtual ~ProfilesDeleteProfileResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### ProfilesGetProfile API
+<CodeGroup title="Retrieves a user's profile" tag="GET" label="ProfilesGetProfile">
+```csharp
+/// <summary>
+/// User Profile Retrieves a user&#39;s profile
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user who&#39;s profile is being viewed</param>
+/// <param name="token">User session token</param>
+/// <returns>ProfilesGetProfileResponse</returns>
+public ProfilesGetProfileResponse ProfilesGetProfile(string userId, string token)
+{
+    Snapser.Client.ApiResponse<ProfilesGetProfileResponse> localVarResponse = ProfilesGetProfileWithHttpInfo(userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ProfilesGetProfileResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="ProfilesGetProfileResponse" /> class.
+/// </summary>
+/// <param name="profile">JSON representation of the user&#39;s profile visible to the logged in user.</param>
+public ProfilesGetProfileResponse(Object profile = default(Object))
+{
+    this.Profile = profile;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserProfilesServiceApi::ProfilesGetProfileRequest : public Request
+{
+public:
+    virtual ~ProfilesGetProfileRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user who's profile is being viewed */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserProfilesServiceApi::ProfilesGetProfileResponse : public Response
+{
+public:
+    virtual ~ProfilesGetProfileResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserProfilesGetProfileResponse Content;
+};
+
+class SNAPSER_API SnapserProfilesGetProfileResponse : public Model
+{
+public:
+    virtual ~SnapserProfilesGetProfileResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* JSON representation of the user's profile visible to the logged in user */
+    TOptional<TSharedPtr<FJsonObject>> Profile;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### ProfilesUpsertProfile API
+<CodeGroup title="Insert or update a user's profile" tag="PUT" label="ProfilesUpsertProfile">
+```csharp
+/// <summary>
+/// User Profile Insert or update a user&#39;s profile
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user who&#39;s profile is being upserted</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object ProfilesUpsertProfile(string userId, string token, UpsertProfileRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = ProfilesUpsertProfileWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for UpsertProfileRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="UpsertProfileRequest" /> class.
+/// </summary>
+/// <param name="profile">JSON representation of the profile being upserted (required).</param>
+public UpsertProfileRequest(Object profile = default(Object))
+{
+    // to ensure "profile" is required (not null)
+    if (profile == null)
+    {
+        throw new ArgumentNullException("profile is a required property for UpsertProfileRequest and cannot be null");
+    }
+    this.Profile = profile;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserProfilesServiceApi::ProfilesUpsertProfileRequest : public Request
+{
+public:
+    virtual ~ProfilesUpsertProfileRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user who's profile is being upserted */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserUpsertProfileRequest Body;
+};
+
+class SNAPSER_API SnapserUpsertProfileRequest : public Model
+{
+public:
+    virtual ~SnapserUpsertProfileRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* JSON representation of the profile being upserted */
+    TSharedPtr<FJsonObject> Profile;
+};
+
+// Response
+class SNAPSER_API SnapserProfilesServiceApi::ProfilesUpsertProfileResponse : public Response
+{
+public:
+    virtual ~ProfilesUpsertProfileResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### ProfilesPatchProfile API
+<CodeGroup title="Patches a user profile" tag="PATCH" label="ProfilesPatchProfile">
+```csharp
+/// <summary>
+/// User Profile Patches a user's profile
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user who&#39;s profile is being patched</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>ProfilesPatchProfileResponse</returns>
+public ProfilesPatchProfileResponse ProfilesPatchProfile(string userId, string token, PatchProfileRequest body)
+{
+    Snapser.Client.ApiResponse<ProfilesPatchProfileResponse> localVarResponse = ProfilesPatchProfileWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PatchProfileRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="PatchProfileRequest" /> class.
+/// </summary>
+/// <param name="profile">JSON representation of the profile being patched (required).</param>
+public PatchProfileRequest(Object profile = default(Object))
+{
+    // to ensure "profile" is required (not null)
+    if (profile == null)
+    {
+        throw new ArgumentNullException("profile is a required property for PatchProfileRequest and cannot be null");
+    }
+    this.Profile = profile;
+}
+
+/// Snapser.Model for ProfilesPatchProfileResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="ProfilesPatchProfileResponse" /> class.
+/// </summary>
+/// <param name="profile">JSON representation of the user&#39;s profile after the patch.</param>
+public ProfilesPatchProfileResponse(Object profile = default(Object))
+{
+    this.Profile = profile;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserProfilesServiceApi::ProfilesPatchProfileRequest : public Request
+{
+public:
+    virtual ~ProfilesPatchProfileRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user who's profile is being patched */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserPatchProfileRequest Body;
+};
+
+class SNAPSER_API SnapserPatchProfileRequest : public Model
+{
+public:
+    virtual ~SnapserPatchProfileRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* JSON representation of the profile being patched */
+    TSharedPtr<FJsonObject> Profile;
+};
+
+// Response
+class SNAPSER_API SnapserProfilesServiceApi::ProfilesPatchProfileResponse : public Response
+{
+public:
+    virtual ~ProfilesPatchProfileResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserProfilesPatchProfileResponse Content;
+};
+
+class SNAPSER_API SnapserProfilesPatchProfileResponse : public Model
+{
+public:
+    virtual ~SnapserProfilesPatchProfileResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* JSON representation of the user's profile after the patch */
+    TOptional<TSharedPtr<FJsonObject>> Profile;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### ProfilesBatchGetProfiles API
+<CodeGroup title="Retrieves a list of user profiles" tag="GET" label="ProfilesBatchGetProfiles">
+```csharp
+/// <summary>
+/// User Profile (App Auth) Retrieves a list of user profiles
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User IDs to fetch profiles for</param>
+/// <param name="token">(app auth only)</param>
+/// <returns>ProfilesBatchGetProfilesResponse</returns>
+public ProfilesBatchGetProfilesResponse ProfilesBatchGetProfiles(List<string> userId, string token)
+{
+    Snapser.Client.ApiResponse<ProfilesBatchGetProfilesResponse> localVarResponse = ProfilesBatchGetProfilesWithHttpInfo(userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ProfilesBatchGetProfilesResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="ProfilesBatchGetProfilesResponse" /> class.
+/// </summary>
+/// <param name="profiles">profiles.</param>
+/// <param name="responses">List of responses for each user ID.</param>
+public ProfilesBatchGetProfilesResponse(Dictionary<string, Object> profiles = default(Dictionary<string, Object>), List<ProfilesBatchGetProfilesSingleResponse> responses = default(List<ProfilesBatchGetProfilesSingleResponse>))
+{
+    this.Profiles = profiles;
+    this.Responses = responses;
+}
+
+/// Snapser.Model for ProfilesBatchGetProfilesSingleResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="ProfilesBatchGetProfilesSingleResponse" /> class.
+/// </summary>
+/// <param name="message">message.</param>
+/// <param name="request">request.</param>
+/// <param name="response">response.</param>
+/// <param name="success">success.</param>
+public ProfilesBatchGetProfilesSingleResponse(string message = default(string), ProfilesGetProfileRequest request = default(ProfilesGetProfileRequest), Object response = default(Object), bool success = default(bool))
+{
+    this.Message = message;
+    this.Request = request;
+    this.Response = response;
+    this.Success = success;
+}
+
+/// Snapser.Model for ProfilesGetProfileRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="ProfilesGetProfileRequest" /> class.
+/// </summary>
+/// <param name="userId">User ID of the user who&#39;s profile is being viewed (required).</param>
+public ProfilesGetProfileRequest(string userId = default(string))
+{
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for ProfilesGetProfileRequest and cannot be null");
+    }
+    this.UserId = userId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserProfilesServiceApi::ProfilesBatchGetProfilesRequest : public Request
+{
+public:
+    virtual ~ProfilesBatchGetProfilesRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User IDs to fetch profiles for */
+    TArray<FString> UserId;
+    /* (app auth only) */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserProfilesServiceApi::ProfilesBatchGetProfilesResponse : public Response
+{
+public:
+    virtual ~ProfilesBatchGetProfilesResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserProfilesBatchGetProfilesResponse Content;
+};
+
+class SNAPSER_API SnapserProfilesBatchGetProfilesResponse : public Model
+{
+public:
+    virtual ~SnapserProfilesBatchGetProfilesResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TMap<FString, TSharedPtr<FJsonObject>>> Profiles;
+    /* List of responses for each user ID */
+    TOptional<TArray<SnapserProfilesBatchGetProfilesSingleResponse>> Responses;
+};
+
+class SNAPSER_API SnapserProfilesBatchGetProfilesSingleResponse : public Model
+{
+public:
+    virtual ~SnapserProfilesBatchGetProfilesSingleResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Message;
+    TOptional<SnapserProfilesGetProfileRequest> Request;
+    TOptional<TSharedPtr<FJsonObject>> Response;
+    TOptional<bool> Success;
+};
+
+class SNAPSER_API SnapserProfilesGetProfileRequest : public Model
+{
+public:
+    virtual ~SnapserProfilesGetProfileRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* User ID of the user who's profile is being viewed */
+    FString UserId;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Admin Pic](/images/docs/profiles-api.png)
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code  | Variable           | Message             | HTTP | gRPC               |
+| ----- | ------------------ | ------------------- | ---- | ------------------ |
+| 14000 | ErrBadKey          | Bad key             | 400  | InvalidArgument    |
+| 14001 | ErrKeyExists       | Key already exists  | 409  | AlreadyExists      |
+| 14002 | ErrDataExists      | Data already exists | 400  | FailedPrecondition |
+| 14010 | ErrBadProfile      | Bad profile         | 400  | InvalidArgument    |
+| 14011 | ErrProfileNotFound | Profile not found   | 404  | NotFound           |
+| 14012 | ErrUniqueViolation | Unique violation    | 409  | AlreadyExists      |
+</div>
+
+## Additional Details
+
+### Data Stores
+
+POSTGRES
+
+### Service Dependencies
+
+The profiles service does not depend on any other Snap.
+
+### Recommended Services
+
+The profiles service works best when paired with the Auth service.
+
+## Upcoming enhancements
+
+### File-based attributes
+
+We plan to expose a file based attribute. As an example, once we support this
+attribute, you can get your app client to upload a user profile picture.
+
+### Custom access type
+
+We want to integrate this service with the Social graph Snap. Allowing you to
+set access for a particular attribute based on user relationships.

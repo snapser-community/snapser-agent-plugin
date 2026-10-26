@@ -1,0 +1,142 @@
+# beta-0.46.0
+##### Feb 14, 2025
+
+## Breaking Changes
+- A major update to all the Snaps was done and some Snap API URLs have changed. This is a backwards compatible change as long as you are using the SDK. There should be no impact to your live game clients as well. Additionally, if you've been using custom scripts to make direct API calls, your scripts will continue to work as we have kept APIs backward compatible. However, if you were using Protos from your BYOSnaps to talk to other Snaps, please be aware that you will need to download the new protos and make the necessary fixes to your BYOSnap code.
+
+  **NOTE**: We strongly advise upgrading all your snaps to the latest version together. This is because internally all snaps use GRPCs and so they need to be updated in lockstep. As best practice, initiate updates in your development or staging environments, and rigorously test all changes before deploying them in production.
+
+- A major update was made to the Snapctl CLI tool. Most of the commands and input variable names have been changed to make them consistent. This is a breaking change. Please refer to the CLI release notes for more details.
+
+## Update Recommendations
+- We recommend updating all the snaps to the 0.46 to take advantage of the new API Key Manager
+and User Auth exemption features.
+
+## Features
+### API Key Manager
+- We are releasing the API Key Manager feature with this release. This feature allows you to create and
+  manage API keys for your game. You can create multiple API keys and assign them specific APIs they should have access to.
+  This feature is useful when you want to give access to a third-party service or a third-party developer
+  to access your game data. You can also revoke and rotate the API keys at any time. Note that you
+  need to upgrade all Snaps to 0.46 to take advantage of this feature.
+
+  As part of this feature, we are introducing a new Auth type: Server. This Auth type now requires you to
+  send a header 'Api-Key' with the API key value. We have kept the old Auth Type: App as is. But you
+  should consider to moving to this new Auth type as it allows you to customize the permissions for
+  each API key.
+
+### User Auth Exemption
+- We are releasing the User Auth Exemption feature with this release. This feature allows you nominate
+Snap APIs that you do not wish to expose via User Auth. This allows to you to build a completely server
+authoritative experience for your game. Note that you need to upgrade all Snaps to 0.46 to take advantage of this feature.
+
+## Snaps
+### Matchmaking
+  - Disconnecting a player from the game will also remove the player from the matchmaking queue.
+
+### Eventbus
+#### BYOSnap Custom Events
+ - Deprecated **ByoSnapEvent.event_id** field in favor of a new field **ByoSnapEvent.event_type_id** in the EventBus protos. Use this, or (recommended) **ByoSnapEVent.subject** to identify the event and payload.
+ - Added a **ByoSnapEvent.subject** which is the full subject of the event. This is the recommended way to identify event and payloads. To identify multiple payload types that share the same **subject**, use a combination of subject, **event_type_id** and **service_name**.
+
+### Lobbies
+  - A new Lobby Created event with the subject **snapser.services.lobbies.lobby.created** available in the EventBus for use with BYOSnap webhooks.
+
+## Web App
+### Search
+- You will now see a new search bar in the Web App. This will allow you to quickly search for any
+  Documents or API endpoints. Search is still in alpha and we will continue making improvements to it.
+
+### API Explorer
+- A major upgrade was added to the API Explorer. You can now view Examples and Schemas for request and
+  response objects. Additionally the API Explorer pre-populates the data from the example, allowing you
+  to quickly test the API.
+
+### User Tool
+- The User tool now supports a multi-user reset. This is useful especially during testing and debugging
+  when you want to reset multiple users at once.
+
+### Logs tool
+- The Snapend logs tool share link now works even for non-logged in users. You can now share the logs
+  link with your team members or support team to help debug issues.
+
+### Trackables
+- Added the ability to clone XP and Energy in the Trackables configuration tool. This is useful when you
+  want to create a new trackable with the same configuration as an existing one.
+- The XP and Energy tables now show data in a sorted order. This makes it easier to view the data. Additionally,
+you can search for a specific entry in the table.
+
+### BYOSnap Profile Tool
+- Added a new tool to the Web App that allows you to view, validate, import and download a BYOSnap profile.
+  This tool is useful when you want to create a new BYOSnap or update an existing one.
+
+### SDK Download
+- Simplified the SDK download widget. It now has a simple selector to pick user, server, app or internal SDKs.
+
+## Snapctl
+### Breaking Changes
+- **BYOSnap**:
+  - BYOSnap commands like `publish`, `sync` and `upload-docs` now take BYOSnap ID as a
+    non-positional argument. You now have to pass the BYOSnap Id using `--byosnap-id`.
+    ```bash
+    # Previously
+    snapctl byosnap publish byosnap-jinks-flask --version "v0.0.1" --path $path
+
+    # New
+    snapctl byosnap publish --byosnap-id byosnap-jinks-flask --version "v0.0.1" --path  $path
+    ```
+  - BYOSnap input parameter `--byosnap-profile-file` has been renamed to `--profile-filename`
+
+- **Generate**: The ability to generate a base BYOSnap profile using the `generate` command has
+  been deprecated. Instead its moved under `byosnap` commands for consistency.
+
+- **Snapend**:
+  - The manifest path variable has been changed for Snapend commands like `apply` and `clone`
+    from `--manifest-path` to `--manifest-path-filename`, for consistency with our new
+    variable naming nomenclature.
+  - The Snapend download command has new variable names like `format` and `type`. This is to add
+    more consistency and clarity to the command.
+    ```bash
+    # Previously
+    # snapctl snapend download --snapend-id gx5x6bc0 --category sdk --type unity --sdk-access-type external --sdk-auth-type user --out-path .
+
+    # New
+    snapctl snapend download --snapend-id gx5x6bc0 --category sdk --format unity --type user --out-path .
+    ```
+
+- Input param `--docker` for BYOGS and BYOSnap commands has been changed to `--docker_filename`
+
+### New Commands
+- **BYOSnap Generate Profile**: You can now use a new command to generate a base BYOSnap profile.
+  ```bash
+  snapctl byosnap generate-profile --out-path $outputPath --profile-filename $profileName
+  ```
+- **BYOSnap Validate Profile**: After you hand edit the base BYOSnap profile, you can use this
+  command to validate your BYOSnap profile before using it in other commands like `publish` and `sync`
+  ```bash
+  snapctl byosnap validate-profile --path $path --profile-filename $profileName
+  # or
+  snapctl byosnap validate-profile --resources-path $resources_path --profile-filename $profileName
+  ```
+- **Release Notes**: You can now view release notes for a specific version of Snapctl using the
+  `release-notes` command.
+  ```bash
+  snapctl release-notes releases
+  snapctl release-notes show
+  # or
+  snapctl release-notes show --version $version
+  ```
+
+
+## Bug Fixes
+- There was an issue with the CPU graph in the Infrastructure Monitor. This has been fixed.
+- Fixed a minor infra issue with the Assets snap.
+- API Explorer now supports JSON array payloads.
+
+
+## Documentation
+- Added API documentation for the new API Key Manager feature.
+- Added API documentation for the new User Auth Exemption feature.
+- Updated documentation about the Snapctl CLI tool.
+- Updated documentation about the Snapend Web App.
+- Updated documentation about the Snapend API Explorer.

@@ -1,0 +1,211 @@
+
+export const description =
+  'This guide will help you set up a Web project with Snapser.'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Snapend Settings & Clone
+Snapser provides a powerful backend-as-a-service platform that allows developers to quickly set up backends. Developers can clone from existing Snapends, making it easy to replicate configurations and settings across multiple projects.
+
+Each Snap has its own configuration settings. During a clone operation, these settings are duplicated to the new Snapend, ensuring that the new backend mirrors the original setup. This feature is particularly useful for teams managing multiple environments (like development, staging, and production) or for those who want to quickly spin up new projects with similar backend requirements.
+
+There is a small nuance to this, especially when it comes to sensitive data like:
+1. Auth connectors in Auth Snap.
+1. API keys in Auth Snap.
+1. IAP connectors in the In-App Purchase Snap.
+
+This tutorial explains both these concepts in detail.
+
+## Prerequisites
+Before starting this tutorial, here are some of the basics you should be familiar with:
+1. Each Snap has a single JSON configuration. However, Snapser has built different tools to update the configurations. For example, the Auth Snap has a tools like Connectors, Email Templates, etc. Each of these tools updates a specific part of the Auth Snap configuration JSON.
+1. In some tools, you will see a tabs like `Development`, `Staging` and `Production` and in some tools you will not. It is these tools that have these tabs, that support preemptively setting different configurations for different environments. For example, you can have a different set of Auth connectors for your Dev environment and a different set of Auth connectors for your Staging environment.
+1. The idea for the tools with these tabs is that you can preemptively set different configurations for different environments. However, when you create a Snapend in a specific environment, only the configuration for that environment is applied to the Snapend. For example, if you create a Snapend in the Dev environment, only the configuration under the Dev tab is applied to the Snapend. The configuration under the Staging and Production tabs are ignored for this Snapend and only comes into play when you clone this Snapend to create a new Snapend in the Staging or Production environment.
+![Setting Tabs](/images/docs/tutorials/snapend-settings-tabs.png)
+
+<Note>
+  Snapser has made an educated decision to only have the complex multiple environment settings in the tools where it makes sense. Most of the tools do not have these tabs and hence do not support multiple environment settings. In these cases, the same configuration is applied to all environments when you clone.
+</Note>
+
+<Checkpoint step={0}>
+  You are now ready to begin the tutorial.
+</Checkpoint>
+
+## Step 1: Set up your game
+
+To integrate Snapser features into your game, you need to create an account and add your game to it. This section demonstrates how to do that.
+
+<Note>
+  If you have already created a game in Snapser, you can skip this step and proceed to the next one.
+</Note>
+
+1. **Log in to your Snapser account** at https://snapser.com/login.
+2. Navigate to the **Apps dashboard** and click on the **New App** button located in the upper right corner.
+3. **Enter the name of your app** in the designated field. It's advisable to use a name that closely matches your applications title to avoid confusion among your team members. Click **Add** when done.
+    ![Add new game name](/images/docs/tutorials/create-snapend-add-game.png)
+    <Note>
+    Avoid adding prefixes like "dev", "staging", or "prod". Snapser supports multiple environments for each game, allowing you to create a separate custom backend for each stage of your development.
+    </Note>
+
+<Checkpoint step={1}>
+  Shortly after, your app will appear in the Apps dashboard, ready for you to build your first custom backend.
+</Checkpoint>
+
+
+## Step 2: Create a Snapend
+
+1. In the **Apps dashboard**, click on the game you have added. This action brings up a view that shows the development, staging, and production environments. Since there are currently no Snapends, let's add one.
+![GameClick](/images/docs/tutorials/create-snapend-game.png)
+1. In the Development environment, click on **Create a Snapend**.
+![GameClick](/images/docs/tutorials/create-snapend-game-home.png)
+1. **Enter the name of your Snapend** in the **Name your Snapend** field and click **Continue**.
+    ![Name your Snapend](/images/docs/quick-start/name-your-snapend.png)
+1. On the next page, select the following snaps:
+   1. Authentication
+   2. Leaderboard
+   3. Storage
+    ![Cluster](/images/docs/tutorials/web-game-snapend.png)
+1. Keep clicking **Continue** and then on the Review page click the **Snap It** button. A pop-up window will appear showing you the state of creating your cluster, which takes a moment or two to complete.
+1. As Snapser finishes setting up the Snapser cluster in Kubernetes (which includes infrastructure, configuration of Snaps, network and security, and generating your Snapend), click the **App** button to wait for your Snapend to be operational.
+1. Once the Snapend is ready, you will see a green dot mark on the Snapend widget. This indicates that your Snapend is ready to use.
+![Snap Dashboard](/images/docs/tutorials/create-snapend-cluster-ready.png)
+1. Click on the Snapend widget to go to the Snapend dashboard.
+![Snapend Dashboard](/images/docs/tutorials/web-game-snapend-dashboard.png)
+1. **IMPORTANT**: On this page, copy the **Snapend ID**. You will need to replace this in the Unity codebase.
+
+<Checkpoint step={2}>
+  You now have a backend setup. We can now proceed toward downloading our custom SDK, configuring our snaps for our game and then putting it altogether in Unity.
+</Checkpoint>
+
+## Step 3: Configure Snaps
+On your Snapend homepage look for Quick links. Click the **Snaps Configuration** button under **Quick Links** to go to the Snaps configuration home page. Now, lets configure the Snaps one by one.
+
+### A. Leaderboard Configuration
+<Note>
+    The leaderboard snap does not have a multi-environment configuration. This means that whatever configuration you set here will be applied to all environments when you clone the Snapend. In our case, we want to create a global leaderboard to store the maximum distance covered by the player
+</Note>
+1. Click on the **Leaderboards** widget to open the Leaderboards snaps configuration page.
+1. Here we are going to create one leaderboard:
+    - max_distance
+1. To create a leaderboard, click on the `Leaderboards` tool from the tool navigation and click on the **+ Leaderboard** button. This will open up a form, where you can add the new leaderboard details. Add the following leaderboards and click save.
+   1. `Name` - `laps_completed`
+   1. `Description` - `Laps completed by the player`
+   1. `Behavior` - `counter` - This is because we want to store counts per player.
+   1. `Period - Start time` - Use the date picker to select the current date time, such that the leaderboard is active.
+   1. `Period - Type` - `non-recurring` - This is because we want to keep the leaderboard running indefinitely.
+    1. `Type` - `global` - This is because we want to have a single leaderboard for all players.
+![Leaderboard Config](/images/docs/tutorials/web-game-leaderboard.png)
+1. Then click the back button to go back to the configuration home page.
+
+### B. Storage Configuration
+<Note>
+    Similar to the Leaderboard snap, the Storage snap does not have a multi-environment configuration. This means that whatever configuration you set here will be applied to all environments when you clone the Snapend. In our case, we want to create a blob key to store user data.
+</Note>
+1. Click on the **Storage** widget to open the Storage snaps configuration page.
+1. Select the `Blob Keys` tool from the tool navigation and then click on the **+ Blob Key** button. This will open up a form, where you can add the new blob key. Add the following details in the form and click save.
+   1. `Blob Keys` - `user_data`
+   1. `Type` - `json`
+1. Keep the default values for the rest of the fields.
+    ![Storage Config](/images/docs/tutorials/web-game-storage.png)
+
+### C. Authentication Configuration
+<Note>
+    Authentication snap has multi-environment configuration for adding Auth connectors. This means that you can set different configurations for different environments. In our case, we want to set up an Username password connector for our Dev environment and an Anonymous connector for the Staging environment. You will soon find out why we are doing this.
+</Note>
+
+#### Dev Environment - Username Password Connector
+1. Click on the **Authentication** widget to open the Auth snaps configuration page.
+1. Select the `Authentication > Connectors` tool from the tool navigation and then click on the **Add a connector** button. You will see quite a few connectors in the menu but lets select **Anonymous** and press Save.
+![Add Username Password Authentication](/images/docs/tutorials/snapend-create-admin-auth-uname-password.png)
+1. Add a generic regex pattern for now. Allowing the user to enter any password. But do note you should have a strong password policy in production.
+    - `Password Settings` - `^[\s\S]*$`
+1. Click Save.
+
+#### Staging Environment - Anonymous Connector
+1. Now select the **Staging** tab from the top.
+1. Select the `Authentication > Connectors` tool from the tool navigation and then click on the **Add a connector** button. You will see quite a few connectors in the menu but lets select **Anonymous** and press Save.
+![Add Anonymous Authentication](/images/docs/tutorials/snapend-stage-anon.png)
+1. Click Save.
+
+<Note>
+  `IMPORTANT`: Now, here is the important part. We have created a Snapend in the **Development** environment. We have added a `Username Password` connector in the **Development** environment and an `Anonymous` connector in the **Staging** environment. So when clients are accessing this Snapend they will only be able to use the Username Password connector. The Anonymous connector even though setup in the Stage tab does not apply to this Snapend. Snapser has only done that for the convenience of cloning.
+</Note>
+
+<Checkpoint step={3}>
+  We have configured the Authentication, Leaderboard, and Storage snaps. Our Snapend is now ready to be cloned.
+</Checkpoint>
+
+## Step 4: Clone the Snapend
+Now that we have our Snapend setup, lets clone it to create a new Snapend in the Staging environment.
+1. Go back to the Demo App dashboard by clicking on the **Demo** link in the top breadcrumb.
+    ![Breadcrumb App](/images/docs/tutorials/breadcrumb-app.png)
+1. In the Staging environment, click on **+ Snapend**.
+    ![Add Snapend Staging](/images/docs/tutorials/snapend-settings-stage-snapend-add.png)
+1. Next give it a name like `my-dev-cluster` and click **Snaps** to continue.
+1. In this UI, click the Clone button, which will open up a modal. Now, select the Dev Snapend that we created earlier. Then toggle on all the Snaps to clone the configuration for all the snaps.
+    ![Snapend Settings Clone](/images/docs/tutorials/snapend-settings-clone.png)
+    <Warning>
+      Once you pick a Snapend to clone, the web app will reach out to the backend to load the settings for the selected Snapend. This may take a few seconds. Please wait for the settings to load before proceeding.
+    </Warning>
+1. Click **Clone** in the modal, which tells Snapser to clone the architecture and configuration from the source Snapend.
+1. Now, keep going till the end where you can click the **Snap It** button.
+1. In a few minutes, your new Snapend will be ready. Once its ready, click on the Snapend widget to go to the Snapend dashboard.
+
+<Checkpoint step={4}>
+  You now have a cloned Snapend in the Staging environment. Lets see what happened to the snap configuration.
+</Checkpoint>
+
+## Step 5: Cloned Snapend configuration
+1. On your Snapend homepage look for Quick links. Click the **Snaps Configuration** button under **Quick Links** to go to the Snaps configuration home page. Now, lets check the configuration of the Snaps one by one.
+![Snapend Stage Home](/images/docs/tutorials/snapend-settings-stage-snapend-home.png)
+
+### A. Leaderboard Configuration
+1. Select the **Leaderboards** tool from the navigation.
+1. You will see that the `laps_completed` leaderboard is present here. This is because the Leaderboard snap does not have multi-environment configuration and hence whatever configuration we set in the source Snapend is copied over to the cloned Snapend.
+  ![Cloned Leaderboard Config](/images/docs/tutorials/snapend-settings-leaderboard-cloned.png)
+
+
+### B. Storage Configuration
+1. Select the **Storage Blob Keys** tool from the navigation.
+1. You will see that the `user_data` blob key is present here. This is because the Storage snap does not have multi-environment configuration and hence whatever configuration we set in the source Snapend is copied over to the cloned Snapend.
+  ![Cloned Storage Config](/images/docs/tutorials/snapend-settings-storage-cloned.png)
+
+### C. Authentication Configuration
+1. Select the **Auth Connectors** tool from the navigation.
+1. You will see that the Staging tab is the `default` selected tab. This is because we are in the Staging environment. Additionally, you will see that the `Anonymous` connector is present here. This is because we set up the Anonymous connector in the Staging tab of the source Snapend and hence it is copied over to the cloned Snapend.
+    ![Cloned Auth Config Stage](/images/docs/tutorials/snapend-settings-auth-stage-cloned.png)
+1. Note, if you change to the Dev tab you will see that the `Username Password` connector is present there. This is because we set up the Username Password connector in the Dev tab of the source Snapend and hence it is copied over to the cloned Snapend.
+    ![Cloned Auth Config Dev](/images/docs/tutorials/snapend-settings-auth-dev-cloned.png)
+<Note>
+  `IMPORTANT`: Its important to understand that in the source snapend `my-dev-cluster` if we had not added the Anon connector in the Staging tab, then the cloned snapend would not have had any connectors in the Staging tab. This is because the Staging tab configuration is independent of the Dev tab configuration. So if you want a connector to be present in a specific environment after cloning, you must add it in that environment in the source snapend.
+</Note>
+
+<Checkpoint step={5}>
+  Congratulations! You should have successfully cloned a Snapend along with its configuration and now understand how single configuration and multi-environment configuration works.
+</Checkpoint>
+
+## Next Steps
+Check out some of the tutorials to follow up on the Snapend you just created.
+
+<div className="parent">
+  <div className="tutorialBox">
+    # Snapend Security
+
+    Check out the tutorial to understand how Snapend security works. This tutorial will help you understand how to secure your Snapend and the services running on it.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/snapend-security'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div>
+  <div className="servicesBox">
+    # App Authentication
+
+    This tutorial helps you understand how to use Snapser’s Authentication Snap for in-app login.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/app-authentication'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,77 @@
+export const description = 'WebSocket Tester'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# WebSocket Tester
+
+## About
+The WebSocket Tester is a multi-user tool that allows you to open simultaneous WebSocket connections to your Snapend and test real-time events across multiple users. Unlike the [API Explorer](/docs/snapend/tools/api-explorer) which focuses on individual HTTP API calls, the WebSocket Tester is designed for testing real-time communication — you can connect multiple users at once, trigger actions from one user, and observe the events received by other connected users.
+
+This tool is especially useful for testing features that involve real-time interactions between users, such as lobbies, matchmaking, chat, presence, and any custom events emitted by your Snaps via the Event Bus.
+
+## Pre-requisites
+
+Before using the WebSocket Tester, ensure your Snapend has the following enabled:
+
+1. **Authentication Snap** with **Anonymous Authentication** enabled — the tool creates anonymous test users to establish connections.
+2. **Gateway WebSockets** enabled — WebSocket connections are made through your Snapend's gateway.
+3. **Event Bus Snap** — required for receiving real-time events from your Snaps.
+
+<Warning>
+  If any of these pre-requisites are not met, the WebSocket Tester will not be able to establish connections to your Snapend.
+</Warning>
+
+## Accessing the WebSocket Tester
+
+To access the WebSocket Tester, go to your Snapend home page and click on the **WebSocket Tester** button under the **Quick Links** section.
+
+## Usage
+
+The WebSocket Tester workflow consists of three steps: configure connections, connect, and interact.
+
+### 1. Configure Connections
+
+When you open the WebSocket Tester, you will see an option to select the number of simultaneous connections you want to open. You can open up to **25** concurrent connections. Each connection represents a unique anonymous test user.
+
+### 2. Connect
+
+Click the **Connect** button to establish all WebSocket connections. The tool will:
+- Create anonymous test users via your Snapend's authentication API
+- Open a WebSocket connection for each user through your gateway
+
+Once connected, you will see a **connection card** for each user. Each card displays:
+- The user's **ID** and **authentication token**
+- A **service and API dropdown** to select the API you want to call
+- **Input fields** for the request payload, dynamically generated based on the selected API
+- A **Submit** button to send the request
+- A **Logs** section showing all events received by that user
+
+### 3. Interact and Observe
+
+Select an API from the dropdown on any user's card, fill in the required payload fields, and click **Submit**. The request is sent over the WebSocket connection for that user. If the action triggers events for other connected users, those events will appear in the **Logs** section of their respective cards.
+
+## Example Workflow
+
+Here is an example of how you might use the WebSocket Tester to test lobby functionality:
+
+1. Open the WebSocket Tester and select **2** connections.
+2. Click **Connect** — you now have two users connected via WebSocket.
+3. On **User 1's** card, select the Lobby API and create a new lobby.
+4. On **User 2's** card, select the Lobby API and join the lobby created by User 1.
+5. Both users should now see lobby-related events in their logs.
+6. Disconnect **User 1** — **User 2** should receive an event notifying them that User 1 has left.
+
+This pattern applies to any real-time feature: matchmaking, chat, presence updates, or custom events from your Snaps.
+
+## FAQs
+
+### How is this different from the API Explorer's Stream Tool?
+The [API Explorer's Stream Tool](/docs/snapend/tools/api-explorer#explorer-tools) allows you to view events for a single user while making HTTP API calls. The WebSocket Tester, on the other hand, lets you manage **multiple simultaneous WebSocket connections** and observe how events propagate across different users in real time. Use the API Explorer for single-user API testing and the WebSocket Tester for multi-user real-time event testing.
+
+### Can I use the WebSocket Tester without the Event Bus Snap?
+No. The Event Bus Snap is required for routing real-time events between your Snaps and the connected WebSocket clients. Without it, you will not receive any events in the logs.
+
+### Is there a limit to the number of connections?
+Yes, the tool currently supports a maximum of **25** simultaneous connections.

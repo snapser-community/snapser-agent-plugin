@@ -1,0 +1,40 @@
+# Lobby Settings
+This tool allows you to set the settings for a lobby. You can set the base settings and allocation settings for the lobby.
+
+To get started:
+1. Click on `Settings` from the side Nav.
+2. You will see a form with all the settings that you can set for the lobby.
+
+## Lobby TTL Settings
+1. **Lifetime TTL**: The time to live for the lobby in seconds. The lobby will be deleted after this time.
+2. **Invite TTL**: The time to live for the invite in seconds. The invite will be deleted after this time.
+3. **Match Start TTL**: The time to live for the match start in seconds.
+
+## Lobby Invite and Member Settings
+1. **Max Invites**: The maximum number of invites that can be sent for the lobby.
+2. **Max Members**: The maximum number of members that can be in the lobby.
+
+## Lobby Allocation Settings
+1. **Allocation Target**: The target for the match allocation. The target can be `relay` or `fleet`.
+   <Note>
+    You need the Game Server Fleet Snap and Relay Snap to be snapped in to use the `fleet` and `relay` allocation targets.
+   </Note>
+
+## Lobby Start Settings
+1. **Check if lobby ready**: The toggle to enable or disable the ready check. If enabled, all members must be ready before the match can start.
+
+## Lobby Disconnect Settings
+1. **Kick users on disconnect**: The toggle to automatically remove member from their lobby when their Snapser websocket disconnects.
+   <Note>
+   You need to enable **Web Socket** on your gateway to use this feature.
+    </Note>
+
+# Lobby Custom Metadata
+Custom metadata lets you define key-value pairs that are automatically attached to every lobby created in your game. This is configured once in the lobby settings and applied at lobby creation time.
+
+1. **Key**: The metadata key. This should be an alphanumeric string without spaces or special characters.
+2. **Value**: The metadata value. This can be any string.
+
+<Note>
+Custom metadata configured here is separate from metadata passed at runtime via the Create Lobby API. Both are included on the lobby — settings metadata is always present, while API metadata can vary per lobby.
+</Note>

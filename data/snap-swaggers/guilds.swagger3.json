@@ -1,0 +1,1972 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Manage guilds",
+    "title" : "Guilds",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "GuildsService"
+  } ],
+  "paths" : {
+    "/v1/guilds/batch/members" : {
+      "post" : {
+        "description" : "Returns details for multiple members. Maximum 100 user IDs per request.",
+        "operationId" : "BatchGetMember",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/guildsBatchGetMemberRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/guildsBatchGetMemberResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Members",
+        "tags" : [ "GuildsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/guilds" : {
+      "post" : {
+        "description" : "Creates a guild",
+        "operationId" : "CreateGuild",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/guildsCreateGuildRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/guildsCreateGuildResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild",
+        "tags" : [ "GuildsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/guilds/{guild_id}" : {
+      "delete" : {
+        "description" : "(Guild Admin Only) Deletes the guild with the given ID",
+        "operationId" : "DeleteGuild",
+        "parameters" : [ {
+          "description" : "Guild ID for deleting the guild",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "DEPRECATED: ignored. The caller is derived from the authenticated session (X-Snapser-User-Id).",
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild",
+        "tags" : [ "GuildsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "get" : {
+        "description" : "Returns the guild with specified ID",
+        "operationId" : "GetGuild",
+        "parameters" : [ {
+          "description" : "User ID for the user whose data is being returned",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/guildsGetGuildResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild",
+        "tags" : [ "GuildsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "(Guild Admin Only) Updates the guild with the given ID",
+        "operationId" : "UpdateGuild",
+        "parameters" : [ {
+          "description" : "Guild ID for updating the guild",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateGuild_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild",
+        "tags" : [ "GuildsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/guilds/{guild_id}/admin" : {
+      "put" : {
+        "description" : "(Guild Admin Only) Updates a guild's admin",
+        "operationId" : "TransferAdmin",
+        "parameters" : [ {
+          "description" : "ID of the guild",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TransferAdmin_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild",
+        "tags" : [ "GuildsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/guilds/{guild_id}/invite-guild" : {
+      "post" : {
+        "description" : "(Guild Admin Only) Sends an invitation to a user to join a guild",
+        "operationId" : "InviteGuildUser",
+        "parameters" : [ {
+          "description" : "ID of the guild",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InviteGuildUser_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/guildsMembershipRequest"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Invite",
+        "tags" : [ "GuildsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ],
+        "x-snapser-exclude-from-non-legacy-sdk" : true
+      }
+    },
+    "/v1/guilds/guilds/{guild_id}/invites" : {
+      "post" : {
+        "description" : "(Guild Admin Only) Sends an invitation to a user to join a guild",
+        "operationId" : "InviteUser",
+        "parameters" : [ {
+          "description" : "ID of the guild",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InviteGuildUser_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/guildsMembershipRequest"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Invite",
+        "tags" : [ "GuildsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ],
+        "x-snapser-exclude-from-legacy-sdk" : true
+      }
+    },
+    "/v1/guilds/guilds/{guild_id}/invites/accept" : {
+      "post" : {
+        "description" : "User accepts a guild invitation and joins the guild",
+        "operationId" : "AcceptInvite",
+        "parameters" : [ {
+          "description" : "ID of the guild",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AcceptInvite_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Invite",
+        "tags" : [ "GuildsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ],
+        "x-snapser-exclude-from-legacy-sdk" : true
+      }
+    },
+    "/v1/guilds/guilds/{guild_id}/invites/accept-guild" : {
+      "post" : {
+        "description" : "User accepts a guild invitation and joins the guild",
+        "operationId" : "AcceptGuildInvite",
+        "parameters" : [ {
+          "description" : "ID of the guild",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AcceptInvite_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Invite",
+        "tags" : [ "GuildsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ],
+        "x-snapser-exclude-from-non-legacy-sdk" : true
+      }
+    },
+    "/v1/guilds/guilds/{guild_id}/invites/decline" : {
+      "post" : {
+        "description" : "User declines a guild invitation",
+        "operationId" : "DeclineInvite",
+        "parameters" : [ {
+          "description" : "ID of the guild",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DeclineInvite_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Invite",
+        "tags" : [ "GuildsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ],
+        "x-snapser-exclude-from-legacy-sdk" : true
+      }
+    },
+    "/v1/guilds/guilds/{guild_id}/invites/decline-guild" : {
+      "post" : {
+        "description" : "User declines a guild invitation",
+        "operationId" : "DeclineGuildInvite",
+        "parameters" : [ {
+          "description" : "ID of the guild",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DeclineInvite_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Invite",
+        "tags" : [ "GuildsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ],
+        "x-snapser-exclude-from-non-legacy-sdk" : true
+      }
+    },
+    "/v1/guilds/guilds/{guild_id}/leaderboards" : {
+      "get" : {
+        "description" : "Returns leaderboard scores for the guild",
+        "operationId" : "GetGuildLeaderboardScores",
+        "parameters" : [ {
+          "description" : "ID of the guild",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Optional user ID for the user who's standing is requested",
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Range of the leaderboard requested: 'top', 'bottom' or 'around' the user specified",
+          "explode" : true,
+          "in" : "query",
+          "name" : "range",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Number of rankings to be displayed",
+          "explode" : true,
+          "in" : "query",
+          "name" : "count",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "For recurring leaderboards, the offset from the latest occurrence of the leaderboard",
+          "explode" : true,
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/guildsGetGuildLeaderboardScoresResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Leaderboard",
+        "tags" : [ "GuildsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/guilds/{guild_id}/members" : {
+      "post" : {
+        "description" : "(Guild Admin Only) Adds a member to a guild",
+        "operationId" : "AddMember",
+        "parameters" : [ {
+          "description" : "ID of the guild",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AddMember_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Member",
+        "tags" : [ "GuildsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/guilds/{guild_id}/members/{target_user_id}" : {
+      "delete" : {
+        "description" : "(Guild Admin Only) Removes a member from the specified guild",
+        "operationId" : "RemoveMember",
+        "parameters" : [ {
+          "description" : "ID of the guild",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "target_user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Member",
+        "tags" : [ "GuildsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/guilds/{guild_id}/members/{user_id}" : {
+      "put" : {
+        "description" : "Updates the member metadata",
+        "operationId" : "UpdateMemberMetadata",
+        "parameters" : [ {
+          "description" : "ID of the guild",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "ID of the member whose metadata is updated (resource key). User-auth callers may only act on their own record; api-key/internal may target any user.",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateMemberMetadata_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Member",
+        "tags" : [ "GuildsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/guilds/{guild_id}/membership" : {
+      "post" : {
+        "description" : "Joins a guild",
+        "operationId" : "JoinGuild",
+        "parameters" : [ {
+          "description" : "ID of the guild",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/JoinGuild_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild",
+        "tags" : [ "GuildsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/guilds/{guild_id}/membership-requests" : {
+      "get" : {
+        "description" : "Returns all membership requests for the guild",
+        "operationId" : "GetMembershipRequests",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Number of results returned. The maximum allowed is 50, defaults to 10 if not provided.",
+          "explode" : true,
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Number of results to skip from the start of the result set",
+          "explode" : true,
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "DEPRECATED: ignored. The caller is derived from the authenticated session (X-Snapser-User-Id).",
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/guildsGetMembershipRequestsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Member",
+        "tags" : [ "GuildsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "post" : {
+        "description" : "Sends a request to join the given private guild",
+        "operationId" : "RequestMembership",
+        "parameters" : [ {
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RequestMembership_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Member",
+        "tags" : [ "GuildsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/guilds/{guild_id}/membership-requests/{target_user_id}/approve" : {
+      "post" : {
+        "description" : "(Guild Admin Only) Approves a membership request and adds the user to the guild",
+        "operationId" : "ApproveMembershipRequest",
+        "parameters" : [ {
+          "description" : "ID of the guild",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User ID of the requester to approve",
+          "explode" : false,
+          "in" : "path",
+          "name" : "target_user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ApproveMembershipRequest_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Member",
+        "tags" : [ "GuildsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/guilds/{guild_id}/membership-requests/{target_user_id}/decline" : {
+      "post" : {
+        "description" : "(Guild Admin Only) Declines a membership request",
+        "operationId" : "DeclineMembershipRequest",
+        "parameters" : [ {
+          "description" : "ID of the guild",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User ID of the requester to decline",
+          "explode" : false,
+          "in" : "path",
+          "name" : "target_user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ApproveMembershipRequest_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Member",
+        "tags" : [ "GuildsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/guilds/{guild_id}/membership-requests/{user_id}" : {
+      "delete" : {
+        "description" : "Deletes the guild membership request for the user",
+        "operationId" : "DeleteMembershipRequest",
+        "parameters" : [ {
+          "description" : "ID of the guild",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "ID of the user whose membership request is deleted (resource key). User-auth callers may only act on their own record; api-key/internal may target any user.",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Member",
+        "tags" : [ "GuildsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/guilds/{guild_id}/membership/{user_id}" : {
+      "delete" : {
+        "description" : "Leave the guild",
+        "operationId" : "LeaveGuild",
+        "parameters" : [ {
+          "description" : "Guild ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "ID of the user leaving the guild (resource key). User-auth callers may only act on their own record; api-key/internal may target any user.",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild",
+        "tags" : [ "GuildsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/invites/{user_id}" : {
+      "get" : {
+        "description" : "Returns all pending invitations for the user",
+        "operationId" : "GetUserInvites",
+        "parameters" : [ {
+          "description" : "ID of the user whose invites are returned (resource key). User-auth callers may only read their own; api-key/internal may read any user's.",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Number of results returned. Maximum 50, defaults to 10.",
+          "explode" : true,
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Number of results to skip",
+          "explode" : true,
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/guildsGetUserInvitesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Invite",
+        "tags" : [ "GuildsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/leaderboards" : {
+      "get" : {
+        "description" : "Gets the scores of an inter-guild leaderboard",
+        "operationId" : "GetInterGuildLeaderboardScores",
+        "parameters" : [ {
+          "description" : "Optional ID for the guild whose standing is requested",
+          "explode" : true,
+          "in" : "query",
+          "name" : "guild_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Range of the leaderboard requested: 'top', 'bottom' or 'around' the user specified",
+          "explode" : true,
+          "in" : "query",
+          "name" : "range",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Number of rankings to be displayed",
+          "explode" : true,
+          "in" : "query",
+          "name" : "count",
+          "required" : true,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "For recurring leaderboards, the offset from the latest occurrence of the leaderboard",
+          "explode" : true,
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "DEPRECATED: ignored. The caller is derived from the authenticated session (X-Snapser-User-Id).",
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/guildsGetInterGuildLeaderboardScoresResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Leaderboard",
+        "tags" : [ "GuildsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/leaderboards/guild/{guild_id}/score" : {
+      "patch" : {
+        "description" : "Increment score for the inter-guild leaderboard",
+        "operationId" : "IncrementInterGuildLeaderboardScores",
+        "parameters" : [ {
+          "description" : "ID of the guild whose score is being updated",
+          "explode" : false,
+          "in" : "path",
+          "name" : "guild_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/IncrementInterGuildLeaderboardScores_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/guildsIncrementInterGuildLeaderboardScoreResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Leaderboard",
+        "tags" : [ "GuildsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/members/{user_id}" : {
+      "get" : {
+        "description" : "Returns details for the member",
+        "operationId" : "GetMember",
+        "parameters" : [ {
+          "description" : "ID of the member to fetch. This is a resource key, not caller identity; user-auth callers may only fetch their own record.",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/guildsGetMemberResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild Member",
+        "tags" : [ "GuildsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/search" : {
+      "post" : {
+        "description" : "Search the guild with the given name",
+        "operationId" : "SearchGuilds",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/guildsSearchGuildsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/guildsSearchGuildsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild",
+        "tags" : [ "GuildsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/guilds/user/{user_id}" : {
+      "get" : {
+        "description" : "Returns the guild a user is a member of",
+        "operationId" : "GetGuildForUserId",
+        "parameters" : [ {
+          "description" : "ID of the member to fetch. This is a resource key, not caller identity; user-auth callers may only fetch their own record.",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/guildsGetGuildForUserIdResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Guild",
+        "tags" : [ "GuildsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "AcceptInvite_request" : {
+        "properties" : {
+          "member_metadata" : {
+            "description" : "Optional metadata to override invite metadata",
+            "type" : "object"
+          },
+          "user_id" : {
+            "description" : "ID of the user accepting the invite",
+            "type" : "string"
+          }
+        },
+        "required" : [ "user_id" ],
+        "type" : "object"
+      },
+      "AddMember_request" : {
+        "properties" : {
+          "metadata" : {
+            "description" : "Metadata for the user",
+            "type" : "object"
+          },
+          "target_user_id" : {
+            "description" : "User ID of the user to be added",
+            "type" : "string"
+          }
+        },
+        "required" : [ "target_user_id" ],
+        "type" : "object"
+      },
+      "AnyValue" : {
+        "description" : "Can be of any type",
+        "nullable" : true,
+        "oneOf" : [ {
+          "type" : "string"
+        }, {
+          "type" : "number"
+        }, {
+          "type" : "boolean"
+        }, {
+          "type" : "integer"
+        }, {
+          "type" : "object"
+        }, {
+          "items" : {
+            "type" : "object"
+          },
+          "type" : "array"
+        } ]
+      },
+      "ApproveMembershipRequest_request" : {
+        "properties" : {
+          "user_id" : {
+            "description" : "DEPRECATED: ignored. The caller is derived from the authenticated session (X-Snapser-User-Id).",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "DeclineInvite_request" : {
+        "properties" : {
+          "user_id" : {
+            "description" : "ID of the user declining the invite",
+            "type" : "string"
+          }
+        },
+        "required" : [ "user_id" ],
+        "type" : "object"
+      },
+      "IncrementInterGuildLeaderboardScores_request" : {
+        "properties" : {
+          "delta" : {
+            "description" : "The delta of the score to increment",
+            "format" : "double",
+            "type" : "number"
+          },
+          "tier_name" : {
+            "description" : "Name of the tier",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "DEPRECATED: ignored. The caller is derived from the authenticated session (X-Snapser-User-Id).",
+            "type" : "string"
+          }
+        },
+        "required" : [ "delta" ],
+        "type" : "object"
+      },
+      "InviteGuildUser_request" : {
+        "properties" : {
+          "metadata" : {
+            "description" : "Metadata for the invited user",
+            "type" : "object"
+          },
+          "target_user_id" : {
+            "description" : "User ID of the user to invite",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "DEPRECATED: ignored. The caller is derived from the authenticated session (X-Snapser-User-Id).",
+            "type" : "string"
+          }
+        },
+        "required" : [ "target_user_id" ],
+        "type" : "object"
+      },
+      "JoinGuild_request" : {
+        "properties" : {
+          "metadata" : {
+            "description" : "Metadata of the user",
+            "type" : "object"
+          },
+          "user_id" : {
+            "description" : "User ID of the user",
+            "type" : "string"
+          }
+        },
+        "required" : [ "user_id" ],
+        "type" : "object"
+      },
+      "RequestMembership_request" : {
+        "properties" : {
+          "metadata" : {
+            "type" : "object"
+          },
+          "user_id" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "TransferAdmin_request" : {
+        "properties" : {
+          "target_user_id" : {
+            "description" : "User ID of the new admin",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "DEPRECATED: ignored. The caller is derived from the authenticated session (X-Snapser-User-Id).",
+            "type" : "string"
+          }
+        },
+        "required" : [ "target_user_id" ],
+        "type" : "object"
+      },
+      "UpdateGuild_request" : {
+        "properties" : {
+          "is_public" : {
+            "description" : "If the guild id public or private",
+            "type" : "boolean"
+          },
+          "metadata" : {
+            "description" : "Metadata for the guild",
+            "type" : "object"
+          },
+          "name" : {
+            "description" : "Name of the guild",
+            "type" : "string"
+          }
+        },
+        "required" : [ "is_public", "metadata", "name" ],
+        "type" : "object"
+      },
+      "UpdateMemberMetadata_request" : {
+        "properties" : {
+          "metadata" : {
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsBatchGetMemberRequest" : {
+        "properties" : {
+          "user_ids" : {
+            "description" : "List of user IDs to retrieve. Maximum 100.",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "user_ids" ],
+        "type" : "object"
+      },
+      "guildsBatchGetMemberResponse" : {
+        "properties" : {
+          "responses" : {
+            "description" : "List of member responses, one per requested user ID",
+            "items" : {
+              "$ref" : "#/components/schemas/guildsBatchGetMemberSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsBatchGetMemberSingleResponse" : {
+        "properties" : {
+          "member" : {
+            "$ref" : "#/components/schemas/guildsMember"
+          },
+          "message" : {
+            "description" : "Error message if not successful",
+            "type" : "string"
+          },
+          "success" : {
+            "description" : "Whether the member was found successfully",
+            "type" : "boolean"
+          },
+          "user_id" : {
+            "description" : "The user ID for this response",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsCreateGuildRequest" : {
+        "properties" : {
+          "guild_metadata" : {
+            "description" : "JSON metadata for the guild",
+            "type" : "object"
+          },
+          "is_public" : {
+            "description" : "Is the guild public",
+            "type" : "boolean"
+          },
+          "member_metadata" : {
+            "description" : "JSON metadata for the admin member",
+            "type" : "object"
+          },
+          "name" : {
+            "description" : "Name of the guild",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "ID of the user",
+            "type" : "string"
+          }
+        },
+        "required" : [ "is_public", "name", "user_id" ],
+        "type" : "object"
+      },
+      "guildsCreateGuildResponse" : {
+        "properties" : {
+          "guild_id" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsGetGuildForUserIdResponse" : {
+        "properties" : {
+          "guild" : {
+            "$ref" : "#/components/schemas/guildsGuild"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsGetGuildLeaderboardScoresResponse" : {
+        "properties" : {
+          "tier" : {
+            "$ref" : "#/components/schemas/guildsTier"
+          },
+          "user_scores" : {
+            "description" : "List of users in the order defined by the leaderboard",
+            "items" : {
+              "$ref" : "#/components/schemas/guildsUserScore"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsGetGuildResponse" : {
+        "properties" : {
+          "guild" : {
+            "$ref" : "#/components/schemas/guildsGuild"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsGetInterGuildLeaderboardScoresResponse" : {
+        "properties" : {
+          "guild_scores" : {
+            "description" : "List of guilds in the order defined by the leaderboard",
+            "items" : {
+              "$ref" : "#/components/schemas/guildsGuildScore"
+            },
+            "type" : "array"
+          },
+          "tier" : {
+            "$ref" : "#/components/schemas/guildsTier"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsGetMemberResponse" : {
+        "properties" : {
+          "member" : {
+            "$ref" : "#/components/schemas/guildsMember"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsGetMembershipRequestsResponse" : {
+        "properties" : {
+          "membership_requests" : {
+            "items" : {
+              "$ref" : "#/components/schemas/guildsMembershipRequest"
+            },
+            "type" : "array"
+          },
+          "total" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsGetUserInvitesResponse" : {
+        "properties" : {
+          "invites" : {
+            "items" : {
+              "$ref" : "#/components/schemas/guildsMembershipRequest"
+            },
+            "type" : "array"
+          },
+          "total" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsGuild" : {
+        "properties" : {
+          "admin" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "is_public" : {
+            "type" : "boolean"
+          },
+          "leaderboard" : {
+            "type" : "string"
+          },
+          "members" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "metadata" : {
+            "type" : "object"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsGuildScore" : {
+        "properties" : {
+          "guild_id" : {
+            "type" : "string"
+          },
+          "rank" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "score" : {
+            "format" : "double",
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsGuildSummary" : {
+        "properties" : {
+          "admin" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "is_public" : {
+            "type" : "boolean"
+          },
+          "member_count" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "metadata" : {
+            "type" : "object"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsIncrementInterGuildLeaderboardScoreResponse" : {
+        "properties" : {
+          "rank" : {
+            "description" : "Latest rank to be returned",
+            "format" : "int64",
+            "type" : "number"
+          },
+          "score" : {
+            "description" : "Incremented score to be returned",
+            "format" : "double",
+            "type" : "number"
+          },
+          "tier" : {
+            "$ref" : "#/components/schemas/guildsTier"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsMember" : {
+        "properties" : {
+          "guild_id" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "join_date" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "metadata" : {
+            "type" : "object"
+          },
+          "type" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsMemberCountFilter" : {
+        "properties" : {
+          "op" : {
+            "description" : "Comparison operator for member count. Valid values: <, >, =",
+            "type" : "string"
+          },
+          "value" : {
+            "description" : "Value for the member count comparison",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsMembershipRequest" : {
+        "properties" : {
+          "expires_at" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "guild_id" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "member_metadata" : {
+            "type" : "object"
+          },
+          "request_date" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "sender_id" : {
+            "type" : "string"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/guildsMembershipRequestStatus"
+          },
+          "type" : {
+            "type" : "string"
+          },
+          "user_id" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsMembershipRequestStatus" : {
+        "default" : "MEMBERSHIP_REQUEST_STATUS_UNKNOWN",
+        "enum" : [ "MEMBERSHIP_REQUEST_STATUS_UNKNOWN", "MEMBERSHIP_REQUEST_STATUS_PENDING", "MEMBERSHIP_REQUEST_STATUS_ACCEPTED", "MEMBERSHIP_REQUEST_STATUS_DECLINED" ],
+        "type" : "string"
+      },
+      "guildsMetadataFilter" : {
+        "properties" : {
+          "bool_value" : {
+            "description" : "Strongly typed boolean value for comparison, use instead of value for type safety",
+            "nullable" : true,
+            "type" : "boolean"
+          },
+          "double_value" : {
+            "description" : "Strongly typed double value for comparison, use instead of value for type safety",
+            "format" : "double",
+            "nullable" : true,
+            "type" : "number"
+          },
+          "int_value" : {
+            "description" : "Strongly typed integer value for comparison, use instead of value for type safety",
+            "format" : "int64",
+            "nullable" : true,
+            "type" : "integer"
+          },
+          "key" : {
+            "description" : "Field inside metadata to be filtered on",
+            "type" : "string"
+          },
+          "op" : {
+            "description" : "Operator for the comparison. Valid values - LIKE, =, <>, >, <",
+            "type" : "string"
+          },
+          "string_value" : {
+            "description" : "Strongly typed string value for comparison, use instead of value for type safety",
+            "nullable" : true,
+            "type" : "string"
+          },
+          "value" : {
+            "$ref" : "#/components/schemas/AnyValue"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsSearchGuildsRequest" : {
+        "properties" : {
+          "access" : {
+            "description" : "Filter by guild type. Valid values - public, private",
+            "type" : "string"
+          },
+          "limit" : {
+            "description" : "Number of results returned. The maximum allowed is 50, defaults to 10 if not provided.",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "member_count" : {
+            "$ref" : "#/components/schemas/guildsMemberCountFilter"
+          },
+          "metadata_filters" : {
+            "description" : "Metadata filters. IMPORTANT: Only populate value or a single strongly typed value field (bool_value, int_value, double_value, string_value) inside each filter to ensure correct behavior.",
+            "items" : {
+              "$ref" : "#/components/schemas/guildsMetadataFilter"
+            },
+            "type" : "array"
+          },
+          "name" : {
+            "description" : "Returns guilds that have the name matching this field",
+            "type" : "string"
+          },
+          "offset" : {
+            "description" : "Number of results to skip from the start of the result set",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/guildsSortParams"
+          },
+          "user_id" : {
+            "description" : "DEPRECATED: ignored. The caller is derived from the authenticated session (X-Snapser-User-Id).",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsSearchGuildsResponse" : {
+        "properties" : {
+          "guilds" : {
+            "items" : {
+              "$ref" : "#/components/schemas/guildsGuildSummary"
+            },
+            "type" : "array"
+          },
+          "total" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsSortParams" : {
+        "properties" : {
+          "field" : {
+            "description" : "Field on which the results are to be sorted",
+            "type" : "string"
+          },
+          "order" : {
+            "description" : "Order of sorting. Valid values - asc, desc",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "guildsTier" : {
+        "properties" : {
+          "bucket_size" : {
+            "description" : "Number of players per bucket within the tier",
+            "format" : "uint64",
+            "type" : "integer"
+          },
+          "description" : {
+            "description" : "Description of the tier",
+            "type" : "string"
+          },
+          "name" : {
+            "description" : "Name of the tier, unique within the leaderboard",
+            "type" : "string"
+          },
+          "single_bucket" : {
+            "description" : "Whether the tier uses a single shared bucket",
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "name" ],
+        "type" : "object"
+      },
+      "guildsUserScore" : {
+        "properties" : {
+          "rank" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "score" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "user_id" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "protobufNullValue" : {
+        "default" : "NULL_VALUE",
+        "description" : "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value.",
+        "enum" : [ "NULL_VALUE" ],
+        "type" : "string"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

@@ -1,0 +1,52 @@
+# Custom Email Templates
+
+Customize the email template that Snapser sends to users when they request an export of their data via the GDPR snap.
+By default, Snapser uses a standard email format. With this tool, game studios can personalize the look and content of
+the data export email to match their brand.
+
+## Prerequisites
+
+1. The **GDPR** snap must be added to your cluster.
+2. The GDPR snap must be on version **1.8.0** or higher. If your snap is on an older version, you will see an upgrade prompt.
+
+## Getting Started
+
+1. Navigate to **Snapend > Admin > GDPR > Custom Email Templates** from the side nav.
+2. If the GDPR snap is not present on your cluster, the page will display an empty state prompting you to add it.
+
+## Template Fields
+
+1. **Sender** — The email address that will appear as the sender of the data export email. Must be a valid email address. The sender email needs to be verified by Snapser before it can be used.
+2. **Subject** — The subject line of the data export email.
+3. **Content Type** — The MIME content type of the email (e.g., `text/html`).
+4. **Template** — The HTML body of the email. You can write custom HTML to style the email. The following HTML tags are supported:
+   - Layout: `div`, `span`, `table`, `tr`, `td`
+   - Text: `p`, `h1`, `h2`, `h3`, `ul`, `li`
+   - Media & Links: `img`, `a`
+   - Styling: `style`
+
+<Note>
+  For security, `script` tags are not allowed and will be stripped from the template.
+  Only the `style`, `class`, `href`, `src`, `width`, and `height` attributes are permitted.
+</Note>
+
+## Preview
+
+A live preview of the rendered HTML is displayed below the template body field. As you edit the HTML, the preview updates
+in real time so you can see exactly how the email will look before saving.
+
+## Saving and Resetting
+
+- Click **Save** to apply your custom template. All fields are required and the sender must be a valid email address.
+- Click **Reset** to revert to the default Snapser email template. This action requires confirmation.
+
+## Permissions
+
+Access to this tool is controlled by your organization's role-based access settings:
+
+- **View** — Permission to retrieve and view the current template.
+- **Create / Update** — Permission to save or modify the template.
+- **Delete** — Permission to reset the template back to the default.
+
+If you do not have the required permissions, the page will display a permission denied message. Contact your organization
+administrator to request access.

@@ -1,0 +1,37 @@
+# Create Users Tool
+
+This tool allows Snapser customers to batch-create users by specifying login identifiers for supported authentication connectors.
+
+<Note>
+  This tool works even if you have **disabled** New User Creation via the **User Settings** tool.
+</Note>
+
+## Requirements
+
+- Snapend Auth Snap version **v0.49.0 or later**
+
+## How to Use
+
+1. Navigate to **Auth → Create Users** from the Snapend Tools panel.
+2. Select the **Login Type** for your users.
+3. Enter a **comma-separated list of login IDs** (e.g., `user_a@gmail.com, user_b@yahoo.com, user_c@snapser.com`).
+4. Click **Create Users**.
+
+<Note>
+  The user identifiers have to be appropriate for the selected login type. For example, if you select `email`, the identifiers should be valid email addresses.
+  If you select `anon`, the identifiers should be unique usernames. The system will validate the inputs and provide feedback.
+</Note>
+
+## Supported Login Types
+
+The following login connectors are supported:
+
+- `anon`
+- `email`
+- `google`
+- `apple`
+- `steam`
+- `facebook`
+- `discord`
+- `epic`
+- `xbox`

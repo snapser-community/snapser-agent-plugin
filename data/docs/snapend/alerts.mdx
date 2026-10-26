@@ -1,0 +1,160 @@
+export const description = 'Alerts'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Alerts
+
+<Warning>
+  This viewer only populates if a **Portal** channel in the
+  [Alert Manager](/docs/resources/tools/alert-manager) is subscribed to
+  this Snapend. Without a Portal channel + matching subscription, alerts
+  for this Snapend will only fan out to your other channels (Slack,
+  PagerDuty, Email) and this page will stay empty.
+</Warning>
+
+## Concept
+
+Every Snapend in Snapser is continuously evaluated for health — pod
+crashes, CPU and memory pressure, restart loops, latency drift, error
+rates and more. When a condition trips, Snapser fires a **platform
+alert**. The Alerts viewer shows you the alerts currently firing on
+_this_ Snapend, with the most recent and most severe at the top.
+
+If you want to set up _where_ alerts get delivered (this Portal viewer,
+Slack, PagerDuty, email) or _which_ snapends a subscription covers, head
+to the [Alert Manager](/docs/resources/tools/alert-manager) at the app
+level.
+
+<Note>
+  The Alerts viewer is read-only. It's the right place to triage a fire,
+  not to change subscriptions.
+</Note>
+
+## Pre-requisites
+
+You need a role that grants view access on the cluster (any
+`cluster-*` role works). Users without cluster view do not see the
+Alerts entry in the snapend navigation.
+
+## Tool Location
+
+From your Snapend home page, open the left nav and click
+**Infrastructure → Alerts**.
+
+![Snapend Alerts](/images/docs/snapend-alerts.png)
+
+A small badge also appears in the Snapend header whenever there are
+unresolved alerts firing on this snapend. The badge color tracks the
+highest active severity — red for critical, amber for warning, blue for
+info — and clicking it jumps you straight into this view.
+
+## Columns
+
+The table surfaces six columns by default:
+
+| Column | What it shows |
+|--------|---------------|
+| **Severity** | A colored chip — `critical`, `warning` or `info` |
+| **Alert** | The catalog alert name (e.g. `PodCrashLoopBackOff`) |
+| **Pod** | The specific pod the signal came from |
+| **Started** | When this alert first fired |
+| **Last seen** | When Snapser last received a `firing` event for it |
+| **Actions** | Expand button to open the detail panel |
+
+Rows sort by severity then by start time so the highest-priority items
+are always at the top.
+
+## Detail panel
+
+Clicking **Expand** on any row drops in a detail panel inline beneath it
+with the full alert payload:
+
+- **Summary** — one-line human-readable description from the catalog
+- **Description** — the full rendered description (in a monospaced
+  panel so labels and values stay aligned)
+- **Namespace** — the Kubernetes namespace the signal came from
+- **Snapend ID** — included for cross-referencing in logs
+- **Status** — `firing` or `resolved`
+
+Use **Collapse** (or click Expand on a different row) to close it.
+
+## Auto-refresh
+
+The page polls every 30 seconds. A **Refresh** button in the top right
+lets you pull the latest data on demand and an "Updated _Ns_ ago"
+caption next to it tells you how fresh the current view is. While a
+refresh is in flight the caption switches to a spinner — the table
+itself doesn't blank out so you can keep reading.
+
+## Lifecycle
+
+Snapser stores firing alerts in a short-lived buffer so the viewer
+stays fast even when Grafana is under load. A few things to keep in
+mind:
+
+1. **Entries auto-clear after 30 minutes** — even if the underlying
+   condition is still firing. Grafana will resend on its next
+   evaluation cycle and the alert will pop back into the table.
+2. **Resolved alerts disappear immediately** — when Grafana sends a
+   `resolved` event the row leaves the table. Channel subscriptions
+   with **Notify on resolve** enabled will receive a follow-up message.
+3. **The viewer is per-snapend** — to see alerts across multiple
+   snapends, open each one. The snapend header badge is the easiest
+   way to spot which one is on fire.
+
+<Note>
+  Because of the 30-minute TTL, you might see the same alert "appear,
+  disappear, then appear again" while the condition is still firing.
+  This is expected. The Alert Manager subscription will continue
+  delivering on every Grafana evaluation either way.
+</Note>
+
+## Severity model
+
+| Severity | What it means |
+|----------|---------------|
+| `critical` | Customer-impacting — a snap or pod is down, hot, or hitting an unrecoverable error |
+| `warning` | Something to look at soon — elevated error rates, restart counts, latency drift |
+| `info` | Informational — useful telemetry, not actionable on its own |
+
+The Snapend header badge color tracks the highest active severity on
+the snapend.
+
+## See also
+
+- [Alert Manager](/docs/resources/tools/alert-manager) — set up channels
+  and subscriptions at the app level
+- [Monitoring](/docs/snapend/monitoring) — graphs and the pod heatmap
+- [Logs](/docs/snapend/logs) — drill into log lines for the pod that
+  fired the alert
+
+## FAQs
+
+### An alert just disappeared but the issue isn't fixed. What gives?
+
+The Alerts viewer's buffer has a 30-minute TTL. If Grafana hasn't
+re-fired the alert yet (it evaluates on a periodic cycle) you'll see a
+brief gap. The row will re-appear on the next firing event. Your
+channel subscriptions are unaffected.
+
+### Can I acknowledge or snooze an alert from this view?
+
+Not today. The Alerts viewer is read-only — it's intentionally light so
+oncall can use it during an incident without worrying about state
+changes. Acknowledgement and snoozing belong in your notification
+destination (PagerDuty, Slack thread, etc.).
+
+### Why is there a badge in the Snapend header but the Alerts page is empty?
+
+There's a small race between Snapser invalidating the badge counter and
+the page loading. Hit **Refresh** in the top right and the badge will
+fall in line.
+
+### Can I see resolved alerts here?
+
+No — once Grafana sends `resolved`, the row leaves the table. For an
+audit trail of past fires, look in your channel destination (Slack
+history, PagerDuty incidents, etc.).

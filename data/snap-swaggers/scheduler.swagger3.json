@@ -1,0 +1,23 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Schedule one-time and recurring tasks",
+    "title" : "Scheduler",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "SchedulerService"
+  } ],
+  "paths" : { },
+  "components" : {
+    "schemas" : { }
+  },
+  "x-original-swagger-version" : "2.0"
+}

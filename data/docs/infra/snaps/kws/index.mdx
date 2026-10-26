@@ -1,0 +1,619 @@
+export const description = 'Kids Web Service'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Kids Web Service (KWS)
+
+Epic Games and Snapser have partnered together to enables game studios to have a fully COPPA compliant backend for their games.
+
+<Warning>
+  This is a Premium snap. You will need to be on a Premium plan to use it.
+</Warning>
+
+## About KWS
+The Kids Web Service (KWS) is a service that helps game developers comply with the Children's Online Privacy Protection Act (COPPA) by providing age-gating and parental consent features. The KWS Snap provides a seamless integration between your Snapend and the KWS service, allowing you to easily configure and manage your COPPA compliance settings.
+
+<Note>
+  Presently, the Kids Web Service, does not have a self service portal. You need to reach out to their team to get the necessary credentials.
+</Note>
+
+## Concept
+When it comes to COPPA compliance, there are two key concepts to understand:
+1. Parental Consent: Before a child can access your game or a subset of game features, you must obtain verifiable parental consent. This can be done through a variety of methods, such as email verification, credit card verification, or a signed consent form.
+   This part is completely handled by the KWS service. The game client directly interacts with the KWS service to get the parental consent kicked off.
+2. Server Gating: This is where Snapser comes in. The KWS Snap provides a permission harness that allows you to gate access to your game and its features based on the age of the player and the consent of the parent or guardian.
+
+### Flow Diagram
+The flow diagram below illustrates how the KWS Snap integrates with the KWS service to provide age-gating and parental consent features.
+
+![kws-flow](/images/docs/kws-flow.png)
+
+1. The game client authenticates with the Auth snap and gets a Snapser session token.
+2. The game client sends a request to the GetUserSettingValues API in the KWS snap to get the user specific settings.
+3. The KWS snap sends a request to the KWS service to get the user specific settings.
+4. The KWS service returns the user specific settings to the KWS snap, which it caches for faster access. This data is then returned back to the game client.
+5. Now, say the game client figures out that the user is a child and needs parental consent for a particular feature. The game client sends a request to the KWS snap to get the parental consent.
+6. The KWS snap sends a request to the KWS service to get the parental consent. The KWS service then sends an email to the parent or guardian with a link to provide consent.
+7. Once the parent or guardian provides consent, the KWS service makes an API call to the KWS snap to update the user specific settings.
+8. The KWS Snap updates the user specific settings. The client is expected to poll for new permissions or if using Snapser web sockets will get the updated permissions in real time.
+
+## Example Use Case
+Imagine you are developing a game that is targeted at children under the age of 13. To comply with COPPA regulations, you need to ensure that you obtain verifiable parental consent before allowing children to access chat in your game. However, if a child is above 16 years of age, you can allow them to access chat without parental consent.
+As a game studio you will need to:
+1. Set up the KWS service with your Snapend.
+2. Create a permission in the KWS console that checks the age of the player and whether they have parental consent to access chat.
+3. Add the permission to the KWS Snap on Snapser and attach it to the chat API in your game.
+
+## Snaps integration
+The KWS Snap integrates with all the Snaps on Snapser. It provides a permission harness that allows you to gate access to your game based on the age of the player and the consent of the parent or guardian.
+
+## APIs & Emitters
+
+The `KWS` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name             | HTTP Method | API Description                                                                                          |
+| -------------------- | ----------- | -------------------------------------------------------------------------------------------------------- |
+| [KwsSendConsentEmail](#kwssendconsentemail-api)     | POST        | Send consent email to the parent                                                                         |
+| [KwsGetUserSettingValues](#kwsgetusersettingvalues-api) | GET         | Get the kws setting values of a user                                                                     |
+| [KwsHandleKwsWebhook](#kwshandlekwswebhook-api)     | POST        | Internal use: Endpoint that KWS hits to notify Snapser of changes to a users permission user permissions |
+</div>
+
+### Usage
+#### KwsSendConsentEmail API
+<CodeGroup title="Send consent email to the parent" tag="POST" label="KwsSendConsentEmail">
+```csharp
+/// <summary>
+/// Send consent email Send consent email
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User id</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>ApiHttpBody</returns>
+public ApiHttpBody KwsSendConsentEmail(string userId, string token, SendConsentEmailRequest body)
+{
+    Snapser.Client.ApiResponse<ApiHttpBody> localVarResponse = KwsSendConsentEmailWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+// Snapser.Model for SendConsentEmailRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="SendConsentEmailRequest" /> class.
+/// </summary>
+/// <param name="age">Age.</param>
+/// <param name="dob">DOB of the user in YYYY-MM-DD.</param>
+/// <param name="enforceParentalControl">Whether parental controls should be enforced (might trigger an email to the parent to review limits).</param>
+/// <param name="language">Language of the email.</param>
+/// <param name="location">Location of the user, example US-CA.</param>
+/// <param name="parentEmail">Parent email.</param>
+/// <param name="settings">List of settings.</param>
+/// <param name="timezone">The relative time zone of the user based off IANA Time Zone database.</param>
+public SendConsentEmailRequest(int age = default(int), string dob = default(string), bool enforceParentalControl = default(bool), string language = default(string), string location = default(string), string parentEmail = default(string), List<KwsConsentSettings> settings = default(List<KwsConsentSettings>), string timezone = default(string))
+{
+    this.Age = age;
+    this.Dob = dob;
+    this.EnforceParentalControl = enforceParentalControl;
+    this.Language = language;
+    this.Location = location;
+    this.ParentEmail = parentEmail;
+    this.Settings = settings;
+    this.Timezone = timezone;
+}
+
+// Snapser.Model for KwsConsentSettings
+/// <summary>
+/// Initializes a new instance of the <see cref="KwsConsentSettings" /> class.
+/// </summary>
+/// <param name="varNamespace">Namespace of the setting.</param>
+/// <param name="settingName">Name of the setting.</param>
+public KwsConsentSettings(string varNamespace = default(string), string settingName = default(string))
+{
+    this.VarNamespace = varNamespace;
+    this.SettingName = settingName;
+}
+
+// Snapser.Model for ApiHttpBody
+/// <summary>
+/// Initializes a new instance of the <see cref="ApiHttpBody" /> class.
+/// </summary>
+/// <param name="contentType">The HTTP Content-Type header value specifying the content type of the body..</param>
+/// <param name="data">The HTTP request/response body as raw binary..</param>
+/// <param name="extensions">Application specific response metadata. Must be set in the first response for streaming APIs..</param>
+public ApiHttpBody(string contentType = default(string), byte[] data = default(byte[]), List<ProtobufAny> extensions = default(List<ProtobufAny>))
+{
+    this.ContentType = contentType;
+    this.Data = data;
+    this.Extensions = extensions;
+}
+
+// Snapser.Model for ProtobufAny
+/// <summary>
+/// Initializes a new instance of the <see cref="ProtobufAny" /> class.
+/// </summary>
+/// <param name="type">A URL/resource name that uniquely identifies the type of the serialized protocol buffer message. This string must contain at least one \&quot;/\&quot; character. The last segment of the URL&#39;s path must represent the fully qualified name of the type (as in &#x60;path/google.protobuf.Duration&#x60;). The name should be in a canonical form (e.g., leading \&quot;.\&quot; is not accepted).  In practice, teams usually precompile into the binary all types that they expect it to use in the context of Any. However, for URLs which use the scheme &#x60;http&#x60;, &#x60;https&#x60;, or no scheme, one can optionally set up a type server that maps type URLs to message definitions as follows:  * If no scheme is provided, &#x60;https&#x60; is assumed. * An HTTP GET on the URL must yield a [google.protobuf.Type][]   value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the   URL, or have them precompiled into a binary to avoid any   lookup. Therefore, binary compatibility needs to be preserved   on changes to types. (Use versioned type names to manage   breaking changes.)  Note: this functionality is not currently available in the official protobuf release, and it is not used for type URLs beginning with type.googleapis.com. As of May 2023, there are no widely used type server implementations and no plans to implement one.  Schemes other than &#x60;http&#x60;, &#x60;https&#x60; (or the empty scheme) might be used with implementation specific semantics..</param>
+public ProtobufAny(string type = default(string)) : base()
+{
+    this.Type = type;
+    this.AdditionalProperties = new Dictionary<string, object>();
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserKwsServiceApi::KwsSendConsentEmailRequest : public Request
+{
+public:
+    virtual ~KwsSendConsentEmailRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User id */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserSendConsentEmailRequest Body;
+};
+
+class SNAPSER_API SnapserSendConsentEmailRequest : public Model
+{
+public:
+    virtual ~SnapserSendConsentEmailRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Age */
+    TOptional<int32> Age;
+    /* DOB of the user in YYYY-MM-DD */
+    TOptional<FString> Dob;
+    /* Whether parental controls should be enforced (might trigger an email to the parent to review limits) */
+    TOptional<bool> EnforceParentalControl;
+    /* Language of the email */
+    TOptional<FString> Language;
+    /* Location of the user, example US-CA */
+    TOptional<FString> Location;
+    /* Parent email */
+    TOptional<FString> ParentEmail;
+    /* List of settings */
+    TOptional<TArray<SnapserKwsConsentSettings>> Settings;
+    /* The relative time zone of the user based off IANA Time Zone database */
+    TOptional<FString> Timezone;
+};
+
+class SNAPSER_API SnapserKwsConsentSettings : public Model
+{
+public:
+    virtual ~SnapserKwsConsentSettings() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Namespace of the setting */
+    TOptional<FString> _Namespace;
+    /* Name of the setting */
+    TOptional<FString> SettingName;
+};
+
+// Response
+class SNAPSER_API SnapserKwsServiceApi::KwsSendConsentEmailResponse : public Response
+{
+public:
+    virtual ~KwsSendConsentEmailResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserApiHttpBody Content;
+};
+
+class SNAPSER_API SnapserApiHttpBody : public Model
+{
+public:
+    virtual ~SnapserApiHttpBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* The HTTP Content-Type header value specifying the content type of the body. */
+    TOptional<FString> ContentType;
+    /* The HTTP request/response body as raw binary. */
+    TOptional<TArray<uint8>> Data;
+    /* Application specific response metadata. Must be set in the first response for streaming APIs. */
+    TOptional<TArray<SnapserProtobufAny>> Extensions;
+};
+
+class SNAPSER_API SnapserProtobufAny : public Model
+{
+public:
+    virtual ~SnapserProtobufAny() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* A URL/resource name that uniquely identifies the type of the serialized protocol buffer message. This string must contain at least one \"/\" character. The last segment of the URL's path must represent the fully qualified name of the type (as in `path/google.protobuf.Duration`). The name should be in a canonical form (e.g., leading \".\" is not accepted).  In practice, teams usually precompile into the binary all types that they expect it to use in the context of Any. However, for URLs which use the scheme `http`, `https`, or no scheme, one can optionally set up a type server that maps type URLs to message definitions as follows:  * If no scheme is provided, `https` is assumed. * An HTTP GET on the URL must yield a [google.protobuf.Type][]   value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the   URL, or have them precompiled into a binary to avoid any   lookup. Therefore, binary compatibility needs to be preserved   on changes to types. (Use versioned type names to manage   breaking changes.)  Note: this functionality is not currently available in the official protobuf release, and it is not used for type URLs beginning with type.googleapis.com. As of May 2023, there are no widely used type server implementations and no plans to implement one.  Schemes other than `http`, `https` (or the empty scheme) might be used with implementation specific semantics. */
+    TOptional<FString> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### KwsGetUserSettingValues API
+<CodeGroup title="Get the kws setting values of a user" tag="GET" label="KwsGetUserSettingValues">
+```csharp
+/// <summary>
+/// Get the kws setting values of a user Get kws setting values
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User id</param>
+/// <param name="token">User session token</param>
+/// <param name="dob">DOB of the user in YYYY-MM-DD (optional)</param>
+/// <param name="location">Location of the user, example US-CA (optional)</param>
+/// <param name="enforceParentalControl">Whether parental controls should be enforced, might trigger an email to parent to review limits (optional)</param>
+/// <param name="timeZone">The relative time zone of the user based off IANA Time Zone database (optional)</param>
+/// <param name="varNamespace">Namespace of the setting (optional)</param>
+/// <param name="settingName">Name of the setting (optional)</param>
+/// <param name="format">full to include settings definitions in the response. (Default: short) (optional)</param>
+/// <returns>KwsGetUserSettingValuesResponse</returns>
+public KwsGetUserSettingValuesResponse KwsGetUserSettingValues(string userId, string token, string dob = default(string), string location = default(string), string enforceParentalControl = default(string), string timeZone = default(string), string varNamespace = default(string), List<string> settingName = default(List<string>), string format = default(string))
+{
+    Snapser.Client.ApiResponse<KwsGetUserSettingValuesResponse> localVarResponse = KwsGetUserSettingValuesWithHttpInfo(userId, token, dob, location, enforceParentalControl, timeZone, varNamespace, settingName, format);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for KwsGetUserSettingValuesResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="KwsGetUserSettingValuesResponse" /> class.
+/// </summary>
+/// <param name="meta">meta.</param>
+/// <param name="response">response.</param>
+public KwsGetUserSettingValuesResponse(KwsKwsUserSettingMeta meta = default(KwsKwsUserSettingMeta), KwsKwsUserSettingValueList response = default(KwsKwsUserSettingValueList))
+{
+    this.Meta = meta;
+    this.Response = response;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserKwsServiceApi::KwsGetUserSettingValuesRequest : public Request
+{
+public:
+    virtual ~KwsGetUserSettingValuesRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User id */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    /* DOB of the user in YYYY-MM-DD */
+    TOptional<FString> Dob;
+    /* Location of the user, example US-CA */
+    TOptional<FString> Location;
+    /* Whether parental controls should be enforced, might trigger an email to parent to review limits */
+    TOptional<FString> EnforceParentalControl;
+    /* The relative time zone of the user based off IANA Time Zone database */
+    TOptional<FString> TimeZone;
+    /* Namespace of the setting */
+    TOptional<FString> _Namespace;
+    /* Name of the setting */
+    TOptional<TArray<FString>> SettingName;
+    /* full to include settings definitions in the response. (Default: short) */
+    TOptional<FString> Format;
+};
+
+// Response
+class SNAPSER_API SnapserKwsServiceApi::KwsGetUserSettingValuesResponse : public Response
+{
+public:
+    virtual ~KwsGetUserSettingValuesResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserKwsGetUserSettingValuesResponse Content;
+};
+
+class SNAPSER_API SnapserKwsGetUserSettingValuesResponse : public Model
+{
+public:
+    virtual ~SnapserKwsGetUserSettingValuesResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserKwsKwsUserSettingMeta> Meta;
+    TOptional<SnapserKwsKwsUserSettingValueList> Response;
+};
+
+class SNAPSER_API SnapserKwsKwsUserSettingMeta : public Model
+{
+public:
+    virtual ~SnapserKwsKwsUserSettingMeta() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> RequestId;
+    TOptional<FString> Timestamp;
+};
+
+class SNAPSER_API SnapserKwsKwsUserSettingValueList : public Model
+{
+public:
+    virtual ~SnapserKwsKwsUserSettingValueList() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserKwsKwsUserSettingValue>> Settings;
+};
+
+class SNAPSER_API SnapserKwsKwsUserSettingValue : public Model
+{
+public:
+    virtual ~SnapserKwsKwsUserSettingValue() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserKwsKwsSettingDefinition> Definition;
+    /* How the effective value was determined (one of default, preference, parentLimit, enforcedLimit). */
+    TOptional<FString> EffectiveSource;
+    /* The effective value to use in the client, taking into account limits. */
+    TOptional<TSharedPtr<FJsonObject>> EffectiveValue;
+    /* True if the full setting is from an org-level setting and false if it is from a product-level setting (only relevant when using setting inheritance) */
+    TOptional<bool> IsOrgLevel;
+    /* The unix timestamp in milliseconds for the date/time that the user last graduated to a different age-bracket. */
+    TOptional<FString> LastGraduatedAt;
+    /* The namespace of setting */
+    TOptional<FString> _Namespace;
+    /* The maximum value the parent has allowed. */
+    TOptional<TSharedPtr<FJsonObject>> ParentLimit;
+    /* True if the parent limit value is from an org-level setting and false if it is from a product-level setting (only relevant when using setting inheritance) */
+    TOptional<bool> ParentLimitFromOrgLevel;
+    /* A hashmap containing the parent limit schedule, with keys as time window and value as the parent limit */
+    TOptional<TSharedPtr<FJsonObject>> ParentLimitSchedule;
+    /* True if the parent limit schedule is enabled, indicating that a schedule may have been used in calculation of users effective value. */
+    TOptional<bool> ParentLimitScheduleEnabled;
+    /* The unix timestamp in milliseconds for the date/time that the parent limit was last updated. If null, it indicates that the user is using the default */
+    TOptional<FString> ParentLimitUpdatedAt;
+    /* The user's preference */
+    TOptional<TSharedPtr<FJsonObject>> PreferredValue;
+    /* True if the preferred value is from an org-level setting and false if it is from a product-level setting (only relevant when using setting inheritance) */
+    TOptional<bool> PreferredValueFromOrgLevel;
+    /* The unix timestamp in milliseconds for the date/time that the preferred value was last updated. If null, it indicates that the user is using the default */
+    TOptional<FString> PreferredValueUpdatedAt;
+    /* Time Zone used in the calculation of a users effective value when a parentLimitSchedule is enabled */
+    TOptional<FString> ScheduleCalculatedFromTimeZone;
+    /* The setting name */
+    TOptional<FString> SettingName;
+};
+
+class SNAPSER_API SnapserKwsKwsSettingDefinition : public Model
+{
+public:
+    virtual ~SnapserKwsKwsSettingDefinition() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserKwsKwsSettingRegionalAgeBracket> AgeBracket;
+    /* Determines whether or not settings can be overridden and specifies if overrides are limited to values, translations, regions or age brackets */
+    TOptional<FString> AllowProductOverrides;
+    /* Whether the setting data should be stored */
+    TOptional<FString> DataStorage;
+    /* The value to apply for each increment or decrement. i.e. a value of 2 would result in 6 incrementing to 8 or decrementing to 4 */
+    TOptional<int32> IncrementOrDecrementBy;
+    /* Whether the setting was inherited from the organisation level */
+    TOptional<bool> InheritFromOrg;
+    /* The maximum value for a numeric setting */
+    TOptional<int32> Max;
+    /* The maximum number of schedule windows allowed for the particular setting */
+    TOptional<int32> MaximumScheduleWindowsPerDay;
+    /* The minimum value for a numeric setting */
+    TOptional<int32> Min;
+    /* The namespace of the setting */
+    TOptional<FString> _Namespace;
+    /* The number of decimals for a numeric setting */
+    TOptional<int32> NumberOfDecimals;
+    /* The numeric value type (decimal, integer, etc) */
+    TOptional<FString> NumericValueFormat;
+    TOptional<TArray<SnapserKwsKwsSettingOption>> Options;
+    /* The organisation ID of the setting */
+    TOptional<FString> OrgId;
+    TOptional<SnapserKwsKwsSettingRegionalAgeBracket> PreviousAgeBracket;
+    /* The product ID of a product-level setting */
+    TOptional<FString> ProductId;
+    /* Whether the setting is required */
+    TOptional<bool> Required;
+    /* The type of restrictiveOrder that corresponds with the value type of the setting. The restrictiveOrder can be oneOf 'firstRestrictive', 'firstPermissive' for valueType 'option' 'lowRestrictive', 'lowPermissive' for valueType 'numeric' 'falseRestrictive', 'falsePermissive' for valueType 'boolean' 'earlierRestrictive', 'earlierPermissive' for valueType 'date' */
+    TOptional<FString> RestrictiveOrder;
+    /* The configured schedule periods, can be 5m, 10m, 15m, 30m 1h, 1d */
+    TOptional<FString> SchedulePeriod;
+    /* The name used to identify the setting */
+    TOptional<FString> SettingName;
+    /* Translations */
+    TOptional<TSharedPtr<FJsonObject>> Translations;
+    /* Whether the setting is visible to a child user or not */
+    TOptional<bool> UserHidden;
+    /* The type of setting value (boolean, numeric, option, etc) */
+    TOptional<FString> ValueType;
+};
+
+class SNAPSER_API SnapserKwsKwsSettingRegionalAgeBracket : public Model
+{
+public:
+    virtual ~SnapserKwsKwsSettingRegionalAgeBracket() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* The consent required from the parent for the age bracket */
+    TOptional<bool> ApplyConsentToEnforcedUsersOnly;
+    /* The type of consent required for the age bracket */
+    TOptional<FString> ConsentType;
+    /* The default parent limit for the regional age bracket */
+    TOptional<TSharedPtr<FJsonObject>> DefaultParentLimit;
+    /* The default value for the regional age bracket */
+    TOptional<TSharedPtr<FJsonObject>> DefaultPreference;
+    /* The enforced limit for the regional age bracket */
+    TOptional<TSharedPtr<FJsonObject>> EnforcedLimit;
+    /* Enforeced limit schedule */
+    TOptional<TSharedPtr<FJsonObject>> EnforcedLimitSchedule;
+};
+
+class SNAPSER_API SnapserKwsKwsSettingOption : public Model
+{
+public:
+    virtual ~SnapserKwsKwsSettingOption() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Translations */
+    TOptional<TSharedPtr<FJsonObject>> Translations;
+    /* The value for the setting option */
+    TOptional<FString> Value;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### KwsHandleKwsWebhook API
+<CodeGroup title="Internal use: Endpoint that KWS hits to notify Snapser of changes to a users permission user permissions" tag="POST" label="KwsHandleKwsWebhook">
+```csharp
+/// <summary>
+/// Handle Kws Webook Handle Kws Webook
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object KwsHandleKwsWebhook(KwsHandleKwsWebhookRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = KwsHandleKwsWebhookWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for KwsHandleKwsWebhookRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="KwsHandleKwsWebhookRequest" /> class.
+/// </summary>
+/// <param name="environmentId">environmentId.</param>
+/// <param name="name">name.</param>
+/// <param name="orgId">orgId.</param>
+/// <param name="payload">payload.</param>
+/// <param name="productId">productId.</param>
+/// <param name="times">times.</param>
+public KwsHandleKwsWebhookRequest(string environmentId = default(string), string name = default(string), string orgId = default(string), Object payload = default(Object), string productId = default(string), string times = default(string))
+{
+    this.EnvironmentId = environmentId;
+    this.Name = name;
+    this.OrgId = orgId;
+    this.Payload = payload;
+    this.ProductId = productId;
+    this.Times = times;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserKwsServiceApi::KwsHandleKwsWebhookRequest : public Request
+{
+public:
+    virtual ~KwsHandleKwsWebhookRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserKwsHandleKwsWebhookRequest Body;
+};
+
+class SNAPSER_API SnapserKwsHandleKwsWebhookRequest : public Model
+{
+public:
+    virtual ~SnapserKwsHandleKwsWebhookRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> EnvironmentId;
+    TOptional<FString> Name;
+    TOptional<FString> OrgId;
+    TOptional<TSharedPtr<FJsonObject>> Payload;
+    TOptional<FString> ProductId;
+    TOptional<FString> Times;
+};
+
+// Response
+class SNAPSER_API SnapserKwsServiceApi::KwsHandleKwsWebhookResponse : public Response
+{
+public:
+    virtual ~KwsHandleKwsWebhookResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code  | Variable                             | Message                                              | HTTP | gRPC             |
+| ----- | ------------------------------------ | ---------------------------------------------------- | ---- | ---------------- |
+| 22000 | ErrUnauthorized                      | Unauthorized                                         | 403  | PermissionDenied |
+| 22001 | ErrKwsSettingNotFound                | setting not found                                    | 404  | NotFound         |
+| 22002 | ErrSettingAlreadyExists              | setting already exists                               | 409  | AlreadyExists    |
+| 22003 | ErrInvalidComparisonType             | invalid comparison type                              | 400  | InvalidArgument  |
+| 22004 | ErrInvalidExpectedValue              | invalid expected value                               | 400  | InvalidArgument  |
+| 22005 | ErrServiceMethodAlreadyExists        | service & method already linked to a different setting | 409 | AlreadyExists   |
+| 22006 | ErrCreateKwsSettingFailure           | failed to create setting                             | 500  | Internal         |
+| 22007 | ErrUpdateKwsSettingFailure           | failed to update setting                             | 500  | Internal         |
+| 22008 | ErrDeleteKwsSettingFailure           | failed to delete setting                             | 500  | Internal         |
+| 22009 | ErrGetKwsSettingFailure              | failed to get settings                               | 500  | Internal         |
+| 22010 | ErrKwsSettingsNotFound               | no kws settings found                                | 404  | NotFound         |
+| 22011 | ErrUpdateKwsCredentialsFailure       | failed to update kws credentials                     | 500  | Internal         |
+| 22011 | ErrKwsCrendentialsNotFound           | kws credentials not found                            | 404  | NotFound         |
+| 22012 | ErrGetKwsCrendentialsFailure         | failed to get kws credentials                        | 500  | Internal         |
+| 22013 | ErrDeleteKwsCrendentialsFailure      | failed to delete kws credentials                     | 500  | Internal         |
+| 22013 | ErrGetKwsSettingsFromUpstreamFailure | failed to get kws settings from upstream             | 500  | Internal         |
+| 22014 | ErrGetUserSettingValuesFailure       | failed to get setting values for user                | 500  | Internal         |
+| 22015 | ErrSendConsentEmailFailure           | failed sending consent email                         | 500  | Internal         |
+| 22016 | ErrAuthorizeFailure                  | failed to authorize                                  | 500  | Internal         |
+| 22017 | ErrImportSettingsFailure             | failed to import settings                            | 500  | Internal         |
+| 22018 | ErrExportSettingsFailure             | failed to export settings                            | 500  | Internal         |
+| 22019 | ErrValidateImportFailure             | failed to validate settings                          | 500  | Internal         |
+| 22020 | ErrNoUserData                        | no user data found                                   | 404  | NotFound         |
+| 22021 | ErrGetUserDataFailure                | failed to get user data                              | 500  | Internal         |
+| 22022 | ErrDeleteUserDataFailure             | failed to delete user data                           | 500  | Internal         |
+</div>
+
+{/* ![Api Pic](/images/docs/leaderboards-api.png) */}
+
+### Websocket Emitters
+
+When [Web sockets](/docs/infra/snaps/hermes) are enabled on your snapends gateway,
+and you have added the [Event Bus](/docs/infra/snaps/eventbus) snap, this snap can broadcast
+specific events related to KWS value changes directly to the game clients. These events are
+targeted to the appropriate user. Each event is uniquely identified by an enum, and the event
+payload is a well-structured protobuf message. These protobuf messages can be downloaded from
+the Downloads page.
+
+You can choose to enable/disable events from the [Event Bus](/docs/infra/snaps/eventbus) configuration tool.
+
+| Event Id | Event Name                   | Description                                                     | Payload Proto Message         |
+| -------- | ---------------------------- | --------------------------------------------------------------- | ----------------------------- |
+| 1        | KWS_EFFECTIVE_VALUES_CHANGED | Published When Kws Effective Values Changed Webhook Is Received | EventKwsEffectiveValueChanged |
+
+
+### Upcoming enhancements
+
+None at the moment.
+

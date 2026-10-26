@@ -1,0 +1,19 @@
+# Statistics
+This tool allows you to add, edit and delete user statistics.
+
+To get started:
+1. Click on `Statistics` from the side Nav.
+2. Click on the `Add a Statistic` button.
+3. You will then see a form where you can add or update your statistic.
+
+## Statistic Details
+1. **Key** - Unique key for the statistic. This should be alphanumeric without spaces.
+
+## Statistic Category
+1. **Type** - The type of statistic. This can be a counter, timestamp, or string.
+2. **Negative Value Allowed** - This allows you to set if the statistic can have negative values. This only applies to counter stats.
+
+## Statistic Access
+1. **Scope** - The scope of the statistic. This can be external or internal. External stats can be updated by the client, over app auth. Internal stats can only be updated by other snaps within your cluster or using app auth.
+
+![Admin Stats Pic](/images/docs/stats-admin.png)

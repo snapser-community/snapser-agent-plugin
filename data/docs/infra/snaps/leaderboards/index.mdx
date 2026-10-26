@@ -1,0 +1,1235 @@
+
+
+export const description = 'Leaderboards'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Leaderboards
+
+The Leaderboard snap makes it easy to add a sense of competition to your game or even social app.
+At the core this snap keeps score for your entire audience at a global or per
+league level, including player ranks. The service is extremely comprehensive
+and supports both recurring and non-recurring as well as tiered and
+non-tiered leaderboards.
+
+## Leaderboard Types
+
+There are mainly two types of leaderboards
+
+1. **Global**: Single leaderboard for your entire user base.
+2. **Tiered**: Leaderboards with tiers and each tier having a fixed bucket size. These leaderboards are used to create tiers within your game or app.
+
+<Note>
+  If you are creating a mass market game or have the ambition to do so, we
+  recommend always choosing a tiered leaderboard. This will allow you to create
+  tiers or leagues within your game and give your users a sense of competition that feels
+  fair.
+</Note>
+
+### Global Leaderboards
+
+Global leaderboards are the simplest form of leaderboards. Every user in your
+game is ranked against every other user. This is the most common form of
+leaderboard. However it's not the most engaging form of leaderboard. This is
+because most users will see their rank as a very large number and not feel
+compelled to improve it.
+
+<Note>
+You should consider using a tiered leaderboard if you want to create a sense of
+competition within your game.
+</Note>
+
+### Tiered Leaderboards
+
+One major problem when you use a global leaderboard is that it's hard to
+ignite a sense of competition for most of your users. For example if a user
+sees that their rank is 1,000,000 they wont feel compelled to improve their
+rank. Tiered leaderboards solve this problem by creating tiers within your
+game. Each tier has a fixed bucket size and users are ranked within their
+bucket. Now, instead of competing against the entire game user base, users of a
+tiered leaderboard are competing only with a limited set. This makes the
+competition feel fair.
+
+#### Example of a Tiered Leaderboard Setup
+
+Best way to think about tiered leaderboards is in the form of a league.
+In the leaderboards Snap you create 3 tiers. One Bronze tier with a bucket size of 200,
+then a silver tier with a bucket size of 100 and a gold tier with a bucket size of 50.
+Note there can be any number of buckets within each tier and this is completely managed by the snap.
+Users typically start in the Bronze tier and compete against the other 200 people. At the end of the league period,
+the top X players can be promoted to the next league. The bottom Y people get moved down to the previous league. The
+promotion and demotion is totally up to the game team.
+
+## Recurring and Non-Recurring
+
+Recurring leaderboards get reset over a schedule automatically. Non-recurring
+leaderboards are forever leaderboards where the scores never reset.
+
+<Note>
+  When using a recurring leaderboard, the service supports the client querying
+  for their score from the previous phase. This is useful if you want to look at
+  a user's rank in the previous event and decide whether to give them a winning
+  prize.
+</Note>
+
+## Retrieving Leaderboard Data
+
+Every leaderboard can be set up to return user ranks in an **Ascending** order or **Descending** order.
+
+## Handling Rewards
+Say you have a tiered leaderboard with 3 tiers. You have decided that the top 3 ranks get a special reward. Most game studios,
+handle this directly client side, for a client authoritative game. Server authoritative games handle this via a BYOSnap.
+In both cases, the code detects that a rollover has happened recently and queries the leaderboard service to get the rank,
+of the previous period. If the user is within the top three ranks a prize can be granted to the user.
+
+<Note>
+The Leaderboards Snap does not do any kind of automatic granting of prizes. This is left to the game team to handle.
+</Note>
+
+## Handling Cheaters
+
+Leaderboards are always prey to cheaters, especially if your league has some sort of a reward associated with it.
+There is a super simple trick that some game studios use. They create a `_c` version of the leaderboard via the Leaderboards
+snaps admin. The setup is identical to the main leaderboard for your game. However, whenever your game detects a cheater, you
+should throw the user to this new leaderboard. This way slowly but surely all cheaters start playing against each other and
+the main leaderboard stays clean.
+
+<Note>
+This is just one of the many simple hacks typical game studios use. The Leaderboards Snap does not do any kind of automatic
+cheater detection. This is left to the game team to handle.
+</Note>
+
+## APIs
+
+The `Leaderboards` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name            | HTTP Method | API Description                                                                               |
+| ------------------- | ----------- | --------------------------------------------------------------------------------------------- |
+| [LeaderboardsGetScores](#leaderboardsgetscores-api)           | GET         | Gets the standings within a leaderboard                                                       |
+| [LeaderboardsIncrementScore](#leaderboardsincrementscore-api)      | PATCH       | Increments the score on the leaderboard                                                       |
+| [LeaderboardsSetScore](#leaderboardssetscore-api)            | PUT         | Updates the score on the leaderboard for the logged in user (only non 'counter' leaderboards) |
+| [LeaderboardsBatchGetScores](#leaderboardsbatchgetscores-api)       | GET         | Gets the standings within a leaderboard for multiple users |
+| [LeaderboardsBatchIncrementScore](#leaderboardsbatchincrementscore-api) | PATCH       | Increments the scores on the leaderboard                                                      |
+| [LeaderboardsBatchSetScore](#leaderboardsbatchsetscore-api)       | PUT         | Updates the score on the leaderboard for the logged in user (only non 'counter' leaderboards) |
+</div>
+
+### Usage
+#### LeaderboardsGetScores API
+<CodeGroup title="Gets the standings within a leaderboard" tag="GET" label="LeaderboardsGetScores">
+```csharp
+/// <summary>
+/// Get Scores Gets the standings within a leaderboard
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="leaderboardName">Name of the leaderboard</param>
+/// <param name="range">Range of the leaderboard requested: &#39;top&#39;, &#39;bottom&#39; or &#39;around&#39; the user specified</param>
+/// <param name="count">Number of rankings to be displayed</param>
+/// <param name="token">User session token</param>
+/// <param name="userId">Optional user ID for the user who&#39;s standing is requested (optional)</param>
+/// <param name="offset">For recurring leaderboards, the offset from the latest occurrence of the leaderboard (optional)</param>
+/// <param name="withMetadata">Whether the user metadata should be included with the request (optional)</param>
+/// <returns>LeaderboardsGetScoresResponse</returns>
+public LeaderboardsGetScoresResponse LeaderboardsGetScores(string leaderboardName, string range, long count, string token, string userId = default(string), int? offset = default(int?), bool? withMetadata = default(bool?))
+{
+    Snapser.Client.ApiResponse<LeaderboardsGetScoresResponse> localVarResponse = LeaderboardsGetScoresWithHttpInfo(leaderboardName, range, count, token, userId, offset, withMetadata);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for LeaderboardsGetScoresResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsGetScoresResponse" /> class.
+/// </summary>
+/// <param name="tier">tier.</param>
+/// <param name="userScores">List of users in the order defined by the leaderboard.</param>
+public LeaderboardsGetScoresResponse(LeaderboardsTier tier = default(LeaderboardsTier), List<LeaderboardsUserScore> userScores = default(List<LeaderboardsUserScore>))
+{
+    this.Tier = tier;
+    this.UserScores = userScores;
+}
+
+/// Snapser.Model for LeaderboardsUserScore
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsTier" /> class.
+/// </summary>
+/// <param name="bucketSize">bucketSize.</param>
+/// <param name="description">description.</param>
+/// <param name="name">name.</param>
+public LeaderboardsTier(string bucketSize = default(string), string description = default(string), string name = default(string))
+{
+    this.BucketSize = bucketSize;
+    this.Description = description;
+    this.Name = name;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserLeaderboardsServiceApi::LeaderboardsGetScoresRequest : public Request
+{
+public:
+    virtual ~LeaderboardsGetScoresRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Name of the leaderboard */
+    FString LeaderboardName;
+    /* Range of the leaderboard requested: 'top', 'bottom' or 'around' the user specified */
+    FString Range;
+    /* Number of rankings to be displayed */
+    int64 Count = 0;
+    /* User session token */
+    FString Token;
+    /* Optional user ID for the user who's standing is requested */
+    TOptional<FString> UserId;
+    /* For recurring leaderboards, the offset from the latest occurrence of the leaderboard */
+    TOptional<int32> Offset;
+    /* Whether the user metadata should be included with the request */
+    TOptional<bool> WithMetadata;
+};
+
+// Response
+class SNAPSER_API SnapserLeaderboardsServiceApi::LeaderboardsGetScoresResponse : public Response
+{
+public:
+    virtual ~LeaderboardsGetScoresResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserLeaderboardsGetScoresResponse Content;
+};
+
+class SNAPSER_API SnapserLeaderboardsGetScoresResponse : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsGetScoresResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserLeaderboardsTier> Tier;
+    /* List of users in the order defined by the leaderboard */
+    TOptional<TArray<SnapserLeaderboardsUserScore>> UserScores;
+};
+
+class SNAPSER_API SnapserLeaderboardsTier : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsTier() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> BucketSize;
+    TOptional<FString> Description;
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserLeaderboardsUserScore : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsUserScore() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* User's rank starting with 1 */
+    TOptional<int64> Rank;
+    /* User's score */
+    TOptional<double> Score;
+    /* User ID of the user */
+    TOptional<FString> UserId;
+    /* User metadata */
+    TOptional<TSharedPtr<FJsonObject>> UserMetadata;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### LeaderboardsIncrementScore API
+<CodeGroup title="Increments the score on the leaderboard" tag="PATCH" label="LeaderboardsIncrementScore">
+```csharp
+/// <summary>
+/// Score Increments the leaderboard score for the user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="leaderboardName">Name of the leaderboard</param>
+/// <param name="userId">User ID for the user who&#39;s score is being updated</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>LeaderboardsIncrementScoreResponse</returns>
+public LeaderboardsIncrementScoreResponse LeaderboardsIncrementScore(string leaderboardName, string userId, string token, IncrementScoreRequest body)
+{
+    Snapser.Client.ApiResponse<LeaderboardsIncrementScoreResponse> localVarResponse = LeaderboardsIncrementScoreWithHttpInfo(leaderboardName, userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for IncrementScoreRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="IncrementScoreRequest" /> class.
+/// </summary>
+/// <param name="delta">The delta of the score to increment (required).</param>
+/// <param name="tierName">Name of the tier.</param>
+/// <param name="userMetadata">Metadata to be stored with the user.</param>
+public IncrementScoreRequest(double delta = default(double), string tierName = default(string), Object userMetadata = default(Object))
+{
+    this.Delta = delta;
+    this.TierName = tierName;
+    this.UserMetadata = userMetadata;
+}
+
+/// Snapser.Model for LeaderboardsIncrementScoreResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsIncrementScoreResponse" /> class.
+/// </summary>
+/// <param name="rank">Latest rank to be returned.</param>
+/// <param name="score">Incremented score to be returned.</param>
+/// <param name="tier">tier.</param>
+/// <param name="userId">User ID of the user.</param>
+public LeaderboardsIncrementScoreResponse(long rank = default(long), double score = default(double), LeaderboardsTier tier = default(LeaderboardsTier), string userId = default(string))
+{
+    this.Rank = rank;
+    this.Score = score;
+    this.Tier = tier;
+    this.UserId = userId;
+}
+
+/// Snapser.Model for LeaderboardsTier
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsTier" /> class.
+/// </summary>
+/// <param name="bucketSize">bucketSize.</param>
+/// <param name="description">description.</param>
+/// <param name="name">name.</param>
+public LeaderboardsTier(string bucketSize = default(string), string description = default(string), string name = default(string))
+{
+    this.BucketSize = bucketSize;
+    this.Description = description;
+    this.Name = name;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserLeaderboardsServiceApi::LeaderboardsIncrementScoreRequest : public Request
+{
+public:
+    virtual ~LeaderboardsIncrementScoreRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Name of the leaderboard */
+    FString LeaderboardName;
+    /* User ID for the user who's score is being updated */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserIncrementScoreRequest Body;
+};
+
+class SNAPSER_API SnapserIncrementScoreRequest : public Model
+{
+public:
+    virtual ~SnapserIncrementScoreRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* The delta of the score to increment */
+    double Delta = 0.0;
+    /* Name of the tier */
+    TOptional<FString> TierName;
+    /* Metadata to be stored with the user */
+    TOptional<TSharedPtr<FJsonObject>> UserMetadata;
+};
+// Response
+class SNAPSER_API SnapserLeaderboardsServiceApi::LeaderboardsIncrementScoreResponse : public Response
+{
+public:
+    virtual ~LeaderboardsIncrementScoreResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserLeaderboardsIncrementScoreResponse Content;
+};
+
+class SNAPSER_API SnapserLeaderboardsIncrementScoreResponse : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsIncrementScoreResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Latest rank to be returned */
+    TOptional<double> Rank;
+    /* Incremented score to be returned */
+    TOptional<double> Score;
+    TOptional<SnapserLeaderboardsTier> Tier;
+    /* User ID of the user */
+    TOptional<FString> UserId;
+};
+
+class SNAPSER_API SnapserLeaderboardsTier : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsTier() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> BucketSize;
+    TOptional<FString> Description;
+    TOptional<FString> Name;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### LeaderboardsSetScore API
+<CodeGroup title="Updates the score on the leaderboard for the logged in user (only non 'counter' leaderboards)" tag="PUT" label="LeaderboardsSetScore">
+```csharp
+/// <summary>
+/// Update Scores Updates the score on the leaderboard for the logged in user (only non &#39;counter&#39; leaderboards)
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="leaderboardName">Name of the leaderboard</param>
+/// <param name="userId">User ID for the user who&#39;s score is being updated</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>LeaderboardsSetScoreResponse</returns>
+public LeaderboardsSetScoreResponse LeaderboardsSetScore(string leaderboardName, string userId, string token, SetScoreRequest body)
+{
+    Snapser.Client.ApiResponse<LeaderboardsSetScoreResponse> localVarResponse = LeaderboardsSetScoreWithHttpInfo(leaderboardName, userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for SetScoreRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="SetScoreRequest" /> class.
+/// </summary>
+/// <param name="score">New score to be inserted (required).</param>
+/// <param name="tierName">Name of the tier.</param>
+/// <param name="userMetadata">Metadata to be stored with the user.</param>
+public SetScoreRequest(double score = default(double), string tierName = default(string), Object userMetadata = default(Object))
+{
+    this.Score = score;
+    this.TierName = tierName;
+    this.UserMetadata = userMetadata;
+}
+
+/// Snapser.Model for LeaderboardsSetScoreResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsSetScoreResponse" /> class.
+/// </summary>
+/// <param name="score">Latest score to be returned.</param>
+/// <param name="tier">tier.</param>
+/// <param name="userId">User ID of the user.</param>
+public LeaderboardsSetScoreResponse(double score = default(double), LeaderboardsTier tier = default(LeaderboardsTier), string userId = default(string))
+{
+    this.Score = score;
+    this.Tier = tier;
+    this.UserId = userId;
+}
+
+/// Snapser.Model for LeaderboardsTier
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsTier" /> class.
+/// </summary>
+/// <param name="bucketSize">bucketSize.</param>
+/// <param name="description">description.</param>
+/// <param name="name">name.</param>
+public LeaderboardsTier(string bucketSize = default(string), string description = default(string), string name = default(string))
+{
+    this.BucketSize = bucketSize;
+    this.Description = description;
+    this.Name = name;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserLeaderboardsServiceApi::LeaderboardsSetScoreRequest : public Request
+{
+public:
+    virtual ~LeaderboardsSetScoreRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Name of the leaderboard */
+    FString LeaderboardName;
+    /* User ID for the user who's score is being updated */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserSetScoreRequest Body;
+};
+
+class SNAPSER_API SnapserSetScoreRequest : public Model
+{
+public:
+    virtual ~SnapserSetScoreRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* New score to be inserted */
+    double Score = 0.0;
+    /* Name of the tier */
+    TOptional<FString> TierName;
+    /* Metadata to be stored with the user */
+    TOptional<TSharedPtr<FJsonObject>> UserMetadata;
+};
+
+// Response
+class SNAPSER_API SnapserLeaderboardsServiceApi::LeaderboardsSetScoreResponse : public Response
+{
+public:
+    virtual ~LeaderboardsSetScoreResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserLeaderboardsSetScoreResponse Content;
+};
+
+class SNAPSER_API SnapserLeaderboardsSetScoreResponse : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsSetScoreResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Latest score to be returned */
+    TOptional<double> Score;
+    TOptional<SnapserLeaderboardsTier> Tier;
+    /* User ID of the user */
+    TOptional<FString> UserId;
+};
+
+class SNAPSER_API SnapserLeaderboardsTier : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsTier() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> BucketSize;
+    TOptional<FString> Description;
+    TOptional<FString> Name;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### LeaderboardsBatchGetScores API
+<CodeGroup title="Gets the standings within a leaderboard for multiple users" tag="GET" label="LeaderboardsBatchGetScores">
+```csharp
+/// <summary>
+/// Scores APIs (App Auth) Gets the standings within a leaderboard for multiple users
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userIds">List of user IDs for which scores are requested</param>
+/// <param name="leaderboardName">Name of the leaderboard</param>
+/// <param name="userId">User ID of the user</param>
+/// <returns>LeaderboardsBatchGetScoresResponse</returns>
+public LeaderboardsBatchGetScoresResponse LeaderboardsBatchGetScores(List<string> userIds, string leaderboardName, string userId)
+{
+    Snapser.Client.ApiResponse<LeaderboardsBatchGetScoresResponse> localVarResponse = LeaderboardsBatchGetScoresWithHttpInfo(userIds, leaderboardName, userId);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for LeaderboardsBatchGetScoresResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsBatchGetScoresResponse" /> class.
+/// </summary>
+/// <param name="responses">List of responses with the latest scores.</param>
+/// <param name="userScores">userScores.</param>
+public LeaderboardsBatchGetScoresResponse(List<LeaderboardsBatchGetScoresSingleResponse> responses = default(List<LeaderboardsBatchGetScoresSingleResponse>), List<LeaderboardsTieredUserScore> userScores = default(List<LeaderboardsTieredUserScore>))
+{
+    this.Responses = responses;
+    this.UserScores = userScores;
+}
+
+/// Snapser.Model for LeaderboardsBatchGetScoresSingleResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsBatchGetScoresSingleResponse" /> class.
+/// </summary>
+/// <param name="message">message.</param>
+/// <param name="request">request.</param>
+/// <param name="response">response.</param>
+/// <param name="success">success.</param>
+public LeaderboardsBatchGetScoresSingleResponse(string message = default(string),
+                                                LeaderboardsGetScoresRequest request = default(LeaderboardsGetScoresRequest), List<LeaderboardsTieredUserScore> response = default(List<LeaderboardsTieredUserScore>), bool success = default(bool))
+{
+    this.Message = message;
+    this.Request = request;
+    this.Response = response;
+    this.Success = success;
+}
+
+/// Snapser.Model for LeaderboardsTieredUserScore
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsTieredUserScore" /> class.
+/// </summary>
+/// <param name="tier">Name of the tier.</param>
+/// <param name="userScore">userScore.</param>
+public LeaderboardsTieredUserScore(string tier = default(string), LeaderboardsUserScore userScore = default(LeaderboardsUserScore))
+{
+    this.Tier = tier;
+    this.UserScore = userScore;
+}
+
+/// Snapser.Model for LeaderboardsGetScoresRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsGetScoresRequest" /> class.
+/// </summary>
+/// <param name="count">Number of rankings to be displayed (required).</param>
+/// <param name="leaderboardName">Name of the leaderboard (required).</param>
+/// <param name="offset">For recurring leaderboards, the offset from the latest occurrence of the leaderboard.</param>
+/// <param name="range">Range of the leaderboard requested: &#39;top&#39;, &#39;bottom&#39; or &#39;around&#39; the user specified (required).</param>
+/// <param name="userId">Optional user ID for the user who&#39;s standing is requested.</param>
+/// <param name="withMetadata">Whether the user metadata should be included with the request.</param>
+public LeaderboardsGetScoresRequest(long count = default(long), string leaderboardName = default(string), int offset = default(int), RangeEnum range = default(RangeEnum), string userId = default(string), bool withMetadata = default(bool))
+{
+    this.Count = count;
+    // to ensure "leaderboardName" is required (not null)
+    if (leaderboardName == null)
+    {
+        throw new ArgumentNullException("leaderboardName is a required property for LeaderboardsGetScoresRequest and cannot be null");
+    }
+    this.LeaderboardName = leaderboardName;
+    this.Range = range;
+    this.Offset = offset;
+    this.UserId = userId;
+    this.WithMetadata = withMetadata;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserLeaderboardsServiceApi::LeaderboardsBatchGetScoresRequest : public Request
+{
+public:
+    virtual ~LeaderboardsBatchGetScoresRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* List of user IDs for which scores are requested */
+    TArray<FString> UserIds;
+    /* Name of the leaderboard */
+    FString LeaderboardName;
+    /* User ID of the user */
+    FString UserId;
+};
+
+// Response
+class SNAPSER_API SnapserLeaderboardsServiceApi::LeaderboardsBatchGetScoresResponse : public Response
+{
+public:
+    virtual ~LeaderboardsBatchGetScoresResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserLeaderboardsBatchGetScoresResponse Content;
+};
+
+class SNAPSER_API SnapserLeaderboardsBatchGetScoresResponse : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsBatchGetScoresResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* List of responses with the latest scores */
+    TOptional<TArray<SnapserLeaderboardsBatchGetScoresSingleResponse>> Responses;
+    TOptional<TArray<SnapserLeaderboardsTieredUserScore>> UserScores;
+};
+
+class SNAPSER_API SnapserLeaderboardsBatchGetScoresSingleResponse : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsBatchGetScoresSingleResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Message;
+    TOptional<SnapserLeaderboardsGetScoresRequest> Request;
+    TOptional<TArray<SnapserLeaderboardsTieredUserScore>> Response;
+    TOptional<bool> Success;
+};
+
+class SNAPSER_API SnapserLeaderboardsTieredUserScore : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsTieredUserScore() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Name of the tier */
+    TOptional<FString> Tier;
+    TOptional<SnapserLeaderboardsUserScore> UserScore;
+};
+
+class SNAPSER_API SnapserLeaderboardsGetScoresRequest : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsGetScoresRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Number of rankings to be displayed */
+    int64 Count = 0;
+    /* Name of the leaderboard */
+    FString LeaderboardName;
+    /* For recurring leaderboards, the offset from the latest occurrence of the leaderboard */
+    TOptional<int32> Offset;
+    enum class RangeEnum
+    {
+        Top,
+        Bottom,
+        Around,
+    };
+
+    static FString EnumToString(const RangeEnum& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, RangeEnum& EnumValue);
+    /* Range of the leaderboard requested: 'top', 'bottom' or 'around' the user specified */
+    RangeEnum Range;
+    /* Optional user ID for the user who's standing is requested */
+    TOptional<FString> UserId;
+    /* Whether the user metadata should be included with the request */
+    TOptional<bool> WithMetadata;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### LeaderboardsBatchIncrementScore API
+<CodeGroup title="Increments the scores on the leaderboard" tag="PATCH" label="LeaderboardsBatchIncrementScore">
+```csharp
+/// <summary>
+/// Scores (App Auth) Increments the scores on the leaderboard
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">(app auth only)</param>
+/// <param name="body"></param>
+/// <returns>LeaderboardsBatchIncrementScoreResponse</returns>
+public LeaderboardsBatchIncrementScoreResponse LeaderboardsBatchIncrementScore(string token, LeaderboardsBatchIncrementScoreRequest body)
+{
+    Snapser.Client.ApiResponse<LeaderboardsBatchIncrementScoreResponse> localVarResponse = LeaderboardsBatchIncrementScoreWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for LeaderboardsBatchIncrementScoreRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsBatchIncrementScoreRequest" /> class.
+/// </summary>
+/// <param name="incrementScoreRequests">List of requests with their scores to be incremented (required).</param>
+public LeaderboardsBatchIncrementScoreRequest(List<LeaderboardsIncrementScoreRequest> incrementScoreRequests = default(List<LeaderboardsIncrementScoreRequest>))
+{
+    // to ensure "incrementScoreRequests" is required (not null)
+    if (incrementScoreRequests == null)
+    {
+        throw new ArgumentNullException("incrementScoreRequests is a required property for LeaderboardsBatchIncrementScoreRequest and cannot be null");
+    }
+    this.IncrementScoreRequests = incrementScoreRequests;
+}
+
+/// Snapser.Model for LeaderboardsBatchIncrementScoreResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsBatchIncrementScoreResponse" /> class.
+/// </summary>
+/// <param name="incrementScoreResponses">incrementScoreResponses.</param>
+/// <param name="responses">List of responses for each user ID.</param>
+/// <param name="scoresFailed">scoresFailed.</param>
+/// <param name="scoresIncremented">scoresIncremented.</param>
+public LeaderboardsBatchIncrementScoreResponse(List<LeaderboardsIncrementScoreResponse> incrementScoreResponses = default(List<LeaderboardsIncrementScoreResponse>), List<LeaderboardsBatchIncrementScoreSingleResponse> responses = default(List<LeaderboardsBatchIncrementScoreSingleResponse>), int scoresFailed = default(int), int scoresIncremented = default(int))
+{
+    this.IncrementScoreResponses = incrementScoreResponses;
+    this.Responses = responses;
+    this.ScoresFailed = scoresFailed;
+    this.ScoresIncremented = scoresIncremented;
+}
+
+/// Snapser.Model for LeaderboardsIncrementScoreResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsIncrementScoreResponse" /> class.
+/// </summary>
+/// <param name="rank">Latest rank to be returned.</param>
+/// <param name="score">Incremented score to be returned.</param>
+/// <param name="tier">tier.</param>
+/// <param name="userId">User ID of the user.</param>
+public LeaderboardsIncrementScoreResponse(decimal rank = default(decimal), double score = default(double), LeaderboardsTier tier = default(LeaderboardsTier), string userId = default(string))
+{
+    this.Rank = rank;
+    this.Score = score;
+    this.Tier = tier;
+    this.UserId = userId;
+}
+
+/// Snapser.Model for LeaderboardsBatchIncrementScoreSingleResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsBatchIncrementScoreSingleResponse" /> class.
+/// </summary>
+/// <param name="message">message.</param>
+/// <param name="request">request.</param>
+/// <param name="response">response.</param>
+/// <param name="success">success.</param>
+public LeaderboardsBatchIncrementScoreSingleResponse(string message = default(string), LeaderboardsIncrementScoreRequest request = default(LeaderboardsIncrementScoreRequest), LeaderboardsIncrementScoreResponse response = default(LeaderboardsIncrementScoreResponse), bool success = default(bool))
+{
+    this.Message = message;
+    this.Request = request;
+    this.Response = response;
+    this.Success = success;
+}
+
+/// Snapser.Model for LeaderboardsIncrementScoreRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsIncrementScoreRequest" /> class.
+/// </summary>
+/// <param name="delta">The delta of the score to increment (required).</param>
+/// <param name="leaderboardName">Name of the leaderboard (required).</param>
+/// <param name="tierName">Name of the tier.</param>
+/// <param name="userId">User ID for the user who&#39;s score is being updated (required).</param>
+/// <param name="userMetadata">Metadata to be stored with the user.</param>
+public LeaderboardsIncrementScoreRequest(double delta = default(double), string leaderboardName = default(string), string tierName = default(string), string userId = default(string), Object userMetadata = default(Object))
+{
+    this.Delta = delta;
+    // to ensure "leaderboardName" is required (not null)
+    if (leaderboardName == null)
+    {
+        throw new ArgumentNullException("leaderboardName is a required property for LeaderboardsIncrementScoreRequest and cannot be null");
+    }
+    this.LeaderboardName = leaderboardName;
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for LeaderboardsIncrementScoreRequest and cannot be null");
+    }
+    this.UserId = userId;
+    this.TierName = tierName;
+    this.UserMetadata = userMetadata;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserLeaderboardsServiceApi::LeaderboardsBatchIncrementScoreRequest : public Request
+{
+public:
+    virtual ~LeaderboardsBatchIncrementScoreRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* (app auth only) */
+    FString Token;
+    SnapserLeaderboardsBatchIncrementScoreRequest Body;
+};
+
+class SNAPSER_API SnapserLeaderboardsBatchIncrementScoreRequest : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsBatchIncrementScoreRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* List of requests with their scores to be incremented */
+    TArray<SnapserLeaderboardsIncrementScoreRequest> IncrementScoreRequests;
+};
+
+class SNAPSER_API SnapserLeaderboardsIncrementScoreRequest : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsIncrementScoreRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* The delta of the score to increment */
+    double Delta = 0.0;
+    /* Name of the leaderboard */
+    FString LeaderboardName;
+    /* Name of the tier */
+    TOptional<FString> TierName;
+    /* User ID for the user who's score is being updated */
+    FString UserId;
+    /* Metadata to be stored with the user */
+    TOptional<TSharedPtr<FJsonObject>> UserMetadata;
+};
+
+// Response
+class SNAPSER_API SnapserLeaderboardsServiceApi::LeaderboardsBatchIncrementScoreResponse : public Response
+{
+public:
+    virtual ~LeaderboardsBatchIncrementScoreResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserLeaderboardsBatchIncrementScoreResponse Content;
+};
+
+class SNAPSER_API SnapserLeaderboardsBatchIncrementScoreResponse : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsBatchIncrementScoreResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserLeaderboardsIncrementScoreResponse>> IncrementScoreResponses;
+    /* List of responses for each user ID */
+    TOptional<TArray<SnapserLeaderboardsBatchIncrementScoreSingleResponse>> Responses;
+    TOptional<int32> ScoresFailed;
+    TOptional<int32> ScoresIncremented;
+};
+
+class SNAPSER_API SnapserLeaderboardsIncrementScoreResponse : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsIncrementScoreResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Latest rank to be returned */
+    TOptional<double> Rank;
+    /* Incremented score to be returned */
+    TOptional<double> Score;
+    TOptional<SnapserLeaderboardsTier> Tier;
+    /* User ID of the user */
+    TOptional<FString> UserId;
+};
+
+class SNAPSER_API SnapserLeaderboardsTier : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsTier() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> BucketSize;
+    TOptional<FString> Description;
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserLeaderboardsBatchIncrementScoreSingleResponse : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsBatchIncrementScoreSingleResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Message;
+    TOptional<SnapserLeaderboardsIncrementScoreRequest> Request;
+    TOptional<SnapserLeaderboardsIncrementScoreResponse> Response;
+    TOptional<bool> Success;
+};
+
+class SNAPSER_API SnapserLeaderboardsIncrementScoreRequest : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsIncrementScoreRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* The delta of the score to increment */
+    double Delta = 0.0;
+    /* Name of the leaderboard */
+    FString LeaderboardName;
+    /* Name of the tier */
+    TOptional<FString> TierName;
+    /* User ID for the user who's score is being updated */
+    FString UserId;
+    /* Metadata to be stored with the user */
+    TOptional<TSharedPtr<FJsonObject>> UserMetadata;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### LeaderboardsBatchSetScore API
+<CodeGroup title="Updates the score on the leaderboard for the logged in user (only non 'counter' leaderboards)" tag="PUT" label="LeaderboardsBatchSetScore">
+```csharp
+/// <summary>
+/// Scores (App Auth) Updates the score on the leaderboard for the logged in user (only non &#39;counter&#39; leaderboards)
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">(app auth only)</param>
+/// <param name="body"></param>
+/// <returns>LeaderboardsBatchSetScoreResponse</returns>
+public LeaderboardsBatchSetScoreResponse LeaderboardsBatchSetScore(string token, LeaderboardsBatchSetScoreRequest body)
+{
+    Snapser.Client.ApiResponse<LeaderboardsBatchSetScoreResponse> localVarResponse = LeaderboardsBatchSetScoreWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for LeaderboardsBatchSetScoreRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsBatchSetScoreRequest" /> class.
+/// </summary>
+/// <param name="setScoreRequests">List of requests with their scores to be inserted (required).</param>
+public LeaderboardsBatchSetScoreRequest(List<LeaderboardsSetScoreRequest> setScoreRequests = default(List<LeaderboardsSetScoreRequest>))
+{
+    // to ensure "setScoreRequests" is required (not null)
+    if (setScoreRequests == null)
+    {
+        throw new ArgumentNullException("setScoreRequests is a required property for LeaderboardsBatchSetScoreRequest and cannot be null");
+    }
+    this.SetScoreRequests = setScoreRequests;
+}
+
+/// Snapser.Model for LeaderboardsBatchSetScoreResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsBatchSetScoreResponse" /> class.
+/// </summary>
+/// <param name="responses">List of responses for each user ID.</param>
+/// <param name="scoreResponses">scoreResponses.</param>
+/// <param name="scoresFailed">scoresFailed.</param>
+/// <param name="scoresSet">scoresSet.</param>
+public LeaderboardsBatchSetScoreResponse(List<LeaderboardsBatchSetScoreSingleResponse> responses = default(List<LeaderboardsBatchSetScoreSingleResponse>), List<LeaderboardsSetScoreResponse> scoreResponses = default(List<LeaderboardsSetScoreResponse>), int scoresFailed = default(int), int scoresSet = default(int))
+{
+    this.Responses = responses;
+    this.ScoreResponses = scoreResponses;
+    this.ScoresFailed = scoresFailed;
+    this.ScoresSet = scoresSet;
+}
+
+/// Snapser.Model for LeaderboardsBatchSetScoreSingleResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsBatchSetScoreSingleResponse" /> class.
+/// </summary>
+/// <param name="message">message.</param>
+/// <param name="request">request.</param>
+/// <param name="response">response.</param>
+/// <param name="success">success.</param>
+public LeaderboardsBatchSetScoreSingleResponse(string message = default(string), LeaderboardsSetScoreRequest request = default(LeaderboardsSetScoreRequest), LeaderboardsSetScoreResponse response = default(LeaderboardsSetScoreResponse), bool success = default(bool))
+{
+    this.Message = message;
+    this.Request = request;
+    this.Response = response;
+    this.Success = success;
+}
+
+/// Snapser.Model for LeaderboardsSetScoreRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsSetScoreRequest" /> class.
+/// </summary>
+/// <param name="leaderboardName">Name of the leaderboard (required).</param>
+/// <param name="score">New score to be inserted (required).</param>
+/// <param name="tierName">Name of the tier.</param>
+/// <param name="userId">User ID for the user who&#39;s score is being updated (required).</param>
+/// <param name="userMetadata">Metadata to be stored with the user.</param>
+public LeaderboardsSetScoreRequest(string leaderboardName = default(string), double score = default(double), string tierName = default(string), string userId = default(string), Object userMetadata = default(Object))
+{
+    // to ensure "leaderboardName" is required (not null)
+    if (leaderboardName == null)
+    {
+        throw new ArgumentNullException("leaderboardName is a required property for LeaderboardsSetScoreRequest and cannot be null");
+    }
+    this.LeaderboardName = leaderboardName;
+    this.Score = score;
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for LeaderboardsSetScoreRequest and cannot be null");
+    }
+    this.UserId = userId;
+    this.TierName = tierName;
+    this.UserMetadata = userMetadata;
+}
+
+/// Snapser.Model for LeaderboardsSetScoreResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="LeaderboardsSetScoreResponse" /> class.
+/// </summary>
+/// <param name="score">Latest score to be returned.</param>
+/// <param name="tier">tier.</param>
+/// <param name="userId">User ID of the user.</param>
+public LeaderboardsSetScoreResponse(double score = default(double), LeaderboardsTier tier = default(LeaderboardsTier), string userId = default(string))
+{
+    this.Score = score;
+    this.Tier = tier;
+    this.UserId = userId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserLeaderboardsServiceApi::LeaderboardsBatchSetScoreRequest : public Request
+{
+public:
+    virtual ~LeaderboardsBatchSetScoreRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* (app auth only) */
+    FString Token;
+    SnapserLeaderboardsBatchSetScoreRequest Body;
+};
+
+class SNAPSER_API SnapserLeaderboardsBatchSetScoreRequest : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsBatchSetScoreRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* List of requests with their scores to be inserted */
+    TArray<SnapserLeaderboardsSetScoreRequest> SetScoreRequests;
+};
+
+class SNAPSER_API SnapserLeaderboardsSetScoreRequest : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsSetScoreRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Name of the leaderboard */
+    FString LeaderboardName;
+    /* New score to be inserted */
+    double Score = 0.0;
+    /* Name of the tier */
+    TOptional<FString> TierName;
+    /* User ID for the user who's score is being updated */
+    FString UserId;
+    /* Metadata to be stored with the user */
+    TOptional<TSharedPtr<FJsonObject>> UserMetadata;
+};
+
+// Response
+class SNAPSER_API SnapserLeaderboardsServiceApi::LeaderboardsBatchSetScoreResponse : public Response
+{
+public:
+    virtual ~LeaderboardsBatchSetScoreResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserLeaderboardsBatchSetScoreResponse Content;
+};
+
+class SNAPSER_API SnapserLeaderboardsBatchSetScoreResponse : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsBatchSetScoreResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* List of responses for each user ID */
+    TOptional<TArray<SnapserLeaderboardsBatchSetScoreSingleResponse>> Responses;
+    TOptional<TArray<SnapserLeaderboardsSetScoreResponse>> ScoreResponses;
+    TOptional<int32> ScoresFailed;
+    TOptional<int32> ScoresSet;
+};
+
+class SNAPSER_API SnapserLeaderboardsBatchSetScoreSingleResponse : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsBatchSetScoreSingleResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Message;
+    TOptional<SnapserLeaderboardsSetScoreRequest> Request;
+    TOptional<SnapserLeaderboardsSetScoreResponse> Response;
+    TOptional<bool> Success;
+};
+
+class SNAPSER_API SnapserLeaderboardsSetScoreRequest : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsSetScoreRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Name of the leaderboard */
+    FString LeaderboardName;
+    /* New score to be inserted */
+    double Score = 0.0;
+    /* Name of the tier */
+    TOptional<FString> TierName;
+    /* User ID for the user who's score is being updated */
+    FString UserId;
+    /* Metadata to be stored with the user */
+    TOptional<TSharedPtr<FJsonObject>> UserMetadata;
+};
+
+class SNAPSER_API SnapserLeaderboardsSetScoreResponse : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsSetScoreResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Latest score to be returned */
+    TOptional<double> Score;
+    TOptional<SnapserLeaderboardsTier> Tier;
+    /* User ID of the user */
+    TOptional<FString> UserId;
+};
+
+class SNAPSER_API SnapserLeaderboardsTier : public Model
+{
+public:
+    virtual ~SnapserLeaderboardsTier() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> BucketSize;
+    TOptional<FString> Description;
+    TOptional<FString> Name;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/leaderboards-api.png)
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code | Variable                    | Message                                      | HTTP | gRPC               |
+| ---- | --------------------------- | -------------------------------------------- | ---- | ------------------ |
+| 9000 | ErrLeaderboardNotFound      | Leaderboard not found                        | 404  | NotFound           |
+| 9001 | ErrLeaderboardNotStarted    | Leaderboard not started                      | 400  | FailedPrecondition |
+| 9002 | ErrLeaderboardAlreadyExists | Leaderboard already exists                   | 409  | AlreadyExists      |
+| 9003 | ErrTierNotFound             | Tier not found                               | 404  | NotFound           |
+| 9004 | ErrUserNotFound             | User not found in the leaderboard            | 404  | NotFound           |
+| 9005 | ErrSetScoreNotAllowed       | SetScore not allowed on counter leaderboards | 400  | FailedPrecondition |
+</div>
+
+
+## Additional Details
+
+### Data Stores
+
+Redis
+
+### Service Dependencies
+
+The leaderboards service does not depend on any other Snap.
+
+### Recommended Services
+
+The leaderboards service works best when paired with the Auth service.
+
+### Upcoming enhancements
+
+None planned so far.

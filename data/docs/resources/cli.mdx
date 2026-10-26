@@ -1,0 +1,1532 @@
+export const description = 'CLI'
+
+export const meta = {
+  author: 'AJ Apte'
+}
+
+# Snapser CLI
+
+Snapser has developed a CLI tool called **snapctl** that can be used on MacOSX, Linux and Windows machines. Snapctl will be the best way for game studios to integrate Snapser into their build pipelines.
+
+## Quick Start
+
+One command. You do not need Python installed first — the installer brings its own.
+
+**MacOS / Linux**
+
+```bash
+curl -fsSL https://snapser.com/install.sh | sh
+```
+
+**Windows** (PowerShell)
+
+```powershell
+powershell -c "irm https://snapser.com/install.ps1 | iex"
+```
+
+Then log in and confirm everything works:
+
+```bash
+snapctl login
+snapctl validate
+```
+
+If the installer tells you to open a new terminal, do that first — it means your
+`PATH` was just updated and your current shell predates the change.
+
+### What the installer does
+
+- Installs [uv](https://docs.astral.sh/uv/) if you do not already have it, and uses it to
+  put snapctl in its own isolated environment, so snapctl's dependencies can never
+  collide with your other Python projects.
+- Supplies its own Python 3.13. Snapctl needs Python 3.10–3.14, and MacOS still ships
+  3.9, so this is the step that most often trips people up when installing by hand.
+- Puts snapctl on your `PATH` and tells you if you need to reload your shell.
+- Leaves your setup alone if you already manage snapctl with `pipx` — it upgrades that
+  install in place rather than switching you to a different tool.
+
+Re-run the same command any time to upgrade. It is safe to run repeatedly.
+
+### Options
+
+Pass these as environment variables:
+
+| Variable | Effect |
+| --- | --- |
+| `SNAPCTL_VERSION` | Install a specific version instead of the latest |
+| `SNAPCTL_INSTALLER` | Force a backend: `uv`, `pipx` or `pip` |
+| `SNAPCTL_NO_MODIFY_PATH` | Set to `1` to leave your shell profile untouched |
+
+```bash
+# MacOS / Linux
+curl -fsSL https://snapser.com/install.sh | SNAPCTL_VERSION=1.14.0 sh
+```
+
+```powershell
+# Windows
+$env:SNAPCTL_VERSION="1.14.0"; powershell -c "irm https://snapser.com/install.ps1 | iex"
+```
+
+### Uninstall
+
+```bash
+uv tool uninstall snapctl
+```
+
+If the installer kept you on `pipx` (because that is how snapctl was already
+installed), use `pipx uninstall snapctl` instead.
+
+### Prefer to install it yourself?
+
+The [Installation](#installation) section below covers the manual `pip` and `pipx` route.
+Note that some snapctl commands (building and publishing BYOSnaps) also need Docker —
+see [Requirements](#requirements).
+
+## Requirements
+### Python 3.X and Pip
+The Snapser CLI tool depends on Python 3.X and Pip. MacOS comes pre installed with Python. But
+please make sure you are running Python 3.X. On Windows, you can download Python 3.X from the
+Windows store.
+
+### Docker
+Some of the commands also need docker. You can download the latest version of Docker from the
+[Docker website](https://www.docker.com/products/docker-desktop).
+
+**IMPORTANT**: Open up Docker desktop and settings. Make sure this setting is disabled **Use containerd for pulling and storing images**. This is because Snapser uses Docker to build and push images to the Snapser registry. Having this setting enabled will cause issues with the Snapser CLI tool.
+
+```bash
+# Run this on your machine to confirm the setting has been disabled and confirm the output is `overlay2`
+$ docker info --format "{{.Driver}}"
+overlay2
+```
+
+## Installation
+
+### Pip
+Installing PIP on MacOS
+
+```
+curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+python3 get-pip.py
+```
+
+Installing PIP on Windows
+
+```
+curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+python get-pip.py
+```
+
+### Pipx
+Now a days, pipx is recommended for CLI tools. Once you have Python and Pip installed, lets install `Pipx`.
+```bash
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+```
+
+### Install Snapctl
+ - If you chose to use Pip
+```bash
+pip install --user snapctl
+```
+
+If you also have Python 2.X on your machine, you may have to run the following command instead
+
+```bash
+pip3 install --user snapctl
+```
+- If using, Pipx
+```bash
+pipx install snapctl
+```
+
+**IMPORTANT**: After you install snapctl you may have to add the python bin folder to your path. For example, on MacOSX this is usually **~/Library/Python/3.9/bin**. On Windows this is usually **C:\Users\username\AppData\Roaming\Python\Python39\Scripts**. For, Windows users, after running pipx ensurepath, you may need to restart your terminal (Command Prompt, PowerShell, or Windows Terminal) for the PATH changes to take effect.
+
+
+## Upgrade
+
+Upgrade your snapctl version
+
+- If using Pip
+
+```bash
+pip3 install --user snapctl --upgrade
+```
+
+- If using Pipx
+```bash
+pipx upgrade snapctl
+```
+
+## Setup
+
+### Log in (recommended)
+
+The quickest way to set up Snapctl is to log in through your browser — you do not need to
+generate or copy an API key by hand.
+
+```bash
+snapctl login
+```
+
+Snapctl prints a short one-time code and opens the Snapser web app (when a browser is
+available). Log in if you are not already, enter the code, and click **Activate**. Snapser
+mints an API key for you and hands it back to Snapctl automatically. The key is saved to
+your local config (`~/.snapser/config`, created with `600` permissions on macOS/Linux) —
+you never see or paste it.
+
+```text
+$ snapctl login
+To finish logging in:
+  1. Open the Snapser web app:  https://<your-portal>/snapctl-login?name=snapctl-<host>-<timestamp>&code=WDJB-MJHT
+  2. Confirm the code is WDJB-MJHT, then click Activate.
+Waiting for activation... (Ctrl-C to cancel)
+Success Activated as you@yourcompany.com
+Success Saved profile [default] to ~/.snapser/config (permissions 600)
+```
+
+`snapctl login` is safe to re-run: if your stored key is still active it reports
+**"Already logged in"** and does nothing. If the key has expired, login starts a fresh
+browser activation automatically. The minted key is labeled in the Developer Center
+(`snapctl-<hostname>-<unix-timestamp>`) so you can revoke each machine's login individually.
+
+Most customers are on Snapser's production cloud and don't need to specify anything —
+`snapctl login` defaults to production.
+
+Useful variations:
+
+```bash
+# Log in (defaults to Snapser's production cloud)
+snapctl login
+
+# Enterprise / self-hosted customers: log in against your own portal
+snapctl login --portal-endpoint $your_portal_endpoint
+
+# Save the key under a named profile instead of [default]
+snapctl login --profile professional
+```
+
+<EnterpriseNote>
+  **Enterprise / self-hosted customers** run Snapser on their own portal rather than
+  Snapser's shared cloud. Pass your portal URL with `--portal-endpoint`; Snapctl validates
+  against it and persists it as `PORTAL_ENDPOINT` in the profile, so every later
+  `snapctl login` just works without the flag:
+
+  ```bash
+  snapctl login --portal-endpoint <ServerConfig configKey='baseProtocol' /><ServerConfig configKey='baseUrl' />
+  ```
+</EnterpriseNote>
+
+<Note>
+  If your Snapser environment does not yet support browser login, `snapctl login`
+  automatically falls back to the manual paste flow.
+</Note>
+
+Two related commands:
+
+```bash
+# Show which key snapctl is using and where it came from (flag, env var, or config file)
+snapctl whoami
+
+# Remove the stored key from your local config. NOTE: the key itself stays active
+# until you revoke it in the Developer Center.
+snapctl logout
+```
+
+### Get your Snapser Access Key (manual / CI only)
+
+Most users should just run `snapctl login` above. You only need to generate a key by hand
+for the manual paste flow (`snapctl login --paste`), for CI (`--api-key`), or to write the
+config file yourself.
+
+Log in to your Snapser account. Click on your user icon on the top right and select, User Account.
+In the left navigation click on **Developer** which will bring up your Personal API Key widget.
+If you have not generated an API Key yet click on the **Generate** button to generate a new key.
+You can generate up to 3 API Keys per user account.
+
+**IMPORTANT**: Please make sure you save your API key in a safe place. You will not be able to see it again.
+
+### Setup a local config
+
+`snapctl login` creates and manages this file for you. The methods below are for passing
+the API key yourself. You have three ways to pass the API key to Snapctl
+1. Pass it via a command line argument with every command
+2. Pass it via an environment variable
+3. Pass it via a config file (recommended — `snapctl login` writes this for you)
+
+#### Command line argument
+
+Every Snapser command can take a command line argument `--api-key <your_key>`. This will take precedence over other methods.
+
+#### Environment Variable
+
+You can set an Environment variable `SNAPSER_API_KEY=<your_key>` and then run your snapctl commands. This will be evaluated after verifying if there is any command line argument. NOTE: when set, this takes precedence over the config file written by `snapctl login`.
+
+#### Config file
+
+Create a file named `~/.snapser/config`. Open it using the editor of your choice and replace with your
+personal Snapser Access key. Save the file. Advantage of using this method is you can use the `--profile`
+argument with your snapctl command to use different API keys. NOTE: You may want to pass your own path
+instead on relying on the default one the CLI looks for. You can do so by setting an environment variable `SNAPSER_CONFIG_PATH='<your_custom_path>'`. Doing this will make sure that the CLI tool will look for the config file at that path. Both `snapctl login` and the rest of the CLI honor this variable. Heads up: `snapctl login` rewrites the config file, so any hand-written comments in it are not preserved.
+
+```
+[default]
+SNAPSER_API_KEY=$your_api_key
+```
+
+Or you can run the following command
+
+on MacOSX
+
+```
+# $your_api_key = Your Snapser developer key
+echo -e "[default]\nSNAPSER_API_KEY=$your_api_key" > ~/.snapser/config
+```
+
+on Windows Powershell
+
+```
+# $your_api_key = Your Snapser developer key
+echo "[default]
+SNAPSER_API_KEY=$your_api_key" | Out-File -encoding utf8 ~\.snapser\config
+```
+
+<EnterpriseNote>
+  **Enterprise customers**: your config needs an additional `PORTAL_ENDPOINT` entry
+  pointing at your portal. `snapctl login --portal-endpoint <your_portal_endpoint>` writes
+  this for you; to do it by hand, add:
+  <Note>
+  PORTAL_ENDPOINT=<ServerConfig configKey='baseProtocol' /><ServerConfig configKey='baseUrl' />
+  </Note>
+```
+[default]
+SNAPSER_API_KEY=$your_api_key
+PORTAL_ENDPOINT=$your_portal_endpoint
+```
+</EnterpriseNote>
+
+## Verify Snapctl installation
+
+```
+snapctl validate
+```
+
+Output will tell you if the Snapctl was able successfully validate your setup with the remote Snapser server or not.
+
+## Advanced Setup
+
+Snapser by default supports access to multiple accounts. You can create multiple profiles in your Snapser config **~/.snapser/config**.
+
+```
+[profile personal]
+SNAPSER_API_KEY=<key>
+
+[profile professional]
+SNAPSER_API_KEY=<key>
+
+```
+
+You can then set an environment variable telling Snapser which profile you want to use.
+
+```
+# Mac
+export SNAPSER_PROFILE="my_profile_name";
+
+```
+
+```
+# Windows
+setx SNAPSER_PROFILE="my_profile_name";
+
+```
+
+Or you can pass **--profile professional** with every command to tell Snapser to use a particular profile.
+
+## Command variable name nomenclature
+All commands follow these rules with their input variables
+1. A variable that is named `*path` = CLI tool expects a path to a **folder**
+2. A variable that is named `*filename` = CLI tool expects the name of the file, without the path.
+3. A variable that is named `*path_filename` = CLI tool expects the full path. The folder up to the name of the file.
+
+## Commands
+
+Run the following to see the list of commands Snapser supports
+
+```bash
+snapctl --help
+```
+
+You can also run Snapctl in an interactive GUI (TUI) mode:
+
+```bash
+snapctl run
+```
+
+### 1. Snaps
+Snapctl commands for snaps
+
+#### 1. snaps help
+See all the supported commands.
+
+```bash
+# Help for the byosnap command
+snapctl snaps --help
+```
+
+#### 2. snaps enumerate
+See all the supported commands.
+
+```bash
+# Enumerate details for all the available snaps
+# $output_path_filename = Optional path and filename ending in .json, where you want snapctl to save snap details. If not passed, the list is printed on the console.
+snapctl snaps enumerate
+snapctl snaps enumerate --out-path-filename ./snaps.json
+```
+
+### 2. BYO Snap - Bring your own Snap
+Snapctl commands for your custom code
+
+#### 1. byosnap help
+
+See all the supported commands.
+
+```bash
+# Help for the byosnap command
+snapctl byosnap --help
+```
+
+#### 2. byosnap generate-profile
+
+This command generates a base BYOSnap profile. You will have to update the values within this file
+and then you can use it in commands like `publish` and `sync`. It is recommended that you save this
+file at the root of your BYOSnap code and commit it to version control.
+
+<Note>
+  The generated profile now includes an optional `hpa` field under `prod_template` for configuring autoscaling on the production deployment. It is `null` by default — uncomment / fill it in to enable autoscaling. `hpa` is production only; the validator rejects it on Dev and Stage templates. See the [Profile Tool](/docs/custom/tools/profile-tool) doc for the field reference.
+</Note>
+
+```bash
+# Help for the byosnap command
+snapctl byosnap generate-profile --help
+
+# Generate your BYOSnap profile
+# $output_path = Directory where you want the BYOSnap profile to be saved.
+# $profile_filename = Name of the BYOSnap profile you want to give. Only .json, .yaml, .yml extensions
+#   are allowed. If you do not pass `--profile-filename` then Snapser choses
+#   `snapser-byosnap-profile.json` as the filename.
+snapctl byosnap generate-profile --out-path $output_path --profile-filename $profile_filename
+snapctl byosnap generate-profile --out-path /Users/DevName/Development/SnapserEngine/byosnap-python --profile-filename=my-byosnap-profile.json
+snapctl byosnap generate-profile --out-path /Users/DevName/Development/SnapserEngine/byosnap-python --profile-filename=my-byosnap-profile.yaml
+```
+
+##### BYOSnap profile: `secrets` field
+
+Each of `dev_template`, `stage_template`, and `prod_template` accepts an optional `secrets` array of **SecretRef objects**. Each SecretRef references a specific tagged version of a secret created via `snapctl secret create`, and the referenced (file_name, tag) pair is mounted into the running snap at that environment. The deployment diff is computed on `(file_name, tag)` — changing either field is a meaningful diff that triggers a redeploy.
+
+A SecretRef has two fields:
+
+- **`file_name`** — the file_name (primary key) of the secret. Must match `^[-._a-zA-Z0-9]+$` (1–253 characters).
+- **`tag`** — the tag you chose when creating that version of the secret. Same character set and length rules as `file_name`.
+
+Rules:
+
+- `secrets` is optional and may be an empty list. Profiles authored before this feature was added (no `secrets` key) continue to validate.
+- Maximum of 5 SecretRef entries per template.
+- No duplicate `file_name` entries within a single template, even at different tags — listing the same file_name twice would collide at the mount point.
+- Unknown extra keys on a SecretRef are rejected to catch typos. In particular, the old `version:` key (used in an earlier iteration of this feature) is now rejected — replace it with `tag:`.
+
+Example (YAML):
+
+```yaml
+dev_template:
+  # ... cpu, memory, etc ...
+  secrets:
+    - file_name: my-api-key
+      tag: prod
+    - file_name: db.password
+      tag: v1.0
+```
+
+Example (JSON):
+
+```json
+"dev_template": {
+  "secrets": [
+    {"file_name": "my-api-key", "tag": "prod"},
+    {"file_name": "db.password", "tag": "v1.0"}
+  ]
+}
+```
+
+#### 3. byosnap validate-profile
+
+This command validates your BYOSnap profile. In addition to the per-field checks (CPU/Memory marks, ingress ports, readiness probe shape, etc.), the validator enforces the HPA cross-field rules when `prod_template.hpa` is set: `min_replicas` ≤ `max_replicas`, thresholds in `(0, 100]`, stabilization windows in `[0, 3600]`, periods in `[0, 300]`, and exactly one of `percent` or `pods` on each scale behavior (with `scale_down.percent` strictly less than 100). HPA on Dev or Stage templates is rejected outright.
+
+```bash
+# Help for the byosnap command
+snapctl byosnap validate-profile --help
+
+# Validate your BYOSnap profile
+# $path = Directory Path to where your BYOSnap Profile is located. No need to add the file name.
+# $resources_path = Optionally, you can place your BYOSnap profile at your resources path
+# $profile_filename = Optional parameter. Name of your BYOSnap profile.
+#   If you do not pass `--profile-filename` then
+#   Snapser choses the default `snapser-byosnap-profile.json` as the filename to validate
+snapctl byosnap validate-profile --path $path
+snapctl byosnap validate-profile --resources-path $resources_path --profile-filename $profile_filename
+snapctl byosnap validate-profile --path /Users/DevName/Development/SnapserEngine/byosnap-python
+snapctl byosnap validate-profile --path /Users/DevName/Development/SnapserEngine/byosnap-python --profile-filename my-byosnap-profile.yaml
+```
+
+#### 4. byosnap publish
+
+This command allows you to create and publish your BYOSnap. Running this command will first create a BYOSnap namespace on Snapser if not present. Then it will build and publish your code to your own private ECR repo on Snapser. Finally it will assign a version to your BYOSnap so that you can deploy it.
+
+<Warning>
+  **Your image repository holds a maximum of 500 images.** Once it is full, further
+  pushes are rejected and the image tag never registers. The push step can still look
+  like it succeeded, so the failure surfaces on the next call that references the tag —
+  `Image tag not found`, exit code `44` here (`47` from `byosnap sync`, `90` from
+  `snapend update` and `byosnap direct-deploy`).
+
+  Use the [Image Manager](/docs/custom/tools/image-manager) (**Tools > Image Manager**
+  in the web app) to delete old and unused images. If you publish on every CI build you
+  will reach the cap, so prune before you get there.
+</Warning>
+
+**Requirements**:
+- This command needs docker.
+- This command needs a BYOSnap profile. BYOSnap profile, holds information about your BYOSnap like, name, description, etc and hardware requirements like CPU, Memory. We recommend you store this file at the root of your BYOSnap and also add it to version control. You can generate it using `snapctl byosnap generate-profile --out-path $outputPath --profile-filename $profileName`.
+
+**Version rule**: `--version` must be **strictly greater** than the highest version you have already published. For example, if your latest published version is `v1.0.1`, you can publish `v1.0.2`, `v1.1.0`, `v2.0.0`, etc., but not `v1.0.1` or lower. `publish` checks this up front and fails fast (before building or pushing any image) if the version is not greater. For a brand-new BYOSnap with no versions yet, any valid `vX.Y.Z` is allowed. Use `snapctl byosnap next-version --byosnap-id $byosnap_id` to see your next patch/minor/major options.
+
+```bash
+# Help for the byosnap command
+snapctl byosnap publish --help
+
+# Create and publish your BYOSnap
+# $byosnap_id = Snap ID for your snap
+# $version = Semantic version for your snap Eg: v0.0.1
+# $code_root_path = Local code path where your Dockerfile is present
+# $resources_path = Optional path to the resources directory in your Snap. This ensures, you are not forced to put the Dockerfile, snapser-byosnap-profile.json, swagger.json and README.md at the root directory of your Snap.
+# $profile_filename = Optional parameter. Name of your BYOSnap profile.
+#   If you do not pass `--profile-filename` then
+#   Snapser choses the default `snapser-byosnap-profile.json` as the filename to validate
+# $skip-build = true/false. Default is false. Pass this flag as true to skip the build and head straight to tag and push. Build step needs to run and tag using the --tag you pass to the publish-image command for this to work. Make sure the tag matches the version number you are passing.
+# Example:
+snapctl byosnap publish --byosnap-id byosnap-jinks-flask --version "v0.0.1" --path /Users/DevName/Development/SnapserEngine/byosnap-python --profile-filename $profile_filename
+snapctl byosnap publish --byosnap-id $byosnap_id --version $version --path $code_root_path
+byosnap publish --byosnap-id byosnap-python --version "v1.0.0" --path /Users/AJ/Development/byosnap-python --profile-filename my-byosnap-profile.yaml
+```
+
+#### 5. byosnap sync
+
+This command is for development purposes. It allows developers to rapidly build, update and push their BYOSnap to a dev Snapend. Simply, make changes to your code locally, and then run this command to deploy your BYOSnap straight to your development Snapend.
+
+**Requirements**:
+- This command needs docker.
+
+**IMPORTANT**: `sync` only *updates an already-published version*. The `--version` you pass must already exist (created by a prior `snapctl byosnap publish`). `sync` does not create new versions. If the version does not exist, `sync` fails fast (before building or pushing any image). For a brand new BYOSnap or a brand new version, use `snapctl byosnap publish` followed by `snapctl snapend update`, or use `snapctl byosnap direct-deploy` (the recommended path for development deploys — see below).
+
+**IMPORTANT**: This command will only work for Dev Snapends. Additionally if the version you are using in this command happens to be used by a staging or a production snapend then `sync` will not work. We do this to ensure that your staging and production BYOSnap images do not get impacted.
+
+```bash
+# Help for the byosnap command
+snapctl byosnap sync --help
+
+# Deploy local code straight to your Snapend
+# $byosnap_id = Snap ID for your snap
+# $code_root_path = Local code path where your Dockerfile is present
+# $resources_path = Optional path to the resources directory in your Snap. This ensures, you are not forced to put the Dockerfile, swagger.json and README.md in the root directory of your Snap.
+# $skip-build = true/false. Default is false. Pass this flag as true to skip the build and head straight to tag and push. Build step needs to run and tagged using the --tag you pass to the publish-image command for this to work.
+# $tag = Semantic version for your snap Eg: v0.0.1
+# $version =
+# $snapend_id = Dev Snapend Id
+# Example:
+snapctl byosnap sync --byosnap-id byosnap-jinks-flask --path /Users/DevName/Development/SnapserEngine/byosnap-python --version "v0.0.11" --snapend-id "jxmmfryo"
+snapctl byosnap sync --byosnap-id $byosnap_id --path $code_root_path --version $version --snapend-id $snapend_id
+```
+
+#### 6. byosnap create
+
+Create a custom snap. Note that you will have to build, push and publish your snap image, for it to be useable in a Snapend.
+
+<Note>
+  Most workflows can skip `byosnap create` entirely — `snapctl byosnap publish` (above) will create the BYOSnap from your profile if it doesn't exist yet and then publish a new version in one shot. Reach for `byosnap create` only when you want to register a BYOSnap without publishing an image alongside it.
+</Note>
+
+```bash
+# Help for the byosnap command
+snapctl byosnap create --help
+
+# Create a new snap
+# $byosnap_id = Snap ID for your snap. Start start with `byosnap-`
+# $name = User friendly name for your BYOSnap
+# $desc = User friendly description
+# $platform = One of linux/arm64, linux/amd64
+# $language = One of go, python, ruby, c#, c++, rust, java, node
+
+# Example:
+# snapctl byosnap create --byosnap-id byosnap-jinks-flask --name "Jinks Flask Microservice" --desc "Custom Microservice" --platform "linux/arm64" --language "go"
+snapctl byosnap create --byosnap-id $byosnap_id --name "$name" --desc "$desc" --platform "$platform" --language "$language"
+```
+
+#### 7. byosnap upload-docs
+
+Upload swagger.json and README.md for you Snap
+
+```bash
+# Help for the byosnap command
+snapctl byosnap upload-docs --help
+
+# Publish a new image
+# $byosnap_id = Snap ID for your snap
+# $image_tag = An image tag for your snap
+# $resources_path = Path to your swagger.json and README.md files
+# Example:
+# snapctl byosnap upload-docs --byosnap-id byosnap-jinks-flask --tag my-first-image --resources-path /Users/DevName/Development/SnapserEngine/byosnap-python
+snapctl byosnap upload-docs --byosnap-id $byosnap_id --tag $image_tag --resources-path $resources_path
+```
+
+#### 8. byosnap publish-image
+
+<Note>
+  **Deprecation notice**: `byosnap create`, `byosnap publish-image`, `byosnap publish-version` and `byosnap update-version` will be deprecated soon. Use `byosnap publish` (or `byosnap direct-deploy` for development) instead.
+</Note>
+
+Publish a custom snap code image. This command executes the build, push and `upload-docs` steps one after the other.
+
+**IMPORTANT**: Take note of the hardware architecture of machine and your Dockerfile commands. Commands in docker file may be hardware architecture specific. Snapser throws a warning if it detects a mismatch.
+
+```bash
+# Help for the byosnap command
+snapctl byosnap publish-image --help
+
+# Publish a new image
+# $byosnap_id = Snap ID for your snap
+# $image_tag = An image tag for your snap
+# $code_root_path = Local code path where your Dockerfile is present
+# $resources_path = Optional path to the resources directory in your Snap. This ensures, you are not forced to put the Dockerfile, swagger.json and README.md in the root directory of your Snap.
+# $skip-build = true/false. Default is false. Pass this flag as true to skip the build and head straight to tag and push. Build step needs to run and tagged using the --tag you pass to the publish-image command for this to work.
+# Example:
+# snapctl byosnap publish-image --byosnap-id byosnap-jinks-flask --tag my-first-image --path /Users/DevName/Development/SnapserEngine/byosnap-python
+snapctl byosnap publish-image --byosnap-id $byosnap_id --tag $image_tag --path $code_root_path
+snapctl byosnap publish-image --byosnap-id $byosnap_id --tag $image_tag --path $code_root_path --resources-path $resources_path
+snapctl byosnap publish-image --byosnap-id $byosnap_id --tag $image_tag --skip-build
+```
+
+#### 9. byosnap publish-version
+
+Publish a new version for your Snap. Only after your Snap version is published, you will be able to use your snap in your Snapend. This command should be run after `push` or `publish-image` commands.
+
+IMPORTANT: You need to have $byosnapProfile to run this command. BYOSnap profile is a JSON configuration
+of your BYOSnap for the development, staging and production environments. You can generate a base version of this file using the `snapctl byosnap generate-profile --out-path $outputPath --profile-filename $profileName` command.
+
+```bash
+# Help for the byosnap command
+snapctl byosnap publish-version --help
+
+# Publish a new image
+# $byosnap_id = Snap ID for your snap
+# $image_tag = An image tag for your snap
+# $version = Semantic version for your snap Eg: v0.0.1
+# $byosnap_profile_path = Path to the snapser-byosnap-profile.json BYOSnap profile to configure dev, stage and prod settings for this snap. You can generate a base version of this file using the `snapctl byosnap generate-profile --out-path $outputPath --profile-filename $profileName` command
+# Example:
+# snapctl byosnap publish-version --byosnap-id byosnap-jinks-flask --tag my-first-image --version v0.0.1 --path /Users/DevName/Development/SnapserEngine/byosnap-python
+snapctl byosnap publish-version --byosnap-id $byosnap_id --tag $image_tag --version $version --path $byosnap_profile_path
+```
+
+#### 10. byosnap direct-deploy
+
+Direct deploy your BYOSnap to a Snapend, without having to publish it. With this new command, there is no need for you to publish your byosnap and or sync it before using. Any dev can now just directly deploy their byosnap to a snapend and then use byows to attach and start debugging locally. Once you are happy with your BYOSnap you can then publish it for others to use
+
+```bash
+# Help for the byosnap command
+snapctl byosnap direct-deploy --help
+
+# Direct deploy a new image
+# $byosnap_id = Snap ID for your snap
+# $snapend_id = Snapend Id
+# $code_root_path = Local code path where your Dockerfile is present
+# $resources_path = (Optional) path to the resources directory in your Snap. This ensures, you are not forced to put the Dockerfile, swagger.json and README.md in the root directory of your Snap.
+# $platform = (Optional) One of linux/arm64, linux/amd64. In case you want to override the platform
+# Example:
+# snapctl byosnap direct-deploy --byosnap-id byosnap-jinks-flask --snapend-id jxmmfryo --path /Users/DevName/Development/SnapserEngine/byosnap-python
+snapctl byosnap direct-deploy --byosnap-id $byosnap_id --snapend-id $snapend_id --path $code_root_path
+```
+
+#### 11. byosnap next-version
+
+A read-only helper that tells you the next versions you can publish for a BYOSnap, based on its highest already-published version. Handy because `publish` requires a version strictly greater than the latest one. It prints the next patch, minor, and major options. For a BYOSnap that has nothing published yet, it suggests a valid starting version.
+
+```bash
+# Help for the byosnap command
+snapctl byosnap next-version --help
+
+# Show the next publishable versions
+# $byosnap_id = Snap ID for your snap
+# Example: if the latest published version is v1.0.1, this prints
+#   patch -> v1.0.2 | minor -> v1.1.0 | major -> v2.0.0
+snapctl byosnap next-version --byosnap-id $byosnap_id
+```
+
+### 3. BYO Workstation - Bring your own Workstation
+Snapctl commands for bring your own workstation. This command allows you to attach your workstation to a Snapend. This is useful for testing and debugging your BYOSnap code.
+
+#### 1. byows help
+See all the supported commands
+
+```bash
+# Help for the byows command
+snapctl byows --help
+```
+#### 2. byows attach
+Attach your workstation to a Snapend. It should be noted, that this command outputs a file `byows_env_setup.sh|ps1` at `~/.snapser/` directory. This file contains the environment variables that the BYOWS technology will need to route internal calls to the appropriate Snaps.
+
+```bash
+# Attach your workstation to a Snapend
+# $snapend_id = Snapend Id
+# $byosnap_id = BYOSnap Id
+# $http_port = Port that your local server is running on
+snapctl byows attach --snapend-id $snapend_id --byosnap-id $byosnap_id --http-port $http_port
+```
+
+Then run, the following command in a separate terminal window, to setup the BYOWS environment variables.
+```bash
+# MacOSX
+source ~/.snapser/byows_env_setup.sh
+# Windows
+.\.snapser\byows_env_setup.ps1
+```
+
+Then start your BYOSnap local server in the same tab that has the environment variables set up. This will ensure that the BYOSnap code can access the internal SDK and other Snaps in your Snapend.
+
+#### 3. byows detach
+Detach your workstation from a Snapend. This stops forwarding traffic to your local machine for the specified BYOSnap.
+
+```bash
+# Detach your workstation from a Snapend
+# $snapend_id = Snapend Id
+# $byosnap_id = BYOSnap Id
+snapctl byows detach --snapend-id $snapend_id --byosnap-id $byosnap_id
+```
+
+#### 4. byows reset
+Reset the BYOWS state for a Snapend. Useful when an attach is left in a bad state and you want to start fresh.
+
+```bash
+# Reset your workstation attachment state for a Snapend
+# $snapend_id = Snapend Id
+snapctl byows reset --snapend-id $snapend_id
+```
+
+### 4. BYO Game Server - Bring your own Game Server
+Snapctl commands for your custom game server
+
+<Note>
+  **The `--tag` you pass to `byogs publish` and `byogs sync` can be a maximum of 46
+  characters.** Kubernetes caps the full pushed image tag at 63 characters. `publish`
+  pushes `byogs.<tag>` and `sync` pushes `byogs.<tag>-<timestamp>`, so the limit leaves
+  room for the 6-character `byogs.` prefix and the 11-character `-<timestamp>`. Both
+  commands share one limit so the same tag works with either. snapctl rejects a tag that
+  is too long before it builds or pushes anything.
+</Note>
+
+#### 1. byogs help
+
+See all the supported commands
+
+```bash
+# Help for the byogs command
+snapctl byogs --help
+```
+
+#### 2. byogs publish
+
+Publish your custom game server image. This commend replaces the old way of creating, publishing image and
+then publishing the byogs. Now all you have to do is publish your image and create a fleet using the web portal.
+
+**IMPORTANT**: Take note of the hardware architecture of machine and your Dockerfile commands. Commands in docker file may be hardware architecture specific. Snapser throws a warning if it detects a mismatch.
+
+```bash
+# Help for the byogs command
+snapctl byogs publish --help
+
+# Publish a new image
+# $image_tag = An image tag for your snap. Max 46 characters
+# $code_root_path = Local code path where your Dockerfile is present
+# $resources_path = Optional path to the resources directory. This ensures, you are not forced to put the Dockerfile at the root directory of your Game Server code.
+# $skip-build = Default is false. Pass this flag as true to skip the build and head straight to tag and push. Build step needs to run and tagged using the --tag you pass to the publish-image command for this to work.
+# Example:
+# snapctl byogs publish --tag my-first-image --path /Users/DevName/Development/SnapserEngine/game_server
+snapctl byogs publish --tag $image_tag --path $code_root_path
+snapctl byogs publish --tag $image_tag --path $code_root_path --resources-path $resources_path
+snapctl byogs publish --tag $image_tag --skip-build
+```
+
+#### 3. byogs sync
+
+This command allows developers to rapidly build, update and push their BYOGs out to a Snapend fleet. Simply, make changes to your code locally, and then run this command to deploy your BYOGs straight to your Snapend fleet.
+
+```bash
+# Help for the byogs command
+snapctl byogs sync --help
+
+# Publish a new image
+# $code_root_path = Local code path where your Dockerfile is present
+# $resources_path = Optional path to the resources directory in your Snap. This ensures, you are not forced to put the Dockerfile, swagger.json and README.md in the root directory of your Snap.
+# $skip-build = true/false. Default is false. Pass this flag as true to skip the build and head straight to tag and push. Build step needs to run and tagged using the --tag you pass to the publish-image command for this to work.
+# $image_tag = An image tag for your snap. Max 46 characters. Note snapctl adds a timestamp, allowing you to use the same command.
+# $snapend_id = Snapend Id
+# $fleet_names = Comma separated fleet names
+# Example:
+snapctl byogs sync --path /Users/DevName/Development/SnapserEngine/game_server --tag my-first-image --snapend-id "jxmmfryo" --fleet-names "my-fleet,my-second-fleet"
+snapctl byogs sync --path $code_root_path --tag $image_tag --snapend-id $snapend_id --fleet-names $fleet_names
+```
+
+### 5. Application
+Snapctl commands for your application
+
+<Note>
+  The older `snapctl game` command (`create`, `enumerate`) is deprecated. Use the equivalent `snapctl application` commands instead.
+</Note>
+
+#### 1. application help
+
+See all the supported commands
+
+```bash
+# Help for the byogs command
+snapctl application --help
+```
+
+#### 2. application create
+Create an application
+```bash
+snapctl application create --name $app_name
+```
+
+#### 3. application enumerate
+List all the applications
+```bash
+snapctl application enumerate
+```
+
+### 6. Secret
+Snapctl commands for managing application-scoped secrets. Secrets are append-only and **tag-keyed**: every `create` writes a new `(file_name, tag)` pair, values are stored encrypted at rest, and values are returned redacted (`********`) on every operation except `reveal`. The `file_name` is the secret's primary key; `tag` is a user-chosen identifier for a specific version of a secret. Both follow the regex `^[-._a-zA-Z0-9]+$` (1–253 chars). Secret values are limited to 65536 bytes.
+
+**There is intentionally no `update` operation.** To rotate a secret value, call `create` again with a new tag. Older tags remain available until you explicitly delete them.
+
+**Model**
+- `create` writes a new `(file_name, tag)` entry. Duplicate `(file_name, tag)` pairs are rejected by the backend.
+- `enumerate` returns a rollup per secret (file_name, list of tags, timestamps).
+- `get` returns the **full tag history** for a single secret, including which clusters/byosnaps reference each tag.
+- `reveal` is **tag-scoped**: it requires `--tag` and returns the plaintext for that one (file_name, tag).
+- `delete` works at two granularities: without `--tag` it deletes the entire secret (every tag); with `--tag` it deletes only that one tag.
+
+For every secret subcommand you must pass `--application-id`, or set the `SNAPSER_APPLICATION_ID` environment variable / Snapser config key (same fallback as `snapctl snapend`).
+
+#### 1. secret help
+
+See all the supported commands
+
+```bash
+# Help for the secret command
+snapctl secret --help
+```
+
+#### 2. secret enumerate
+List all secrets for an application. Returns a rollup per secret: `file_name`, `tags[]`, `created_at` (oldest tag), `last_updated_at` (newest tag). Sort by `last_updated_at` if you want a "newest first" view. Values are not included — call `get` for the per-tag view.
+
+```bash
+# $application_id = Application Id (or set via SNAPSER_APPLICATION_ID).
+snapctl secret enumerate --application-id $application_id
+```
+
+#### 3. secret get
+Get the full tag history for a single secret. The response is `{file_name, tags: [...]}` where each tag carries `tag`, `value` (redacted), `created_at`, `updated_at`, and `usage[]` (the clusters and byosnaps that reference that specific tag).
+
+```bash
+# $file_name = Secret file name (the secret's primary key).
+snapctl secret get --application-id $application_id --file-name $file_name
+```
+
+#### 4. secret create
+Create a new `(file_name, tag)` entry. `--tag` is required and is a user-chosen identifier for this version of the secret. Pass exactly one of `--value` (inline) or `--from-file` (path to a file whose contents will be used as the value).
+
+To "rotate" a secret, call `create` again with a new tag — there is no separate update operation.
+
+```bash
+# Inline value with a tag:
+snapctl secret create --application-id $application_id --file-name $file_name --tag $tag --value $value
+
+# Value sourced from a file (handy for multi-line values or large keys):
+snapctl secret create --application-id $application_id --file-name $file_name --tag $tag --from-file ./my-secret.txt
+
+# Rotate by creating a new tag for the same file_name:
+snapctl secret create --application-id $application_id --file-name my-api-key --tag prod-2026-06 --value $new_value
+```
+
+#### 5. secret delete
+Delete a secret. Fails if the targeted secret/tag is referenced by a cluster manifest.
+
+```bash
+# Delete the entire secret (every tag):
+snapctl secret delete --application-id $application_id --file-name $file_name
+
+# Delete only one tag:
+snapctl secret delete --application-id $application_id --file-name $file_name --tag $tag
+```
+
+#### 6. secret reveal
+Reveal the plaintext value of a **specific tag** of a secret. `--tag` is required.
+
+Without `--out-path`, the plaintext is printed on stdout (use with caution; the value lands in your shell history).
+
+When `--out-path` is set to an existing directory, the plaintext is written to `<out-path>/<file_name>.<tag>` instead and the plaintext is **not** echoed on stdout. Revealing multiple tags of the same secret into the same directory produces separate files (the tag suffix prevents overwrites). On POSIX systems the written file is chmod'd to `0600` (owner read/write only).
+
+```bash
+# Print plaintext on stdout
+snapctl secret reveal --application-id $application_id --file-name $file_name --tag $tag
+
+# Write plaintext to ./secrets/$file_name.$tag and keep it off stdout
+# $out_path = An existing directory; the file is written as <out-path>/<file_name>.<tag>.
+snapctl secret reveal --application-id $application_id --file-name $file_name --tag $tag --out-path $out_path
+```
+
+**Note:** `--tag` is strictly rejected on `enumerate` and `get` — this catches typos like `snapctl secret get --tag prod --file-name foo` when you actually meant `reveal`.
+
+### 7. Snapend Manifest
+Snapctl commands for the Snapend manifest. Manifest is the representation of your Snapser backend stored as a JSON or YAML. The manifest can then be used to create, update your backend.
+
+#### 1. snapend-manifest help
+
+See all the supported commands
+
+```bash
+# Help for the byogs command
+snapctl snapend-manifest --help
+```
+
+#### 2. Snapend Manifest Create
+
+Create a Snapend manifest. It should be noted that the latest versions of the snap at the time of running the command is what gets added to the manifest. For example, say the `analytics` snap has versions `v1.0.0`, `v1.1.0` available on the web portal. If you run the create command with `--snaps analytics` the `v1.1.0` which is the latest at that moment in time, gets added to your manifest.
+
+The output manifest file can then be used with the `snapend create` or `snapend clone` commands.
+
+```bash
+# Create a Snapend manifest file
+# $name = Name for your backend, which is stored in the outputted manifest
+# $env = One of DEVELOPMENT, STAGING or PRODUCTION
+# $output_path_filename = Path and file name to store the manifest. The filename should end with .json or .yaml
+# $snaps = Comma separated list of snap ids you want to add.  You can get the snap ids from the
+#     `snapctl snaps enumerate --out-path-filename ./snaps.json` command
+# $features = Pass `WEB_SOCKETS` if you want to enable web sockets for your backend.
+# Note: One of snaps or features is required
+# Example:
+#   snapend-manifest create --name my-dev-snapend --env DEVELOPMENT --snaps auth,analytics --add-features WEB_SOCKETS --out-path-filename ./snapend-manifest.json
+
+snapctl snapend-manifest create --name $name --env $env --snaps $snaps --features $features --out-path-filename $output_path_filename
+```
+
+#### 3. Snapend Manifest Sync
+
+Sync with an existing Snapend manifest. This command is idempotent and destructive.
+
+- It ensures the input manifest gets replaced with the values you pass in `--snaps` and `--features`. For example: If your input manifest has a snap but you do not pass the snap in the `--snaps`, it will be removed from the output. Same goes for `--features`.
+- Additionally, if a snap is present in the manifest and you pass it in as part of `--snaps` it will not be touched. But if a snap is not part of the manifest and you pass it in as part of `--snaps` it will be added with the latest version of the snap. For example, say the `analytics` snap has versions `v1.0.0`, `v1.1.0` available on the web portal. If you run the sync command with `--snaps analytics` and you had `v1.0.0` in the manifest then it wont be touched. However, if you did not have it in the manifest then the `v1.1.0` which is the latest at that moment in time, gets added to your manifest.
+
+**IMPORTANT**: If you are looking for a command to purely add or remove snaps or features, consider using the `update` command instead.
+
+```bash
+# Sync a Snapend manifest file
+# $input_manifest = Path and file name of the current manifest. The filename should end with .json or .yaml
+# $output_path_filename = Path and file name to store the manifest. The filename should end with .json or .yaml
+# $snaps = Comma separated list of snap ids you want to have at the end. You can get the snap ids from # the `snapctl snaps enumerate --out-path-filename ./snaps.json` command.
+#   IMPORTANT: If your manifest has a snap but your --snaps does not. It will be removed.
+# $features = Pass `WEB_SOCKETS` if you want to enable web sockets for your backend.
+#   IMPORTANT: If your manifest has a feature but your --features does not. It will be removed.
+# Note: One of snaps, and features is required
+# Example:
+#   snapctl snapend-manifest sync --manifest-path-filename ./snapser-jn86b0dv-manifest.yaml --snaps auth,game-server-fleets --features WEB_SOCKETS --out-path-filename ./snapend-updated-manifest.yaml
+
+snapctl snapend-manifest sync --manifest-path-filename $input_manifest --snaps $snaps --features $features --out-path-filename $output_path_filename
+```
+
+#### 4. Snapend Manifest Upgrade
+
+Upgrade all snaps or a list of snaps to the latest version of the snap available at that moment in time. If you do not pass in `--snaps` then all the snaps in the manifest will be upgraded. If you do pass a list of snaps then all snap Ids are expected to be valid.
+
+```bash
+# Update a Snapend manifest file
+# $input_manifest = Path and file name of the current manifest. The filename should end with .json or .yaml
+# $output_path_filename = Path and file name to store the manifest. The filename should end with .json or .yaml
+# $snaps = (Optional) Comma separated list of snap ids you want to upgrade. You can get the snap ids
+#   from the `snapctl snaps enumerate --out-path-filename ./snaps.json` command
+#   IMPORTANT: If the --snaps parameter is not provided then all snaps in the manifest will be upgraded
+# Example:
+# snapctl snapend-manifest upgrade --manifest-path-filename ./snapser-jn86b0dv-manifest.yaml --snaps game-server-fleets --out-path-filename ./snapend-updated-manifest.yaml
+# snapctl snapend-manifest upgrade --manifest-path-filename ./snapser-jn86b0dv-manifest.yaml --out-path-filename ./snapend-updated-manifest.yaml
+
+snapctl snapend-manifest upgrade --manifest-path-filename $input_manifest --out-path-filename $output_path_filename
+
+snapctl snapend-manifest upgrade --manifest-path-filename $input_manifest --snaps $snaps --out-path-filename $output_path_filename
+```
+
+#### 5. Snapend Manifest Update
+
+Update your manifest. This command is additive and subtractive. It allows you to add or remove, snaps and features from an existing manifest. Unlike `sync`, this will only add or remove entities from your manifest, keeping the remaining part of the manifest intact. If your manifest has a snap and you pass it with `--add-snaps` then it will be ignored. However if you do not have a snap and you pass it with `--add-snaps` then the latest version of the snap will be added. If you pass a snap with `--remove-snaps` that is already not in the manifest, then it will be skipped. This ensures idempotency after the initial update is made to the snapend manifest.
+
+**IMPORTANT**:
+- All additions are performed before removals.
+- If you are looking to have strict relation between your input (snaps + features) and your output manifest, consider using the `sync` command.
+
+```bash
+# Update a Snapend manifest file
+# $input_manifest = Path and file name of the current manifest. The filename should end with .json or .yaml
+# $output_path_filename = Path and file name to store the manifest. The filename should end with .json or .yaml
+# $addSnaps = Comma separated list of snap ids you want to add to your manifest. You can get the snap ids from # the `snapctl snaps enumerate --out-path-filename ./snaps.json` command.
+# $removeSnaps = Comma separated list of snap ids you want to remove from your manifest. You can get the snap ids from # the `snapctl snaps enumerate --out-path-filename ./snaps.json` command.
+# $addFeatures = Pass `WEB_SOCKETS` if you want to enable web sockets for your backend.
+# $removeFeatures = Pass `WEB_SOCKETS` if you want to disable web sockets for your backend.
+# Note: One of add-snaps, remove-snaps, add-features or remove-features is required
+# Example:
+#   snapctl snapend-manifest update --manifest-path-filename ./snapser-jn86b0dv-manifest.yaml --add-snaps game-server-fleets --remove-snaps analytics --remove-features WEB_SOCKETS --out-path-filename ./snapend-updated-manifest.yaml
+
+snapctl snapend-manifest update --manifest-path-filename $input_manifest --add-snaps $addSnaps --remove-snaps $removeSnaps --add-features $addFeatures --remove-features $removeFeatures --out-path-filename $output_path_filename
+```
+
+
+### 8. Snapend
+Snapctl commands for your snapend
+
+#### 1. snapend help
+
+See all the supported commands
+
+```bash
+# Help for the snapend command
+snapctl snapend --help
+```
+
+#### 2. snapend download
+
+Download Manifest, SDKs and Protos for your Snapend
+
+```bash
+# Help for the download command
+snapctl snapend download --help
+
+# Download your Snapend SDK and Protos
+# $snapend_id = Cluster Id
+# $category = snapend-manifest, sdk, protos
+# $format = One of the supported formats:
+#   snapend-manifest(yaml, json)
+#   sdk(unity, unreal, roblox, godot-csharp, godot-cpp, godot-gdscript, cocos, ios-objc, ios-swift, android-java, android-kotlin, web-ts, web-js, flutter-dart),
+#   sdk(csharp, cpp, lua, ts, go, python, kotlin, java, c, node, js, perl, php, clojure, ruby, rust, dart),
+#   protos(go, csharp, cpp, raw)
+# $type = One of the supported types:
+#   For category=sdk type=(user, api-key, internal, unified, app)
+#   For category=protos type=(messages, services)
+# $http_lib (optional) = One of the supported libs
+#   For category=sdk format=unity http-lib=(httpclient, unitywebrequest, restsharp)
+#   For category=sdk format=csharp http-lib=(httpclient, restsharp)
+#   For category=sdk format=web-ts http-lib=(axios, fetch)
+#   For category=sdk format=ts http-lib=(axios, fetch)
+#   For category=sdk format=flutter-dart http-lib=(http, dio)
+#   For category=sdk format=dart http-lib=(http, dio)
+# Example:
+# snapctl snapend download --snapend-id gx5x6bc0 --category snapend-manifest --format yaml --out-path .
+# snapctl snapend download --snapend-id gx5x6bc0 --category sdk --format unity --type user --out-path .
+# snapctl snapend download --snapend-id gx5x6bc0 --category sdk --format cpp --type internal --out-path .
+# snapctl snapend download --snapend-id gx5x6bc0 --category protos --format raw --type messages --out-path .
+# snapctl snapend download --snapend-id gx5x6bc0 --category sdk --format unity --type user --http-lib unitywebrequest --out-path .
+snapctl snapend download --snapend-id $snapend_id --category $category --format $format --type $type --out-path $out_path
+snapctl snapend download --snapend-id $snapend_id --category $category --format $format --type $type --http-lib $http_lib --out-path $out_path
+```
+
+#### 3. snapend create
+
+Create a Snapend from an existing manifest. Passing the blocking flag ensures your CLI command waits till the new Snapend is up.
+
+```bash
+# Help for the crete command
+snapctl snapend create --help
+
+# Create a Snapend
+# $application_id = Application Id. Instead of passing this as an argument, you can set it with the SNAPSER_APPLICATION_ID environment variable or in your Snapser config under the SNAPSER_APPLICATION_ID key.
+# $path_to_manifest = Path to the manifest file; should include the file name
+# Optionally override name and environment by passing the --name and --environment overrides
+# Example:
+# snapctl snapend create --manifest-path-filename $path_to_manifest --application-id $application_id  --blocking
+snapctl snapend create --manifest-path-filename $path_to_manifest --application-id $application_id
+snapctl snapend create --manifest-path-filename $path_to_manifest --application-id $application_id --blocking
+snapctl snapend create --name $name --env $env --manifest-path-filename $path_to_manifest --application-id $application_id --blocking
+```
+
+#### 4. snapend clone
+
+Clone a Snapend from an existing manifest. Passing the blocking flag ensures your CLI command waits till the new Snapend is up.
+
+```bash
+# Help for the clone command
+snapctl snapend clone --help
+
+# Clone your Snapend
+# $application_id = Application Id. Instead of passing this as an argument, you can set it with the SNAPSER_APPLICATION_ID environment variable or in your Snapser config under the SNAPSER_APPLICATION_ID key.
+# $snapend_name = Name of your new Snapend
+# $env = One of development, staging
+# $path_to_manifest = Path to the manifest file; should include the file name
+# Example:
+# snapctl snapend clone --application-id 2581d802-aca-496c-8a76-1953ad0db165 --name new-snapend --env development --manifest-path-filename "C:\Users\name\Downloads\snapser-ox1bcyim-manifest.json" --blocking
+snapctl snapend clone --application-id $application_id --name $snapend_name --env $env --manifest-path-filename "$path_to_manifest"
+snapctl snapend clone --application-id $application_id --name $snapend_name --env $env --manifest-path-filename "$path_to_manifest" --blocking
+```
+
+#### 5. snapend apply
+
+Apply changes to your Snapend from a manifest. You should have the latest manifest before applying changes. Basically, when you download a manifest, Snapser adds an `applied_configuration` section to your manifest, which stores the state of the Snapend during export. Now, if someone manually updates the Snapend or a configuration of a Snap, you are no longer going to have the latest Snapend representation in the `applied_configuration`. This is how Snapser prevents you from stomping over someone elses changes.
+
+You can optionally pass a `--force` flag telling Snapser to ignore any diffs it may find in the current state of the Snapend and the one in the `applied_configuration` field of your manifest. Essentially, this flag allows you to stomp over any changes and tell Snapser to force apply.
+
+Separately, you can pass a blocking flag to make your CLI wait for the Snapend update to complete.
+
+
+```bash
+# Help for the apply command
+snapctl snapend apply --help
+
+# Apply changes to a snapend via manifest
+# $path_to_manifest = Path to the manifest file; should include the file name
+# --force = Optional flag to tell Snapser that you do not want it to check the diff between the Snapend states and just force apply the changes
+# Example:
+# snapctl snapend apply --manifest-path-filename "C:\Users\name\Downloads\snapser-ox1bcyim-manifest.json" --force --blocking
+snapctl snapend apply --manifest-path-filename "$path_to_manifest"
+snapctl snapend apply --manifest-path-filename "$path_to_manifest" --blocking
+snapctl snapend apply --manifest-path-filename "$path_to_manifest" --force --blocking
+```
+
+#### 6. snapend update
+
+Update your BYOSnap or BYOGs versions for the Snapend
+
+```bash
+# Help for the byogs command
+snapctl snapend update --help
+
+# Update your Snapend with new BYOSnaps and BYOGs
+# $snapend_id = Cluster Id
+# $byosnaps = Comma separated list of BYOSnap ids and version. Each entry is
+#             service_id:service_version, with an optional third colon-separated
+#             value pointing at a BYOSnap profile JSON file on disk. When the
+#             profile path is provided, its JSON contents are loaded and sent
+#             along with the update. The profile path is optional per BYOSnap.
+# $byogs = Comma separated list of BYOGs fleet name, id and version.
+# --blocking = (Optional) This makes sure the CLI waits till your Snapend is live.
+# Note at least one of the two needs to be present
+# Example:
+# snapctl snapend update --snapend-id gx5x6bc0 --byosnaps byosnap-service-1:v1.0.0,byosnap-service--2:v1.0.0 --byogs byogs-fleet-one:gs-1:v0.0.1,my-fleet-two:gs-2:v0.0.4
+# snapctl snapend update --snapend-id gx5x6bc0 --byosnaps byosnap-service-1:v1.0.0,byosnap-service--2:v1.0.0 --byogs fleet-one:v0.0.1,fleet-two:v0.0.4 --blocking
+# Example with optional BYOSnap profile (third value, only on the first entry):
+# snapctl snapend update --snapend-id gx5x6bc0 --byosnaps byosnap-service-1:v1.0.0:/Users/DevName/Development/SnapserEngine/byosnap-python/snapser-resources/snapser-byosnap-profile.json,byosnap-service--2:v1.0.0
+snapctl snapend update --snapend-id $snapend_id --byosnaps $byosnaps --byogs $byogs --blocking
+```
+
+#### 7. snapend state
+
+Get the Snapend state
+
+```bash
+# Help for the byogs command
+snapctl snapend state --help
+
+# Get the Snapend state
+# $snapend_id = Cluster Id
+# Example:
+# snapctl snapend state gx5x6bc0
+snapctl snapend state --snapend-id $snapend_id
+```
+
+#### 8. snapend enumerate
+
+List all the Snapends for an application
+
+```bash
+# Help for the enumerate command
+snapctl snapend enumerate --help
+
+# Enumerate all Snapends for an application
+# $application_id = Application Id. Instead of passing this as an argument, you can set it with the SNAPSER_APPLICATION_ID environment variable or in your Snapser config under the SNAPSER_APPLICATION_ID key.
+snapctl snapend enumerate --application-id $application_id
+```
+
+### 9. Generate
+Generator tool to help generate credentials
+
+#### 1. generate help
+See all the supported commands
+```bash
+# Help for the generate command
+snapctl generate --help
+```
+
+#### 2. Generate ECR Credentials
+Generate the ECR credentials. Game studios can use these credentials to self publish their images to Snapser.
+
+```bash
+snapctl generate credentials --category "ecr" --out-path $output_path
+
+```
+
+
+### 10. Snap Configuration
+Retrieve snap-specific configuration from a deployed Snapend.
+
+#### 1. snap-config help
+See all the supported commands
+```bash
+# Help for the snap-config command
+snapctl snap-config --help
+```
+
+#### 2. snap-config get-config
+Get the configuration for specific snaps from a Snapend. This downloads the Snapend manifest and extracts the settings for the requested snap IDs.
+
+```bash
+# Get configuration for specific snaps from a snapend
+# $snaps = Comma separated list of snap IDs (e.g., analytics,auth,inventory)
+# $snapend_id = The Snapend ID to fetch the configuration from
+snapctl snap-config get-config --snaps $snaps --snapend-id $snapend_id
+```
+
+### 11. Admin SDK
+Download the Admin SDK — a downloadable SDK that lets you write your own scripts and tools to configure your Snapends programmatically (e.g. set a storage key blob, a profile attribute, an authenticator connector). The SDK is not tied to a single Snapend; its methods take the Snapend id at runtime. The download is therefore scoped by snap (`name:version`) rather than by `--snapend-id`, and accepts the same `--format`/`--http-lib` inputs as `snapend download`.
+
+#### 1. admin-sdk help
+See all the supported commands
+```bash
+# Help for the admin-sdk command
+snapctl admin-sdk --help
+```
+
+#### 2. admin-sdk download
+Download the Admin SDK for the requested snaps.
+
+```bash
+# Help for the download command
+snapctl admin-sdk download --help
+
+# Download your Admin SDK
+# $format = One of the supported SDK formats:
+#   client sdk(unity, unreal, roblox, godot-csharp, godot-cpp, godot-gdscript, cocos, ios-objc, ios-swift, android-java, android-kotlin, web-ts, web-js, flutter-dart),
+#   server sdk(csharp, cpp, lua, ts, go, python, kotlin, java, c, node, js, perl, php, clojure, ruby, rust, dart)
+# $http_lib (optional) = One of the supported libs for the format:
+#   format=unity http-lib=(httpclient, unitywebrequest, restsharp)
+#   format=csharp http-lib=(httpclient, restsharp)
+#   format=web-ts http-lib=(axios, fetch)
+#   format=ts http-lib=(axios, fetch)
+#   format=flutter-dart http-lib=(http, dio)
+#   format=dart http-lib=(http, dio)
+# $snaps = Comma separated list of snap name:version pairs. Only snap versions
+#   that support the Admin SDK (>= v1.12.0) can be passed.
+# $out_path = Path to save the downloaded SDK zip.
+# Example:
+# snapctl admin-sdk download --format go --snaps auth:v1.12.0,storage:v1.12.0 --out-path .
+# snapctl admin-sdk download --format ts --http-lib axios --snaps auth:v1.12.0 --out-path .
+snapctl admin-sdk download --format $format --snaps $snaps --out-path $out_path
+snapctl admin-sdk download --format $format --http-lib $http_lib --snaps $snaps --out-path $out_path
+```
+
+### 12. Release Notes
+View the release notes for Snapctl.
+
+#### 1. release-notes help
+See all the supported commands
+```bash
+# Help for the release-notes command
+snapctl release-notes --help
+```
+
+#### 2. release-notes releases
+List the available Snapctl releases.
+
+```bash
+snapctl release-notes releases
+```
+
+#### 3. release-notes show
+Show the release notes for a Snapctl version. Defaults to your installed version.
+
+```bash
+# $version = (Optional) Version to show the release notes for. Defaults to the current version.
+# $out_path = (Optional) Path to save the release notes. If not passed, the notes are printed on the console.
+snapctl release-notes show
+snapctl release-notes show --version $version --out-path $out_path
+```
+
+### 13. Accounts
+Snapctl commands for bulk managing the developer accounts and roles on your company. The workflow is **export → edit the CSV → sync**: `export` writes the current roster as CSV, you edit it in a spreadsheet or a script, and `sync` diffs your file against the live state and applies the difference.
+
+The company is derived from your API Key, so there is no `--company-id`. Both subcommands run company wide by default. Pass `--application-id` (or set the `SNAPSER_APPLICATION_ID` environment variable / Snapser config key, same fallback as `snapctl snapend`) to scope the export/sync to a single application.
+
+**`snapctl accounts` requires an admin API Key.** A non-admin key gets a permission error (exit code 117) on every subcommand. A company admin can sync the whole company; an application admin can only run an application-scoped sync (`--application-id`), and `company` rows in that CSV aren't rejected — they're silently skipped, along with any row for a different application.
+
+<Warning>
+  **IMPORTANT**: A sync is a **full replace, not an append**. The CSV you upload becomes the
+  complete list of roles for the scope you picked. Any role that exists today but is missing
+  from your file is **revoked**, and in a company wide sync a user left with no roles at all is
+  **removed from your organization**. Always start from an `accounts export` and edit that file —
+  never hand-write a CSV containing only the people you want to add.
+</Warning>
+
+**CSV format** — the columns are `email,game_id,cluster_id,service_id,role,view_modes`. `export` always writes them in this order; `sync` matches columns by header name, so you can reorder them. One row is one role assignment, so a user holding three roles gets three rows.
+
+| Column | Required | Description |
+|---|---|---|
+| `email` | Yes | The user's email. An address that isn't in your organization yet gets invited. |
+| `game_id` | Depends on the role | The application id. Leave blank for `company-` roles. |
+| `cluster_id` | Depends on the role | The Snapend id. Leave blank for `company-` and `game-` roles. |
+| `service_id` | Depends on the role | The snap id, eg. `auth`. Only used for `cluster-service-` and `cluster-service-user-` roles. |
+| `role` | Yes | The full role name, eg. `cluster-admin` or `cluster-service-user-view` — not split into a separate scope and level. |
+| `view_modes` | No | `;` separated studio functions for a **newly invited** user (`business`, `customer-support`, `design`, `engineering`, `product`, `production`, `qa`). Ignored for existing users; defaults to `engineering`. |
+
+There is no scope column — the scope of a row (company, app, Snapend, or Snap) is implicit in which id columns are filled in. The same sync is available in the portal under **Access > Sync**; see [Syncing accounts and roles with a CSV](/docs/resources/portal/access#f-syncing-accounts-and-roles-with-a-csv) in the Roles doc for the full column reference, worked examples, and guardrails.
+
+#### 1. accounts help
+
+See all the supported commands
+
+```bash
+# Help for the accounts command
+snapctl accounts --help
+```
+
+#### 2. accounts export
+Export the current accounts roster as CSV. Without `--out-path-filename` the CSV is printed on the console.
+
+```bash
+# $out_path_filename = Optional path and filename ending in .csv, where you want snapctl to save the roster.
+# $application_id = Optional Application Id. If not passed, the whole company is exported.
+snapctl accounts export
+snapctl accounts export --out-path-filename ./accounts.csv
+snapctl accounts export --out-path-filename ./accounts.csv --application-id $application_id
+```
+
+#### 3. accounts sync
+Sync an edited CSV back to Snapser. `--dry-run` previews the sync (`mode=PREVIEW`) and prints the diff plus the summary without changing anything. Without `--dry-run` the sync is applied (`mode=APPLY`).
+
+The preview prints one table per action — **Adds**, **Removes**, **Invites**, **Offboards** — followed by the summary counts (`adds`, `removes`, `invites`, `offboards`, `noops`). Rows that are already correct (`noops`) are counted in the summary but only tabled under `--verbose`; they are always present in the JSON on stdout. On apply, the per-row results are printed with the failed rows called out in their own table first.
+
+**Always preview first.** A sync can remove roles and offboard users, so `apply` asks for confirmation before it runs. Pass `--force` to skip the prompt — this is required in non-interactive sessions such as CI.
+
+<Note>
+  A preview is **not a reservation**: the server re-diffs against live state at apply time, so if
+  the roster may have changed since your preview, preview again.
+</Note>
+
+```bash
+# $accounts_path_filename = Full path to your accounts CSV including the filename.
+# Preview the sync — prints the diff and changes nothing:
+snapctl accounts sync --accounts-path-filename ./accounts.csv --dry-run
+
+# Apply the sync — prompts for confirmation first:
+snapctl accounts sync --accounts-path-filename ./accounts.csv
+
+# Apply the sync without a prompt (CI):
+snapctl accounts sync --accounts-path-filename ./accounts.csv --force
+
+# Scope either of the above to a single application:
+snapctl accounts sync --accounts-path-filename ./accounts.csv --dry-run --application-id $application_id
+```
+
+**Exit codes worth scripting against**
+- The server rejected the CSV — snapctl prints the `validation_errors` / `guardrail_errors` with their row numbers and exits `120`. **Nothing was applied.** The only guardrail is self-lockout — removing your own admin role at the scope you're syncing. Validation errors cover things like a row that references an app, Snapend or Snap that doesn't exist. This covers both forms of rejection: a preview that comes back `applicable=false`, and an apply that the server refuses outright with a 4xx.
+- Some rows failed during apply (`failed_count > 0`) — snapctl prints the per-row results and exits `121`. Apply is **continue-on-error with no rollback**, so the successful rows have landed. Fix the failed rows and re-run.
+
+The full server response is always echoed on stdout as JSON (the diff/results tables go to stderr), so `snapctl accounts sync ... | jq` works.
+
+
+## Error codes
+### CLI Return Codes
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 0          | Operation completed successfully                         |
+| 1          | General error                                            |
+| 2          | Input error                                              |
+| 3          | Resource not found                                       |
+| 4          | Internal server error                                    |
+| 5          | Maintenance Mode                                         |
+
+### Configuration Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 10         | Configuration incorrect                                  |
+| 11         | Configuration error                                      |
+| 12         | Dependency missing                                       |
+
+### Auth Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 11         | Configuration error: API key rejected during login (invalid or expired) |
+| 110        | Login error: unable to write the config file             |
+| 112        | Logout error: unable to update the config file           |
+
+### Snaps Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 13         | Snaps Generic error                                      |
+| 14         | Snaps Enumerate error                                    |
+
+### Snapend Manifest Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 16         | Snapend Manifest create error                            |
+| 17         | Snapend Manifest update error                            |
+| 18         | Snapend Manifest upgrade error                           |
+| 19         | Snapend Manifest update error                            |
+
+### BYOGS Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 3          | Resource not found: BYOGs resource not found             |
+| 20         | Generic BYOGS error                                      |
+| 21         | BYOGS dependency missing                                 |
+| 22         | BYOGS ECR login error                                    |
+| 23         | BYOGS build error                                        |
+| 24         | BYOGS tag error                                          |
+| 25         | BYOGS publish error                                      |
+| 26         | BYOGS publish permission error                           |
+| 27         | BYOGS publish duplicate tag error                        |
+
+### BYOSNAP Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 3          | Resource not found: BYOSnap resource not found           |
+| 30         | Generic BYOSNAP error                                    |
+| 31         | BYOSNAP dependency missing                               |
+| 32         | BYOSNAP ECR login error                                  |
+| 33         | BYOSNAP build error                                      |
+| 34         | BYOSNAP tag error                                        |
+| 35         | BYOSNAP publish image error                              |
+| 36         | BYOSNAP publish image permission error                   |
+| 37         | BYOSNAP publish image duplicate tag error                |
+| 38         | BYOSNAP create error                                     |
+| 39         | BYOSNAP create permission error                          |
+| 40         | BYOSNAP create duplicate name error                      |
+| 41         | BYOSNAP publish version error                            |
+| 42         | BYOSNAP publish version permission error                 |
+| 43         | BYOSNAP publish version duplicate version error          |
+| 44         | BYOSNAP publish version tag error: image not found       |
+| 45         | BYOSNAP update version error                             |
+| 46         | BYOSNAP update version service in use                    |
+| 47         | BYOSNAP update version tag error: image not found        |
+| 48         | BYOSNAP update version invalid version error             |
+| 49         | BYOSNAP publish error                                    |
+| 86         | BYOSNAP generate-profile                                 |
+| 87         | BYOSNAP swagger error                                    |
+| 88         | BYOSNAP update error                                     |
+| 89         | BYOSNAP update permission error                          |
+
+
+### Image Registry Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 90         | Image tag not found in the Snapser image registry        |
+
+Returned by `snapctl snapend update`, `snapctl snapend create`, `snapctl snapend clone`,
+`snapctl snapend apply` and `snapctl byosnap direct-deploy`. `snapctl byosnap publish` and
+`snapctl byosnap sync` report the same condition as `44` and `47` respectively.
+
+The most common cause is a full image repository. Repositories cap at 500 images; prune
+them from the [Image Manager](/docs/custom/tools/image-manager) in the web app. See
+[byosnap publish](#4-byosnap-publish) for the full explanation.
+
+### Application Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 3          | Resource not found: Application resource not found       |
+| 50         | Generic application error                                |
+| 51         | Application create error                                 |
+| 52         | Application create permission error                      |
+| 53         | Application create limit error                           |
+| 54         | Application create duplicate name error                  |
+| 55         | Application enumerate error                              |
+
+### Secret Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 3          | Resource not found: Secret resource not found            |
+| 4          | Internal server error: Secret encryption failure (backend api_error_code 584) |
+| 100        | Generic secret error                                     |
+| 101        | Secret enumerate error                                   |
+| 102        | Secret get error                                         |
+| 103        | Secret create error                                      |
+| 104        | Secret create duplicate error — (file_name, tag) already exists (backend api_error_code 588) |
+| 106        | Secret delete error                                      |
+| 107        | Secret delete failed — secret is referenced by a cluster manifest (backend api_error_code 582) |
+| 108        | Secret reveal error                                      |
+
+### Admin SDK Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 113        | Generic admin sdk error                                  |
+| 114        | Admin sdk download error                                 |
+
+### Accounts Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 116        | Generic accounts error                                   |
+| 117        | Permission denied — `snapctl accounts` requires an admin API Key |
+| 118        | Accounts export error                                    |
+| 119        | Accounts sync error                                      |
+| 120        | Accounts sync not applicable — the CSV was rejected (`validation_errors` / `guardrail_errors`) and nothing was applied |
+| 121        | Accounts sync applied with failed rows (`failed_count > 0`) — continue-on-error, not rolled back |
+
+### Snapend Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 3          | Resource not found: Snapend resource not found           |
+| 60         | Generic snapend error                                    |
+| 61         | Snapend enumerate error                                  |
+| 62         | Snapend clone error                                      |
+| 63         | Snapend clone server error                               |
+| 64         | Snapend clone timeout error                              |
+| 65         | Snapend apply error                                      |
+| 66         | Snapend apply server error                               |
+| 67         | Snapend apply timeout error                              |
+| 68         | Snapend promote error                                    |
+| 69         | Snapend promote server error                             |
+| 70         | Snapend promote timeout error                            |
+| 71         | Snapend download error                                   |
+| 72         | Snapend update error                                     |
+| 73         | Snapend update server error                              |
+| 74         | Snapend update timeout error                             |
+| 75         | Snapend state error                                      |
+| 76         | Snapend manifest mismatch error                          |
+| 77         | Snapend create error                                     |
+| 78         | Snapend create server error                              |
+| 79         | Snapend create timeout error                             |
+
+`snapend update`, `create`, `clone` and `apply` can also exit `90` when the manifest or
+update references a service version whose image is missing from the registry — see
+[Image Registry Errors](#image-registry-errors).
+
+### Generate Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 80         | Generic generate error                                   |
+| 81         | Generate credentials error                               |
+
+### Snap Configuration Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 91         | Snap Configuration error                                 |
+| 92         | Snap Configuration download error                        |
+
+### BYOWS Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 95         | Generic byows error                                      |
+| 96         | Byows attach error                                       |
+| 97         | Byows reset error                                        |
+| 98         | Byows detach error                                       |

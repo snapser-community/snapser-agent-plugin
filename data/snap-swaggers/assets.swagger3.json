@@ -1,0 +1,568 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "User generated assets",
+    "title" : "Assets",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "AssetsService"
+  } ],
+  "paths" : {
+    "/v1/assets/app-assets" : {
+      "delete" : {
+        "description" : "Delete app assets",
+        "operationId" : "DeleteAppAssets",
+        "parameters" : [ {
+          "explode" : true,
+          "in" : "query",
+          "name" : "asset_ids",
+          "required" : false,
+          "schema" : {
+            "items" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Skip validation of asset IDs",
+          "explode" : true,
+          "in" : "query",
+          "name" : "skip_invalidation",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/assetsDeleteAppAssetsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "App Assets",
+        "tags" : [ "AssetsService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      },
+      "get" : {
+        "description" : "Get app assets",
+        "operationId" : "GetAppAssets",
+        "parameters" : [ {
+          "description" : "File names to retrieve, if empty all files are returned",
+          "explode" : true,
+          "in" : "query",
+          "name" : "file_names",
+          "required" : false,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Bucket names to retrieve, if empty all buckets are returned",
+          "explode" : true,
+          "in" : "query",
+          "name" : "bucket_names",
+          "required" : false,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        }, {
+          "description" : "File paths to retrieve, if empty all files are returned",
+          "explode" : true,
+          "in" : "query",
+          "name" : "file_paths",
+          "required" : false,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Limit the number of files to retrieve",
+          "explode" : true,
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Offset of the files to retrieve",
+          "explode" : true,
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/assetsGetAppAssetsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "App Assets",
+        "tags" : [ "AssetsService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Upload app asset",
+        "operationId" : "UploadAppAsset",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UploadAppAsset_request"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/assetsUploadAssetResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "App Asset",
+        "tags" : [ "AssetsService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/assets/users/{user_id}/assets" : {
+      "delete" : {
+        "description" : "Delete assets for a user",
+        "operationId" : "DeleteAssets",
+        "parameters" : [ {
+          "description" : "UserID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Asset IDs to delete",
+          "explode" : true,
+          "in" : "query",
+          "name" : "asset_ids",
+          "required" : false,
+          "schema" : {
+            "items" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Skip validation of asset IDs",
+          "explode" : true,
+          "in" : "query",
+          "name" : "skip_invalidation",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/assetsDeleteAssetsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Assets",
+        "tags" : [ "AssetsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "get" : {
+        "description" : "Get assets for a user",
+        "operationId" : "GetAssets",
+        "parameters" : [ {
+          "description" : "UserID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "File names to retrieve, if empty all files are returned",
+          "explode" : true,
+          "in" : "query",
+          "name" : "file_names",
+          "required" : false,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Bucket names to retrieve, if empty all buckets are returned",
+          "explode" : true,
+          "in" : "query",
+          "name" : "bucket_names",
+          "required" : false,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        }, {
+          "description" : "File paths to retrieve, if empty all files are returned",
+          "explode" : true,
+          "in" : "query",
+          "name" : "file_paths",
+          "required" : false,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Limit the number of files to retrieve",
+          "explode" : true,
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Offset of the files to retrieve",
+          "explode" : true,
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/assetsGetAssetsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Assets",
+        "tags" : [ "AssetsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Upload asset for a user",
+        "operationId" : "UploadAsset",
+        "parameters" : [ {
+          "description" : "UserID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UploadAsset_request"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/assetsUploadAssetResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Asset",
+        "tags" : [ "AssetsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "assetsAsset" : {
+        "properties" : {
+          "bucket_name" : {
+            "description" : "Bucket name",
+            "type" : "string"
+          },
+          "bucket_type" : {
+            "description" : "Bucket type",
+            "type" : "string"
+          },
+          "created_at" : {
+            "description" : "Creation timestamp",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "file_name" : {
+            "description" : "File name",
+            "type" : "string"
+          },
+          "file_path" : {
+            "description" : "File path",
+            "type" : "string"
+          },
+          "file_size_bytes" : {
+            "description" : "File size in bytes",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "file_size_kb" : {
+            "description" : "File size in KB",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "file_url" : {
+            "description" : "File URL",
+            "type" : "string"
+          },
+          "id" : {
+            "description" : "Asset ID",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "updated_at" : {
+            "description" : "Update timestamp",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "visibility" : {
+            "description" : "Visibility of the asset",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "assetsDeleteAppAssetsResponse" : {
+        "properties" : {
+          "deleted_ids" : {
+            "items" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "type" : "array"
+          },
+          "failed_ids" : {
+            "items" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "assetsDeleteAssetsResponse" : {
+        "properties" : {
+          "deleted_ids" : {
+            "description" : "Successfully deleted file names",
+            "items" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "type" : "array"
+          },
+          "failed_ids" : {
+            "description" : "Failed to delete file names",
+            "items" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "assetsGetAppAssetsResponse" : {
+        "properties" : {
+          "assets" : {
+            "items" : {
+              "$ref" : "#/components/schemas/assetsAsset"
+            },
+            "type" : "array"
+          },
+          "count" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "assetsGetAssetsResponse" : {
+        "properties" : {
+          "assets" : {
+            "items" : {
+              "$ref" : "#/components/schemas/assetsAsset"
+            },
+            "type" : "array"
+          },
+          "count" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "assetsUploadAssetResponse" : {
+        "properties" : {
+          "asset" : {
+            "$ref" : "#/components/schemas/assetsAsset"
+          }
+        },
+        "type" : "object"
+      },
+      "UploadAppAsset_request" : {
+        "properties" : {
+          "bucket_name" : {
+            "description" : "The bucket name to save the file",
+            "type" : "string"
+          },
+          "content_type_override" : {
+            "description" : "The content type to set for the file (optional: to override detected content type)",
+            "type" : "string"
+          },
+          "file" : {
+            "description" : "The file to be uploaded",
+            "format" : "binary",
+            "type" : "string"
+          },
+          "file_path" : {
+            "description" : "The path to save the file",
+            "type" : "string"
+          },
+          "filename_override" : {
+            "description" : "The name of the file (optional: to override original name)",
+            "type" : "string"
+          },
+          "replace" : {
+            "description" : "Replace the existing asset with the same name; defaults to false.",
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "file" ],
+        "type" : "object"
+      },
+      "UploadAsset_request" : {
+        "properties" : {
+          "bucket_name" : {
+            "description" : "The bucket name to save the file",
+            "type" : "string"
+          },
+          "content_type_override" : {
+            "description" : "The content type to set for the file (optional: to override detected content type)",
+            "type" : "string"
+          },
+          "file" : {
+            "description" : "The file to be uploaded",
+            "format" : "binary",
+            "type" : "string"
+          },
+          "file_path" : {
+            "description" : "The path to save the file",
+            "type" : "string"
+          },
+          "filename_override" : {
+            "description" : "The name of the file (optional: to override original name)",
+            "type" : "string"
+          },
+          "obfuscate_filename" : {
+            "description" : "Obfuscate the filename; defaults to true.",
+            "type" : "boolean"
+          },
+          "replace" : {
+            "description" : "Replace the existing asset with the same name; defaults to false.",
+            "type" : "boolean"
+          },
+          "visibility" : {
+            "description" : "Asset visibility: public for all users, private for the uploader.",
+            "enum" : [ "public", "private" ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "file", "obfuscate_filename", "visibility" ],
+        "type" : "object"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

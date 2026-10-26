@@ -1,0 +1,3047 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "inventory_services.proto",
+    "version" : "version not set"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "InventoryService"
+  } ],
+  "paths" : {
+    "/v1/inventory/batch/rewards-grant" : {
+      "post" : {
+        "description" : "Grants the same set of rewards (items, currencies, and drop tables) to multiple users in a single call. Drop tables are rolled independently for each user. Grants are best-effort and isolated per user: a failure for one user does not roll back or block the others, and each user's outcome is returned in the results. The top-level success is true only if every user was granted successfully. Up to 100 users per call.",
+        "operationId" : "BatchGrantRewards",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/inventoryBatchGrantRewardsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryBatchGrantRewardsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Inventory",
+        "tags" : [ "InventoryService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/batch/user-items" : {
+      "get" : {
+        "description" : "Gets the items from catalog for multiple users in paginated manner. Default page size is 1000.",
+        "operationId" : "BatchGetUserItems",
+        "parameters" : [ {
+          "description" : "userid of the users to fetch the items for",
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        }, {
+          "description" : "limit, max number of items in the response per user, defaults to x",
+          "explode" : true,
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "offset, defaults to zero",
+          "explode" : true,
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "filter items by tags, comma separated strings of tags. Items matching all the tags will be returned",
+          "explode" : true,
+          "in" : "query",
+          "name" : "tags",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "filter items by class_name",
+          "explode" : true,
+          "in" : "query",
+          "name" : "class_name",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "filter items by names, comma separated strings of names. Items matching any of the names will be returned",
+          "explode" : true,
+          "in" : "query",
+          "name" : "names",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "filter items by type (can be container, non-container)",
+          "explode" : true,
+          "in" : "query",
+          "name" : "type",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryBatchGetUserItemsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Items",
+        "tags" : [ "InventoryService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/containers/{container_name}" : {
+      "get" : {
+        "description" : "Gets the contents of a container item from the catalog",
+        "operationId" : "GetContainer",
+        "parameters" : [ {
+          "description" : "Name of the container",
+          "explode" : false,
+          "in" : "path",
+          "name" : "container_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryGetContainerResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Containers",
+        "tags" : [ "InventoryService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/currencies/{currency_name}/total" : {
+      "get" : {
+        "description" : "Get Total Currency in circulation given a currency name",
+        "operationId" : "GetTotalCurrency",
+        "parameters" : [ {
+          "explode" : false,
+          "in" : "path",
+          "name" : "currency_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryGetTotalCurrencyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Currencies",
+        "tags" : [ "InventoryService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/currency-conversions" : {
+      "get" : {
+        "description" : "Get currency conversions",
+        "operationId" : "GetCurrencyConversions",
+        "parameters" : [ {
+          "description" : "Name of the currency to convert from",
+          "explode" : true,
+          "in" : "query",
+          "name" : "from_currency",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Name of the currency to convert to",
+          "explode" : true,
+          "in" : "query",
+          "name" : "to_currency",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryGetCurrencyConversionsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Currency Conversions",
+        "tags" : [ "InventoryService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/drop-tables" : {
+      "get" : {
+        "description" : "Gets drop tables in a paginated manner. Default page size is 1000.",
+        "operationId" : "GetDropTables",
+        "parameters" : [ {
+          "description" : "limit, max number of drop tables in the response, defaults to 1000",
+          "explode" : true,
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "offset, defaults to 0",
+          "explode" : true,
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "filter drop tables by names. Drop tables matching any of the names will be returned",
+          "explode" : true,
+          "in" : "query",
+          "name" : "names",
+          "required" : false,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryGetDropTablesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Drop Tables",
+        "tags" : [ "InventoryService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/drop-tables/{drop_table_name}" : {
+      "get" : {
+        "description" : "Get a drop table",
+        "operationId" : "GetDropTableContents",
+        "parameters" : [ {
+          "description" : "Name of drop table",
+          "explode" : false,
+          "in" : "path",
+          "name" : "drop_table_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryDropTable"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Drop Tables",
+        "tags" : [ "InventoryService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/drop-tables/{drop_table_name}/evaluate" : {
+      "get" : {
+        "description" : "Evaluate a drop table for a user and store the escrow ID",
+        "operationId" : "EvaluateDropTable",
+        "parameters" : [ {
+          "description" : "Name of the drop table",
+          "explode" : false,
+          "in" : "path",
+          "name" : "drop_table_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Id of affected user",
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryEvaluateDropTableResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Drop Tables",
+        "tags" : [ "InventoryService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/drop-tables/{drop_table_name}/grant" : {
+      "post" : {
+        "description" : "Grant items from a drop table based on a new evaluation or existing escrow ID",
+        "operationId" : "GrantDropTable",
+        "parameters" : [ {
+          "description" : "Name of the drop table",
+          "explode" : false,
+          "in" : "path",
+          "name" : "drop_table_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Id of affected user",
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Escrow id for the result, if it was evaluated already",
+          "explode" : true,
+          "in" : "query",
+          "name" : "escrow_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Id of the sub-inventory instance to grant into",
+          "explode" : true,
+          "in" : "query",
+          "name" : "sub_inventory_instance_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryGrantDropTableResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Drop Tables",
+        "tags" : [ "InventoryService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/items" : {
+      "get" : {
+        "description" : "Gets the items from catalog in a paginated manner. Default page size is 1000.",
+        "operationId" : "GetItems",
+        "parameters" : [ {
+          "description" : "limit, max number of items in the response, defaults to 10",
+          "explode" : true,
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "offset, defaults to 0",
+          "explode" : true,
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "filter items by tags, comma separated strings of tags. Items matching all the tags will be returned",
+          "explode" : true,
+          "in" : "query",
+          "name" : "tags",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "filter items by class_name",
+          "explode" : true,
+          "in" : "query",
+          "name" : "class_name",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "filter items by name",
+          "explode" : true,
+          "in" : "query",
+          "name" : "name",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "filter items by names, comma separated strings of names. Items matching any of the names will be returned",
+          "explode" : true,
+          "in" : "query",
+          "name" : "names",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "filter items by type (can be container, non-container, sub-inventory, non-sub-inventory)",
+          "explode" : true,
+          "in" : "query",
+          "name" : "type",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Optional user-id to evaluate discounts against. Requires the caller to be internal, api-key/app auth, or a user whose auth-header user-id matches this value. If unset, the caller's own user-id (from auth header) is used.",
+          "explode" : true,
+          "in" : "query",
+          "name" : "target_user_id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryGetItemsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Items",
+        "tags" : [ "InventoryService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/users" : {
+      "get" : {
+        "description" : "Search all the users who have the item in their inventory",
+        "operationId" : "GetUsers",
+        "parameters" : [ {
+          "description" : "Name of the item to search for",
+          "explode" : true,
+          "in" : "query",
+          "name" : "item_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "limit, max number of items in the response, defaults to 10",
+          "explode" : true,
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "offset, defaults to 0",
+          "explode" : true,
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryGetUsersResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Search",
+        "tags" : [ "InventoryService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/users/{user_id}/containers/{container_name}/grant-and-open" : {
+      "post" : {
+        "description" : "Grants and opens a container item from user inventory given an item name",
+        "operationId" : "GrantAndOpenContainer",
+        "parameters" : [ {
+          "description" : "Id of user receiving the assets",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of the container to grant and open",
+          "explode" : false,
+          "in" : "path",
+          "name" : "container_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/GrantAndOpenContainer_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryGrantAndOpenContainerResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Items",
+        "tags" : [ "InventoryService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/users/{user_id}/currencies" : {
+      "get" : {
+        "description" : "Get user currencies",
+        "operationId" : "GetUserCurrencies",
+        "parameters" : [ {
+          "description" : "User id",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryGetUserCurrenciesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Currency",
+        "tags" : [ "InventoryService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/users/{user_id}/currencies/{currency_name}" : {
+      "put" : {
+        "description" : "Increment or decrement virtual currency of a user",
+        "operationId" : "IncrementUserCurrency",
+        "parameters" : [ {
+          "description" : "Id of affected user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of currency to be granted/consumed",
+          "explode" : false,
+          "in" : "path",
+          "name" : "currency_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/IncrementUserCurrency_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryIncrementUserCurrencyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Currency",
+        "tags" : [ "InventoryService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/users/{user_id}/currencies/{currency_name}/stats" : {
+      "get" : {
+        "description" : "Get user currency stats",
+        "operationId" : "GetUserCurrencyStats",
+        "parameters" : [ {
+          "description" : "Id of affected user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of currency to get stats for",
+          "explode" : false,
+          "in" : "path",
+          "name" : "currency_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryGetUserCurrencyStatsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Currency",
+        "tags" : [ "InventoryService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/users/{user_id}/currency-conversion" : {
+      "post" : {
+        "description" : "Convert user currency from one to another",
+        "operationId" : "ConvertUserCurrency",
+        "parameters" : [ {
+          "description" : "Id of affected user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ConvertUserCurrency_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryConvertUserCurrencyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Currency",
+        "tags" : [ "InventoryService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/users/{user_id}/items-consume" : {
+      "post" : {
+        "description" : "Consumes multiple items from user inventory by instance id and count. This API is all or nothing, if any of the items cannot be consumed, none of the items will be consumed",
+        "operationId" : "ConsumeItems",
+        "parameters" : [ {
+          "description" : "Id of affected user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ConsumeItems_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryConsumeItemsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Items",
+        "tags" : [ "InventoryService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/users/{user_id}/items-grant" : {
+      "post" : {
+        "description" : "Grants the list of items to user, this does not modify currencies",
+        "operationId" : "GrantItemsToUser",
+        "parameters" : [ {
+          "description" : "Id of user receiving the assets",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/GrantItemsToUser_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryUserInventory"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Items",
+        "tags" : [ "InventoryService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/users/{user_id}/items-purchase" : {
+      "post" : {
+        "description" : "Purchase an item with given virtual currency (Deprecated: Use Purchase Item)",
+        "operationId" : "PurchaseItemWithVirtualCurrency",
+        "parameters" : [ {
+          "description" : "Id of user receiving the assets",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PurchaseItemWithVirtualCurrency_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryUserInventoryItem"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Items",
+        "tags" : [ "InventoryService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/users/{user_id}/purchase" : {
+      "post" : {
+        "description" : "Purchase an item with given virtual currency, returning both the purchased item and updated currency balances",
+        "operationId" : "PurchaseItem",
+        "parameters" : [ {
+          "description" : "Id of user receiving the assets",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PurchaseItemWithVirtualCurrency_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryPurchaseItemResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Items",
+        "tags" : [ "InventoryService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/users/{user_id}/sub-inventory/move-items" : {
+      "post" : {
+        "description" : "Move item into sub-inventory",
+        "operationId" : "MoveItemsToSubInventory",
+        "parameters" : [ {
+          "description" : "Id of affected user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MoveItemsToSubInventory_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryMoveItemsToSubInventoryResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Move item into sub-inventory",
+        "tags" : [ "InventoryService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/users/{user_id}/user-containers/{container_instance_id}/open" : {
+      "post" : {
+        "description" : "Open a container item from user inventory given an instance id",
+        "operationId" : "OpenContainer",
+        "parameters" : [ {
+          "description" : "Id of affected user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Id of the container present in user inventory",
+          "explode" : false,
+          "in" : "path",
+          "name" : "container_instance_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OpenContainer_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryOpenContainerResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Items",
+        "tags" : [ "InventoryService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/users/{user_id}/user-containers/{container_instance_id}/unlock" : {
+      "post" : {
+        "description" : "Unlocks a container item from user inventory given an instance id and returns items to be granted without granting them",
+        "operationId" : "UnlockContainer",
+        "parameters" : [ {
+          "description" : "Id of affected user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Id of the container present in user inventory",
+          "explode" : false,
+          "in" : "path",
+          "name" : "container_instance_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UnlockContainer_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryUnlockContainerResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Items",
+        "tags" : [ "InventoryService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/users/{user_id}/user-items" : {
+      "get" : {
+        "description" : "Gets the user items in a paginated manner. Default page size is 1000.",
+        "operationId" : "GetAllUserItems",
+        "parameters" : [ {
+          "description" : "userid to assign the items",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "limit, max number of items in the response, defaults to 1000",
+          "explode" : true,
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "offset, defaults to zero",
+          "explode" : true,
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "filter items by catalog_item_name (DEPRECATED: use names field)",
+          "explode" : true,
+          "in" : "query",
+          "name" : "item_name",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "filter items by tags, comma separated strings of tags. Items matching all the tags will be returned",
+          "explode" : true,
+          "in" : "query",
+          "name" : "tags",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "filter items by class_name",
+          "explode" : true,
+          "in" : "query",
+          "name" : "class_name",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "filter items by names, comma separated strings of names. Items matching any of the names will be returned",
+          "explode" : true,
+          "in" : "query",
+          "name" : "names",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "filter items by type (can be container, non-container)",
+          "explode" : true,
+          "in" : "query",
+          "name" : "type",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryGetUserItemsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Items",
+        "tags" : [ "InventoryService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/users/{user_id}/user-items-consumption/{item_instance_id}" : {
+      "post" : {
+        "description" : "Consumes item from user inventory by a count given an instance id",
+        "operationId" : "ConsumeItem",
+        "parameters" : [ {
+          "description" : "Id of affected user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Id of the item present in user inventory",
+          "explode" : false,
+          "in" : "path",
+          "name" : "item_instance_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ConsumeItem_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryConsumeItemResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Items",
+        "tags" : [ "InventoryService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/users/{user_id}/user-items/{item_instance_id}" : {
+      "delete" : {
+        "description" : "Deletes item from user inventory given instance id",
+        "operationId" : "DeleteUserItem",
+        "parameters" : [ {
+          "description" : "Id of user from which item would be removed",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Id of the item present in user inventory",
+          "explode" : false,
+          "in" : "path",
+          "name" : "item_instance_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Items",
+        "tags" : [ "InventoryService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "get" : {
+        "description" : "Gets item from inventory given instance id",
+        "operationId" : "GetUserItem",
+        "parameters" : [ {
+          "description" : "Id of affected user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Id of the item present in user inventory",
+          "explode" : false,
+          "in" : "path",
+          "name" : "item_instance_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryUserInventoryItem"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Items",
+        "tags" : [ "InventoryService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/inventory/users/{user_id}/user-items/{item_instance_id}/metadata" : {
+      "patch" : {
+        "description" : "Update the metadata of the user inventory item. Not to be confused with catalog item metadata",
+        "operationId" : "UpdateUserItemMetadata",
+        "parameters" : [ {
+          "description" : "Id of affected user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Id of the item present in user inventory",
+          "explode" : false,
+          "in" : "path",
+          "name" : "item_instance_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateUserItemMetadata_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/inventoryUserInventoryItem"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Items",
+        "tags" : [ "InventoryService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "ConsumeItem_request" : {
+        "properties" : {
+          "consume_count" : {
+            "description" : "Number of units to consume",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "consume_count" ],
+        "type" : "object"
+      },
+      "ConsumeItems_request" : {
+        "properties" : {
+          "items" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Map of item instance id to the number of units to consume",
+            "type" : "object"
+          }
+        },
+        "required" : [ "items" ],
+        "type" : "object"
+      },
+      "ConvertUserCurrency_request" : {
+        "properties" : {
+          "amount" : {
+            "description" : "Amount to convert (DEPRECATED: use amount_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "amount_64" : {
+            "description" : "Amount to convert",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "from_currency" : {
+            "description" : "Name of the currency to convert from",
+            "type" : "string"
+          },
+          "to_currency" : {
+            "description" : "Name of the currency to convert to",
+            "type" : "string"
+          }
+        },
+        "required" : [ "from_currency", "to_currency" ],
+        "type" : "object"
+      },
+      "GrantAndOpenContainer_request" : {
+        "properties" : {
+          "require_balance" : {
+            "description" : "If true, the user must have the required balance to be granted the container",
+            "type" : "boolean"
+          },
+          "sub_inventory_instance_id" : {
+            "description" : "Id of the sub-inventory instance to grant into",
+            "type" : "string"
+          },
+          "unlock_cost" : {
+            "$ref" : "#/components/schemas/inventoryUnlockKey"
+          }
+        },
+        "type" : "object"
+      },
+      "GrantItemsToUser_request" : {
+        "properties" : {
+          "items" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Unique name and count of items to grant to user",
+            "type" : "object"
+          },
+          "metadata" : {
+            "description" : "Custom metadata to be attached to user inventory items, not to be confused with catalog item metadata",
+            "type" : "object"
+          },
+          "sub_inventory_instance_id" : {
+            "description" : "Sub inventory instance the granted items should be added to",
+            "type" : "string"
+          },
+          "sub_inventory_item_name" : {
+            "description" : "Name of the sub inventory item to be added to the sub inventory instance (Ignored if sub_inventory_instance_id is not set)",
+            "type" : "string"
+          }
+        },
+        "required" : [ "items" ],
+        "type" : "object"
+      },
+      "IncrementUserCurrency_request" : {
+        "properties" : {
+          "delta" : {
+            "description" : "Amount to grant/consume (DEPRECATED: use delta_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "delta_64" : {
+            "description" : "Amount to grant/consume",
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "MoveItemsToSubInventory_request" : {
+        "properties" : {
+          "item_instance_ids" : {
+            "description" : "Ids of the items to move into the sub-inventory",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "sub_inventory_instance_id" : {
+            "description" : "Id of the sub-inventory instance to move the item into",
+            "type" : "string"
+          }
+        },
+        "required" : [ "item_instance_ids", "sub_inventory_instance_id" ],
+        "type" : "object"
+      },
+      "OpenContainer_request" : {
+        "properties" : {
+          "escrow_id" : {
+            "description" : "Escrow id for the result, if it was evaluated already",
+            "type" : "string"
+          },
+          "sub_inventory_instance_id" : {
+            "description" : "Id of the sub-inventory instance to grant into",
+            "type" : "string"
+          },
+          "unlock_cost" : {
+            "$ref" : "#/components/schemas/inventoryUnlockKey"
+          }
+        },
+        "type" : "object"
+      },
+      "PurchaseItemWithVirtualCurrency_request" : {
+        "properties" : {
+          "catalog_item_name" : {
+            "description" : "Name of catalog item to purchase",
+            "type" : "string"
+          },
+          "currency_name" : {
+            "description" : "Name of virtual currency to purchase item with",
+            "type" : "string"
+          },
+          "sub_inventory_instance_id" : {
+            "description" : "Sub inventory instance the purchased items should be added to",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "UnlockContainer_request" : {
+        "properties" : {
+          "unlock_cost" : {
+            "$ref" : "#/components/schemas/inventoryUnlockKey"
+          }
+        },
+        "type" : "object"
+      },
+      "UpdateUserItemMetadata_request" : {
+        "properties" : {
+          "metadata" : {
+            "description" : "Metadata to be attached to user inventory item. Not be confused with metadata with catalog item",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryApplicableDiscounts" : {
+        "properties" : {
+          "discount_names" : {
+            "description" : "List of applicable discount ids",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "floor_price" : {
+            "description" : "Minimum price after applying discounts",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "strategy" : {
+            "description" : "Strategy used to apply discounts",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryAppliedDiscounts" : {
+        "properties" : {
+          "discount_names" : {
+            "description" : "List of applied discount ids",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "price_after_discounts" : {
+            "description" : "Price after applying discounts",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryBatchGetUserItemsResponse" : {
+        "properties" : {
+          "responses" : {
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryBatchGetUserItemsSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryBatchGetUserItemsSingleResponse" : {
+        "properties" : {
+          "items" : {
+            "description" : "Items in user inventory",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryUserInventoryItem"
+            },
+            "type" : "array"
+          },
+          "message" : {
+            "description" : "Message for the request",
+            "type" : "string"
+          },
+          "success" : {
+            "description" : "Success status of the request",
+            "type" : "boolean"
+          },
+          "user_id" : {
+            "description" : "User id",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryBatchGrantRewardsRequest" : {
+        "properties" : {
+          "rewards" : {
+            "$ref" : "#/components/schemas/inventoryRewardBatch"
+          },
+          "user_ids" : {
+            "description" : "Ids of the users to grant the same rewards to (1-100)",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryBatchGrantRewardsResponse" : {
+        "properties" : {
+          "results" : {
+            "description" : "Per-user grant result",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryBatchGrantUserResult"
+            },
+            "type" : "array"
+          },
+          "success" : {
+            "description" : "True only if every user was granted successfully",
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryBatchGrantUserResult" : {
+        "properties" : {
+          "error" : {
+            "description" : "Error message if success is false; empty otherwise",
+            "type" : "string"
+          },
+          "grant_result" : {
+            "$ref" : "#/components/schemas/inventoryGrantRewardsInBatchesResponse"
+          },
+          "success" : {
+            "description" : "True if this user's rewards were fully granted",
+            "type" : "boolean"
+          },
+          "user_id" : {
+            "description" : "User this result is for",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryBatchResult" : {
+        "properties" : {
+          "drop_table_results" : {
+            "description" : "Results from drop table evaluations in this batch",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryDropTableResult"
+            },
+            "type" : "array"
+          },
+          "failed_currencies" : {
+            "description" : "Names of currencies that failed to grant in this batch",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "failed_drop_tables" : {
+            "description" : "Names of drop tables that failed to evaluate or grant in this batch",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "failed_items" : {
+            "description" : "Names of items that failed to grant in this batch",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "grant_results" : {
+            "$ref" : "#/components/schemas/inventoryGrantResults"
+          },
+          "success" : {
+            "description" : "True if all grants in this batch succeeded",
+            "type" : "boolean"
+          },
+          "tag" : {
+            "description" : "Opaque label from the corresponding RewardBatch",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryCatalogItem" : {
+        "properties" : {
+          "class_name" : {
+            "description" : "An arbitrary string storing classname of the item",
+            "type" : "string"
+          },
+          "consumable" : {
+            "$ref" : "#/components/schemas/inventoryConsumable"
+          },
+          "container" : {
+            "$ref" : "#/components/schemas/inventoryContainer"
+          },
+          "description" : {
+            "description" : "Description of item",
+            "type" : "string"
+          },
+          "display_name" : {
+            "description" : "Display name of the item",
+            "type" : "string"
+          },
+          "metadata" : {
+            "description" : "Additional metadata to attach to inventory item",
+            "type" : "object"
+          },
+          "name" : {
+            "description" : "Name of the item, has to be unique in the catalog",
+            "type" : "string"
+          },
+          "purchasable" : {
+            "$ref" : "#/components/schemas/inventoryPurchasable"
+          },
+          "stackable" : {
+            "description" : "True if item can be stacked, a stackable item only",
+            "type" : "boolean"
+          },
+          "sub_inventory" : {
+            "$ref" : "#/components/schemas/inventorySubInventory"
+          },
+          "tags" : {
+            "description" : "Tags associated with the item",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "tradable" : {
+            "description" : "True if item is tradable",
+            "type" : "boolean"
+          },
+          "ttl" : {
+            "description" : "Time after which item will be removed from user inventory",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "user_inventory_instance_limit" : {
+            "description" : "Maximum number of instances of this item that can be in user inventory at the same time",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "user_inventory_instance_limit_per_sub_inventory" : {
+            "description" : "Maximum number of instances of this item allowed per sub-inventory (or in the main inventory if not targeting a sub-inventory)",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "class_name", "display_name", "name", "stackable", "tradable" ],
+        "type" : "object"
+      },
+      "inventoryConsumable" : {
+        "properties" : {
+          "is_consumable" : {
+            "description" : "True if item is consumable",
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "is_consumable" ],
+        "title" : "Message Types and Enums",
+        "type" : "object"
+      },
+      "inventoryConsumeItemResponse" : {
+        "properties" : {
+          "instance_id" : {
+            "description" : "Id of the item present in user inventory",
+            "type" : "string"
+          },
+          "last_consumed_at" : {
+            "description" : "Timestamp of the last time the item was consumed",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "remaining_uses" : {
+            "description" : "Number of remaining uses for the user inventory item",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryConsumeItemsResponse" : {
+        "properties" : {
+          "items" : {
+            "description" : "Per-item consumption results",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryConsumeItemResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryContainer" : {
+        "properties" : {
+          "drop_tables" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Drop table names associated with the container",
+            "type" : "object"
+          },
+          "items" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Items in the container",
+            "type" : "object"
+          },
+          "unlock_cost" : {
+            "description" : "Unlock cost of the container",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryUnlockCost"
+            },
+            "type" : "array"
+          },
+          "virtual_currencies" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Virtual currencies granted upon opening the container (DEPRECATED: use virtual_currencies_64)",
+            "type" : "object"
+          },
+          "virtual_currencies_64" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "description" : "Virtual currencies granted upon opening the container",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryConvertUserCurrencyResponse" : {
+        "properties" : {
+          "from_currency" : {
+            "$ref" : "#/components/schemas/inventoryUserCurrencyUpdate"
+          },
+          "to_currency" : {
+            "$ref" : "#/components/schemas/inventoryUserCurrencyUpdate"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryCurrencyConversion" : {
+        "properties" : {
+          "from_currency" : {
+            "description" : "Name of currency to convert from",
+            "type" : "string"
+          },
+          "multiplier" : {
+            "description" : "Multiplier for from_currency (DEPRECATED: use multiplier_64)",
+            "format" : "float",
+            "type" : "number"
+          },
+          "multiplier_64" : {
+            "description" : "Multiplier for from_currency",
+            "format" : "double",
+            "type" : "number"
+          },
+          "to_currency" : {
+            "description" : "Name of currency to convert to",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryDropTable" : {
+        "properties" : {
+          "drops" : {
+            "description" : "Items in the drop table",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryDropTableDrops"
+            },
+            "type" : "array"
+          },
+          "name" : {
+            "description" : "Name of drop table",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryDropTableDrops" : {
+        "properties" : {
+          "currencies" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/inventoryDropValues"
+            },
+            "description" : "Map of currency name to drop values",
+            "type" : "object"
+          },
+          "drop_tables" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/inventoryDropValues"
+            },
+            "description" : "Map of drop table name to drop values (quantity determined by min/max/multiple). Mutually exclusive with items/currencies/trackables fields.",
+            "type" : "object"
+          },
+          "empty" : {
+            "description" : "When true, this drop is intentionally empty and yields nothing. Mutually exclusive with items/currencies/trackables/drop_tables.",
+            "type" : "boolean"
+          },
+          "items" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/inventoryDropValues"
+            },
+            "description" : "Map of item name to drop values",
+            "type" : "object"
+          },
+          "trackables_energy" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/inventoryDropValues"
+            },
+            "description" : "Map of trackable energy name to drop values",
+            "type" : "object"
+          },
+          "trackables_xp" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/inventoryDropValues"
+            },
+            "description" : "Map of trackable xp name to drop values",
+            "type" : "object"
+          },
+          "weight" : {
+            "description" : "Weight of item in the drop table",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "weight" ],
+        "type" : "object"
+      },
+      "inventoryDropTableGrant" : {
+        "properties" : {
+          "count" : {
+            "description" : "Number of times to evaluate the drop table",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "name" : {
+            "description" : "Name of the drop table",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryDropTableResult" : {
+        "properties" : {
+          "currencies_granted" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "description" : "Currencies granted from this drop table evaluation",
+            "type" : "object"
+          },
+          "drop_index" : {
+            "description" : "Index of the drop that was selected",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "drop_table_name" : {
+            "description" : "Name of the drop table that was evaluated",
+            "type" : "string"
+          },
+          "energy_granted" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Energy granted from this drop table evaluation",
+            "type" : "object"
+          },
+          "items_granted" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Items granted from this drop table evaluation",
+            "type" : "object"
+          },
+          "xp_granted" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "XP granted from this drop table evaluation",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryDropValues" : {
+        "properties" : {
+          "max" : {
+            "description" : "Maximum value of drop. Will be equal to min if not specified (DEPRECATED: use max_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "max_64" : {
+            "description" : "Maximum value of drop. Will be equal to min if not specified",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "min" : {
+            "description" : "Minimum value of drop (DEPRECATED: use min_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "min_64" : {
+            "description" : "Minimum value of drop",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "multiple" : {
+            "description" : "Increment value of the drop. Defaults to 1 (DEPRECATED: use multiple_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "multiple_64" : {
+            "description" : "Increment value of the drop. Defaults to 1",
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryEvaluateDropTableResponse" : {
+        "properties" : {
+          "currencies" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Virtual currencies that will be granted to the user (DEPRECATED: use currencies_64)",
+            "type" : "object"
+          },
+          "currencies_64" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "description" : "Virtual currencies that will be granted to the user",
+            "type" : "object"
+          },
+          "drop_index" : {
+            "description" : "Index of the drop table that was evaluated",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "empty" : {
+            "description" : "True when the evaluated drop is empty (intentionally yields nothing)",
+            "type" : "boolean"
+          },
+          "escrow_id" : {
+            "description" : "Escrow id for the result",
+            "type" : "string"
+          },
+          "items" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Items that will be granted to the user",
+            "type" : "object"
+          },
+          "trackables_energy" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Trackables energies to be granted to the user",
+            "type" : "object"
+          },
+          "trackables_xp" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Trackables xps to be granted to the user",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryGetContainerResponse" : {
+        "properties" : {
+          "currencies" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Virtual currencies in the container with their counts (DEPRECATED: use currencies_64)",
+            "type" : "object"
+          },
+          "currencies_64" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "description" : "Virtual int64 currencies in the container with their counts",
+            "type" : "object"
+          },
+          "drop_table_contents" : {
+            "description" : "Drop tables associated with the container",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryDropTable"
+            },
+            "type" : "array"
+          },
+          "drop_tables" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Drop tables associated with the container",
+            "type" : "object"
+          },
+          "items" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Items in the container with their counts",
+            "type" : "object"
+          },
+          "name" : {
+            "description" : "Name of the container",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryGetCurrencyConversionsResponse" : {
+        "properties" : {
+          "conversions" : {
+            "description" : "Currency conversions",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryCurrencyConversion"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryGetDropTablesResponse" : {
+        "properties" : {
+          "drop_tables" : {
+            "description" : "Drop tables",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryDropTable"
+            },
+            "type" : "array"
+          },
+          "matching_drop_tables" : {
+            "description" : "Number of drop tables matched by the query",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "total_drop_tables" : {
+            "description" : "Total number of drop tables",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryGetItemsResponse" : {
+        "properties" : {
+          "items" : {
+            "description" : "Catalog items",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryCatalogItem"
+            },
+            "type" : "array"
+          },
+          "matching_catalog_items" : {
+            "description" : "Number of items matched by the query",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "total_catalog_items" : {
+            "description" : "Total number of items in the catalog",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryGetTotalCurrencyResponse" : {
+        "properties" : {
+          "total" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "total_64" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryGetUserCurrenciesResponse" : {
+        "properties" : {
+          "currencies" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Map of currency name to balance (DEPRECATED: use currencies_64)",
+            "type" : "object"
+          },
+          "currencies_64" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "description" : "Map of currency name to balance",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryGetUserCurrencyStatsResponse" : {
+        "properties" : {
+          "total_earned" : {
+            "description" : "Total earned currency (DEPRECATED: use total_earned_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "total_earned_64" : {
+            "description" : "Total earned currency",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "total_spent" : {
+            "description" : "Total spent currency (DEPRECATED: use total_spent_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "total_spent_64" : {
+            "description" : "Total spent currency",
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryGetUserItemsResponse" : {
+        "properties" : {
+          "items" : {
+            "description" : "Items in user inventory",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryUserInventoryItem"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryGetUsersResponse" : {
+        "properties" : {
+          "total_count" : {
+            "description" : "Total number of users that have the item",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "user_ids" : {
+            "description" : "User ids that have the item",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryGrantAndOpenContainerResponse" : {
+        "properties" : {
+          "grant_results" : {
+            "$ref" : "#/components/schemas/inventoryGrantResults"
+          },
+          "granted_items" : {
+            "description" : "Items granted to the user (DEPRECATED: use grant_results.granted_items)",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryUserInventoryItem"
+            },
+            "type" : "array"
+          },
+          "granted_trackables_energy" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Trackables energy granted to the user (DEPRECATED: use grant_results.granted_trackables_energy)",
+            "type" : "object"
+          },
+          "granted_trackables_xp" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Trackables xp granted to the user (DEPRECATED: use grant_results.granted_trackables_xp)",
+            "type" : "object"
+          },
+          "granted_virtual_currency" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Virtual currency granted to the user (DEPRECATED: use grant_results.granted_currencies)",
+            "type" : "object"
+          },
+          "granted_virtual_currency_64" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "description" : "Virtual currency granted to the user (DEPRECATED: use grant_results.granted_currencies)",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryGrantDropTableResponse" : {
+        "properties" : {
+          "drop_index" : {
+            "description" : "Index of the drop table that was granted",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "empty" : {
+            "description" : "True when the granted drop is empty (intentionally yielded nothing)",
+            "type" : "boolean"
+          },
+          "grant_results" : {
+            "$ref" : "#/components/schemas/inventoryGrantResults"
+          },
+          "granted_items" : {
+            "description" : "Items granted to the user (DEPRECATED: use grant_results.granted_items)",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryUserInventoryItem"
+            },
+            "type" : "array"
+          },
+          "granted_trackables_energy" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Trackables energy granted to the user (DEPRECATED: use grant_results.granted_trackables_energy)",
+            "type" : "object"
+          },
+          "granted_trackables_xp" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Trackables xp granted to the user (DEPRECATED: use grant_results.granted_trackables_xp)",
+            "type" : "object"
+          },
+          "granted_virtual_currency" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Virtual currency granted to the user (DEPRECATED: use grant_results.granted_currencies)",
+            "type" : "object"
+          },
+          "granted_virtual_currency_64" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "description" : "Virtual currency granted to the user (DEPRECATED: use grant_results.granted_currencies)",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryGrantInventoryItemsRequest" : {
+        "properties" : {
+          "items" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Unique name and count of items to grant to user",
+            "type" : "object"
+          },
+          "metadata" : {
+            "description" : "Custom metadata to be attached to user inventory items, not to be confused with catalog item metadata",
+            "type" : "object"
+          },
+          "sub_inventory_instance_id" : {
+            "description" : "Sub inventory instance the granted items should be added to",
+            "type" : "string"
+          },
+          "sub_inventory_item_name" : {
+            "description" : "Name of the sub inventory item to be added to the sub inventory instance (Ignored if sub_inventory_instance_id is not set)",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "Id of user receiving the assets",
+            "type" : "string"
+          }
+        },
+        "required" : [ "items", "user_id" ],
+        "type" : "object"
+      },
+      "inventoryGrantResults" : {
+        "properties" : {
+          "granted_currencies" : {
+            "description" : "Virtual currencies granted to the user",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryGrantedCurrency"
+            },
+            "type" : "array"
+          },
+          "granted_items" : {
+            "description" : "Items granted to the user",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryGrantedItem"
+            },
+            "type" : "array"
+          },
+          "granted_trackables_energy" : {
+            "description" : "Trackables energy granted to the user",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryGrantedTrackablesEnergy"
+            },
+            "type" : "array"
+          },
+          "granted_trackables_xp" : {
+            "description" : "Trackables xp granted to the user",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryGrantedTrackablesXp"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryGrantRewardsInBatchesResponse" : {
+        "properties" : {
+          "batch_results" : {
+            "description" : "Per-batch results",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryBatchResult"
+            },
+            "type" : "array"
+          },
+          "success" : {
+            "description" : "True if all batches fully succeeded",
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryGrantedCurrency" : {
+        "properties" : {
+          "after_balance" : {
+            "description" : "Balance of the currency after granting (DEPRECATED: use after_balance_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "after_balance_64" : {
+            "description" : "Balance of the currency after granting",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "before_balance" : {
+            "description" : "Balance of the currency before granting (DEPRECATED: use before_balance_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "before_balance_64" : {
+            "description" : "Balance of the currency before granting",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "currency_name" : {
+            "description" : "Name of the currency granted",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryGrantedItem" : {
+        "properties" : {
+          "after_count" : {
+            "description" : "Count of the item after granting",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "before_count" : {
+            "description" : "Count of the item before granting",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "catalog_item_name" : {
+            "description" : "Name of the item granted",
+            "type" : "string"
+          },
+          "instance_ids" : {
+            "description" : "Instance ids of the item granted",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryGrantedTrackablesEnergy" : {
+        "properties" : {
+          "after_energy" : {
+            "description" : "Energy of the user after granting",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "before_energy" : {
+            "description" : "Energy of the user before granting",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "trackable_energy_name" : {
+            "description" : "Name of the trackable energy granted",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryGrantedTrackablesXp" : {
+        "properties" : {
+          "after_xp" : {
+            "description" : "XP of the user after granting",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "before_xp" : {
+            "description" : "XP of the user before granting",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "num_levels_progressed" : {
+            "description" : "Number of levels progressed",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "trackable_xp_name" : {
+            "description" : "Name of the trackable xp granted",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryIncrementUserCurrencyResponse" : {
+        "properties" : {
+          "current_balance" : {
+            "description" : "Current Balance of given currency with user after adding (DEPRECATED: use current_balance_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "current_balance_64" : {
+            "description" : "Current Balance of given currency with user after adding",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "previous_balance" : {
+            "description" : "Balance of given currency with user before adding (DEPRECATED: use previous_balance_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "previous_balance_64" : {
+            "description" : "Balance of given currency with user before adding",
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryMoveItemsToSubInventoryResponse" : {
+        "properties" : {
+          "success" : {
+            "description" : "True if the move was successful",
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryOpenContainerResponse" : {
+        "properties" : {
+          "grant_results" : {
+            "$ref" : "#/components/schemas/inventoryGrantResults"
+          },
+          "granted_items" : {
+            "description" : "Items granted to the user (DEPRECATED: use grant_results.granted_items)",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryUserInventoryItem"
+            },
+            "type" : "array"
+          },
+          "granted_trackables_energy" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Trackables energy granted to the user (DEPRECATED: use grant_results.granted_trackables_energy)",
+            "type" : "object"
+          },
+          "granted_trackables_xp" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Trackables xp granted to the user (DEPRECATED: use grant_results.granted_trackables_xp)",
+            "type" : "object"
+          },
+          "granted_virtual_currency" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Virtual currency granted to the user (DEPRECATED: use grant_results.granted_currencies)",
+            "type" : "object"
+          },
+          "granted_virtual_currency_64" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "description" : "Virtual currency granted to the user (DEPRECATED: use grant_results.granted_currencies)",
+            "type" : "object"
+          },
+          "remaining_uses" : {
+            "description" : "Number of remaining uses for the user inventory item (DEPRECATED: use grant_results.granted_items)",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryPurchasable" : {
+        "properties" : {
+          "settings" : {
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryPurchasableSetting"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryPurchasableSetting" : {
+        "properties" : {
+          "applied_discounts" : {
+            "$ref" : "#/components/schemas/inventoryAppliedDiscounts"
+          },
+          "currency" : {
+            "description" : "Currency name",
+            "type" : "string"
+          },
+          "discounts" : {
+            "$ref" : "#/components/schemas/inventoryApplicableDiscounts"
+          },
+          "display_price" : {
+            "description" : "Display price of item (DEPRECATED: use display_price_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "display_price_64" : {
+            "description" : "Display price of item",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "price" : {
+            "description" : "Price of item (DEPRECATED: use price_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "price_64" : {
+            "description" : "Price of item",
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "required" : [ "currency" ],
+        "type" : "object"
+      },
+      "inventoryPurchaseItemResponse" : {
+        "properties" : {
+          "current_balance" : {
+            "description" : "Current balance of the currency used to purchase the item",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "previous_balance" : {
+            "description" : "Previous balance of the currency used to purchase the item",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "purchased_item" : {
+            "$ref" : "#/components/schemas/inventoryUserInventoryItem"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryRewardBatch" : {
+        "properties" : {
+          "currencies" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "description" : "Map of currencies to grant (currency name to amount)",
+            "type" : "object"
+          },
+          "drop_tables" : {
+            "description" : "Drop tables to evaluate and grant",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryDropTableGrant"
+            },
+            "type" : "array"
+          },
+          "grant_items" : {
+            "description" : "Items to grant in this batch",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryGrantInventoryItemsRequest"
+            },
+            "type" : "array"
+          },
+          "tag" : {
+            "description" : "Opaque label passed through in response (e.g. level name)",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "inventorySubInventory" : {
+        "properties" : {
+          "is_sub_inventory" : {
+            "description" : "True if this item is a sub-inventory",
+            "title" : "int32 max_size = 1 [\n    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {\n      description: \"Max size of the sub-inventory\"\n      type: INTEGER\n    }\n  ];\n  repeated string allowed_item_classes = 2 [\n    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {\n      description: \"List of allowed item classes in the sub-inventory. If empty, all item classes are allowed\"\n      type: ARRAY\n    }\n  ];\n  repeated string auto_sort_tags = 3 [\n    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {\n      description: \"List of tags to use for auto-sorting items in the sub-inventory. If empty, no auto-sorting is done\"\n      type: ARRAY\n    }\n  ];",
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryUnlockContainerResponse" : {
+        "properties" : {
+          "currencies" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Virtual currencies that will be granted to the user (DEPRECATED: use currencies_64)",
+            "type" : "object"
+          },
+          "currencies_64" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "description" : "Virtual currencies that will be granted to the user",
+            "type" : "object"
+          },
+          "escrow_id" : {
+            "description" : "Escrow id for the result",
+            "type" : "string"
+          },
+          "items" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Items that will be granted to the user",
+            "type" : "object"
+          },
+          "trackables_energy" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Trackables energies to be granted to the user",
+            "type" : "object"
+          },
+          "trackables_xp" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Trackables xps to be granted to the user",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryUnlockCost" : {
+        "properties" : {
+          "applied_discounts" : {
+            "$ref" : "#/components/schemas/inventoryAppliedDiscounts"
+          },
+          "count" : {
+            "description" : "Count of the item/currency/trackable_energy (DEPRECATED: use count_64)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "count_64" : {
+            "description" : "Count of the item/currency/trackable_energy",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "discounts" : {
+            "$ref" : "#/components/schemas/inventoryApplicableDiscounts"
+          },
+          "name" : {
+            "description" : "Name of the item/currency/trackable_energy",
+            "type" : "string"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/inventoryUnlockCostType"
+          }
+        },
+        "required" : [ "name", "type" ],
+        "type" : "object"
+      },
+      "inventoryUnlockCostType" : {
+        "default" : "UNSPECIFIED_TYPE",
+        "enum" : [ "UNSPECIFIED_TYPE", "ITEM", "CURRENCY", "ENERGY" ],
+        "type" : "string"
+      },
+      "inventoryUnlockKey" : {
+        "properties" : {
+          "name" : {
+            "description" : "Name of the item/currency/trackable_energy",
+            "type" : "string"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/inventoryUnlockCostType"
+          }
+        },
+        "required" : [ "name", "type" ],
+        "type" : "object"
+      },
+      "inventoryUserCurrencyUpdate" : {
+        "properties" : {
+          "currency_name" : {
+            "description" : "Name of the currency",
+            "type" : "string"
+          },
+          "current_balance" : {
+            "description" : "Balance of the currency after update",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "current_balance_64" : {
+            "description" : "Balance of the currency after update",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "previous_balance" : {
+            "description" : "Balance of the currency before update",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "previous_balance_64" : {
+            "description" : "Balance of the currency before update",
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryUserInventory" : {
+        "properties" : {
+          "items" : {
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryUserInventoryItem"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "inventoryUserInventoryItem" : {
+        "properties" : {
+          "acquired_at" : {
+            "description" : "Timestamp when player acquired the item",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "catalog_item_name" : {
+            "description" : "name of catalog item",
+            "type" : "string"
+          },
+          "expires_at" : {
+            "description" : "Timestamp when the item will be removed from player inventory",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "instance_id" : {
+            "description" : "Instance id of the inventory item",
+            "type" : "string"
+          },
+          "instance_metadata" : {
+            "description" : "Metadata attached with instance of item in player's inventory. Not to be confused with metadata in catalog inventory item",
+            "type" : "object"
+          },
+          "is_sub_inventory" : {
+            "description" : "True if this item is a sub-inventory",
+            "type" : "boolean"
+          },
+          "last_consumed_at" : {
+            "description" : "Timestamp when item was last consumed. In case of stackables, it is the timestamp of last consumed item of the stack",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "remaining_uses" : {
+            "description" : "Count of times the item can been used",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "sub_inventory_instance_id" : {
+            "description" : "Id of the sub-inventory where this item lives (if any)",
+            "type" : "string"
+          },
+          "sub_inventory_items" : {
+            "description" : "Items in the sub-inventory",
+            "items" : {
+              "$ref" : "#/components/schemas/inventoryUserInventoryItem"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "protobufNullValue" : {
+        "default" : "NULL_VALUE",
+        "description" : "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value.",
+        "enum" : [ "NULL_VALUE" ],
+        "type" : "string"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

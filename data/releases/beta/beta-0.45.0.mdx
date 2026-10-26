@@ -1,0 +1,42 @@
+# beta-0.45.0
+##### Jan 27, 2025
+
+## Breaking Changes
+- **Inventory & Currencies**:
+  - Inventory now supports int64 quantities for currencies. This change is backwards compatible,
+    but you may need to update your code to handle the new quantity type. You will now see a
+    new field `currency_64` in the inventory response. Since currencies are used in other
+    snaps like IAP, Quests, Trackables you should upgrade to the latest version of those snaps
+    to handle the new quantity type.
+
+## Update Recommendations
+- We recommend updating Inventory, IAP, Quests, Trackables, Eventbus to the latest version; that way,
+  you will stay ahead of the breaking changes.
+
+## Snaps
+- **Eventbus**:
+  - Eventbus now supports a new API for BYOSnaps to register and publish custom events.
+- **Guilds**:
+  - Guilds has a new API `GetGuildForUserId` to get the guild for a user.
+
+## Web App
+- **Promote and Sync Tools**:
+  - Promote and Sync tools now have a new UI to show snap wise diffs. Developers can also hand
+    modify the diff, validate it and then apply it.
+- **Logs**: Logs tool now allows you to download raw logs for the specified time range.
+- **Landing Page**: Major update to the landing page.
+- **Admin Tools**: Admin tools have been updated to support the new `currency_64` field in the inventory.
+- **Infrastructure Monitor**: A new graph has been added that shows the number of POD restarts. This is
+  useful to monitor the health of the infrastructure.
+
+## Bug Fixes
+- **BYOSnap**: Fixed a bug where Byosnap prefixes could contain multiple segments.
+- **Infrastructure CPU Graph**: Fixed an issue with the reporting of the CPU %.
+- **Logout**: Fixed an issue where the user was seeing a blank screen after clicking the logout button.
+- **Un Authenticated Users**: Fixed an issue where unauthorized were seeing a blank screen instead of routing to the login page.
+
+## Documentation
+- Added API documentation for the new Inventory changes.
+- Added API documentation for the new Eventbus API.
+- Added API documentation for the new Guilds API.
+- Updated documentation about the default analytics tables.

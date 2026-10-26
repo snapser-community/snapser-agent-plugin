@@ -1,0 +1,41 @@
+# beta-0.50.0
+##### May 28, 2025
+
+## Breaking Changes
+### Matchmaking
+Users that made use of "multi-ruleset" expansions or relative rules will need to re-configure their match profiles to use the new "expanding" rules before promoting v0.50.0 to live.
+
+### Leaderboards
+A small SDK fix which was treating rank as a decimal(double) instead of an integer causing parsing errors on the rank.
+
+## Spotlight
+### Decorator Snap
+We are launching a new Premium snap called Decorators. The Decorator snap allows you to make certain RPC calls to your backend like GetLeaderboards, GetLobby, GetFriends, GetFollows, GetFriendRequests and have the response decorated with user profile and statistics attributes. This allows you to get a single response with all the data you need instead of making multiple calls to your backend.
+
+## Snaps
+### Matchmaking
+The Matchmaking snap now supports expanded rulesets for the latency, stats, leaderboards and number based rules. This gives you a lot more granular access to the matchmaking rules and allows you to create more complex matchmaking rulesets.
+
+### Analytics
+You can now add a property of type double when creating a new analytics event.
+
+### Stats
+You can now access statistics marked as internal via User auth. Only for the user stats that belong to the user.
+
+### Storage
+Blobs marked as internal can now be viewed via User auth. Note: the access rules of private, protected and public still apply. Its just internal blobs can now be accessed via User auth and only for the blobs that belong to the user.
+
+## Bug Fixes
+### Profiles
+- Fixed a bug where the Batch GET profiles endpoint was not returning the corresponding id of the users.
+
+## Web App
+### Snap Configuration Navigation
+- We improved the navigation for configuring snaps in the web app. The nav now shows all tools under a multi-level hierarchy, rather than going back and forth between pages.
+
+### API Explorer
+- The API Explorer has been updated to support RPC request from the Decorator snap. You can test the new Decorator snap API calls directly from the API Explorer.
+
+## Documentation
+- Added documentation for the new Decorator snap.
+- Updated documentation for the new Matchmaking snap feature.

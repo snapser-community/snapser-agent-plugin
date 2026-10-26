@@ -1,0 +1,582 @@
+export const description = 'Auth'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Apple Login
+
+Click here to view all Auth Snap [connectors](/docs/infra/snaps/auth/connectors).
+
+## Overview
+
+Apple Login is a connector that allows users to log into your application using their Apple ID.
+This connector leverages the Apple Sign In API to ensure a smooth and secure login experience.
+
+## Setup Requirements
+Create an app record on the Apple Developer portal by following these steps:
+
+### 1. Create an Apple Developer Account
+- Go to Apple's Developer Website: Visit https://developer.apple.com/.
+- Create an Apple ID: If you don’t have an Apple ID, click on “Create yours now” and follow the prompts to create one. If you already have an Apple ID, log in with it.
+- Enable Two-Factor Authentication: This is required for all Apple IDs. If you don’t have an Apple device, contact Apple for assistance.
+- Join the Apple Developer Program: Click on “Join the Apple Developer Program” and choose between an Individual or Company/Organization account based on your needs.
+- Fill Out Contact Information: Enter your contact details and read through the agreement. Check the box confirming you’ve read it and click Continue.
+- Verify Account Information: Confirm your details and click Continue.
+- Purchase the Developer Account: Pay the enrollment fee. You can enable automatic renewal if desired.
+
+### 2. Create an App Record in App Store Connect
+- Log in to App Store Connect: Go to https://appstoreconnect.apple.com/ and log in with your Apple ID.
+- Add a New App: From the Apps section, click the "+" button at the top left and select “New App”.
+- Enter App Details: Fill in the app name, bundle ID, and other required information.
+  <Note>
+  If you are building a game in Unity, you can find the bundle ID in Unity under Edit > Project Settings > Player Settings for iOS.
+  </Note>
+
+### 3. Create a Services ID (only for web login)
+Web based Sign in with Apple needs its own identifier, it cannot use your app's Bundle Id.
+- Go to Certificates, Identifiers & Profiles > Identifiers on the Apple Developer Portal and register a new **Services ID**.
+- Enable **Sign in with Apple** for it and configure the web domain and return URLs your game signs in from.
+- The identifier you pick here eg: **com.example.mygame.web** is the **Service Id** you enter under the Web Login credentials.
+
+## How it works
+
+To implement Apple Login, developers must configure the connector via the Auth Configuration, Connector tool. You can configure credentials for native app login, for web login, or for both. Details on setting this up are available below in the "Configuration Tool" section.
+
+Once the configuration is done, the app client will need to integrate with the SIWA Restful APIs. This is because unfortunately, Apple does not provide a native SDK specifically for Unity or Unreal Engine to integrate Sign in with Apple (SIWA). However, there are third-party plugins and libraries available that can help you integrate SIWA into your Unity or Unreal Engine projects.
+
+Let's dive into both these steps in detail below.
+
+## Configuration Tool
+A single Apple connector holds two credential sets, one for each way your players can sign in with Apple.
+
+| Credential set | Used for | Client Id field |
+| -------------- | -------- | --------------- |
+| **App Login** | Native app Sign in with Apple, eg: your Unity/Unreal iOS build | **Bundle Id** |
+| **Web Login** | Web based Sign in with Apple | **Service Id** |
+
+You have to fill in at least one of the two sets to save and enable the connector. A set is only valid if
+**all four** of its fields are filled in, which is its client Id, Team Id, Key Id and Apple Private Key. Leave
+a set entirely empty to skip it, and come back to configure it later.
+
+<Note>
+The two credential sets need the Auth snap on **v1.13.0** or above. If your Snapend runs an older Auth snap,
+the configuration tool keeps showing the single credential set that snap supports, with the client Id field
+labelled **Service Id**. Upgrade the Auth snap on your Snapend to configure web login.
+</Note>
+
+<Note>
+Enabling, disabling and deleting act on the whole Apple connector, so they affect App Login and Web Login
+together. There is no separate toggle per credential set.
+</Note>
+
+Both credential sets resolve to the same Snapser user for a given Apple account, because Apple's user
+identifier is scoped to your developer team and not to the client Id. So a player who signs in from your app
+and later from the web lands on one account.
+
+### Credentials
+These credentials can be found in your Apple Developer Portal's - Certificates, Identifiers & Profiles section.
+
+#### App Login credentials
+1. <u>Bundle Id</u> - This is the **Bundle Id** of your application eg: **com.snapser.mygame**. If you are building an iOS application via Unity/Unreal, this is the bundle identifier of that build.
+2. <u>Team Id</u> - This will be your teams Identifier on the Apple Developer Portal. It will be something like **4WRSA9TCRY**.
+3. <u>Key Id</u> - You will have to create a SIWA key for your game, under the Key sidebar tab. Once you create it, you will see your Key Id. Also note, you
+should download the Private key to be used in the next step.
+
+#### Web Login credentials
+1. <u>Service Id</u> - This is the dedicated Apple **Service Id** that has SIWA enabled eg: **com.example.mygame.web**. Web based Sign in with Apple cannot use a Bundle Id.
+2. <u>Team Id</u> - Same as above. This will be your teams Identifier on the Apple Developer Portal.
+3. <u>Key Id</u> - Same as above. You can reuse the SIWA key you created for App Login or create a separate one.
+
+<Note>
+The private key file can be only downloaded once from the Apple Developer portal.
+</Note>
+
+### Apple Private Key
+Download your private key file from the previous step. This file will have a **.p8** extension. Upload it by
+clicking the "Attach a file" button. Every credential set has its own upload, so if you configure both App
+Login and Web Login you have to attach a private key to each one, even when it is the same file.
+
+### Migrating an older connector
+If you configured the Apple connector before Snapser 1.13, your single credential set is migrated to the
+**App Login** credential set automatically once the Auth snap is on **v1.13.0** or above, because that field
+was being used as the app bundle Id. There is nothing for you to do and your existing app logins keep working.
+
+- The values you saved earlier now show up under **App Login credentials**, with the old *Service Id* value
+displayed as **Bundle Id**.
+- **Web Login credentials** stays empty until you fill it in.
+- To turn on web login, edit the connector, complete the Web Login credentials, and Save.
+
+## Integrating with Unity/Unreal Engine
+### A. Unity
+Third-Party Plugins: There are several plugins available on the Unity Asset Store, such as the [Sign in with Apple Plugin](https://assetstore.unity.com/packages/tools/integration/sign-in-with-apple-plugin-for-unity-152088) for Unity and another [plugin](https://github.com/lupidan/apple-signin-unity) available on GitHub. These plugins allow you to integrate SIWA into your Unity projects.
+
+#### Steps for Unity
+- Install a Plugin: Use a plugin like the ones mentioned above from the Unity Asset Store or GitHub.
+- Configure Apple Developer Portal: Ensure you have enabled the Sign in with Apple capability in your app's settings on the Apple Developer portal.
+- Implement in Unity: Follow the plugin's documentation to integrate SIWA into your Unity project.
+
+### B. Unreal Engine
+Custom Implementation: Currently, there isn't a widely recognized or official plugin for Unreal Engine. You might need to implement SIWA manually using Apple's REST API or by integrating a custom solution.
+
+#### Steps for Unreal Engine:
+- Use Apple's REST API: Implement SIWA manually using Apple's REST API for authentication.
+- Custom Integration: You may need to create a custom module or plugin to handle SIWA authentication in Unreal Engine.
+
+After you have integrated your code with SIWA APIs either via plugins or a custom module, you can initiate the login process from your game client. After Apple verifies your credentials, the server returns an **identity token**, **authorization code**, and **user identifier** to your app. This **authorization code** should then be sent to the Auth snap. The Auth Snap receives this, verifies its authenticity with Apple's servers, and if valid, issues a user ID and session token back to the game client. This enables user authentication within the game.
+
+<Warning>
+Note that what you get from Apple is an identity token, authorization code, and user identifier. However, it is the **authorization code** that you need to send to the Auth Snap. The Auth Snap will then verify this with Apple and return a user ID and session token.
+</Warning>
+
+## Usage
+
+Game studios have the option to start user sessions with an Anonymous login and later upgrade to a secure
+Apple login, or they can begin directly with an Apple login. If opting for the latter, simply store and
+utilize the user ID and session token returned by the Auth Snap to interact with other APIs on your Snapend.
+For upgrading from an Anonymous to an Apple login, follow the example below.
+
+### Example
+
+1. Assume a game client initiates an AnonLogin request using the device's unique identifier as the username.
+2. The Auth Snap generates a new user profile with `user_id=395d9b91-72fd-40f2-a3cd-cf5a1e7a604f` and `session_token=9a052312-48f6-4710-a072-230ddd046a2d`.
+3. The game client prompts the user to secure their account via Apple Login, displaying the UI recommended by Apple.
+4. The client interacts with the Apple SDK to authenticate the user and receives a **token**.
+5. Next, the client submits an **AppleLogin** request with the **token** and sets **create_user=true**.
+6. The client receives a new **user_id** and **session_token** linked to the Apple account.
+7. To merge these accounts, the client utilizes the **AssociateLogins** API, specifying which account to retain and which to discard.
+8. The Auth Snap finalizes the association, discarding the unwanted user ID and token, preserving the necessary ones.
+
+This procedure ensures the account remains secure, as access cannot be gained merely through knowing the username used in the AnonLogin API.
+
+## APIs
+
+Here are the relevant APIs
+
+<div className="apisTable">
+| API Name                | HTTP Method | API Description                                                                         |
+| ----------------------- | ----------- | --------------------------------------------------------------------------------------- |
+| [AssociateLogins](#associatelogins-api)         | PUT         | Associates two logins based on their session tokens                                     |
+| [AnonLogin](#anonlogin-api)               | PUT         | Logs in the user with an arbitrary identifier specified and returns a session           |
+| [AppleLogin](#applelogin-api)              | PUT         | Logs in the user based on the apple credential token specified and returns a session    |
+</div>
+
+<Note>
+Starting Snapser 1.13 there is a dedicated login endpoint per credential set.
+
+- `PUT /v1/auth/apple/app/login` - native app login, verified against your **App Login** credentials.
+- `PUT /v1/auth/apple/web/login` - web login, verified against your **Web Login** credentials.
+
+The **AppleLogin** API below (`PUT /v1/auth/login/apple`) continues to work and is routed to the **App Login**
+credentials, but it is deprecated. New integrations should call one of the two endpoints above.
+</Note>
+
+#### AssociateLogins API
+<CodeGroup title="Associates two logins based on their session tokens" tag="PUT" label="AssociateLogins">
+```csharp
+/// <summary>
+/// Associate Multiple Logins Associates two logins based on their session tokens
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object AssociateLogins(AuthAssociateLoginsRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = AssociateLoginsWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthAssociateLoginsRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAssociateLoginsRequest" /> class.
+/// </summary>
+/// <param name="discardUserToken">Token of the user to discard (required).</param>
+/// <param name="keepUserToken">Token of the user to keep (required).</param>
+public AuthAssociateLoginsRequest(string discardUserToken = default(string), string keepUserToken = default(string))
+{
+    // to ensure "discardUserToken" is required (not null)
+    if (discardUserToken == null)
+    {
+        throw new ArgumentNullException("discardUserToken is a required property for AuthAssociateLoginsRequest and cannot be null");
+    }
+    this.DiscardUserToken = discardUserToken;
+    // to ensure "keepUserToken" is required (not null)
+    if (keepUserToken == null)
+    {
+        throw new ArgumentNullException("keepUserToken is a required property for AuthAssociateLoginsRequest and cannot be null");
+    }
+    this.KeepUserToken = keepUserToken;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AssociateLoginsRequest : public Request
+{
+public:
+    virtual ~AssociateLoginsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthAssociateLoginsRequest Body;
+};
+
+class SNAPSER_API SnapserAuthAssociateLoginsRequest : public Model
+{
+public:
+    virtual ~SnapserAuthAssociateLoginsRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Token of the user to discard */
+    FString DiscardUserToken;
+    /* Token of the user to keep */
+    FString KeepUserToken;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AssociateLoginsResponse : public Response
+{
+public:
+    virtual ~AssociateLoginsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AnonLogin API
+<CodeGroup title="Logs in the user with an arbitrary identifier specified and returns a session" tag="PUT" label="AnonLogin">
+```csharp
+/// <summary>
+/// Anonymous Login Logs in the user with an arbitrary identifier specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthAnonLoginResponse</returns>
+public AuthAnonLoginResponse AnonLogin(AuthAnonLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthAnonLoginResponse> localVarResponse = AnonLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthAnonLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAnonLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="username">User&#39;s login ID (required).</param>
+public AuthAnonLoginRequest(bool createUser = default(bool), string username = default(string))
+{
+    // to ensure "username" is required (not null)
+    if (username == null)
+    {
+        throw new ArgumentNullException("username is a required property for AuthAnonLoginRequest and cannot be null");
+    }
+    this.Username = username;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthAnonLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAnonLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthAnonLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AnonLoginRequest : public Request
+{
+public:
+    virtual ~AnonLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthAnonLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthAnonLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthAnonLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* User's login ID */
+    FString Username;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AnonLoginResponse : public Response
+{
+public:
+    virtual ~AnonLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthAnonLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthAnonLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthAnonLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AppleLogin API
+<CodeGroup title="Logs in the user based on the apple credential token specified and returns a session" tag="PUT" label="AppleLogin">
+```csharp
+/// <summary>
+/// Apple Login Logs in the user based on the apple credential token specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthAppleLoginResponse</returns>
+public AuthAppleLoginResponse AppleLogin(AuthAppleLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthAppleLoginResponse> localVarResponse = AppleLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthAppleLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAppleLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="token">Apple token generated on the client (required).</param>
+public AuthAppleLoginRequest(bool createUser = default(bool), string token = default(string))
+{
+    // to ensure "token" is required (not null)
+    if (token == null)
+    {
+        throw new ArgumentNullException("token is a required property for AuthAppleLoginRequest and cannot be null");
+    }
+    this.Token = token;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthAppleLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAppleLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthAppleLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AppleLoginRequest : public Request
+{
+public:
+    virtual ~AppleLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthAppleLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthAppleLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthAppleLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* Apple token generated on the client */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AppleLoginResponse : public Response
+{
+public:
+    virtual ~AppleLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthAppleLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthAppleLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthAppleLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+

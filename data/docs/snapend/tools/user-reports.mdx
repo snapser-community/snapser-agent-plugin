@@ -1,0 +1,99 @@
+export const description = 'Live Operations tools'
+
+export const meta = {
+  author: 'AJ Apte'
+}
+
+# User Reports
+
+## Concept
+
+The **User Reports** tool lets engineers and customer service agents search,
+review, and action reports that players have filed against one another. It is
+the operational companion to the
+[User Reporting retention settings](/docs/infra/user-reporting/config-tools/retention),
+where you control how long reports are retained.
+
+<Note>
+  User Reports is available on **Auth snap v1.11 and above**. If your Auth
+  snap is on an older version, the tool will prompt you to upgrade.
+</Note>
+
+## Pre-requisites
+
+You need at least the **cluster-service-view** role with **Auth** service
+access to view reports, and update access to action them. If you do not have
+the required permissions, please reach out to your company administrator to
+upgrade your role.
+
+## Tool Location
+
+From your Snapend homepage, open **User Reporting** under **Quick Links**, or
+select **User Reports** from the **Tools** section of the left navigation bar.
+
+## Searching Reports
+
+The tool lists every report in the Snapend. You can narrow the list with the
+filters at the top:
+
+1. **State** — Unprocessed, Processing, or Resolved (or all states).
+2. **Category** — a free-text match on the report category (for example
+   `harassment`).
+3. **Target User ID** — the player the reports were filed against.
+4. **Assignee** — the agent a report is assigned to.
+
+Set any combination of filters and click **Search**. Results are paginated, and
+each row shows the report's state, category, target user, reporting user,
+assignee, and creation time.
+
+![snapser-user-reports-search](/images/docs/user-reports-search.png)
+
+<Note>
+  The reports are scoped to the environment your Snapend is running on — the
+  backend resolves the environment automatically, so there is no environment
+  selector on this tool.
+</Note>
+
+## Viewing User Details
+
+Both the **Target User** and **Reported By** columns show the player's ID with
+two ways to dig in:
+
+- Click the **person icon** for a quick-view popover of that player's login
+  methods and profile attributes (profile attributes require the Profiles
+  snap).
+- Click the **player ID** itself to open the
+  [User Manager](/docs/snapend/tools/user-manager) for that player in a new tab.
+
+![snapser-user-reports-user-details](/images/docs/user-reports-user-details.png)
+
+## Inspecting a Report
+
+Click **Details** on any row to expand a panel showing the full **Complaint**
+and **Notes** for that report.
+
+![snapser-user-reports-details-expand](/images/docs/user-reports-details-expand.png)
+
+## Actioning a Report
+
+Click **Action** on a row to open the action dialog, where you can:
+
+1. **Change the state** — move the report between Unprocessed, Processing, and
+   Resolved.
+2. **Assign it** — set the assignee, or click **Assign to me** to assign it to
+   your own account.
+3. **Edit the notes** — record context for your team. Use **+ Add signature** to
+   insert your email and today's date at the cursor.
+
+![snapser-user-reports-action-modal](/images/docs/user-reports-action-modal.png)
+
+<Note>
+  Notes **replace** the existing value on save — they are not appended. The
+  field is pre-filled with the current notes so you can edit the full text.
+</Note>
+
+Click **Save** to write your changes back to the backend.
+
+<Note>
+  Every action taken on a report is recorded in the Audit logs.
+</Note>

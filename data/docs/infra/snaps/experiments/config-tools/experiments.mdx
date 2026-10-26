@@ -1,0 +1,80 @@
+# Experiments Tool
+This tool is used to create and update your experiments. You can create multiple experiments, each with its own audience, variants, and schedule.
+
+To get started:
+1. Click on  experiments from the left hand nav and then click on the **Add an experiment** button
+2. This will open up a form where you can add a new experiment.
+
+The following snapshot shows you an example of creating an experiment.
+
+![Admin Pic](/images/docs/experiments-admin.png)
+
+## Experiment Details
+An experiment contains a name and description for easy housekeeping, a start and end date for scheduling the experiment's
+active period, and the ramp %.
+
+- **Name** - Give your experiment a unique name. This can be an alphanumeric string and is a mandatory field.
+- **Description** - Give your experiment an optional description.
+
+## Schedule
+Your experiment can be scheduled by setting start and end timestamps. It should be noted you still have to ramp up the experiment above 0% to have any users participate.
+
+- **Start Time UTC** - Pick the time when you want the experiment to start in UTC. You can use the calendar to pick the date.
+- **End Time UTC** - Pick the time when you want the experiment to end in UTC. You can use the calendar to pick the date.
+
+## Audience
+Define your audience by selecting either **All Users** or a **Segment**. If you select a segment, you can choose the segment from the dropdown list. You will need the Statistics Snap to create the segment.
+- **Audience** - Choose between **All Users** and **Segment**.
+
+## Exclusion Groups
+Exclusion groups are used if you do not want players to receive conflicting treatments.
+Allocation % will be used as a weight to determine which experiment a user is more likely to encounter.
+If you have not added any exclusion groups, you can add them using the Exclusion Groups tool.
+- **Exclusion Group** - Choose an exclusion group from the dropdown list.
+- **Allocation %** - The percentage of users to include in the experiment. The remaining users will be assigned to the control group.
+
+## Ramp
+This is a way to truly activate your experiment. You can ramp up the experiment to a certain percentage of your user base. This is useful for testing and ensuring your experiment is working as expected. Developers usually ramp up the experiment to 1% of their user base to ensure everything is working as expected before ramping up to 100%.
+- **Ramp %** - This is a percentage between 0 and 100 in which your user base (by audience) is exposed to the experiment.  0% means no users are exposed and 100% means all users (by audience) are exposed.  Users will persist their ramp calculation, per experiment, allowing you to reliably ramp up and down if needed.
+
+## Variants
+Variants are the different treatments you want to test. You can have multiple variants, but you must have at least one control and one treatment variant.
+Each variant has the following fields:
+- **Name** - Name given to the variant.
+- **Description** - Description of the variant.
+- **Target Audience Weight** - This is any positive number. The Snaps sums up all the weights and then divides each weight by the sum to get the percentage of users that will be assigned to the variant.
+
+### Treatment Setup
+This is where you define the treatment data for the variant. This can be as simple as a string or as complex as a JSON blob. JSON validation can be enabled by adding the JSON Treatment Schema.
+- **Treatment** - Any string or JSON data that will be used as the treatment for the variant.
+- **JSON Treatment Schema** - A JSON schema that will be used to validate the treatment data. If the treatment data does not match the schema, the experiment will not be saved or updated.
+
+### Overrides
+For testing purposes, you can specify a comma-separated list of user IDs for each variant. These users will receive the variant's treatment regardless of their segment or ramp assignment. This feature is useful for admins and QA teams to test specific variants.
+- **Allow list** - Comma separated list of user IDs that will receive the variant's treatment.
+
+<Note>
+Deleting an experiment
+is a soft delete so that code can continue to access the experiment in the
+wild safely.
+</Note>
+
+## Closing an Experiment
+
+When your experiment has a clear winner and you are ready to finalize it, the Experiments tool provides a **Close Experiment** button that lets you pick the winning variant and optionally promote its treatment value directly to a Remote Config entry.
+
+<Note>
+  The Remote Config promotion option is only available when your Snapend also has the Remote Config Snap enabled.
+</Note>
+
+To close an experiment:
+
+1. Open the experiment you want to finalize from the experiments list.
+2. Click the **Close Experiment** button at the top of the experiment detail page.
+3. A dialog will appear listing all variants. Select the **winning variant** from the list.
+4. *(Optional)* If you have the Remote Config Snap enabled, choose the **Remote Config entry** you want to assign the winning treatment value to. The winning variant's treatment payload will be written to that entry.
+5. Click **Confirm** to apply the changes.
+
+After confirming:
+- If you selected a Remote Config entry, the winning treatment value is immediately published to Remote Config. All users will receive the winning experience on their next Remote Config fetch, regardless of their experiment variant assignment.
+- The experiment is stopped and can be archived once you have verified the rollout.

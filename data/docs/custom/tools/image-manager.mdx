@@ -1,0 +1,116 @@
+export const description = 'Image Manager'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Image Manager
+
+## Concept
+
+The Image Manager is where you review and delete the container images you have
+uploaded for your custom code. Every time you publish a BYOSnap or a custom game
+server, the image you built lands in a private repository on Snapser, and that
+repository is what the Image Manager shows you — with each image's size, the version
+it was published as, and whether a Snapend is currently using it.
+
+It covers both kinds of custom code, split across two tabs:
+
+- **BYOSNAPS** — images pushed by `snapctl byosnap publish`, `snapctl byosnap sync`,
+  `snapctl byosnap publish-image` and `snapctl byosnap direct-deploy`.
+- **BYOGS** — images pushed by `snapctl byogs publish` and `snapctl byogs sync`.
+
+## Location
+
+The Image Manager lives under **Tools** in the left nav of the Snapser web app.
+
+<Warning>
+  **Each image repository holds a maximum of 500 images.** This is the reason the Image
+  Manager exists, and the reason to visit it before you need it. See
+  [The 500-image limit](#the-500-image-limit) below.
+</Warning>
+
+## The 500-image limit
+
+A repository stores at most **500 images**. Once it is full, further pushes are
+rejected and the image tag never registers.
+
+The failure is easy to misread, because it does not surface at push time. The
+`docker push` step can still report success, so the first sign of trouble is the
+*next* call that references the tag, which fails with **`Image tag not found`**:
+
+| Command | Exit code |
+|---|---|
+| `snapctl byosnap publish` / `publish-version`             | `44` |
+| `snapctl byosnap sync` / `update-version`                 | `47` |
+| `snapctl byosnap direct-deploy`                           | `90` |
+| `snapctl snapend update` / `create` / `clone` / `apply`   | `90` |
+
+See [CLI Return Codes](/docs/resources/cli#error-codes) for the full list.
+
+If your build pipeline publishes a BYOSnap on every commit, you will reach the cap.
+Two habits keep you clear of it:
+
+- Prune on a schedule rather than waiting for a failed deploy. A full repository
+  blocks every publish for that snap, including the hotfix you are trying to ship.
+- Sweep the **Unpublished** filter first. Those images can never be deployed, they are
+  the fastest to accumulate, and they are the safest to remove.
+
+You do not have to work out which images a Snapend still needs by hand — the Image
+Manager tracks that for you in the **In Use** column. See
+[Deleting images](#deleting-images) for the filters and the workflow.
+
+## What the table shows
+
+Each tab lists every image in the repository for that kind of custom code.
+
+| Column | Description |
+|---|---|
+| **Tag** | The image tag, eg. `progression-30588`. This is the tag `snapctl` pushed. |
+| **Service ID** | The BYOSnap or fleet the image belongs to, eg. `byosnap-progression`. |
+| **Published Version** | The BYOSnap version assigned to this image, eg. `v0.0.30588`. **Blank means the image was pushed but never assigned a version** — nothing can deploy it. |
+| **Size** | How much of the repository the image occupies. |
+| **In Use** | Whether a Snapend currently references the image. |
+
+The **Search** box above the table filters by tag, which is useful when you want every
+image for one snap.
+
+## Deleting images
+
+The **In Use** column header carries a filter icon. Click it and you get three
+checkboxes, which narrow the table to one class of image at a time. This is how you
+separate what is safe to delete from what is not:
+
+| Filter | Meaning | Safe to delete |
+|---|---|---|
+| **Unpublished** | The image was pushed to the repository but never assigned a version, so no Snapend can reference it. Shows a blank **Published Version**. | **Yes** — start here |
+| **Unused** | The image has a published version, but no Snapend references it right now. | Use judgement — see below |
+| **Used** | A Snapend currently references this image. | **No** |
+
+**Unpublished** images are the safest thing to clear and usually the bulk of the waste:
+a `snapctl byosnap publish-image` that was never followed by a `publish-version`, an
+interrupted publish, or the timestamped tags that `snapctl byosnap sync` and
+`direct-deploy` generate on every run.
+
+The workflow to reclaim space:
+
+1. Open **Tools > Image Manager** and pick the **BYOSNAPS** or **BYOGS** tab.
+2. Click the filter icon on the **In Use** column and tick **Unpublished**.
+3. Tick the checkbox on each row you want to remove, or the checkbox in the header row
+   to select every row the filter is currently showing. **A Delete button appears once
+   at least one row is selected.**
+4. Click **Delete**.
+5. If you still need room, repeat with the **Unused** filter — but read the warning
+   below first.
+
+If you have not published anything yet, the tab reads **No Images Found**.
+
+<Warning>
+  **Unused means "nobody is using this right now" — not "this version is retired."**
+  Rolling a Snapend back to an earlier BYOSnap version, or re-applying a manifest that
+  names that version, requires the image to still be in the repository. And
+  **deleting an image cannot be undone** — the only way back is to rebuild and re-push
+  it. Keep the last known-good image for each snap even when it shows as Unused.
+</Warning>
+
+There is no `snapctl` equivalent — pruning is done from the web app.

@@ -1,0 +1,292 @@
+
+export const description =
+  'This guide assists users to understand how to use the Authentication snap for in-app authentication.'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# App Authentication
+Snapser provides a variety of authentication connectors to help users log into your app. The Authentication Snap supports multi-connector linking, allowing the same physical user to authenticate via different platforms—ideal for cross-platform and multi-device play.
+
+## Introduction
+This beginner-friendly guide will help you understand how to use Snapser’s Authentication Snap for in-app login. We’ll cover both a simple authentication setup and the more advanced case of supporting multiple authentication connectors for the same physical user across multiple devices.
+
+## Step 0: Pre-requisites
+### A. Create a Snapend
+Before you begin, ensure you have access to a basic Snapend with the Authentication Snap. You can get setup following the tutorial below.
+
+### B. Enable Connectors
+Since this is a theoretical guide, lets assume you have already enabled the following connectors:
+1. Steam
+1. Anonymous
+1. Email OTP
+
+<Note>
+We encourage you to review the documentation for each connector. Connectors can be enabled from your Snapend home page by clicking **Snaps Configuration** under **Quick links**. Then, select the **Authentication** snap from the navigation to access its configuration tools. Look for the **Connectors** tool to enable or manage the connectors you want to support.
+</Note>
+
+<div className="parent">
+  <div className="servicesBox">
+    # Create a Snapend
+
+    Check out the tutorial to create a Snapend with the Authentication snap.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/create-snapend'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div>
+  <div className="servicesBox">
+    # Auth Connectors
+
+    Check out the document for the Authentication connectors to understand how they work.
+
+    <div>
+      <DocsButton href={'/docs/infra/snaps/auth/connectors'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Documentation</DocsButton>
+    </div>
+  </div>
+</div>
+
+<Checkpoint step={0}>
+  You are now ready to begin the tutorial.
+</Checkpoint>
+
+## Step 1: Concept
+Snapser Authentication, powered by the Authentication Snap, offers two core capabilities:
+
+1. Token Validation
+    It completes the second step of authentication by validating the token provided by the connector. For example, once your app uses the Steam SDK to retrieve a session_ticket, Snapser verifies that token and ensures it belongs to the same user.
+
+1. Multi-Connector Identity Mapping
+    Snapser links all authentication connectors used by a user to a single Snapser user account. This means a user can log in using their Steam account, Email, or any other supported method—and your app will consistently receive the same Snapser user_id and session token.
+
+### The Keychain Analogy
+Think of Snapser Auth like a physical keychain. Each user has one keychain, and each time they authenticate using a different connector, a new key is added to it. This approach allows users to log in using any linked connector and still access their same Snapser backend data.
+
+![KeyChain](/images/docs/tutorials/in-game-auth-keychain.png)
+
+For example, Jamie first logs in via Steam, and Snapser adds a “Steam key” to their keychain. Later, your app or game enables Email OTP login, and Jamie completes that flow too—adding an “Email key” to the same keychain. Now, Jamie can log in using either method and always access their account.
+
+<Checkpoint step={1}>
+  You now have a basic understanding of how the Authentication Snap works. Lets now look at how to use the Authentication Snap for in-app authentication.
+</Checkpoint>
+
+## Step 2: Forced Authentication - Single Device
+
+Some games require users to authenticate with a specific connector before they can play. This could be due to platform policies or game-specific rules. For example, a game available only on Steam may require players to authenticate with their Steam account before accessing the game. This is a typical use case for the Authentication Snap to enforce authentication via a specific connector.
+
+![EnforcedSteam](/images/docs/tutorials/in-game-auth-enforced-steam.png)
+
+### 1. Steam SDK
+
+The game client uses the Steam SDK to handle authentication.
+
+<Note>
+The Steam SDK is not a Snapser product. You’ll need to follow Steam’s official documentation to integrate the SDK and complete the authentication process. This also applies to any other third-party authentication providers not owned by Snapser.
+</Note>
+
+At the end of this process, the game client will receive some sort of **user identifiers**. The exact name and format of this token may vary across providers. In Steam’s case, the SDK returns an **identity** and a **session_ticket**.
+
+### 2. Snapser Steam Login
+
+Once the game client has obtained the Steam credentials, it should call the `SteamLogin` API, passing in the **identity** and **session_ticket**, along with the parameter `create_user: true`.
+
+The Authentication Snap will:
+
+- Validate the credentials
+- Check if this user is present in any other keychain
+- If not, add Steam to the user’s keychain
+- Return the Snapser **user_id** and **session_token**
+
+These Snapser credentials can now be used to call any other Snap API securely.
+
+<Checkpoint step={2}>
+  You now have a working authentication flow for your app. Lets now see how authentication would work for a user who plays on multiple devices.
+</Checkpoint>
+
+## Step 3: Forced Authentication - Multiple Devices
+
+Even if your app enforces authentication at launch, users may access the app from multiple devices. In such cases, they expect to continue their progress seamlessly.
+
+Assuming you've completed the steps in **Step 1**, let’s walk through what happens when the same physical user `Jamie`, logs in from a different device (e.g., their gaming laptop):
+
+![EnforcedSteamMultiDevice](/images/docs/tutorials/in-game-auth-enforced-steam-multi-device.png)
+
+### 1. Steam SDK
+
+The game detects that the user isn’t logged in and initiates authentication using the Steam SDK. The game client receives a new **identity** and **session_ticket**.
+
+### 2. Snapser Steam Login
+
+The game client now sends these credentials to the `SteamLogin` API.
+
+Here’s what the Authentication Snap does:
+
+- Validates the session ticket to confirm the user’s identity
+- Determines that the Steam user `steam_1011` is already linked to an existing Snapser keychain for user `5678`
+- Returns the same **user_id** (`5678`) and a new **session_token** (`ijkl`)
+- Sets `create_user: false`, indicating that this is not a new user
+
+This allows the game to skip onboarding (FTUE – First Time User Experience) and drop the player directly into the game. The result is that both devices (A and B) share the same user identity (`5678`) and session continuity.
+
+This is how Snapser enables cross-device, seamless authentication for your players.
+
+<Checkpoint step={3}>
+  You now know, how to use the Authentication Snap for in-app authentication. You can now use the Authentication Snap to enforce authentication via a specific connector and also support multiple devices. Next, lets look at another flow that is common in games, viz the Frictionless Authentication flow.
+</Checkpoint>
+
+## Step 4: Frictionless Authentication – Single Device
+
+Frictionless authentication allows users to log in without entering credentials, making it ideal for apps that require quick, seamless onboarding. In this flow, the app client can use any unique identifier to anonymously authenticate users. Once authenticated, the client receives a Snapser `user_id` and `session_token`, which can be used to call other Snap APIs. When the user is ready to secure their account, they can link it to a secure connector (e.g., Steam, Email OTP).
+
+### 1. Anonymous Login
+
+The game client uses the `AnonymousLogin` API to authenticate the user. Typically, this involves passing a device identifier (e.g., a UUID). The Authentication Snap will:
+
+- Create a new user in the Snapser backend
+- Add the device identifier to the user’s keychain
+- Return the Snapser `user_id` and `session_token`
+
+This enables the app to start interacting with other Snap APIs and allow the user to begin playing immediately.
+
+<Note>
+Anonymous login is a non-secure form of authentication. If someone else discovers your unique identifier (e.g., your device ID), they could impersonate you and access your app data. This is why most apps encourage users to eventually link their account to a secure connector to safeguard their progress and identity.
+</Note>
+
+![FrictionlessAnon](/images/docs/tutorials/in-game-auth-frictionless-anon.png)
+
+### 2. Logging in to a Secure Connector
+
+When the user decides to secure their account, they can log in with a specific connector such as Email OTP. For example, if the user chooses to link their email:
+
+- The app client uses the OTP API to initiate the One-Time Password flow via the Authentication Snap.
+- The user receives the OTP in their email and enters it into the app client.
+- The app client calls the `EmailLogin` API with the OTP and email.
+
+The Authentication Snap will:
+
+- Validate the OTP
+- Check whether the email is already associated with an existing account
+- If not, create a new user `id` and `session_token`
+- Return this information to the game client
+
+![FrictionlessEmail](/images/docs/tutorials/in-game-auth-frictionless-email.png)
+
+**IMPORTANT:** At this point, the client has received a new `user_id` and `session_token`, along with the indication that this is a new account. The client should now associate this new user with the original anonymous user.
+
+<Note>
+The app client knows this is a new user because the response includes `create_user: true`.
+</Note>
+
+### 3. Linking the Anonymous Account to the Secure Connector
+
+The app client now holds two user IDs:
+
+- The original anonymous `user_id` and `session_token`
+- The new secure `user_id` and `session_token`
+
+To link them, the app client calls the `AssociateLogins` API. This API accepts:
+
+- `discard_user_token`: the credentials you want to discard
+- `new_user_token`: the credentials you want to retain
+
+<Note>
+Most studios choose to keep the anonymous user ID, as it's often the one containing all the user’s app data. Discarding it would mean losing app/game progress. However, the decision is left to you.
+</Note>
+
+![FrictionlessLink](/images/docs/tutorials/in-game-auth-frictionless-associate.png)
+
+<Checkpoint step={4}>
+  You now understand how to use the Authentication Snap for frictionless authentication. You've seen how to authenticate users anonymously and how to upgrade them to a secure account. Let’s now explore the multi-device case.
+</Checkpoint>
+
+## Step 5: Frictionless Authentication – Multiple Devices
+
+Now, let’s assume the same user—`Jin`—downloads your app on a second device. Since you’ve already built frictionless authentication into your app, the client will use the `AnonymousLogin` API to authenticate the user.
+
+### 1. Anonymous Login
+
+As before, the Authentication Snap will:
+
+- Create a new user in the Snapser backend
+- Return a new `user_id` and `session_token`
+
+![FrictionlessMultiDeviceAnon](/images/docs/tutorials/in-game-auth-frictionless-multi-device-anon.png)
+
+### 2. Logging in to a Secure Connector
+
+Jin remembers that they secured their account on the first device using Email OTP. The new device offers the option to log in via email. Jin enters their email, triggering the OTP flow:
+
+- The app client initiates the One-Time Password using the OTP API
+- Jin receives the OTP and enters it
+- The app client calls the `EmailLogin` API with the email and OTP
+
+The Authentication Snap will:
+
+- Validate the OTP
+- Recognize that the email is already linked to user ID `91011`
+- Return `user_id: 91011`, `session_token: mnop`, and `create_user: false`
+
+<Note>
+The presence of `create_user: false` tells the app client that this is an existing account.
+</Note>
+
+![FrictionlessMultiDeviceEmail](/images/docs/tutorials/in-game-auth-frictionless-multi-device-email.png)
+
+### 3. New Device Inherits the Keychain
+
+The app client now holds:
+
+- The anonymous `user_id` and `session_token` from this device
+- The secure `user_id: 91011` and `session_token` from the email login
+
+Since the email login did not create a new user, the app client should begin using the secure user ID and its keychain. No additional API calls are required—just start using the new credentials.
+
+<Note>
+Some developers allow users to choose which account they want to keep. If they choose the anonymous account on the second device, they’ll effectively have two separate app states. From Snapser’s point of view, these are two distinct users.
+</Note>
+
+![FrictionlessMultiDeviceState](/images/docs/tutorials/in-game-auth-frictionless-multi-device-state.png)
+
+<Checkpoint step={5}>
+  You've now covered both single-device and multi-device scenarios for apps that support optional and enforced authentication. Next, let’s learn how disassociating a connector works.
+</Checkpoint>
+
+## Step 6: Disassociating a Connector
+
+A user may want to disassociate a connector from their account—for example, removing a Steam login from their keychain. This can be done by calling the `DisassociateLogin` API and specifying the `login_type` in the payload.
+
+![FrictionlessMultiDeviceDisassociate](/images/docs/tutorials/in-game-auth-disassociate.png)
+
+<Note>
+Currently, Snapser does not allow the last secure connector to be removed from a user’s keychain. This is a security measure to prevent users from reverting to a non-secure account. However, we plan to make this behavior configurable for developers in the future.
+</Note>
+
+<Checkpoint step={6}>
+  Congratulations! You now a complete understanding of how to use the Authentication Snap for in-app authentication.
+</Checkpoint>
+
+## Next Steps
+Learn more about Snapsers CLI tool and how to build your own custom code and deploy that in your Snapend.
+
+<div className="parent">
+  <div className="servicesBox">
+    # Setup Snapser CLI
+
+    You can go through the Setup Snapser CLI tutorial to install and configure Snapctl.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/app-authentication'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div>
+  <div className="tutorialBox">
+    # BYOSnap Basic
+
+    Learn how to build and deploy your custom code to your Snapend using the Snapser CLI tool.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/byosnap-basic'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div>
+</div>

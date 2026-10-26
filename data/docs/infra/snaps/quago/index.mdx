@@ -1,0 +1,61 @@
+export const description = 'Quago Snap Guide'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Quago
+
+The Quago Snap enables seamless integration between your Snapend and Quago, a popular service for cheat and churn prediction. This snap provides access to all APIs offered by the Quago service, while also offering enhanced integration with statistics and analytics. These features aid in player segmentation and provide valuable insights such as playtime, emulator usage duration, and typical session durations for individual players.
+
+<Warning>
+  This is a Premium snap. You will need to be on a Premium plan to use it.
+</Warning>
+
+## Snaps integration
+### Statistics and Segmentation
+If you have the Statistics Snap integrated, the Quago snap automatically creates the following statistics and keeps them updated:
+1. **snap_quago_inauth_inference**: This statistic tracks the number of players who have been flagged as inauthentic by Quago.
+2. **snap_quago_emu_play_pct**: This statistic tracks the percentage of playtime spent by players using emulators.
+3. **snap_quago_inauth_play_pct**: This statistic tracks the percentage of playtime spent by players flagged as inauthentic by Quago.
+4. **snap_quago_total_play_secs**: This statistic tracks the total playtime in seconds for all players.
+5. **snap_quago_emu_inference**: This statistic tracks the number of players who have been flagged as emulator users by Quago.
+
+### Analytics
+If you have the Analytics Snap integrated, the Quago snap automatically creates a custom event table named
+
+## Snap Configuration Tools
+Once you have snapped the `Quago` snap to your snapend follow the next steps to get started:
+1. Click on the Snaps Configuration from under quick links.
+2. Select the `Quago` Snap from the left Nav bar.
+
+### 1. Quago Setup
+This tool allows you to configure the Quago service with your Snapend. You will need to input the following details, typically provided by the Quago Team during the onboarding process.
+
+To get started:
+1. Click on `Setup` from the side Nav.
+2. This will open a form where you can configure your Quago setup.
+
+#### Quago Credentials
+1. **User name**: The username to the Quago console.
+2. **Password**: The password to the Quago console.
+
+<Note>
+  The Quago API currently does not support API key-based authentication. Only way to authenticate is using the username and password provided by Quago.
+</Note>
+
+#### Snapser Integration Credentials
+1. **Client ID**: The client Id that you generate for Snapser in the Quago dashboard.
+2. **App Token**: The app token that you generate for Snapser in the Quago dashboard.
+
+<Note>
+  Quago may change their user interface and the names of these fields. Please refer to the Quago documentation for the most up-to-date information.
+</Note>
+
+![quago](/images/docs/quago.png)
+
+Behind the scenes, the APIs interact with the corresponding Quago service and monitor key metrics exposed by Quago, including emulator inference, player authenticity inference, in-auth playtime, total playtime, and player session length. These metrics are accessible within the Statistics Snap and can be leveraged to create segments.
+
+### Upcoming enhancements
+
+We are working with Quago to bring a more seamless integration & allow Quago push the segment & daily report data directly to this snap.

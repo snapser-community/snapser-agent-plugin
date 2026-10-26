@@ -1,0 +1,148 @@
+# 1.12.0
+##### July 21, 2026
+
+## ⚠️ SDK - Breaking changes (all languages)
+1. **Invite request models split by service.**
+   - `AcceptInviteRequest` → `GuildsAcceptInviteRequest` **and** `PartiesAcceptInviteRequest`.
+   - `DeclineInviteRequest` → `GuildsDeclineInviteRequest` **and** `PartiesDeclineInviteRequest`.
+   - Old generic classes are **removed**. `GuildsAcceptInviteRequest` adds `memberMetadata` and makes `userId` required; Parties variants keep `userId` optional.
+<Note>
+This was a long-standing bug and has now been fixed.
+</Note>
+
+2. **KWS (Unified SDK only): `token` parameter removed** from `kwsGetUserSettingValues` and `kwsSendConsentEmail` (auth is now header-derived). A previously required parameter is gone — callers must drop it
+<Note>
+This was a long-standing bug and has now been fixed.
+</Note>
+3. **Optional → required fields.**
+   - `IapBundle.grants`; `IapGrant.id`, `IapGrant.quantity64`, `IapGrant.type`
+   - `GuildsTier.name`, `LeaderboardsTier.name`
+   - `StorageKey.key`, `StorageKey.accessType`, `StorageKey.scope`, `StorageKey.storageType`
+<Note>
+This was a side effect of Snapser adding a new SDK type admin-SDK.
+</Note>
+4. **Type changes (64-bit ints & enums).**
+   - `IapBundle.createdAt/id/updatedAt`: string → int64
+   - `IapGrant.quantity64`: string → int64 (`quantity` int32 now **deprecated**)
+   - `GuildsTier.bucketSize`, `LeaderboardsTier.bucketSize`: string → uint64
+   - `eventbusPublishByoEvent` response `sequence`: number → unsigned 64-bit
+   - Various `AuthUser` timestamp fields → int64
+   - `StorageKey.accessType` (`public`/`protected`/`private`), `.scope` (`internal`/`external`), `.storageType` (`blob`/`append-blob`/`counter`/`json`): string → enums
+<Note>
+This fixes an old issue, where client code had to add a hack of typecasting strings back to ints. The SDK now handles this so that code can be removed.
+</Note>
+5. **Guilds — `userId` deprecated / relaxed / repositioned.**
+   - `userId` is now ignored (session-derived) and made optional on `guildsDeleteGuild`,
+     `guildsGetInterGuildLeaderboardScores`, `guildsGetMembershipRequests`,
+     `approveMembershipRequest`; `inventoryEvaluateDropTable.userId` also optional.
+   - In TypeScript, `userId` was **repositioned** in `guildsGetInterGuildLeaderboardScores`
+     and `guildsGetMembershipRequests` → positional callers break.
+<Note>
+This change allows these APIs to be more compatible with non-user auth APIs.
+</Note>
+6. **MetadataFilter fields now nullable**
+   — `GuildsMetadataFilter` / `PartiesMetadataFilter`  `boolValue`/`doubleValue`/`intValue`/`stringValue`.
+<Note>
+This was a long standing bug that has been fixed.
+</Note>
+
+## Spotlight
+1. **Admin SDK** — a brand new SDK for building tooling on top of Snapser. Configure your snaps programmatically instead of clicking through the WebApp, and pair it with `snapctl` to unlock total automation of your studio's Snapser workflows — from provisioning to configuration to promotion.
+2. **`snapctl login`** — a proper login command for snapctl. Auto-login support, cleaner API key handling, and a new Web App activate page make first-run and re-auth painless.
+3. **Developer Center API Keys — Scopes, Names & Expiry** — API keys minted from the Developer Center are now scoped, named, and time-bound. Every new key must declare which of the `snapctl`, `admin-sdk`, or `mcp` scopes it can use, carries a human-readable name to identify it later, and has an explicit expiry so stale keys don't linger forever.
+4. **User Email Change** — Auth now supports changing the email a player uses to log in. A dedicated User Manager tool ships alongside the backend so support can update a user's email without workarounds.
+
+---
+
+## Snaps
+
+### Auth
+1. **Change login email** — Auth now supports changing the email a player uses to log in.
+2. **Associate / Disassociate return the user object** — the Associate and Disassociate calls now return the fully-resolved user object after the operation, saving a follow-up `GetUser` round-trip.
+3. **Faster login for existing users** — latency optimizations in the login flow reduce sign-in time for returning players.
+4. **Lighter session validation** — session validation now puts significantly less load on the database.
+
+### Inventory
+1. **`GetItems` supports `target_user_id`** — you can now pass an optional `target_user_id` to evaluate discounts against a different user. Backwards compatible: when the caller is user-auth and `target_user_id` is empty, it defaults to the logged-in user.
+2. `EvaluateDropTable`: The `user_id` parameter is now optional. When omitted, the escrow step is skipped and the call runs as a read-only operation.
+3. **`GetDropTables` API** — new client-facing API for listing drop tables directly, without a server-side hop.
+4. **`ImportCatalog` — rich error messages** — the backend now returns structured, row-level errors with the offending row number, column, and reason. The WebApp import tool renders them so you can fix your CSV in place.
+
+### Storage
+1. A logging pass across the snap improves observability and debuggability.
+
+### Matchmaking
+1. **Bug fix: `GetPingUrls` panic** — fixed an index-out-of-range crash in `GetPingUrls` when the caller had no configured regions.
+
+### Guilds
+1. **Add / Remove member events** — Guilds now emit eventbus events when members are added to or removed from a guild.
+2. **Invite already-exists bug fix** — accepting or declining an invite left it lingering as a stale record, so a new invite for the same user/guild could fail with "invite already exists" even though nothing was pending. Cleaned up.
+3. **Guild Settings save bug** — investigated and fixed a case where Guild Settings edits would silently fail to persist.
+
+### Parties & Guilds
+1. **Optional metadata filter string values** — string-valued metadata filters for Parties and Guilds no longer require a value at configuration time; they can be left optional.
+
+### GSF (Game Server Fleets)
+1. **`rotate_after_seconds` on fleets** — fleets now accept a `rotate_after_seconds` field, enabling automatic scheduled server rotation.
+
+---
+
+## Web App
+
+### New Tools
+1. **Admin SDK — Web App integration** — the Web App now hosts tools built with the new Admin SDK. Custom tools appear alongside the built-in ones.
+2. **User Manager — Update User Email** — a new user-manager action to change a user's login email in place.
+
+### BYOSnap
+1. **BYOSnap View / Details / Edit UX rebuilt** — the old view/details/edit surface was clunky and hard to reason about. Fully rebuilt into a cleaner, single-flow experience.
+
+### Snapend
+1. **Redeploy UX** — Redeploy no longer asks you to re-type the Snapend name. A simple confirmation is enough.
+2. **Settings Admin** — the redundant Snapend name input has been removed from the Settings Admin page.
+
+### Persona View
+1. **User Reporting and Snap Tools in personas** — personas now include the User Reporting and Snap Tools surfaces so you can preview the full player-facing experience per persona.
+
+### Developer Center
+1. **API Keys — Scopes, Names, and Expiry** — every API key created in the Developer Center now requires a name, an expiry date, and one or more scopes from `snapctl`, `admin-sdk`, and `mcp`. Keys are only accepted by endpoints that match their scope, so a `snapctl`-only key can't be used to drive the Admin SDK or vice versa. Existing keys can be updated in place — no need to regenerate — and the key list surfaces name, scopes, and expiry so you can audit at a glance.
+
+### API Explorer
+1. **EventBus APIs are now surfaced** in the API Explorer.
+2. **Better empty-state messaging** — when a snap does not expose an API for the selected auth type, the API Explorer now says so clearly instead of showing an empty list.
+
+### Access & Roles
+1. **CS View Mode — all Snapends** — Customer Success view mode can now see every Snapend, matching what CS actually needs day-to-day.
+2. **Marketplace visibility for `cluster-service-view`** — the marketplace page no longer errors out for `cluster-service-view` users clicking on Snaps.
+
+### Bug Fixes
+1. **Breadcrumbs** — breadcrumbs were not rendering in the nav on certain routes. Restored.
+2. **Access role deletion** — the Delete Role modal kept spinning even after a successful delete. Fixed.
+3. **User Manager summary** — `Is Payer` was always showing `No` on Snapends without analytics enabled. Now correctly reflects unknown vs. no.
+4. **WebSocket gateway dialog** — enabling WebSocket on a gateway now closes the dialog automatically.
+5. **Accel URL not shown on live** — the Accel URL was missing on the live environment surface. Fixed.
+6. **Minor UI polish** — Inventory Import save button uses the loading variant, and the User Reset button uses the `warning` variant instead of `success`.
+
+---
+
+## Snapctl
+
+### Important changes
+1. A proper browser-based login flow, with auto-login on subsequent runs so you're not re-authenticating every session.
+2. Admin SDK downloads, alongside the existing game-client SDK downloads.
+
+### Commands
+#### Auth
+1. `snapctl login` — opens a browser device flow to approve the sign-in, then persists the minted API key locally. For CI or headless environments, pass `--api-key <key>` (or `--paste` to enter one interactively). Additional flags: `--env dev|devtwo|playtest|prod` to pick a Snapser environment, `--portal-endpoint <url>` for enterprise URLs, `--profile <name>` to save under a named profile, and `--force` to overwrite an existing valid key without confirmation. Re-running with an already-valid key is a no-op unless `--force` is set.
+
+#### Admin SDK
+1. `snapctl admin-sdk download --format <fmt> --type <type> --snaps <name:v,name:v> --out-path <path>` — downloads the Admin SDK for a specified set of `snap:version` pairs. Only snap versions that support the Admin SDK are eligible; pass an unsupported version and snapctl will tell you up front.
+
+---
+
+## Documentation
+1. **Snapctl login** — documented the new `snapctl login` command and auto-login behavior.
+2. **Admin SDK** — documentation for the new Admin SDK at both the game and Snapend level, covering programmatic snap configuration and automation workflows.
+3. **Developer Center — API Keys** — documented the new scoped API keys (`snapctl`, `admin-sdk`, `mcp`), naming, expiry, and the updated key management flow.
+4. **GSF `rotate_after_seconds`** — documented the new fleet rotation field.
+5. **User Email Change** — documented the new Update User Email tool and API.
+6. **Blog: Dev / Stage / Prod pipeline** — new long-form post walking through a recommended dev → stage → prod promotion pipeline on Snapser.

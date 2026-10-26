@@ -1,0 +1,23 @@
+# App Verify
+As a game studio, you may be relying on some other tools while using Snapser
+as your main backend. These tools may want to validate the identity of a user. Using the
+App Verify tool you can turn Snapser into an authentication validator for
+other tools. Snapser allows you to save a special client secret for your game that can be shared
+with the other tool. The other tool can then use the **AppVerify** API and pass in the user's
+Snapser session token and the client secret. Snapser will validate the user session token
+as well as the client secret and let the caller know if its a valid user or not.
+
+To get started:
+1. Click on App Verify from the side Nav
+2. This will show you a form, where you update your App Verify settings.
+
+
+## App Verify Status
+You will have to toggle the status to **Enabled** to create your App auth keys. On the contrary,
+if you want to stop app auth calls because your keys got leaked, you can just toggle this off
+and your gateway will immediately stop accepting any App auth requests.
+
+## Client Secret
+Client Secret is any alphanumeric string that you want to share between Snapser
+and the other tool. We recommend that you use a string like a UUID for added security. Eg "fd7a7749-20c8-4a12-8edb-a186553c46af"
+You will have to toggle the enable before you can enter a custom client secret.

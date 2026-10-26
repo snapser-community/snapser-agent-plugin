@@ -1,0 +1,84 @@
+# beta-0.49.0
+##### May 2, 2025
+
+## Breaking Changes
+- Trackables single-user API `failure` HTTP response codes have been updated.
+- Trackables Batch API `failure` response messages have been revised.
+- The `snapctl sdk download` command now accepts `api-key` as the type (instead of `server`) to align with the Web App.
+- The BYOSnap Configuration Tool now sends a slimmed down version of the Tool payload. This ensures unnecessary data is not getting send back and forth over the wire.
+
+## Spotlight
+### Bring Your Own Workstation (Alpha)
+- We’re thrilled to introduce the alpha version of **Bring Your Own Workstation (BYOWS)**!
+  You can now run your own workstation and connect it directly to a Snapend. This marks a big step toward giving you full control over your development environment — including the ability to locally debug your BYOSnaps before publishing. In the coming, weeks we will continue to improve this feature and deal with any rough edges or issues that arise.
+
+### Logs Infrastructure Upgrade
+- We’ve upgraded the entire logs pipeline in this release!
+  You should now experience faster, snappier performance when using the Logs tool.
+
+## Snap Features
+### Quests
+- You can now add **quest-level metadata** through the configuration tool.
+  This metadata is exposed in the Quest API and lets you store additional information about your quests.
+- Added the following Batch APIs:
+    - BatchGetActiveQuests
+    - BatchIncrementTaskProgress
+    - BatchClaimQuestRewards
+    - BatchClaimTaskRewards
+
+### Authentication
+- You can now disable user creation
+- New **Create Users** tool! - Allowing you to create users for various login types.
+
+### Trackables
+- **Major upgrade!**
+  Trackables now uses the newly released batch statistics APIs (instead of single user APIs per user), making the Snap much more scalable and reducing load on statistics.
+- **Rewarding to sub-inventory**
+  You can now setup Trackable rewards to be sent to a sub-inventory.
+
+### Storage
+- Added the following Batch APIs:
+    - BatchInsertJsonBlobs
+    - BatchGetJsonBlobs
+    - BatchGetSubDocuments
+    - BatchUpsertSubDocuments
+    - BatchAppendArrSubDocuments
+    - BatchDeleteSubDocuments
+    - BatchPrependArrSubDocuments
+    - BatchDeleteJsonBlobs
+
+### Eventbus
+- Fixed an issue where concurrent events to a Webhook could be lost
+
+## Web App
+- A new **Resources** section has been added!
+  Here you'll find example Snapends, BYOSnaps, and Game Servers — perfect starting points for your own projects.
+- We now support deleting multiple images from image manager. Earlier this did not work when you picked images more than 5 at a time.
+- Updated the `Welcome to Snapser` email that is sent with a new registration.
+
+## Bug Fixes
+- Metrics graphs now correctly display data and smartly group results based on the selected time range.
+- Fixed an issue where the Experiment Configuration Tool was incorrectly caching values.
+- Blob Manager Tool no longer incorrectly stores a local CAS (Content Addressable Storage).
+- The Roblox SDK was missing a file that caused compilation errors. This has been fixed.
+- The Protos download folder now contain protos separated by snaps, eliminating compilation errors when dropping the protos into a project.
+- We fixed an issue with incorrect caching of the SDK when you selected a subset of Snaps. This issue has now been fixed.
+- The BYOSnap Image manager now allows you to delete more than 5 images at a time.
+- The BYOSnap configuration tool had a run time error when using the group component with the `Add Group` button. This has been fixed.
+- Social Graph - User tool was incorrectly generating a new Friend Code instead of only creating it when the user clicks the `Generate` button. This has been fixed.
+- Fix a bug in the Auth snaps email rate limiter that would wrongly block users after 1 attempt instead of 5.
+- The Inventory snap now supports importing re-importing same CSVs.
+- Clicking on some search links resulted in a 404 error. This has been fixed.
+
+## Snapctl
+### New Features
+- Added a new command to support the **Bring Your Own Workstation** feature.
+
+### Bug Fixes
+1. The `snapctl byosnap generate-profile` command was not working when outside the root snapctl folder. This is now fixed.
+2. The `snapctl release-notes` commands were not working when outside the root snapctl folder. This is now fixed.
+
+
+## Documentation
+- Comprehensive documentation updates to cover the new features and improvements in this release.
+- Added new tutorials covering Snapends, Security best practices, BYOSnaps, and Game Servers.

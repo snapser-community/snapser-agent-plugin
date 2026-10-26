@@ -1,0 +1,104 @@
+export const description = 'Snapser Multiplayer Services'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Multiplayer Features
+
+## Snaps
+Snaps are the basic building blocks of your backend. Each Snap is
+pre packaged by the author with a specific set of features and capabilities. Snaps can be
+microservices that unlock a specific feature or capability for your game or application. They can also be
+control planes for hosting your own game servers and relays globally. While some Snaps
+unlock websockets for real-time communication with your Snapend. Essentially every Snap is a
+building block that you can snap together to enhance the functionality of your custom backend.
+
+### Snapser Snaps
+Snapser has built a suite of pre-built backend services called Snaps. They are pre-packaged with a specific set of
+features and capabilities. These Snaps are maintained and updated by Snapser.
+
+### Partner Snaps
+Snapser has partnered with various third-party services to bring their capabilities to your Snapend.
+These are called **Partner Snaps**. Partner Snaps are pre-packaged by the partner and offer a specific
+set of features and capabilities.
+
+### Custom Snaps
+
+One of the most powerful features of Snapser is the ability to build your own Snaps. Custom Snaps get
+all the benefits of Snapser's eco system viz. network security, load balancing, monitoring, logging, and
+more. Custom Snaps can be built using any language and uploaded to your own private registry
+using Snapsers CLI tool. Snapser also has the capability to automatically generate a SDK for your
+custom Snap via a swagger 3.X spec for your Snap. This allows you to interact with your Snap
+using the SDK in any language of your choice.
+
+{/* allowing you to continue choosing the
+language and framework that you are comfortable with. Only requirement is that your code
+should be able to run in a container via Docker. Snapsers CLI tool Snapctl allows you to
+package your code into a Snap and deploy it to your Snapend. Additionally, to build your own
+configuration tools for the Snap, Snapser provides a Tool Builder. This allows you to build
+a configuration tool for your Snap that will be rendered for the user in the Snapser Dashboard. */}
+
+
+## Snap Features
+Each Snap offers the following:
+- **Pre-packaged functionality**: Each Snap comes with a specific set of features and capabilities. These
+  features are exposed via APIs as well as Events emitted by the Snap.
+- **Configuration tools**: Configuration tools have been built for each Snap allowing you to customize the
+  behavior of the Snap.
+- **User manager tool**: User manager tools allow you to manage the
+  user data of that Snap. Especially useful during development and testing, as well as for a
+  customer support team.
+- **Monitoring & Logs**: All Snaps hook into the Snapser's Monitoring and Logging system. This allows you to monitor
+  the health of the Snap and the performance of the Snap.
+- **Import & Export Configuration**: Each Snap runs as infrastructure as code. This means that you can
+  export the configuration of the Snap and import it into another Snap.
+- **Connected Snaps**: Each Snap is aware of the presence of absence of other snaps in your backend.
+   They upgrade their behavior based on the presence of other snaps. Eg: The Quest snap, after
+    detecting the presence of the Inventory snap, will allow you to create quests that allow
+    you to offer Inventory items as rewards.
+
+## API & Events
+Each Snap exposes a set of APIs and Events. The APIs allow you to interact with the Snap and
+the Events allow you to listen to changes in the Snap. The APIs are RESTful and the Events are
+emitted over Websockets. You can enable web sockets for your Snapend by toggling the Websocket
+toggle in the Snapend Gateway.
+
+<Note>
+  Your custom Snap can listen to the events emitted by other Snaps. This allows you to build
+  complex interactions between Snaps.
+</Note>
+
+{/* ## Building blocks
+### Multiplayer Services
+
+Snapser's suite of **[multiplayer services](infra/multiplayer)** encompasses a wide array of gamification features to fulfill
+all your app needs. Full duplex communication between app clients and backend is enabled through Snapser's [websocket](infra/snaps/web-socket)
+gateway, allowing for real-time multiplayer experiences.
+
+### Relay Servers
+
+Snapser provides multi regional relay compute optimized for real-time PvP games across regions, ensuring low-latency
+experiences for players. The relay system comes pre configured with the Snapser matchmaker for ease of use.
+
+### Game Server Hosting
+
+Snapser offers a comprehensive suite of services for game studios to manage their [game servers](service/relay) efficiently.
+**Snapser Fleets** facilitate hosting and horizontally scaling of game servers with an integration with the Snapser
+matchmaker for full automation.
+
+### Customizations
+
+Developers gain control over data, integrate existing servers, host game servers, and deploy microservices using
+Snapser's **[customization](service/customization) services**. */}
+
+## Custom Backend
+
+Each **custom backend** on Snapser is called a [Snapend](/docs/snapend). It is a custom encapsulation
+of the Snaps that you chose to snap together and deploy.
+
+
+{/* ## Live Ops Tools
+
+Snapser's [Live Ops tools](service/liveops) **Olympus** provides developers with an integrated analytics platform while **User Tools** enable real-time user data manipulation within Snapend for operational adjustments during live app scenarios. */}

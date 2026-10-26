@@ -1,0 +1,48 @@
+# beta-0.44.0
+##### December 20, 2024
+
+## Breaking Changes
+- **Chat**:
+  - Sending direct messages does not require the message_id anymore.
+
+## Update Recommendations
+- We recommend updating Chat, Analytics and Statistics to the latest version; that way, you will stay ahead of the breaking changes.
+
+## Snaps
+- **Assets**:
+  We are excited to release the new **Assets** Snap, which allows you to upload, manage, and organize all your user-generated assets—images, audio, and other files—all in one place.
+
+- **Parties**:
+  - Parties snap has a new decline invite endpoint.
+
+- **Inventory**:
+  - New API to get Batch Inventory Items with support for filters.
+  - Added a new currency conversion API
+
+- **IAP**:
+  - You can now have currency bundles in IAP.
+
+## Web App
+- **Image Manager**: Now supports pagination.
+- **IAP Admin Tool**: UX update to show populated password fields so the user knows if credentials are already set.
+- **Usage Pricing calculator**: UX updates to make that easier to understand.
+- **API Explorer to Code Docs**: You can now directly navigate to the code docs from the API Explorer.
+- **Heatmap**: Heatmap now shows POD level granularity.
+- **Segments Configuration Tool**: The segment configuration tool now shows each segment's approximate number of users.
+- **User Manager Tool**: Now shows Roblox ID information for users.
+
+## Bug Fixes
+- **Snap Configuration**: Snap configuration view now shows an upgrade available for BYOSnaps as well.
+- **Snap Configuration Tools**: Tabular view for specific tools have a better UX. Hovering over a row now does not change the row's height anymore.
+- **Landing Page**: Fixed bugs for mobile view.
+- **BYOSnap Publish Form**: Worked on better error handling.
+- **Segment-based Quests**: Fixed a bug where the segment-based quests were not working as expected.
+- **Lobbies**: Deleted lobbies are now removed from the start queue.
+- **Quests**: Quests now does not allow a create or update if there are no tasks in the quest.
+- **API Explorer**: Fixed a bug when using non-optional and optional query parameters.
+
+## Documentation
+- Documentation Nav has been updated for a better user experience.
+- SDK documentation has gone through a major update.
+- Added documentation for Protos and how to use them in Snapser.
+- Added documentation for Infra as Code and about the Snapend manifest.

@@ -1,0 +1,550 @@
+export const description = 'Snapser Access'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Roles
+
+Snapser supports a role-based access control system. This allows you to assign different levels of access to different users.
+
+The Snapser access control system has five main categories:
+1. company
+2. game
+3. cluster
+4. cluster-service
+5. cluster-service-user
+
+<Note>
+**IMPORTANT**: Each level supersedes in control over the next. E.g., **cluster-service-** roles have more power than **cluster-service-user-** roles. **cluster-** roles have more power than **cluster-service-** roles. **game-** roles have more power than **cluster-** roles and **company-** roles have more power than **game-roles**.
+</Note>
+
+## One role per resource
+
+Every role points at a resource, and a user holds at most **one** role on any given resource.
+
+<Warning>
+**IMPORTANT**: Assigning a role on a resource where the user already has one **replaces** that role. You never end up with two roles on the same resource. The Access tool tells you when a save replaced an existing role instead of adding a new one.
+</Warning>
+
+The resource is the full path the role points at, and that path is what makes the role unique for a user:
+
+| Role                        | Resource it points at          |
+| --------------------------- | ------------------------------ |
+| **company-\***              | Company                        |
+| **game-\***                 | Company + App                  |
+| **cluster-\***              | Company + App + Snapend        |
+| **cluster-service-\***      | Company + App + Snapend + Snap |
+| **cluster-service-user-\*** | Company + App + Snapend + Snap |
+
+So the same user can hold a **company-\*** role, a **game-\*** role on each of your apps, a **cluster-\*** role on each Snapend, and a Snap-level role on each Snap — those are all different resources. What they cannot hold is two roles on the *same* resource.
+
+<Warning>
+**IMPORTANT**: Look at the last two rows above. **cluster-service-\*** and **cluster-service-user-\*** point at the **same** resource, so a user can only hold one of them per Snap — granting one **replaces** the other. You rarely need both: **cluster-service-\*** already covers the **User Manager** tool as well as Snap configuration. Reach for **cluster-service-user-\*** only when you want to give someone User Manager access *without* Configuration access.
+</Warning>
+
+<Warning>
+  Tiers below Premium are limited to company and game roles. Upgrade to the Premium Tier or higher for granular access control, including cluster and cluster-service roles.
+</Warning>
+
+![Access Pic](/images/docs/access.png)
+
+## Access Tool
+
+The role assignment tool is located inside the **Access** tool in the left Nav. There are three flavors of
+this tool:
+
+- Tool at the studio level. This tool allows you to manage company-_ and game-_ roles.
+  ![Access Company Pic](/images/docs/access-company.png)
+
+- Tool at the game level. This tool allows you to manage game-_, cluster-_, cluster-service-_, and cluster-service-user-\* roles.
+  ![Access Game Pic](/images/docs/access-game.png)
+
+- Tool at the cluster level. This tool allows you to manage cluster-_, cluster-service-_, and cluster-service-user-\* roles.
+  ![Access Cluster Pic](/images/docs/access-snapend.png)
+
+## A. Company roles
+
+There are three types of company roles:
+
+1. company-admin
+2. company-edit
+3. company-view
+
+### 1. company-admin
+
+The company-admin role has the highest amount of power. Users with this role
+can
+
+- Update other user roles at any level
+- Create, edit, and delete games
+- Create, edit, and delete snapends
+- Redeploy non-production snapends
+- Use the Configuration & User Tools on any snapend
+- Push game code to Production for any game
+
+<Note>Usually, this role is assigned to the CTO of your company.</Note>
+
+### 2. company-edit
+
+Users with this role can
+
+- Update all other user roles except at the **Company-** level
+- Create and delete any game
+- Create and delete any snapend
+- Redeploy non-production snapends
+- Use the Configuration & User Tools on any snapend
+
+<Note>
+  Usually, this role is assigned to the higher-level technical staff of a gaming
+  company or people who operate across game teams.
+</Note>
+
+### 3. company-view
+
+This role allows users to view everything but act on nothing. Users with this
+role can
+
+- View all user roles
+- View all games
+- View all snapends
+- View all Configuration & User Tools
+
+<Note>
+  Usually, this role is assigned to a gaming company's highest-level
+  non-technical staff.
+</Note>
+
+## B. Game roles
+
+There are three game roles:
+
+1. game-admin
+2. game-edit
+3. game-view
+
+This role is always associated with a \*\*Game\*\*.
+
+### 1. game-admin
+
+The game-admin role has the highest amount of power for a game. Users with
+this role can
+
+- Update all user roles for their game
+- Edit and delete game
+- Create and delete snapends
+- Redeploy non-production snapends
+- Use the Configuration & User Tools on any snapend
+- Push game code to Production
+
+<Note>
+  Usually, this role is assigned to the Technical Director of an individual game.
+</Note>
+
+### 2. game-edit
+
+Users with this role can
+
+- Update all user roles except the ones at the **game-** level
+- Create and delete snapends
+- Redeploy non-production snapends
+- Use the Configuration & User Tools on any snapend
+
+<Note>
+  Usually, this role is assigned to a game's higher-level technical staff.
+</Note>
+
+### 3. game-view
+
+This role allows users to view everything but act on nothing for a particular
+game. Users with this role can
+
+- View all user roles belonging to a game
+- View all snapends in a game
+- View all Configuration & User Tools
+
+<Note>
+  Usually, this role is assigned to a game's highest-level non-technical staff.
+</Note>
+
+## C. Cluster roles
+
+There are three cluster roles:
+
+1. cluster-admin
+2. cluster-edit
+3. cluster-view
+
+This role is always associated with a Snapend.
+
+### 1. cluster-admin
+
+This role gives complete control of a Snapend to a user. A user that creates a Snapend automatically gets this role. Users with this role can
+
+- Update other user roles for their snapend only
+- Create, edit, and delete snapends
+- Redeploy non-production snapends
+- Use the Configuration & User Tools on the snapend
+
+<Note>
+  Usually, this role is assigned to senior engineers of a game studio
+</Note>
+
+### 2. cluster-edit
+
+Users with this role can
+
+- Update all user roles except the ones at the **company-**, **game-** and **cluster-** level
+- Create and edit snapends
+- Redeploy non-production snapends
+- Use the Configuration & User Tools on the snapend
+
+<Note>
+  Usually, this role is assigned to other engineers collaborating with you on a Snapend.
+</Note>
+
+### 3. cluster-view
+
+This role lets users view everything but act on nothing for a game snapend.
+Users with this role can
+
+- View all user roles belonging to a game snapend
+- View all Configuration & User Tools
+
+<Note>
+  Usually, this role is assigned to any non-technical staff of a game.
+</Note>
+
+## D. Cluster Service roles
+
+There are three cluster-service roles:
+
+1. cluster-service-admin
+2. cluster-service-edit
+3. cluster-service-view
+
+<Note>This role is always associated with a Snapend Snap.</Note>
+
+### 1. cluster-service-admin
+
+This is the ideal role to give someone access to all Configuration & User Tools for your
+Snapend.
+
+<Note>
+  Usually, this role is assigned to Product, QA, or other disciplines who use
+  the admin tool to set up the game. E.g., PMs may set up experiments on the
+  production cluster, and you only want to give them access to its admin tool.
+</Note>
+
+Users with this role can
+
+- View, Add, Edit and Delete Snap configuration
+
+### 2. cluster-service-edit
+
+This is the ideal role to give someone who needs the ability to view add and edit but you
+do not want to give them permissions to delete any Snap configuration.
+
+Users with this role can
+
+- View, Add and Edit Snap configuration
+
+<Note>
+  Usually, this role is assigned to junior members of Product, QA, or other
+  disciplines.
+</Note>
+
+### 3. cluster-service-view
+
+This role lets users view everything in the Configuration & User Tools for a Snapend but act
+on nothing.
+
+Users with this role can
+
+- View all Configuration & User Tools settings
+
+<Note>
+  Usually, this role is assigned to a junior non-technical staff of a game snapend.
+</Note>
+
+## E. Cluster Service User roles
+
+There are three cluster-service-user roles:
+
+1. cluster-service-user-admin
+2. cluster-service-user-edit
+3. cluster-service-user-view
+
+<Note>This role is always associated with a Snapend Snap.</Note>
+
+<Note>
+**IMPORTANT**: Unlike **cluster-service-\*** roles, **cluster-service-user-\*** roles only grant access to the **User Manager** tool for the selected Snap. They do **not** grant access to that Snap's Configuration tools.
+</Note>
+
+<Warning>
+**IMPORTANT**: **cluster-service-user-\*** and **cluster-service-\*** roles point at the same resource — a Snapend Snap — so a user can hold only **one** of them per Snap. Assigning a **cluster-service-user-\*** role to someone who already has a **cluster-service-\*** role on that Snap **replaces** it, and the other way round too. See [One role per resource](#one-role-per-resource).
+</Warning>
+
+This is the ideal set of roles to give someone who should only be able to look up and manipulate an individual player's data for a Snap, without giving them access to that Snap's configuration.
+
+### 1. cluster-service-user-admin
+
+Users with this role can
+
+- View, Add, Edit and Delete a user's data in the User Manager tool for the selected Snap
+
+### 2. cluster-service-user-edit
+
+Users with this role can
+
+- View, Add and Edit a user's data in the User Manager tool for the selected Snap
+
+### 3. cluster-service-user-view
+
+This role lets users view a user's data in the User Manager tool for the selected Snap but act on nothing.
+
+Users with this role can
+
+- View a user's data in the User Manager tool for the selected Snap
+
+<Note>
+  Usually, this role is assigned to Customer Support agents who only need to look up or fix a player's data and should not have access to Snap configuration.
+</Note>
+  
+## F. Syncing accounts and roles with a CSV
+
+Inviting users and assigning roles one at a time works well for a handful of people. Once
+your studio has dozens of users across several games, it is easier to keep the whole list
+in a single CSV file and let Snapser reconcile to it. That is what the **Sync** tool does.
+
+You will find it as the **Sync** button in the header of the **Access** tool:
+
+- **Access > Portal** (studio level) — sync your entire organization, or pick a single app.
+- **Access** inside an app (game level) — sync that app only. The scope is preselected.
+
+<Warning>
+  **IMPORTANT**: A sync is a **full replace, not an append**. The CSV you upload becomes the
+  complete list of roles for the scope you picked. Any role that exists today but is missing
+  from your file is **revoked**. In an organization-wide sync, users left with no roles at all
+  are **removed from your organization**. Always read the preview before you apply.
+</Warning>
+
+### The workflow
+
+1. **Download the current accounts and roles.** This gives you a CSV of everything in the
+   scope you picked.
+2. **Edit the file.** Add rows to grant roles, delete rows to revoke them, and add a row with
+   a new email address to invite someone.
+3. **Upload your edited CSV.** Snapser immediately computes a preview and shows you exactly
+   what will change. Nothing has been applied yet at this point.
+4. **Review and apply.** Once the preview looks right, click **Apply changes**.
+
+<Note>
+  Always start from the downloaded file rather than writing a CSV from scratch. The export
+  already contains the correct `game_id` and `cluster_id` values, which are hard to type by
+  hand. Downloading the file and uploading it back without editing it is a no-op.
+</Note>
+
+### CSV format
+
+The header row is required. One row represents one role assignment — that is, one
+(user, resource, role) combination.
+
+| Column       | Required             | Description                                                                                        |
+| ------------ | -------------------- | -------------------------------------------------------------------------------------------------- |
+| `email`      | Yes                  | The user's email address. A user who is not in your organization yet will be invited.               |
+| `game_id`    | Depends on the role  | The app id. Leave blank for `company-` roles.                                                       |
+| `cluster_id` | Depends on the role  | The Snapend id. Leave blank for `company-` and `game-` roles.                                       |
+| `service_id` | Depends on the role  | The snap id, for example `auth`. Only used for `cluster-service-` and `cluster-service-user-` roles. |
+| `role`       | Yes                  | The full role name, for example `cluster-admin`. See the table below.                                |
+| `view_modes` | No                   | Studio functions, `;` separated. Only takes effect when the row invites a **new** user.              |
+
+A user can appear on as many rows as you like — one row per role they hold. Because a user holds
+[one role per resource](#one-role-per-resource), give each user at most one row per resource. Two
+rows pointing at the same resource for the same user contradict each other.
+
+### Which id columns to fill in
+
+There is no scope column. The level of a role assignment is implied by the `role` name, and
+that in turn tells you which id columns to fill in. Leave the rest blank.
+
+| Role                       | `game_id` | `cluster_id` | `service_id` |
+| -------------------------- | --------- | ------------ | ------------ |
+| `company-admin`            | —         | —            | —            |
+| `company-edit`             | —         | —            | —            |
+| `company-view`             | —         | —            | —            |
+| `game-admin`               | Yes       | —            | —            |
+| `game-edit`                | Yes       | —            | —            |
+| `game-view`                | Yes       | —            | —            |
+| `cluster-admin`            | Yes       | Yes          | —            |
+| `cluster-edit`             | Yes       | Yes          | —            |
+| `cluster-view`             | Yes       | Yes          | —            |
+| `cluster-service-admin`    | Yes       | Yes          | Yes          |
+| `cluster-service-edit`     | Yes       | Yes          | Yes          |
+| `cluster-service-view`     | Yes       | Yes          | Yes          |
+| `cluster-service-user-admin` | Yes     | Yes          | Yes          |
+| `cluster-service-user-edit`  | Yes     | Yes          | Yes          |
+| `cluster-service-user-view`  | Yes     | Yes          | Yes          |
+
+### Studio functions
+
+The `view_modes` column accepts a `;` separated list of studio functions. Valid values are
+`business`, `customer-support`, `design`, `engineering`, `product`, `production` and `qa`.
+If you leave the column blank, a newly invited user gets `engineering`.
+
+<Note>
+  The export fills `view_modes` in on every row so you can see what each user has, but the column
+  only **takes effect** when a row invites a new user. Editing it for someone who is already in
+  your organization does nothing — change their studio functions from the **Accounts** tab
+  instead.
+</Note>
+
+### Examples
+
+#### Example: 1 Organization-wide sync
+
+Run this from **Access > Portal** with the scope set to your entire organization. It gives
+Alice full control of the studio, makes Bob an admin on one app, lets Carol view a single
+Snapend, and gives Dave admin rights on just the `auth` snap of that Snapend.
+
+```csv
+email,game_id,cluster_id,service_id,role,view_modes
+alice@acme.com,,,,company-admin,engineering
+bob@acme.com,b20d3467-cc17-41b9-a7b2-022e88279b17,,,game-admin,engineering
+carol@acme.com,b20d3467-cc17-41b9-a7b2-022e88279b17,y21c26jq,,cluster-view,engineering
+dave@acme.com,b20d3467-cc17-41b9-a7b2-022e88279b17,y21c26jq,auth,cluster-service-admin,engineering
+```
+
+#### Example: 2 App-scoped sync
+
+Run this from the **Access** tool inside an app. Only rows for that app take effect — a
+`company-` row, or a row for a different app, is silently skipped rather than rejected. See
+[Guardrails](#guardrails). This means you can run an app-scoped sync straight from your full
+company export without trimming it down first.
+
+```csv
+email,game_id,cluster_id,service_id,role,view_modes
+erin@acme.com,b20d3467-cc17-41b9-a7b2-022e88279b17,,,game-admin,engineering
+frank@acme.com,b20d3467-cc17-41b9-a7b2-022e88279b17,y21c26jq,,cluster-edit,engineering
+grace@acme.com,b20d3467-cc17-41b9-a7b2-022e88279b17,y21c26jq,experiments,cluster-service-view,engineering
+```
+
+#### Example: 3 One user with several roles, and a new hire
+
+Heidi holds three roles, so she gets three rows. Ivan is not in the organization yet, so his
+row invites him and gives him the `product` and `qa` studio functions. Note that Ivan gets a
+`cluster-service-user-view` role, which lets him look up player data in the User Manager for
+the `auth` snap without seeing its configuration.
+
+```csv
+email,game_id,cluster_id,service_id,role,view_modes
+heidi@acme.com,b20d3467-cc17-41b9-a7b2-022e88279b17,,,game-view,engineering
+heidi@acme.com,b20d3467-cc17-41b9-a7b2-022e88279b17,y21c26jq,,cluster-edit,engineering
+heidi@acme.com,b20d3467-cc17-41b9-a7b2-022e88279b17,ybhj0qv2,experiments,cluster-service-admin,engineering
+ivan@acme.com,b20d3467-cc17-41b9-a7b2-022e88279b17,y21c26jq,auth,cluster-service-user-view,product;qa
+```
+
+### Reading the preview
+
+After you upload a file, the preview groups the changes into five buckets:
+
+1. **Roles to revoke** — assignments that exist today but are missing from your CSV.
+2. **Users to remove from the organization** — users who end up with no roles at all.
+3. **Roles to assign** — new assignments in your CSV.
+4. **Users to invite** — email addresses that are not in your organization yet.
+5. **Unchanged** — assignments that already match your CSV.
+
+The first two are the destructive ones and are highlighted accordingly. If your CSV has
+problems, the preview lists them with the row number and the **Apply changes** button stays
+disabled until you fix the file and upload it again.
+
+### Guardrails
+
+A sync is refused outright, before anything is applied, if it would remove your own admin role
+at the scope you are syncing — `company-admin` for an organization-wide sync, `game-admin` for
+an app-scoped one. Losing that role would strip the authority needed to fix or re-run the sync,
+so Snapser blocks the whole thing rather than lock you out.
+
+A sync is also refused if any row references an app, Snapend or Snap that does not exist.
+Unlike the self-lockout guardrail this is a per-row validation error, but it still blocks the
+entire sync — every reported row has to be fixed before you can apply.
+
+<Note>
+  A row for a resource outside the scope you picked — a `company-` row, or a row for a
+  different app, inside an app-scoped sync — is not an error. Snapser silently skips it: the
+  row is not applied and does not appear in the preview at all.
+</Note>
+
+<Note>
+  When you apply a sync, Snapser works through the changes one at a time and keeps going if an
+  individual change fails. You will get a per-row report at the end showing what succeeded and
+  what did not. A partly applied sync is not rolled back — fix the failing rows and run the
+  sync again.
+</Note>
+
+### Syncing from the CLI
+
+Everything above is also available in [snapctl](/docs/resources/cli), the Snapser CLI, as the
+`snapctl accounts` command. It is the same engine — the same CSV format, the same preview, the
+same guardrails — so you can keep your roster in version control and reconcile it from a script
+or a CI job instead of the browser.
+
+```bash
+# 1. Download the current accounts and roles
+snapctl accounts export --out-path-filename ./accounts.csv
+
+# 2. Edit ./accounts.csv, then preview what would change. Nothing is applied.
+snapctl accounts sync --accounts-path-filename ./accounts.csv --dry-run
+
+# 3. Apply it. You will be asked to confirm first.
+snapctl accounts sync --accounts-path-filename ./accounts.csv
+```
+
+Add `--application-id <id>` to any of these to scope them to a single app, exactly like picking
+a scope in the tool. The command needs an admin API key, and prints the same five buckets the
+preview shows in the browser.
+
+<Note>
+  In a CI job there is nobody to answer the confirmation prompt, so pass `--force` to apply
+  without one. Snapctl exits non-zero when a sync is refused or when individual rows fail, which
+  is what you want your pipeline to fail on. See the
+  [CLI doc](/docs/resources/cli) for the exit codes.
+</Note>
+
+## FAQs
+
+### I assigned a new role to someone and their old role disappeared. Is that a bug?
+No. A user holds [one role per resource](#one-role-per-resource), so assigning a role on a resource where they already have one replaces it rather than adding a second. The Access tool tells you when this happens and shows you which role it replaced. If you meant to grant an *additional* role, point it at a different resource — another app, Snapend or Snap.
+
+### Can someone hold both a cluster-service-\* and a cluster-service-user-\* role on the same Snap?
+No. Both point at the same resource, so granting one replaces the other. You almost never need both: **cluster-service-\*** already covers the **User Manager** tool as well as Snap configuration. Use **cluster-service-user-\*** only when you want to give User Manager access *without* Configuration access.
+
+### How do I give someone access to two different Snaps?
+Assign the role twice, once per Snap. Two Snaps are two different resources, so both roles stick. The same applies across Snapends and across apps — you only ever replace a role when you point at a resource the user already has a role on.
+
+### Who should have the company-admin role?
+The company-admin role should be given to the CTO or the highest level of technical staff in your company. This role has the highest level of access and can manage all users and games.
+
+### Who should have the game-admin role?
+The game-admin role should be given to the Technical Director of your game. This role has the highest level of access for a game and can manage all users and snapends for that game.
+
+### I want to give my QA access to the Experiment configuration tool only on my production snapend. What role should I give them?
+You should give them the **cluster-service-edit** role and select the `Production` Snapend and the `Experiment` snap. You can also assign them the QA studio function
+
+### I want to give my Customer Support team access to only look up and fix a player's data for the Auth snap, without exposing Snap configuration. What role should I give them?
+You should give them the **cluster-service-user-edit** role (or **cluster-service-user-view** if they should only look, not act) and select the `Production` Snapend and the `Auth` snap. You can also assign them the Customer Support studio function.
+
+### Can I use the Sync tool to add a few people without touching anyone else?
+No. A sync always replaces the full role list for the scope you pick, so a CSV containing only the people you want to add would revoke everyone else. To add a few people, either download the current CSV first and append your new rows to it, or use **Invite users** and **Assign roles** instead.
+
+### I am a game-admin. Why can I not sync my whole organization?
+A sync only ever covers what you already administer. As a game-admin you can run an app-scoped sync for the apps you own; asking for a company-wide sync is refused outright as a permission error and requires the **company-admin** role. You don't need to strip `company` rows out of your CSV for an app-scoped sync — they're not rejected, just silently skipped.
+
+### I removed a user from my CSV by mistake and applied the sync. Can I undo it?
+There is no undo. Re-uploading your previous CSV will restore their roles, but a user who was removed from the organization has to accept a new invite before those roles take effect. This is why the preview highlights revokes and removals before you apply.
+
+### Can I automate this instead of using the browser?
+Yes. `snapctl accounts export` and `snapctl accounts sync` do the same thing from the command line, so you can keep the CSV in version control and reconcile it from CI. Pass `--dry-run` to preview and `--force` to skip the confirmation prompt in a non-interactive job. See [Syncing from the CLI](#syncing-from-the-cli).
+
+### The preview says my CSV is invalid but does not change anything. Is that expected?
+Yes. A preview never modifies anything, and a CSV with validation or guardrail errors cannot be applied at all — the **Apply changes** button stays disabled until the file is clean.

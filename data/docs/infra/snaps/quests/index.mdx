@@ -1,0 +1,3335 @@
+export const description = 'Quests'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Quests
+
+Quest snap allows you to add quests or missions to your game.
+
+## Concept
+
+1. A quest contains tasks. Completion of all the tasks in the quests completes a quest.
+2. Every task in a quest has a goal. The task is considered complete once the user reaches the goal. Rewards can be set for completing a task.
+3. Additionally, you can also setup rewards for completing the entire quest. Rewards can be an inventory item, currency, statistic or a trackable.
+
+## Audience
+
+Quests can be made available to all users or to a specific segment of users. If
+you want to restrict quests to a specific segment, you will need the
+Segmentation snap.
+
+## Period
+
+The setup for recurring and non recurring quests is done via a cron
+expression.
+
+1. For recurring quests, the quest starts at the first tick after the creation. For example, `* */2 * * *`
+   evaluates to quest that repeats every 2 minutes. If the quest was created at 1:00, the quest will start at 1:02.
+2. For non recurring quests, this expression is just for starting the quest.
+
+
+## Tasks and Goals
+
+Every quest can have multiple tasks. Each task has a goal that needs to be
+achieved to complete the task. The goal can be one of the following types:
+
+- **Counter**: This is a goal counter that is tracked by the snap. The goal can be positive or negative.
+  This goal is always an absolute count.
+
+- **Item**: This tracks an item from inventory. The count can be absolute or relative to the number when the quest starts for the user. An example of such a task can be "Acquire 10 swords". Now, whenever "swords" are granted to the user, the progress of the task is automatically updated.
+
+- **Currency**: This tracks a currency from inventory. The count can be absolute or relative to the number when the quest starts for the user.  An example of such a task can be "Acquire 10 gold". Now, whenever "gold" is granted to the user, the progress of the task is automatically updated.
+
+- **Statistic**: This tracks a `counter` statistic from the Statistics snap. The count can be absolute or relative to the number when the quest starts for the user.  An example of such a task can be "Deal 10,000 damage". Now, whenever the relevant statistic is updated for the user, the progress of the task is automatically updated.
+
+- **Trackable**: This tracks XP or energy from the Trackables snap. The count can be absolute or relative to the number when the quest starts for a user. An example of such a task can be "Reach 200 XP". Now, whenever the user reaches "200 XP", this task will be marked as complete.
+
+<Note>
+The Item, Currency, Statistic and Trackable tasks need the Inventory, Statistics and Trackables snaps respectively,
+to be part of your snapend. Also, a quest is only marked as completed if all the tasks are completed.
+</Note>
+
+## Rewards
+
+Rewards can be added to a particular task or the entire quest. Rewards are granted when the task or the quest is completed.
+
+The Quest Snap supports four types of rewards: Catalog Item, Currency,
+Statistic, and Trackable (XP or Energy).
+
+- **Catalog Item**: You can set up the count of a particular catalog item to be granted as a reward for completing the quest.
+  Note: Inventory snap is required for this.
+
+- **Currency**: You can set up the count of a particular catalog item to be granted as a reward for completing the quest.
+  Note: Inventory snap is required for this.
+
+- **Statistic**: You can set up the count of a particular statistic item to be granted as a reward for completing the quest.
+  Note: Statistic snap is required for this, and only counter-type statistics are supported.
+
+- **Trackable**: You can set up the count of a particular trackable item viz. XP or Energy to be granted as a reward for completing the quest.
+  Note: Trackable snap is required for this.
+
+<Note>
+  You need the Inventory, Statistics or Trackable snaps to be part of your snapend to use
+  the rewards feature.
+</Note>
+
+### Claiming Rewards
+To claim rewards for a quest task, invoke the `ClaimTaskRewards` endpoint. Rewards for a task can only be claimed once.
+To claim rewards on completion of a quest, invoke the `ClaimRewardsForQuest` endpoint. For quests of recurring type, you can only claim rewards for the quest before the next refresh.
+Once the quest refreshes, rewards for a quest completed earlier cannot be claimed.
+
+## Quest Assignment
+
+Quests can either be manually assigned to users or auto assigned. For auto
+assigned quests, the quests get assigned dynamically at runtime when the game code invokes
+GetActiveQuests.
+
+<Note>
+  For auto-assigned quests, we recommend calling GetActiveQuests during game startup to directly assign
+  the available and active quests to users. This api call assigns any available
+  quests to the user, and also refreshes the progress if needed for a recurring
+  type of quest.
+</Note>
+
+## APIs & Emitters
+
+The `Quests` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name              | HTTP Method | API Description                                              |
+| --------------------- | ----------- | ------------------------------------------------------------ |
+| [QuestsGetActiveQuests](#questsgetactivequests-api)       | GET         | Get active quests for user                                   |
+| [QuestsGetAvailableQuests](#questsgetavailablequests-api)    | GET         | Get available quests for user                                |
+| [QuestsDeleteUserQuest](#questsdeleteuserquest-api)       | DELETE      | Delete user quest                                            |
+| [QuestsAssignQuest](#questsassignquest-api)           | POST        | Assign a quest to a user                                     |
+| [QuestsClaimQuestRewards](#questsclaimquestrewards-api)     | POST        | Claim rewards for a quest                                    |
+| [QuestsIncrementTaskProgress](#questsincrementtaskprogress-api) | PUT         | Increment/Decrement progress of a task in a quest for a user |
+| [QuestsBatchIncrementTaskProgress](#questsbatchincrementtaskprogress-api) | PATCH         | Batch Increment/Decrement progress of a task in a quest for a user |
+| [QuestsClaimTaskRewards](#questsclaimtaskrewards-api)      | POST        | Claim rewards for a task                                     |
+| [QuestsUpdateTaskMetadata](#questsupdatetaskmetadata-api)    | PUT         | Update metadata to a task in a quest assigned to a user      |
+</div>
+
+### Usage
+#### QuestsGetActiveQuests API
+<CodeGroup title="Get active quests for user" tag="GET" label="QuestsGetActiveQuests">
+```csharp
+/// <summary>
+/// Quests Get active quests for user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User id</param>
+/// <param name="token">User session token</param>
+/// <param name="tags">Comma separated tags to filter quests (optional)</param>
+/// <param name="includeRewardContents">If true, include contents of containers, drop tables in the rewards (optional)</param>
+/// <returns>QuestsUserQuests</returns>
+public QuestsUserQuests QuestsGetActiveQuests(string userId, string token, string tags = default(string), bool? includeRewardContents = default(bool?))
+{
+    Snapser.Client.ApiResponse<QuestsUserQuests> localVarResponse = QuestsGetActiveQuestsWithHttpInfo(userId, token, tags, includeRewardContents);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for QuestsUserQuests
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsUserQuests" /> class.
+/// </summary>
+/// <param name="quests">Quests assigned to the user.</param>
+/// <param name="updatedAt">Timestamp of the last update.</param>
+public QuestsUserQuests(Dictionary<string, QuestsUserQuest> quests = default(Dictionary<string, QuestsUserQuest>), string updatedAt = default(string))
+{
+    this.Quests = quests;
+    this.UpdatedAt = updatedAt;
+}
+
+/// Snapser.Model for QuestsUserQuest
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsUserQuest" /> class.
+/// </summary>
+/// <param name="assignedAt">Timestamp of when the quest was assigned.</param>
+/// <param name="description">Description of the quest.</param>
+/// <param name="resetsAt">Timestamp of when the quest resets.</param>
+/// <param name="rewardCurrencies">Currencies to be rewarded on completion.</param>
+/// <param name="rewardEnergy">Energy to be rewarded on completion.</param>
+/// <param name="rewardInventoryItems">Items to be rewarded on completion.</param>
+/// <param name="rewardStatistics">Statistics to be rewarded on completion.</param>
+/// <param name="rewardXp">XP to be rewarded on completion.</param>
+/// <param name="status">Status of the quest.</param>
+/// <param name="tags">Tags to categorize the quest.</param>
+/// <param name="tasks">Tasks to be completed to finish the quest.</param>
+public QuestsUserQuest(string assignedAt = default(string), string description = default(string), string resetsAt = default(string), List<QuestsRewardCurrency> rewardCurrencies = default(List<QuestsRewardCurrency>), List<QuestsRewardEnergy> rewardEnergy = default(List<QuestsRewardEnergy>), List<QuestsRewardInventoryItem> rewardInventoryItems = default(List<QuestsRewardInventoryItem>), List<QuestsRewardStatistic> rewardStatistics = default(List<QuestsRewardStatistic>), List<QuestsRewardXp> rewardXp = default(List<QuestsRewardXp>), string status = default(string), List<string> tags = default(List<string>), Dictionary<string, QuestsTaskProgress> tasks = default(Dictionary<string, QuestsTaskProgress>))
+{
+    this.AssignedAt = assignedAt;
+    this.Description = description;
+    this.ResetsAt = resetsAt;
+    this.RewardCurrencies = rewardCurrencies;
+    this.RewardEnergy = rewardEnergy;
+    this.RewardInventoryItems = rewardInventoryItems;
+    this.RewardStatistics = rewardStatistics;
+    this.RewardXp = rewardXp;
+    this.Status = status;
+    this.Tags = tags;
+    this.Tasks = tasks;
+}
+
+/// Snapser.Model for QuestsRewardCurrency
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardCurrency" /> class.
+/// </summary>
+/// <param name="count">Count of the currency to be rewarded (Deprecated: Use count_64).</param>
+/// <param name="count64">Count of the currency to be rewarded.</param>
+/// <param name="name">Name of the currency.</param>
+public QuestsRewardCurrency(int count = default(int), long count64 = default(long), string name = default(string))
+{
+    this.Count = count;
+    this.Count64 = count64;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardEnergy
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardEnergy" /> class.
+/// </summary>
+/// <param name="count">Count of the energy to be rewarded.</param>
+/// <param name="name">Name of the energy.</param>
+public QuestsRewardEnergy(int count = default(int), string name = default(string))
+{
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardInventoryItem
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardInventoryItem" /> class.
+/// </summary>
+/// <param name="containerContents">containerContents.</param>
+/// <param name="count">Count of the item to be rewarded.</param>
+/// <param name="name">Name of the item.</param>
+public QuestsRewardInventoryItem(QuestsContainerContents containerContents = default(QuestsContainerContents), int count = default(int), string name = default(string))
+{
+    this.ContainerContents = containerContents;
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardStatistic
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardStatistic" /> class.
+/// </summary>
+/// <param name="count">Count of the statistic to be rewarded (Deprecated: Use count_64).</param>
+/// <param name="count64">Count of the statistic to be rewarded.</param>
+/// <param name="name">Name of the statistic.</param>
+public QuestsRewardStatistic(int count = default(int), string count64 = default(string), string name = default(string))
+{
+    this.Count = count;
+    this.Count64 = count64;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardXp
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardXp" /> class.
+/// </summary>
+/// <param name="count">Count of the xp to be rewarded.</param>
+/// <param name="name">Name of the xp.</param>
+public QuestsRewardXp(int count = default(int), string name = default(string))
+{
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsTaskProgress
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsTaskProgress" /> class.
+/// </summary>
+/// <param name="completed">Whether the task is completed.</param>
+/// <param name="currentProgress">Current progress of the task (Deprecated: Use current_progress_64).</param>
+/// <param name="currentProgress64">Current progress of the task.</param>
+/// <param name="description">Description of the task.</param>
+/// <param name="goal">Goal of the task (Deprecated: Use goal_64).</param>
+/// <param name="goal64">Goal of the task.</param>
+/// <param name="metadata">Additional metadata to attached to task.</param>
+/// <param name="rewardCurrencies">Currencies to be rewarded on completion.</param>
+/// <param name="rewardEnergy">Energy to be rewarded on completion.</param>
+/// <param name="rewardInventoryItems">Items to be rewarded on completion.</param>
+/// <param name="rewardStatistics">Statistics to be rewarded on completion.</param>
+/// <param name="rewardXp">XP to be rewarded on completion.</param>
+/// <param name="status">Status of the task.</param>
+/// <param name="userMetadata">Additional metadata to attached to task for user.</param>
+public QuestsTaskProgress(bool completed = default(bool), int currentProgress = default(int), long currentProgress64 = default(long), string description = default(string), int goal = default(int), long goal64 = default(long), Object metadata = default(Object), Object rewardCurrencies = default(Object), Object rewardEnergy = default(Object), Object rewardInventoryItems = default(Object), Object rewardStatistics = default(Object), Object rewardXp = default(Object), string status = default(string), Object userMetadata = default(Object))
+{
+    this.Completed = completed;
+    this.CurrentProgress = currentProgress;
+    this.CurrentProgress64 = currentProgress64;
+    this.Description = description;
+    this.Goal = goal;
+    this.Goal64 = goal64;
+    this.Metadata = metadata;
+    this.RewardCurrencies = rewardCurrencies;
+    this.RewardEnergy = rewardEnergy;
+    this.RewardInventoryItems = rewardInventoryItems;
+    this.RewardStatistics = rewardStatistics;
+    this.RewardXp = rewardXp;
+    this.Status = status;
+    this.UserMetadata = userMetadata;
+}
+
+/// Snapser.Model for QuestsContainerContents
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsContainerContents" /> class.
+/// </summary>
+/// <param name="currencies">Currencies in the container (Deprecated: Use currencies_64).</param>
+/// <param name="currencies64">Currencies in the container.</param>
+/// <param name="dropTableContents">Drop table contents in the container.</param>
+/// <param name="dropTables">Drop tables in the container.</param>
+/// <param name="items">Items in the container.</param>
+public QuestsContainerContents(Dictionary<string, int> currencies = default(Dictionary<string, int>), Dictionary<string, string> currencies64 = default(Dictionary<string, string>), Dictionary<string, QuestsDropTableContents> dropTableContents = default(Dictionary<string, QuestsDropTableContents>), Dictionary<string, int> dropTables = default(Dictionary<string, int>), Dictionary<string, int> items = default(Dictionary<string, int>))
+{
+    this.Currencies = currencies;
+    this.Currencies64 = currencies64;
+    this.DropTableContents = dropTableContents;
+    this.DropTables = dropTables;
+    this.Items = items;
+}
+
+/// Snapser.Model for QuestsDropTableContents
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsDropTableContents" /> class.
+/// </summary>
+/// <param name="drops">Drops in the drop table.</param>
+public QuestsDropTableContents(List<QuestsDropTableDrops> drops = default(List<QuestsDropTableDrops>))
+{
+    this.Drops = drops;
+}
+
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsDropTableDrops" /> class.
+/// </summary>
+/// <param name="currencies">Map of currency name to drop values.</param>
+/// <param name="items">Map of item name to drop values.</param>
+/// <param name="trackablesEnergy">Map of trackable energy name to drop values.</param>
+/// <param name="trackablesXp">Map of trackable xp name to drop values.</param>
+/// <param name="weight">Weight of item in the drop table (required).</param>
+public QuestsDropTableDrops(Dictionary<string, QuestsDropValues> currencies = default(Dictionary<string, QuestsDropValues>), Dictionary<string, QuestsDropValues> items = default(Dictionary<string, QuestsDropValues>), Dictionary<string, QuestsDropValues> trackablesEnergy = default(Dictionary<string, QuestsDropValues>), Dictionary<string, QuestsDropValues> trackablesXp = default(Dictionary<string, QuestsDropValues>), int weight = default(int))
+{
+    this.Weight = weight;
+    this.Currencies = currencies;
+    this.Items = items;
+    this.TrackablesEnergy = trackablesEnergy;
+    this.TrackablesXp = trackablesXp;
+}
+
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsDropValues" /> class.
+/// </summary>
+/// <param name="max">Maximum value of drop. Will be equal to min if not specified (Deprecated: Use max_64).</param>
+/// <param name="max64">Maximum value of drop. Will be equal to min if not specified.</param>
+/// <param name="min">Minimum value of drop (Deprecated: Use min_64).</param>
+/// <param name="min64">Minimum value of drop.</param>
+/// <param name="multiple">Increment value of the drop. Defaults to 1 (Deprecated: Use multiple_64).</param>
+/// <param name="multiple64">Increment value of the drop. Defaults to 1.</param>
+public QuestsDropValues(int max = default(int), string max64 = default(string), int min = default(int), string min64 = default(string), int multiple = default(int), string multiple64 = default(string))
+{
+    this.Max = max;
+    this.Max64 = max64;
+    this.Min = min;
+    this.Min64 = min64;
+    this.Multiple = multiple;
+    this.Multiple64 = multiple64;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserQuestsServiceApi::QuestsGetActiveQuestsRequest : public Request
+{
+public:
+    virtual ~QuestsGetActiveQuestsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User id */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    /* Comma separated tags to filter quests */
+    TOptional<FString> Tags;
+    /* If true, include contents of containers, drop tables in the rewards */
+    TOptional<bool> IncludeRewardContents;
+};
+
+// Response
+class SNAPSER_API SnapserQuestsServiceApi::QuestsGetActiveQuestsResponse : public Response
+{
+public:
+    virtual ~QuestsGetActiveQuestsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserQuestsUserQuests Content;
+};
+
+class SNAPSER_API SnapserQuestsUserQuests : public Model
+{
+public:
+    virtual ~SnapserQuestsUserQuests() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Quests assigned to the user */
+    TOptional<TMap<FString, SnapserQuestsUserQuest>> Quests;
+    /* Timestamp of the last update */
+    TOptional<FString> UpdatedAt;
+};
+
+class SNAPSER_API SnapserQuestsUserQuest : public Model
+{
+public:
+    virtual ~SnapserQuestsUserQuest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Timestamp of when the quest was assigned */
+    TOptional<FString> AssignedAt;
+    /* Description of the quest */
+    TOptional<FString> Description;
+    /* Timestamp of when the quest resets */
+    TOptional<FString> ResetsAt;
+    /* Currencies to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardCurrency>> RewardCurrencies;
+    /* Energy to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardEnergy>> RewardEnergy;
+    /* Items to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardInventoryItem>> RewardInventoryItems;
+    /* Statistics to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardStatistic>> RewardStatistics;
+    /* XP to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardXp>> RewardXp;
+    /* Status of the quest */
+    TOptional<FString> Status;
+    /* Tags to categorize the quest */
+    TOptional<TArray<FString>> Tags;
+    /* Tasks to be completed to finish the quest */
+    TOptional<TMap<FString, SnapserQuestsTaskProgress>> Tasks;
+};
+
+class SNAPSER_API SnapserQuestsRewardCurrency : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardCurrency() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the currency to be rewarded (Deprecated: Use count_64) */
+    TOptional<int32> Count;
+    /* Count of the currency to be rewarded */
+    TOptional<int64> Count64;
+    /* Name of the currency */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardEnergy : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardEnergy() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the energy to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the energy */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardInventoryItem : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardInventoryItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserQuestsContainerContents> ContainerContents;
+    /* Count of the item to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the item */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardStatistic : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardStatistic() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the statistic to be rewarded (Deprecated: Use count_64) */
+    TOptional<int32> Count;
+    /* Count of the statistic to be rewarded */
+    TOptional<FString> Count64;
+    /* Name of the statistic */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardXp : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardXp() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the xp to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the xp */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsTaskProgress : public Model
+{
+public:
+    virtual ~SnapserQuestsTaskProgress() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether the task is completed */
+    TOptional<bool> Completed;
+    /* Current progress of the task (Deprecated: Use current_progress_64) */
+    TOptional<int32> CurrentProgress;
+    /* Current progress of the task */
+    TOptional<int64> CurrentProgress64;
+    /* Description of the task */
+    TOptional<FString> Description;
+    /* Goal of the task (Deprecated: Use goal_64) */
+    TOptional<int32> Goal;
+    /* Goal of the task */
+    TOptional<int64> Goal64;
+    /* Additional metadata to attached to task */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* Currencies to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardCurrencies;
+    /* Energy to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardEnergy;
+    /* Items to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardInventoryItems;
+    /* Statistics to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardStatistics;
+    /* XP to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardXp;
+    /* Status of the task */
+    TOptional<FString> Status;
+    /* Additional metadata to attached to task for user */
+    TOptional<TSharedPtr<FJsonObject>> UserMetadata;
+};
+
+class SNAPSER_API SnapserQuestsContainerContents : public Model
+{
+public:
+    virtual ~SnapserQuestsContainerContents() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Currencies in the container (Deprecated: Use currencies_64) */
+    TOptional<TMap<FString, int32>> Currencies;
+    /* Currencies in the container */
+    TOptional<TMap<FString, FString>> Currencies64;
+    /* Drop table contents in the container */
+    TOptional<TMap<FString, SnapserQuestsDropTableContents>> DropTableContents;
+    /* Drop tables in the container */
+    TOptional<TMap<FString, int32>> DropTables;
+    /* Items in the container */
+    TOptional<TMap<FString, int32>> Items;
+};
+
+class SNAPSER_API SnapserQuestsDropTableContents : public Model
+{
+public:
+    virtual ~SnapserQuestsDropTableContents() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Drops in the drop table */
+    TOptional<TArray<SnapserQuestsDropTableDrops>> Drops;
+};
+
+class SNAPSER_API SnapserQuestsDropTableDrops : public Model
+{
+public:
+    virtual ~SnapserQuestsDropTableDrops() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Map of currency name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> Currencies;
+    /* Map of item name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> Items;
+    /* Map of trackable energy name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> TrackablesEnergy;
+    /* Map of trackable xp name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> TrackablesXp;
+    /* Weight of item in the drop table */
+    int32 Weight = 0;
+};
+
+class SNAPSER_API SnapserQuestsDropValues : public Model
+{
+public:
+    virtual ~SnapserQuestsDropValues() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Maximum value of drop. Will be equal to min if not specified (Deprecated: Use max_64) */
+    TOptional<int32> Max;
+    /* Maximum value of drop. Will be equal to min if not specified */
+    TOptional<FString> Max64;
+    /* Minimum value of drop (Deprecated: Use min_64) */
+    TOptional<int32> Min;
+    /* Minimum value of drop */
+    TOptional<FString> Min64;
+    /* Increment value of the drop. Defaults to 1 (Deprecated: Use multiple_64) */
+    TOptional<int32> Multiple;
+    /* Increment value of the drop. Defaults to 1 */
+    TOptional<FString> Multiple64;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### QuestsGetAvailableQuests API
+<CodeGroup title="Get available quests for user" tag="GET" label="QuestsGetAvailableQuests">
+```csharp
+/// <summary>
+/// Available Quests Get available quests for user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User id</param>
+/// <param name="token">User session token</param>
+/// <param name="tags">Comma separated tags to filter quests (optional)</param>
+/// <param name="includeRewardContents">If true, include contents of containers, drop tables in the rewards (optional)</param>
+/// <returns>QuestsGetAvailableQuestsResponse</returns>
+public QuestsGetAvailableQuestsResponse QuestsGetAvailableQuests(string userId, string token, string tags = default(string), bool? includeRewardContents = default(bool?))
+{
+    Snapser.Client.ApiResponse<QuestsGetAvailableQuestsResponse> localVarResponse = QuestsGetAvailableQuestsWithHttpInfo(userId, token, tags, includeRewardContents);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for QuestsGetAvailableQuestsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsGetAvailableQuestsResponse" /> class.
+/// </summary>
+/// <param name="quests">List of available quests.</param>
+public QuestsGetAvailableQuestsResponse(List<QuestsAvailableQuest> quests = default(List<QuestsAvailableQuest>))
+{
+    this.Quests = quests;
+}
+
+/// Snapser.Model for QuestsAvailableQuest
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsAvailableQuest" /> class.
+/// </summary>
+/// <param name="description">Description of the quest.</param>
+/// <param name="name">Name of the quest.</param>
+/// <param name="rewardCurrencies">Currencies to be rewarded on completion.</param>
+/// <param name="rewardEnergy">Energy to be rewarded on completion.</param>
+/// <param name="rewardInventoryItems">Items to be rewarded on completion.</param>
+/// <param name="rewardStatistics">Statistics to be rewarded on completion.</param>
+/// <param name="rewardXp">XP to be rewarded on completion.</param>
+/// <param name="tags">Tags to categorize the quest.</param>
+/// <param name="tasks">Tasks to be completed to finish the quest.</param>
+public QuestsAvailableQuest(string description = default(string), string name = default(string), List<QuestsRewardCurrency> rewardCurrencies = default(List<QuestsRewardCurrency>), List<QuestsRewardEnergy> rewardEnergy = default(List<QuestsRewardEnergy>), List<QuestsRewardInventoryItem> rewardInventoryItems = default(List<QuestsRewardInventoryItem>), List<QuestsRewardStatistic> rewardStatistics = default(List<QuestsRewardStatistic>), List<QuestsRewardXp> rewardXp = default(List<QuestsRewardXp>), List<string> tags = default(List<string>), List<QuestsAvailableTask> tasks = default(List<QuestsAvailableTask>))
+{
+    this.Description = description;
+    this.Name = name;
+    this.RewardCurrencies = rewardCurrencies;
+    this.RewardEnergy = rewardEnergy;
+    this.RewardInventoryItems = rewardInventoryItems;
+    this.RewardStatistics = rewardStatistics;
+    this.RewardXp = rewardXp;
+    this.Tags = tags;
+    this.Tasks = tasks;
+}
+
+/// Snapser.Model for QuestsRewardCurrency
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardCurrency" /> class.
+/// </summary>
+/// <param name="count">Count of the currency to be rewarded (Deprecated: Use count_64).</param>
+/// <param name="count64">Count of the currency to be rewarded.</param>
+/// <param name="name">Name of the currency.</param>
+public QuestsRewardCurrency(int count = default(int), string count64 = default(string), string name = default(string))
+{
+    this.Count = count;
+    this.Count64 = count64;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardEnergy
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardEnergy" /> class.
+/// </summary>
+/// <param name="count">Count of the energy to be rewarded.</param>
+/// <param name="name">Name of the energy.</param>
+public QuestsRewardEnergy(int count = default(int), string name = default(string))
+{
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardInventoryItem
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardInventoryItem" /> class.
+/// </summary>
+/// <param name="containerContents">containerContents.</param>
+/// <param name="count">Count of the item to be rewarded.</param>
+/// <param name="name">Name of the item.</param>
+public QuestsRewardInventoryItem(QuestsContainerContents containerContents = default(QuestsContainerContents), int count = default(int), string name = default(string))
+{
+    this.ContainerContents = containerContents;
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardStatistic
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardStatistic" /> class.
+/// </summary>
+/// <param name="count">Count of the statistic to be rewarded (Deprecated: Use count_64).</param>
+/// <param name="count64">Count of the statistic to be rewarded.</param>
+/// <param name="name">Name of the statistic.</param>
+public QuestsRewardStatistic(int count = default(int), string count64 = default(string), string name = default(string))
+{
+    this.Count = count;
+    this.Count64 = count64;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardXp
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardXp" /> class.
+/// </summary>
+/// <param name="count">Count of the xp to be rewarded.</param>
+/// <param name="name">Name of the xp.</param>
+public QuestsRewardXp(int count = default(int), string name = default(string))
+{
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsTaskProgress
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsAvailableTask" /> class.
+/// </summary>
+/// <param name="autoProgress">Whether the task should be automatically progressed.</param>
+/// <param name="comparisonType">Type of the comparison to be made.</param>
+/// <param name="description">Description of the task.</param>
+/// <param name="goal">Goal to be achieved (Deprecated: Use goal_64).</param>
+/// <param name="goal64">Goal to be achieved.</param>
+/// <param name="goalSign">Positive or negative, indicates whether item tracked is gained or used.</param>
+/// <param name="goalType">Indicates whether the goal is absolute or delta.</param>
+/// <param name="metadata">Additional metadata to attached to task.</param>
+/// <param name="name">Name of the task.</param>
+/// <param name="rewardCurrencies">Currencies to be rewarded on completion.</param>
+/// <param name="rewardEnergy">Energy to be rewarded on completion.</param>
+/// <param name="rewardInventoryItems">Items to be rewarded on completion.</param>
+/// <param name="rewardStatistics">Statistics to be rewarded on completion.</param>
+/// <param name="rewardXp">XP to be rewarded on completion.</param>
+/// <param name="trackingObjectName">name of the object to be tracked.</param>
+/// <param name="trackingObjectType">Type of the object to be tracked.</param>
+public QuestsAvailableTask(bool autoProgress = default(bool), string comparisonType = default(string), string description = default(string), int goal = default(int), string goal64 = default(string), string goalSign = default(string), string goalType = default(string), Object metadata = default(Object), string name = default(string), Object rewardCurrencies = default(Object), Object rewardEnergy = default(Object), Object rewardInventoryItems = default(Object), Object rewardStatistics = default(Object), Object rewardXp = default(Object), string trackingObjectName = default(string), string trackingObjectType = default(string))
+{
+    this.AutoProgress = autoProgress;
+    this.ComparisonType = comparisonType;
+    this.Description = description;
+    this.Goal = goal;
+    this.Goal64 = goal64;
+    this.GoalSign = goalSign;
+    this.GoalType = goalType;
+    this.Metadata = metadata;
+    this.Name = name;
+    this.RewardCurrencies = rewardCurrencies;
+    this.RewardEnergy = rewardEnergy;
+    this.RewardInventoryItems = rewardInventoryItems;
+    this.RewardStatistics = rewardStatistics;
+    this.RewardXp = rewardXp;
+    this.TrackingObjectName = trackingObjectName;
+    this.TrackingObjectType = trackingObjectType;
+}
+
+/// Snapser.Model for QuestsContainerContents
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsContainerContents" /> class.
+/// </summary>
+/// <param name="currencies">Currencies in the container (Deprecated: Use currencies_64).</param>
+/// <param name="currencies64">Currencies in the container.</param>
+/// <param name="dropTableContents">Drop table contents in the container.</param>
+/// <param name="dropTables">Drop tables in the container.</param>
+/// <param name="items">Items in the container.</param>
+public QuestsContainerContents(Dictionary<string, int> currencies = default(Dictionary<string, int>), Dictionary<string, string> currencies64 = default(Dictionary<string, string>), Dictionary<string, QuestsDropTableContents> dropTableContents = default(Dictionary<string, QuestsDropTableContents>), Dictionary<string, int> dropTables = default(Dictionary<string, int>), Dictionary<string, int> items = default(Dictionary<string, int>))
+{
+    this.Currencies = currencies;
+    this.Currencies64 = currencies64;
+    this.DropTableContents = dropTableContents;
+    this.DropTables = dropTables;
+    this.Items = items;
+}
+
+/// Snapser.Model for QuestsDropTableContents
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsDropTableContents" /> class.
+/// </summary>
+/// <param name="drops">Drops in the drop table.</param>
+public QuestsDropTableContents(List<QuestsDropTableDrops> drops = default(List<QuestsDropTableDrops>))
+{
+    this.Drops = drops;
+}
+
+/// Snapser.Model for QuestsDropTableDrops
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsDropTableDrops" /> class.
+/// </summary>
+/// <param name="currencies">Map of currency name to drop values.</param>
+/// <param name="items">Map of item name to drop values.</param>
+/// <param name="trackablesEnergy">Map of trackable energy name to drop values.</param>
+/// <param name="trackablesXp">Map of trackable xp name to drop values.</param>
+/// <param name="weight">Weight of item in the drop table (required).</param>
+public QuestsDropTableDrops(Dictionary<string, QuestsDropValues> currencies = default(Dictionary<string, QuestsDropValues>), Dictionary<string, QuestsDropValues> items = default(Dictionary<string, QuestsDropValues>), Dictionary<string, QuestsDropValues> trackablesEnergy = default(Dictionary<string, QuestsDropValues>), Dictionary<string, QuestsDropValues> trackablesXp = default(Dictionary<string, QuestsDropValues>), int weight = default(int))
+{
+    this.Weight = weight;
+    this.Currencies = currencies;
+    this.Items = items;
+    this.TrackablesEnergy = trackablesEnergy;
+    this.TrackablesXp = trackablesXp;
+}
+
+/// Snapser.Model for QuestsDropValues
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsDropValues" /> class.
+/// </summary>
+/// <param name="max">Maximum value of drop. Will be equal to min if not specified (Deprecated: Use max_64).</param>
+/// <param name="max64">Maximum value of drop. Will be equal to min if not specified.</param>
+/// <param name="min">Minimum value of drop (Deprecated: Use min_64).</param>
+/// <param name="min64">Minimum value of drop.</param>
+/// <param name="multiple">Increment value of the drop. Defaults to 1 (Deprecated: Use multiple_64).</param>
+/// <param name="multiple64">Increment value of the drop. Defaults to 1.</param>
+public QuestsDropValues(int max = default(int), string max64 = default(string), int min = default(int), string min64 = default(string), int multiple = default(int), string multiple64 = default(string))
+{
+    this.Max = max;
+    this.Max64 = max64;
+    this.Min = min;
+    this.Min64 = min64;
+    this.Multiple = multiple;
+    this.Multiple64 = multiple64;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserQuestsServiceApi::QuestsGetAvailableQuestsRequest : public Request
+{
+public:
+    virtual ~QuestsGetAvailableQuestsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User id */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    /* Comma separated tags to filter quests */
+    TOptional<FString> Tags;
+    /* If true, include contents of containers, drop tables in the rewards */
+    TOptional<bool> IncludeRewardContents;
+};
+
+// Response
+class SNAPSER_API SnapserQuestsServiceApi::QuestsGetAvailableQuestsResponse : public Response
+{
+public:
+    virtual ~QuestsGetAvailableQuestsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserQuestsGetAvailableQuestsResponse Content;
+};
+
+class SNAPSER_API SnapserQuestsGetAvailableQuestsResponse : public Model
+{
+public:
+    virtual ~SnapserQuestsGetAvailableQuestsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* List of available quests */
+    TOptional<TArray<SnapserQuestsAvailableQuest>> Quests;
+};
+
+class SNAPSER_API SnapserQuestsAvailableQuest : public Model
+{
+public:
+    virtual ~SnapserQuestsAvailableQuest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Description of the quest */
+    TOptional<FString> Description;
+    /* Name of the quest */
+    TOptional<FString> Name;
+    /* Currencies to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardCurrency>> RewardCurrencies;
+    /* Energy to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardEnergy>> RewardEnergy;
+    /* Items to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardInventoryItem>> RewardInventoryItems;
+    /* Statistics to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardStatistic>> RewardStatistics;
+    /* XP to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardXp>> RewardXp;
+    /* Tags to categorize the quest */
+    TOptional<TArray<FString>> Tags;
+    /* Tasks to be completed to finish the quest */
+    TOptional<TArray<SnapserQuestsAvailableTask>> Tasks;
+};
+
+class SNAPSER_API SnapserQuestsRewardCurrency : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardCurrency() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the currency to be rewarded (Deprecated: Use count_64) */
+    TOptional<int32> Count;
+    /* Count of the currency to be rewarded */
+    TOptional<FString> Count64;
+    /* Name of the currency */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardEnergy : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardEnergy() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the energy to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the energy */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardInventoryItem : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardInventoryItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserQuestsContainerContents> ContainerContents;
+    /* Count of the item to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the item */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardStatistic : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardStatistic() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the statistic to be rewarded (Deprecated: Use count_64) */
+    TOptional<int32> Count;
+    /* Count of the statistic to be rewarded */
+    TOptional<FString> Count64;
+    /* Name of the statistic */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardXp : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardXp() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the xp to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the xp */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsAvailableTask : public Model
+{
+public:
+    virtual ~SnapserQuestsAvailableTask() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether the task should be automatically progressed */
+    TOptional<bool> AutoProgress;
+    /* Type of the comparison to be made */
+    TOptional<FString> ComparisonType;
+    /* Description of the task */
+    TOptional<FString> Description;
+    /* Goal to be achieved (Deprecated: Use goal_64) */
+    TOptional<int32> Goal;
+    /* Goal to be achieved */
+    TOptional<FString> Goal64;
+    /* Positive or negative, indicates whether item tracked is gained or used */
+    TOptional<FString> GoalSign;
+    /* Indicates whether the goal is absolute or delta */
+    TOptional<FString> GoalType;
+    /* Additional metadata to attached to task */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* Name of the task */
+    TOptional<FString> Name;
+    /* Currencies to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardCurrencies;
+    /* Energy to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardEnergy;
+    /* Items to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardInventoryItems;
+    /* Statistics to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardStatistics;
+    /* XP to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardXp;
+    /* name of the object to be tracked */
+    TOptional<FString> TrackingObjectName;
+    /* Type of the object to be tracked */
+    TOptional<FString> TrackingObjectType;
+};
+
+class SNAPSER_API SnapserQuestsContainerContents : public Model
+{
+public:
+    virtual ~SnapserQuestsContainerContents() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Currencies in the container (Deprecated: Use currencies_64) */
+    TOptional<TMap<FString, int32>> Currencies;
+    /* Currencies in the container */
+    TOptional<TMap<FString, FString>> Currencies64;
+    /* Drop table contents in the container */
+    TOptional<TMap<FString, SnapserQuestsDropTableContents>> DropTableContents;
+    /* Drop tables in the container */
+    TOptional<TMap<FString, int32>> DropTables;
+    /* Items in the container */
+    TOptional<TMap<FString, int32>> Items;
+};
+
+class SNAPSER_API SnapserQuestsDropTableContents : public Model
+{
+public:
+    virtual ~SnapserQuestsDropTableContents() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Drops in the drop table */
+    TOptional<TArray<SnapserQuestsDropTableDrops>> Drops;
+};
+
+class SNAPSER_API SnapserQuestsDropTableDrops : public Model
+{
+public:
+    virtual ~SnapserQuestsDropTableDrops() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Map of currency name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> Currencies;
+    /* Map of item name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> Items;
+    /* Map of trackable energy name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> TrackablesEnergy;
+    /* Map of trackable xp name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> TrackablesXp;
+    /* Weight of item in the drop table */
+    int32 Weight = 0;
+};
+
+class SNAPSER_API SnapserQuestsDropValues : public Model
+{
+public:
+    virtual ~SnapserQuestsDropValues() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Maximum value of drop. Will be equal to min if not specified (Deprecated: Use max_64) */
+    TOptional<int32> Max;
+    /* Maximum value of drop. Will be equal to min if not specified */
+    TOptional<FString> Max64;
+    /* Minimum value of drop (Deprecated: Use min_64) */
+    TOptional<int32> Min;
+    /* Minimum value of drop */
+    TOptional<FString> Min64;
+    /* Increment value of the drop. Defaults to 1 (Deprecated: Use multiple_64) */
+    TOptional<int32> Multiple;
+    /* Increment value of the drop. Defaults to 1 */
+    TOptional<FString> Multiple64;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### QuestsDeleteUserQuest API
+<CodeGroup title="Delete user quest" tag="DELETE" label="QuestsDeleteUserQuest">
+```csharp
+/// <summary>
+/// Delete User Quest Delete user quest
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User id</param>
+/// <param name="questName">Name of the quest to delete</param>
+/// <param name="token">User session token</param>
+/// <returns>Object</returns>
+public Object QuestsDeleteUserQuest(string userId, string questName, string token)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = QuestsDeleteUserQuestWithHttpInfo(userId, questName, token);
+    return localVarResponse.Data;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserQuestsServiceApi::QuestsDeleteUserQuestRequest : public Request
+{
+public:
+    virtual ~QuestsDeleteUserQuestRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User id */
+    FString UserId;
+    /* Name of the quest to delete */
+    FString QuestName;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserQuestsServiceApi::QuestsDeleteUserQuestResponse : public Response
+{
+public:
+    virtual ~QuestsDeleteUserQuestResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### QuestsAssignQuest API
+<CodeGroup title="Assign a quest to a user" tag="POST" label="QuestsAssignQuest">
+```csharp
+/// <summary>
+/// Assign Quest Assign a quest to a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User id</param>
+/// <param name="questName">Name of the quest to assign</param>
+/// <param name="token">User session token</param>
+/// <returns>QuestsUserQuest</returns>
+public QuestsUserQuest QuestsAssignQuest(string userId, string questName, string token)
+{
+    Snapser.Client.ApiResponse<QuestsUserQuest> localVarResponse = QuestsAssignQuestWithHttpInfo(userId, questName, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for QuestsUserQuest
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsUserQuest" /> class.
+/// </summary>
+/// <param name="assignedAt">Timestamp of when the quest was assigned.</param>
+/// <param name="description">Description of the quest.</param>
+/// <param name="resetsAt">Timestamp of when the quest resets.</param>
+/// <param name="rewardCurrencies">Currencies to be rewarded on completion.</param>
+/// <param name="rewardEnergy">Energy to be rewarded on completion.</param>
+/// <param name="rewardInventoryItems">Items to be rewarded on completion.</param>
+/// <param name="rewardStatistics">Statistics to be rewarded on completion.</param>
+/// <param name="rewardXp">XP to be rewarded on completion.</param>
+/// <param name="status">Status of the quest.</param>
+/// <param name="tags">Tags to categorize the quest.</param>
+/// <param name="tasks">Tasks to be completed to finish the quest.</param>
+public QuestsUserQuest(string assignedAt = default(string), string description = default(string), string resetsAt = default(string), List<QuestsRewardCurrency> rewardCurrencies = default(List<QuestsRewardCurrency>), List<QuestsRewardEnergy> rewardEnergy = default(List<QuestsRewardEnergy>), List<QuestsRewardInventoryItem> rewardInventoryItems = default(List<QuestsRewardInventoryItem>), List<QuestsRewardStatistic> rewardStatistics = default(List<QuestsRewardStatistic>), List<QuestsRewardXp> rewardXp = default(List<QuestsRewardXp>), string status = default(string), List<string> tags = default(List<string>), Dictionary<string, QuestsTaskProgress> tasks = default(Dictionary<string, QuestsTaskProgress>))
+{
+    this.AssignedAt = assignedAt;
+    this.Description = description;
+    this.ResetsAt = resetsAt;
+    this.RewardCurrencies = rewardCurrencies;
+    this.RewardEnergy = rewardEnergy;
+    this.RewardInventoryItems = rewardInventoryItems;
+    this.RewardStatistics = rewardStatistics;
+    this.RewardXp = rewardXp;
+    this.Status = status;
+    this.Tags = tags;
+    this.Tasks = tasks;
+}
+
+/// Snapser.Model for QuestsRewardCurrency
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardCurrency" /> class.
+/// </summary>
+/// <param name="count">Count of the currency to be rewarded (Deprecated: Use count_64).</param>
+/// <param name="count64">Count of the currency to be rewarded.</param>
+/// <param name="name">Name of the currency.</param>
+public QuestsRewardCurrency(int count = default(int), string count64 = default(string), string name = default(string))
+{
+    this.Count = count;
+    this.Count64 = count64;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardEnergy
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardEnergy" /> class.
+/// </summary>
+/// <param name="count">Count of the energy to be rewarded.</param>
+/// <param name="name">Name of the energy.</param>
+public QuestsRewardEnergy(int count = default(int), string name = default(string))
+{
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardInventoryItem
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardInventoryItem" /> class.
+/// </summary>
+/// <param name="containerContents">containerContents.</param>
+/// <param name="count">Count of the item to be rewarded.</param>
+/// <param name="name">Name of the item.</param>
+public QuestsRewardInventoryItem(QuestsContainerContents containerContents = default(QuestsContainerContents), int count = default(int), string name = default(string))
+{
+    this.ContainerContents = containerContents;
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardStatistic
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardStatistic" /> class.
+/// </summary>
+/// <param name="count">Count of the statistic to be rewarded (Deprecated: Use count_64).</param>
+/// <param name="count64">Count of the statistic to be rewarded.</param>
+/// <param name="name">Name of the statistic.</param>
+public QuestsRewardStatistic(int count = default(int), string count64 = default(string), string name = default(string))
+{
+    this.Count = count;
+    this.Count64 = count64;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardXp
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardXp" /> class.
+/// </summary>
+/// <param name="count">Count of the xp to be rewarded.</param>
+/// <param name="name">Name of the xp.</param>
+public QuestsRewardXp(int count = default(int), string name = default(string))
+{
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsTaskProgress
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsTaskProgress" /> class.
+/// </summary>
+/// <param name="completed">Whether the task is completed.</param>
+/// <param name="currentProgress">Current progress of the task (Deprecated: Use current_progress_64).</param>
+/// <param name="currentProgress64">Current progress of the task.</param>
+/// <param name="description">Description of the task.</param>
+/// <param name="goal">Goal of the task (Deprecated: Use goal_64).</param>
+/// <param name="goal64">Goal of the task.</param>
+/// <param name="metadata">Additional metadata to attached to task.</param>
+/// <param name="rewardCurrencies">Currencies to be rewarded on completion.</param>
+/// <param name="rewardEnergy">Energy to be rewarded on completion.</param>
+/// <param name="rewardInventoryItems">Items to be rewarded on completion.</param>
+/// <param name="rewardStatistics">Statistics to be rewarded on completion.</param>
+/// <param name="rewardXp">XP to be rewarded on completion.</param>
+/// <param name="status">Status of the task.</param>
+/// <param name="userMetadata">Additional metadata to attached to task for user.</param>
+public QuestsTaskProgress(bool completed = default(bool), int currentProgress = default(int), long currentProgress64 = default(long), string description = default(string), int goal = default(int), long goal64 = default(long), Object metadata = default(Object), Object rewardCurrencies = default(Object), Object rewardEnergy = default(Object), Object rewardInventoryItems = default(Object), Object rewardStatistics = default(Object), Object rewardXp = default(Object), string status = default(string), Object userMetadata = default(Object))
+{
+    this.Completed = completed;
+    this.CurrentProgress = currentProgress;
+    this.CurrentProgress64 = currentProgress64;
+    this.Description = description;
+    this.Goal = goal;
+    this.Goal64 = goal64;
+    this.Metadata = metadata;
+    this.RewardCurrencies = rewardCurrencies;
+    this.RewardEnergy = rewardEnergy;
+    this.RewardInventoryItems = rewardInventoryItems;
+    this.RewardStatistics = rewardStatistics;
+    this.RewardXp = rewardXp;
+    this.Status = status;
+    this.UserMetadata = userMetadata;
+}
+
+/// Snapser.Model for QuestsContainerContents
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsContainerContents" /> class.
+/// </summary>
+/// <param name="currencies">Currencies in the container.</param>
+/// <param name="dropTableContents">Drop table contents in the container.</param>
+/// <param name="dropTables">Drop tables in the container.</param>
+/// <param name="items">Items in the container.</param>
+public QuestsContainerContents(Dictionary<string, int> currencies = default(Dictionary<string, int>), Dictionary<string, QuestsDropTableContents> dropTableContents = default(Dictionary<string, QuestsDropTableContents>), Dictionary<string, int> dropTables = default(Dictionary<string, int>), Dictionary<string, int> items = default(Dictionary<string, int>))
+{
+    this.Currencies = currencies;
+    this.DropTableContents = dropTableContents;
+    this.DropTables = dropTables;
+    this.Items = items;
+}
+
+/// Snapser.Model for QuestsDropTableContents
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsDropTableContents" /> class.
+/// </summary>
+/// <param name="drops">Drops in the drop table.</param>
+public QuestsDropTableContents(List<QuestsDropTableDrops> drops = default(List<QuestsDropTableDrops>))
+{
+    this.Drops = drops;
+}
+
+/// Snapser.Model for QuestsDropTableDrops
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsDropTableDrops" /> class.
+/// </summary>
+/// <param name="currencies">Map of currency name to drop values.</param>
+/// <param name="items">Map of item name to drop values.</param>
+/// <param name="trackablesEnergy">Map of trackable energy name to drop values.</param>
+/// <param name="trackablesXp">Map of trackable xp name to drop values.</param>
+/// <param name="weight">Weight of item in the drop table (required).</param>
+public QuestsDropTableDrops(Dictionary<string, QuestsDropValues> currencies = default(Dictionary<string, QuestsDropValues>), Dictionary<string, QuestsDropValues> items = default(Dictionary<string, QuestsDropValues>), Dictionary<string, QuestsDropValues> trackablesEnergy = default(Dictionary<string, QuestsDropValues>), Dictionary<string, QuestsDropValues> trackablesXp = default(Dictionary<string, QuestsDropValues>), int weight = default(int))
+{
+    this.Weight = weight;
+    this.Currencies = currencies;
+    this.Items = items;
+    this.TrackablesEnergy = trackablesEnergy;
+    this.TrackablesXp = trackablesXp;
+}
+
+/// Snapser.Model for QuestsDropValues
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsDropValues" /> class.
+/// </summary>
+/// <param name="max">Maximum value of drop. Will be equal to min if not specified (Deprecated: Use max_64).</param>
+/// <param name="max64">Maximum value of drop. Will be equal to min if not specified.</param>
+/// <param name="min">Minimum value of drop (Deprecated: Use min_64).</param>
+/// <param name="min64">Minimum value of drop.</param>
+/// <param name="multiple">Increment value of the drop. Defaults to 1 (Deprecated: Use multiple_64).</param>
+/// <param name="multiple64">Increment value of the drop. Defaults to 1.</param>
+public QuestsDropValues(int max = default(int), string max64 = default(string), int min = default(int), string min64 = default(string), int multiple = default(int), string multiple64 = default(string))
+{
+    this.Max = max;
+    this.Max64 = max64;
+    this.Min = min;
+    this.Min64 = min64;
+    this.Multiple = multiple;
+    this.Multiple64 = multiple64;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserQuestsServiceApi::QuestsAssignQuestRequest : public Request
+{
+public:
+    virtual ~QuestsAssignQuestRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User id */
+    FString UserId;
+    /* Name of the quest to assign */
+    FString QuestName;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserQuestsServiceApi::QuestsAssignQuestResponse : public Response
+{
+public:
+    virtual ~QuestsAssignQuestResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserQuestsUserQuest Content;
+};
+
+class SNAPSER_API SnapserQuestsUserQuest : public Model
+{
+public:
+    virtual ~SnapserQuestsUserQuest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Timestamp of when the quest was assigned */
+    TOptional<FString> AssignedAt;
+    /* Description of the quest */
+    TOptional<FString> Description;
+    /* Timestamp of when the quest resets */
+    TOptional<FString> ResetsAt;
+    /* Currencies to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardCurrency>> RewardCurrencies;
+    /* Energy to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardEnergy>> RewardEnergy;
+    /* Items to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardInventoryItem>> RewardInventoryItems;
+    /* Statistics to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardStatistic>> RewardStatistics;
+    /* XP to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardXp>> RewardXp;
+    /* Status of the quest */
+    TOptional<FString> Status;
+    /* Tags to categorize the quest */
+    TOptional<TArray<FString>> Tags;
+    /* Tasks to be completed to finish the quest */
+    TOptional<TMap<FString, SnapserQuestsTaskProgress>> Tasks;
+};
+
+class SNAPSER_API SnapserQuestsRewardCurrency : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardCurrency() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the currency to be rewarded (Deprecated: Use count_64) */
+    TOptional<int32> Count;
+    /* Count of the currency to be rewarded */
+    TOptional<int64> Count64;
+    /* Name of the currency */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardEnergy : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardEnergy() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the energy to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the energy */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardInventoryItem : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardInventoryItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserQuestsContainerContents> ContainerContents;
+    /* Count of the item to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the item */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardStatistic : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardStatistic() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the statistic to be rewarded (Deprecated: Use count_64) */
+    TOptional<int32> Count;
+    /* Count of the statistic to be rewarded */
+    TOptional<FString> Count64;
+    /* Name of the statistic */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardXp : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardXp() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the xp to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the xp */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsTaskProgress : public Model
+{
+public:
+    virtual ~SnapserQuestsTaskProgress() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether the task is completed */
+    TOptional<bool> Completed;
+    /* Current progress of the task (Deprecated: Use current_progress_64) */
+    TOptional<int32> CurrentProgress;
+    /* Current progress of the task */
+    TOptional<int64> CurrentProgress64;
+    /* Description of the task */
+    TOptional<FString> Description;
+    /* Goal of the task (Deprecated: Use goal_64) */
+    TOptional<int32> Goal;
+    /* Goal of the task */
+    TOptional<int64> Goal64;
+    /* Additional metadata to attached to task */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* Currencies to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardCurrencies;
+    /* Energy to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardEnergy;
+    /* Items to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardInventoryItems;
+    /* Statistics to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardStatistics;
+    /* XP to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardXp;
+    /* Status of the task */
+    TOptional<FString> Status;
+    /* Additional metadata to attached to task for user */
+    TOptional<TSharedPtr<FJsonObject>> UserMetadata;
+};
+
+class SNAPSER_API SnapserQuestsContainerContents : public Model
+{
+public:
+    virtual ~SnapserQuestsContainerContents() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Currencies in the container (Deprecated: Use currencies_64) */
+    TOptional<TMap<FString, int32>> Currencies;
+    /* Currencies in the container */
+    TOptional<TMap<FString, FString>> Currencies64;
+    /* Drop table contents in the container */
+    TOptional<TMap<FString, SnapserQuestsDropTableContents>> DropTableContents;
+    /* Drop tables in the container */
+    TOptional<TMap<FString, int32>> DropTables;
+    /* Items in the container */
+    TOptional<TMap<FString, int32>> Items;
+};
+
+class SNAPSER_API SnapserQuestsDropTableContents : public Model
+{
+public:
+    virtual ~SnapserQuestsDropTableContents() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Drops in the drop table */
+    TOptional<TArray<SnapserQuestsDropTableDrops>> Drops;
+};
+
+class SNAPSER_API SnapserQuestsDropTableDrops : public Model
+{
+public:
+    virtual ~SnapserQuestsDropTableDrops() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Map of currency name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> Currencies;
+    /* Map of item name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> Items;
+    /* Map of trackable energy name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> TrackablesEnergy;
+    /* Map of trackable xp name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> TrackablesXp;
+    /* Weight of item in the drop table */
+    int32 Weight = 0;
+};
+
+class SNAPSER_API SnapserQuestsDropValues : public Model
+{
+public:
+    virtual ~SnapserQuestsDropValues() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Maximum value of drop. Will be equal to min if not specified (Deprecated: Use max_64) */
+    TOptional<int32> Max;
+    /* Maximum value of drop. Will be equal to min if not specified */
+    TOptional<FString> Max64;
+    /* Minimum value of drop (Deprecated: Use min_64) */
+    TOptional<int32> Min;
+    /* Minimum value of drop */
+    TOptional<FString> Min64;
+    /* Increment value of the drop. Defaults to 1 (Deprecated: Use multiple_64) */
+    TOptional<int32> Multiple;
+    /* Increment value of the drop. Defaults to 1 */
+    TOptional<FString> Multiple64;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### QuestsClaimQuestRewards API
+<CodeGroup title="Claim rewards for a quest" tag="POST" label="QuestsClaimQuestRewards">
+```csharp
+/// <summary>
+/// Claim rewards for a quest Claim rewards for a quest
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User id</param>
+/// <param name="questName">Name of the quest to claim rewards for</param>
+/// <param name="token">User session token</param>
+/// <returns>QuestsClaimQuestRewardsResponse</returns>
+public QuestsClaimQuestRewardsResponse QuestsClaimQuestRewards(string userId, string questName, string token)
+{
+    Snapser.Client.ApiResponse<QuestsClaimQuestRewardsResponse> localVarResponse = QuestsClaimQuestRewardsWithHttpInfo(userId, questName, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for QuestsClaimQuestRewardsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsClaimQuestRewardsResponse" /> class.
+/// </summary>
+/// <param name="currenciesGranted">Currencies granted.</param>
+/// <param name="energyGranted">Energy granted.</param>
+/// <param name="failedCurrencies">Currencies that failed to grant.</param>
+/// <param name="failedEnergy">Energy that failed to grant.</param>
+/// <param name="failedItems">Items that failed to grant.</param>
+/// <param name="failedStatistics">Statistics that failed to grant.</param>
+/// <param name="failedXp">XP that failed to grant.</param>
+/// <param name="itemsGranted">Items granted.</param>
+/// <param name="statisticsGranted">Statistics granted.</param>
+/// <param name="xpGranted">XP granted.</param>
+public QuestsClaimQuestRewardsResponse(Dictionary<string, int> currenciesGranted = default(Dictionary<string, int>), Dictionary<string, int> energyGranted = default(Dictionary<string, int>), List<string> failedCurrencies = default(List<string>), List<string> failedEnergy = default(List<string>), List<string> failedItems = default(List<string>), List<string> failedStatistics = default(List<string>), List<string> failedXp = default(List<string>), Dictionary<string, int> itemsGranted = default(Dictionary<string, int>), Dictionary<string, int> statisticsGranted = default(Dictionary<string, int>), Dictionary<string, int> xpGranted = default(Dictionary<string, int>))
+{
+    this.CurrenciesGranted = currenciesGranted;
+    this.EnergyGranted = energyGranted;
+    this.FailedCurrencies = failedCurrencies;
+    this.FailedEnergy = failedEnergy;
+    this.FailedItems = failedItems;
+    this.FailedStatistics = failedStatistics;
+    this.FailedXp = failedXp;
+    this.ItemsGranted = itemsGranted;
+    this.StatisticsGranted = statisticsGranted;
+    this.XpGranted = xpGranted;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserQuestsServiceApi::QuestsClaimQuestRewardsRequest : public Request
+{
+public:
+    virtual ~QuestsClaimQuestRewardsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User id */
+    FString UserId;
+    /* Name of the quest to claim rewards for */
+    FString QuestName;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserQuestsServiceApi::QuestsClaimQuestRewardsResponse : public Response
+{
+public:
+    virtual ~QuestsClaimQuestRewardsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserQuestsClaimQuestRewardsResponse Content;
+};
+
+class SNAPSER_API SnapserQuestsClaimQuestRewardsResponse : public Model
+{
+public:
+    virtual ~SnapserQuestsClaimQuestRewardsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Currencies granted */
+    TOptional<TMap<FString, int32>> CurrenciesGranted;
+    /* Energy granted */
+    TOptional<TMap<FString, int32>> EnergyGranted;
+    /* Currencies that failed to grant */
+    TOptional<TArray<FString>> FailedCurrencies;
+    /* Energy that failed to grant */
+    TOptional<TArray<FString>> FailedEnergy;
+    /* Items that failed to grant */
+    TOptional<TArray<FString>> FailedItems;
+    /* Statistics that failed to grant */
+    TOptional<TArray<FString>> FailedStatistics;
+    /* XP that failed to grant */
+    TOptional<TArray<FString>> FailedXp;
+    /* Items granted */
+    TOptional<TMap<FString, int32>> ItemsGranted;
+    /* Statistics granted */
+    TOptional<TMap<FString, int32>> StatisticsGranted;
+    /* XP granted */
+    TOptional<TMap<FString, int32>> XpGranted;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### QuestsIncrementTaskProgress API
+<CodeGroup title="Increment/Decrement progress of a task in a quest for a user" tag="PUT" label="QuestsIncrementTaskProgress">
+```csharp
+/// <summary>
+/// Quest Task Increment or decrement progress for a quest assigned to a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User id</param>
+/// <param name="questName">Name of the quest to update task progress</param>
+/// <param name="taskName">Name of the task to update progress</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>QuestsUserQuest</returns>
+public QuestsUserQuest QuestsIncrementTaskProgress(string userId, string questName, string taskName, string token, IncrementTaskProgressRequest body)
+{
+    Snapser.Client.ApiResponse<QuestsUserQuest> localVarResponse = QuestsIncrementTaskProgressWithHttpInfo(userId, questName, taskName, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for IncrementTaskProgressRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="IncrementTaskProgressRequest" /> class.
+/// </summary>
+/// <param name="delta">Progress to update (Deprecated: Use delta64).</param>
+/// <param name="delta64">Progress to update.</param>
+public IncrementTaskProgressRequest(int delta = default(int), long delta64 = default(long))
+{
+    this.Delta = delta;
+    this.Delta64 = delta64;
+}
+
+/// Snapser.Model for QuestsUserQuest
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsUserQuest" /> class.
+/// </summary>
+/// <param name="assignedAt">Timestamp of when the quest was assigned.</param>
+/// <param name="description">Description of the quest.</param>
+/// <param name="resetsAt">Timestamp of when the quest resets.</param>
+/// <param name="rewardCurrencies">Currencies to be rewarded on completion.</param>
+/// <param name="rewardEnergy">Energy to be rewarded on completion.</param>
+/// <param name="rewardInventoryItems">Items to be rewarded on completion.</param>
+/// <param name="rewardStatistics">Statistics to be rewarded on completion.</param>
+/// <param name="rewardXp">XP to be rewarded on completion.</param>
+/// <param name="status">Status of the quest.</param>
+/// <param name="tags">Tags to categorize the quest.</param>
+/// <param name="tasks">Tasks to be completed to finish the quest.</param>
+public QuestsUserQuest(string assignedAt = default(string), string description = default(string), string resetsAt = default(string), List<QuestsRewardCurrency> rewardCurrencies = default(List<QuestsRewardCurrency>), List<QuestsRewardEnergy> rewardEnergy = default(List<QuestsRewardEnergy>), List<QuestsRewardInventoryItem> rewardInventoryItems = default(List<QuestsRewardInventoryItem>), List<QuestsRewardStatistic> rewardStatistics = default(List<QuestsRewardStatistic>), List<QuestsRewardXp> rewardXp = default(List<QuestsRewardXp>), string status = default(string), List<string> tags = default(List<string>), Dictionary<string, QuestsTaskProgress> tasks = default(Dictionary<string, QuestsTaskProgress>))
+{
+    this.AssignedAt = assignedAt;
+    this.Description = description;
+    this.ResetsAt = resetsAt;
+    this.RewardCurrencies = rewardCurrencies;
+    this.RewardEnergy = rewardEnergy;
+    this.RewardInventoryItems = rewardInventoryItems;
+    this.RewardStatistics = rewardStatistics;
+    this.RewardXp = rewardXp;
+    this.Status = status;
+    this.Tags = tags;
+    this.Tasks = tasks;
+}
+
+/// Snapser.Model for QuestsRewardCurrency
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardCurrency" /> class.
+/// </summary>
+/// <param name="count">Count of the currency to be rewarded (Deprecated: Use count_64).</param>
+/// <param name="count64">Count of the currency to be rewarded.</param>
+/// <param name="name">Name of the currency.</param>
+public QuestsRewardCurrency(int count = default(int), long count64 = default(long), string name = default(string))
+{
+    this.Count = count;
+    this.Count64 = count64;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardEnergy
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardEnergy" /> class.
+/// </summary>
+/// <param name="count">Count of the energy to be rewarded.</param>
+/// <param name="name">Name of the energy.</param>
+public QuestsRewardEnergy(int count = default(int), string name = default(string))
+{
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardInventoryItem
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardInventoryItem" /> class.
+/// </summary>
+/// <param name="containerContents">containerContents.</param>
+/// <param name="count">Count of the item to be rewarded.</param>
+/// <param name="name">Name of the item.</param>
+public QuestsRewardInventoryItem(QuestsContainerContents containerContents = default(QuestsContainerContents), int count = default(int), string name = default(string))
+{
+    this.ContainerContents = containerContents;
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardStatistic
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardStatistic" /> class.
+/// </summary>
+/// <param name="count">Count of the statistic to be rewarded (Deprecated: Use count_64).</param>
+/// <param name="count64">Count of the statistic to be rewarded.</param>
+/// <param name="name">Name of the statistic.</param>
+public QuestsRewardStatistic(int count = default(int), string count64 = default(string), string name = default(string))
+{
+    this.Count = count;
+    this.Count64 = count64;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardXp
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardXp" /> class.
+/// </summary>
+/// <param name="count">Count of the xp to be rewarded.</param>
+/// <param name="name">Name of the xp.</param>
+public QuestsRewardXp(int count = default(int), string name = default(string))
+{
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsTaskProgress
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsTaskProgress" /> class.
+/// </summary>
+/// <param name="completed">Whether the task is completed.</param>
+/// <param name="currentProgress">Current progress of the task (Deprecated: Use current_progress_64).</param>
+/// <param name="currentProgress64">Current progress of the task.</param>
+/// <param name="description">Description of the task.</param>
+/// <param name="goal">Goal of the task (Deprecated: Use goal_64).</param>
+/// <param name="goal64">Goal of the task.</param>
+/// <param name="metadata">Additional metadata to attached to task.</param>
+/// <param name="rewardCurrencies">Currencies to be rewarded on completion.</param>
+/// <param name="rewardEnergy">Energy to be rewarded on completion.</param>
+/// <param name="rewardInventoryItems">Items to be rewarded on completion.</param>
+/// <param name="rewardStatistics">Statistics to be rewarded on completion.</param>
+/// <param name="rewardXp">XP to be rewarded on completion.</param>
+/// <param name="status">Status of the task.</param>
+/// <param name="userMetadata">Additional metadata to attached to task for user.</param>
+public QuestsTaskProgress(bool completed = default(bool), int currentProgress = default(int), long currentProgress64 = default(long), string description = default(string), int goal = default(int), long goal64 = default(long), Object metadata = default(Object), Object rewardCurrencies = default(Object), Object rewardEnergy = default(Object), Object rewardInventoryItems = default(Object), Object rewardStatistics = default(Object), Object rewardXp = default(Object), string status = default(string), Object userMetadata = default(Object))
+{
+    this.Completed = completed;
+    this.CurrentProgress = currentProgress;
+    this.CurrentProgress64 = currentProgress64;
+    this.Description = description;
+    this.Goal = goal;
+    this.Goal64 = goal64;
+    this.Metadata = metadata;
+    this.RewardCurrencies = rewardCurrencies;
+    this.RewardEnergy = rewardEnergy;
+    this.RewardInventoryItems = rewardInventoryItems;
+    this.RewardStatistics = rewardStatistics;
+    this.RewardXp = rewardXp;
+    this.Status = status;
+    this.UserMetadata = userMetadata;
+}
+
+/// Snapser.Model for QuestsContainerContents
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsContainerContents" /> class.
+/// </summary>
+/// <param name="currencies">Currencies in the container (Deprecated: Use currencies_64).</param>
+/// <param name="currencies64">Currencies in the container.</param>
+/// <param name="dropTableContents">Drop table contents in the container.</param>
+/// <param name="dropTables">Drop tables in the container.</param>
+/// <param name="items">Items in the container.</param>
+public QuestsContainerContents(Dictionary<string, int> currencies = default(Dictionary<string, int>), Dictionary<string, string> currencies64 = default(Dictionary<string, string>), Dictionary<string, QuestsDropTableContents> dropTableContents = default(Dictionary<string, QuestsDropTableContents>), Dictionary<string, int> dropTables = default(Dictionary<string, int>), Dictionary<string, int> items = default(Dictionary<string, int>))
+{
+    this.Currencies = currencies;
+    this.Currencies64 = currencies64;
+    this.DropTableContents = dropTableContents;
+    this.DropTables = dropTables;
+    this.Items = items;
+}
+
+/// Snapser.Model for QuestsDropTableContents
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsDropTableContents" /> class.
+/// </summary>
+/// <param name="drops">Drops in the drop table.</param>
+public QuestsDropTableContents(List<QuestsDropTableDrops> drops = default(List<QuestsDropTableDrops>))
+{
+    this.Drops = drops;
+}
+
+/// Snapser.Model for QuestsDropTableDrops
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsDropTableDrops" /> class.
+/// </summary>
+/// <param name="currencies">Map of currency name to drop values.</param>
+/// <param name="items">Map of item name to drop values.</param>
+/// <param name="trackablesEnergy">Map of trackable energy name to drop values.</param>
+/// <param name="trackablesXp">Map of trackable xp name to drop values.</param>
+/// <param name="weight">Weight of item in the drop table (required).</param>
+public QuestsDropTableDrops(Dictionary<string, QuestsDropValues> currencies = default(Dictionary<string, QuestsDropValues>), Dictionary<string, QuestsDropValues> items = default(Dictionary<string, QuestsDropValues>), Dictionary<string, QuestsDropValues> trackablesEnergy = default(Dictionary<string, QuestsDropValues>), Dictionary<string, QuestsDropValues> trackablesXp = default(Dictionary<string, QuestsDropValues>), int weight = default(int))
+{
+    this.Weight = weight;
+    this.Currencies = currencies;
+    this.Items = items;
+    this.TrackablesEnergy = trackablesEnergy;
+    this.TrackablesXp = trackablesXp;
+}
+
+/// Snapser.Model for QuestsDropValues
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsDropValues" /> class.
+/// </summary>
+/// <param name="max">Maximum value of drop. Will be equal to min if not specified (Deprecated: Use max_64).</param>
+/// <param name="max64">Maximum value of drop. Will be equal to min if not specified.</param>
+/// <param name="min">Minimum value of drop (Deprecated: Use min_64).</param>
+/// <param name="min64">Minimum value of drop.</param>
+/// <param name="multiple">Increment value of the drop. Defaults to 1 (Deprecated: Use multiple_64).</param>
+/// <param name="multiple64">Increment value of the drop. Defaults to 1.</param>
+public QuestsDropValues(int max = default(int), string max64 = default(string), int min = default(int), string min64 = default(string), int multiple = default(int), string multiple64 = default(string))
+{
+    this.Max = max;
+    this.Max64 = max64;
+    this.Min = min;
+    this.Min64 = min64;
+    this.Multiple = multiple;
+    this.Multiple64 = multiple64;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserQuestsServiceApi::QuestsIncrementTaskProgressRequest : public Request
+{
+public:
+    virtual ~QuestsIncrementTaskProgressRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User id */
+    FString UserId;
+    /* Name of the quest to update task progress */
+    FString QuestName;
+    /* Name of the task to update progress */
+    FString TaskName;
+    /* User session token */
+    FString Token;
+    SnapserIncrementTaskProgressRequest Body;
+};
+
+class SNAPSER_API SnapserIncrementTaskProgressRequest : public Model
+{
+public:
+    virtual ~SnapserIncrementTaskProgressRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Progress to update (Deprecated: Use delta64) */
+    TOptional<int32> Delta;
+    /* Progress to update */
+    TOptional<int64> Delta64;
+};
+
+// Response
+class SNAPSER_API SnapserQuestsServiceApi::QuestsIncrementTaskProgressResponse : public Response
+{
+public:
+    virtual ~QuestsIncrementTaskProgressResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserQuestsUserQuest Content;
+};
+
+class SNAPSER_API SnapserQuestsUserQuest : public Model
+{
+public:
+    virtual ~SnapserQuestsUserQuest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Timestamp of when the quest was assigned */
+    TOptional<FString> AssignedAt;
+    /* Description of the quest */
+    TOptional<FString> Description;
+    /* Timestamp of when the quest resets */
+    TOptional<FString> ResetsAt;
+    /* Currencies to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardCurrency>> RewardCurrencies;
+    /* Energy to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardEnergy>> RewardEnergy;
+    /* Items to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardInventoryItem>> RewardInventoryItems;
+    /* Statistics to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardStatistic>> RewardStatistics;
+    /* XP to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardXp>> RewardXp;
+    /* Status of the quest */
+    TOptional<FString> Status;
+    /* Tags to categorize the quest */
+    TOptional<TArray<FString>> Tags;
+    /* Tasks to be completed to finish the quest */
+    TOptional<TMap<FString, SnapserQuestsTaskProgress>> Tasks;
+};
+
+class SNAPSER_API SnapserQuestsRewardCurrency : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardCurrency() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the currency to be rewarded (Deprecated: Use count_64) */
+    TOptional<int32> Count;
+    /* Count of the currency to be rewarded */
+    TOptional<int64> Count64;
+    /* Name of the currency */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardEnergy : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardEnergy() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the energy to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the energy */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardInventoryItem : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardInventoryItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserQuestsContainerContents> ContainerContents;
+    /* Count of the item to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the item */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardStatistic : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardStatistic() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the statistic to be rewarded (Deprecated: Use count_64) */
+    TOptional<int32> Count;
+    /* Count of the statistic to be rewarded */
+    TOptional<FString> Count64;
+    /* Name of the statistic */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardXp : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardXp() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the xp to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the xp */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsTaskProgress : public Model
+{
+public:
+    virtual ~SnapserQuestsTaskProgress() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether the task is completed */
+    TOptional<bool> Completed;
+    /* Current progress of the task (Deprecated: Use current_progress_64) */
+    TOptional<int32> CurrentProgress;
+    /* Current progress of the task */
+    TOptional<int64> CurrentProgress64;
+    /* Description of the task */
+    TOptional<FString> Description;
+    /* Goal of the task (Deprecated: Use goal_64) */
+    TOptional<int32> Goal;
+    /* Goal of the task */
+    TOptional<int64> Goal64;
+    /* Additional metadata to attached to task */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* Currencies to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardCurrencies;
+    /* Energy to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardEnergy;
+    /* Items to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardInventoryItems;
+    /* Statistics to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardStatistics;
+    /* XP to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardXp;
+    /* Status of the task */
+    TOptional<FString> Status;
+    /* Additional metadata to attached to task for user */
+    TOptional<TSharedPtr<FJsonObject>> UserMetadata;
+};
+
+class SNAPSER_API SnapserQuestsContainerContents : public Model
+{
+public:
+    virtual ~SnapserQuestsContainerContents() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Currencies in the container (Deprecated: Use currencies_64) */
+    TOptional<TMap<FString, int32>> Currencies;
+    /* Currencies in the container */
+    TOptional<TMap<FString, FString>> Currencies64;
+    /* Drop table contents in the container */
+    TOptional<TMap<FString, SnapserQuestsDropTableContents>> DropTableContents;
+    /* Drop tables in the container */
+    TOptional<TMap<FString, int32>> DropTables;
+    /* Items in the container */
+    TOptional<TMap<FString, int32>> Items;
+};
+
+class SNAPSER_API SnapserQuestsDropTableContents : public Model
+{
+public:
+    virtual ~SnapserQuestsDropTableContents() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Drops in the drop table */
+    TOptional<TArray<SnapserQuestsDropTableDrops>> Drops;
+};
+
+class SNAPSER_API SnapserQuestsDropTableDrops : public Model
+{
+public:
+    virtual ~SnapserQuestsDropTableDrops() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Map of currency name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> Currencies;
+    /* Map of item name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> Items;
+    /* Map of trackable energy name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> TrackablesEnergy;
+    /* Map of trackable xp name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> TrackablesXp;
+    /* Weight of item in the drop table */
+    int32 Weight = 0;
+};
+
+class SNAPSER_API SnapserQuestsDropValues : public Model
+{
+public:
+    virtual ~SnapserQuestsDropValues() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Maximum value of drop. Will be equal to min if not specified (Deprecated: Use max_64) */
+    TOptional<int32> Max;
+    /* Maximum value of drop. Will be equal to min if not specified */
+    TOptional<FString> Max64;
+    /* Minimum value of drop (Deprecated: Use min_64) */
+    TOptional<int32> Min;
+    /* Minimum value of drop */
+    TOptional<FString> Min64;
+    /* Increment value of the drop. Defaults to 1 (Deprecated: Use multiple_64) */
+    TOptional<int32> Multiple;
+    /* Increment value of the drop. Defaults to 1 */
+    TOptional<FString> Multiple64;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### QuestsBatchIncrementTaskProgress API
+<CodeGroup title="Batch increment task progress" tag="PATCH" label="QuestsBatchIncrementTaskProgress">
+```csharp
+/// <summary>
+/// Quest Task Batch Increment Task Progress
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>QuestsBatchIncrementTaskProgressResponse</returns>
+public QuestsBatchIncrementTaskProgressResponse QuestsBatchIncrementTaskProgress(string token, QuestsBatchIncrementTaskProgressRequest body)
+{
+    Snapser.Client.ApiResponse<QuestsBatchIncrementTaskProgressResponse> localVarResponse = QuestsBatchIncrementTaskProgressWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for QuestsBatchIncrementTaskProgressRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsBatchIncrementTaskProgressRequest" /> class.
+/// </summary>
+/// <param name="requests">Requests for each user.</param>
+public QuestsBatchIncrementTaskProgressRequest(List<QuestsIncrementTaskProgressRequest> requests = default(List<QuestsIncrementTaskProgressRequest>))
+{
+    this.Requests = requests;
+}
+
+/// Snapser.Model for QuestsIncrementTaskProgressRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsIncrementTaskProgressRequest" /> class.
+/// </summary>
+/// <param name="delta">Progress to update (Deprecated: Use delta64).</param>
+/// <param name="delta64">Progress to update.</param>
+/// <param name="questName">Name of the quest to update task progress (required).</param>
+/// <param name="taskName">Name of the task to update progress (required).</param>
+/// <param name="userId">User id (required).</param>
+public QuestsIncrementTaskProgressRequest(int delta = default(int), long delta64 = default(long), string questName = default(string), string taskName = default(string), string userId = default(string))
+{
+    // to ensure "questName" is required (not null)
+    if (questName == null)
+    {
+        throw new ArgumentNullException("questName is a required property for QuestsIncrementTaskProgressRequest and cannot be null");
+    }
+    this.QuestName = questName;
+    // to ensure "taskName" is required (not null)
+    if (taskName == null)
+    {
+        throw new ArgumentNullException("taskName is a required property for QuestsIncrementTaskProgressRequest and cannot be null");
+    }
+    this.TaskName = taskName;
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for QuestsIncrementTaskProgressRequest and cannot be null");
+    }
+    this.UserId = userId;
+    this.Delta = delta;
+    this.Delta64 = delta64;
+}
+
+/// Snapser.Model for QuestsBatchIncrementTaskProgressResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsBatchIncrementTaskProgressResponse" /> class.
+/// </summary>
+/// <param name="responses">Responses for each user.</param>
+public QuestsBatchIncrementTaskProgressResponse(List<QuestsBatchIncrementTaskProgressSingleResponse> responses = default(List<QuestsBatchIncrementTaskProgressSingleResponse>))
+{
+    this.Responses = responses;
+}
+
+/// Snapser.Model for QuestsBatchIncrementTaskProgressSingleResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsBatchIncrementTaskProgressSingleResponse" /> class.
+/// </summary>
+/// <param name="message">Message for the request.</param>
+/// <param name="request">request.</param>
+/// <param name="response">response.</param>
+/// <param name="success">Whether the request was successful.</param>
+public QuestsBatchIncrementTaskProgressSingleResponse(string message = default(string), QuestsIncrementTaskProgressRequest request = default(QuestsIncrementTaskProgressRequest), QuestsUserQuest response = default(QuestsUserQuest), bool success = default(bool))
+{
+    this.Message = message;
+    this.Request = request;
+    this.Response = response;
+    this.Success = success;
+}
+
+/// Snapser.Model for QuestsUserQuest
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsUserQuest" /> class.
+/// </summary>
+/// <param name="assignedAt">Timestamp of when the quest was assigned.</param>
+/// <param name="description">Description of the quest.</param>
+/// <param name="resetsAt">Timestamp of when the quest resets.</param>
+/// <param name="rewardCurrencies">Currencies to be rewarded on completion.</param>
+/// <param name="rewardEnergy">Energy to be rewarded on completion.</param>
+/// <param name="rewardInventoryItems">Items to be rewarded on completion.</param>
+/// <param name="rewardStatistics">Statistics to be rewarded on completion.</param>
+/// <param name="rewardXp">XP to be rewarded on completion.</param>
+/// <param name="status">Status of the quest.</param>
+/// <param name="tags">Tags to categorize the quest.</param>
+/// <param name="tasks">Tasks to be completed to finish the quest.</param>
+public QuestsUserQuest(string assignedAt = default(string), string description = default(string), string resetsAt = default(string), List<QuestsRewardCurrency> rewardCurrencies = default(List<QuestsRewardCurrency>), List<QuestsRewardEnergy> rewardEnergy = default(List<QuestsRewardEnergy>), List<QuestsRewardInventoryItem> rewardInventoryItems = default(List<QuestsRewardInventoryItem>), List<QuestsRewardStatistic> rewardStatistics = default(List<QuestsRewardStatistic>), List<QuestsRewardXp> rewardXp = default(List<QuestsRewardXp>), string status = default(string), List<string> tags = default(List<string>), Dictionary<string, QuestsTaskProgress> tasks = default(Dictionary<string, QuestsTaskProgress>))
+{
+    this.AssignedAt = assignedAt;
+    this.Description = description;
+    this.ResetsAt = resetsAt;
+    this.RewardCurrencies = rewardCurrencies;
+    this.RewardEnergy = rewardEnergy;
+    this.RewardInventoryItems = rewardInventoryItems;
+    this.RewardStatistics = rewardStatistics;
+    this.RewardXp = rewardXp;
+    this.Status = status;
+    this.Tags = tags;
+    this.Tasks = tasks;
+}
+
+/// Snapser.Model for QuestsRewardCurrency
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardCurrency" /> class.
+/// </summary>
+/// <param name="count">Count of the currency to be rewarded (Deprecated: Use count_64).</param>
+/// <param name="count64">Count of the currency to be rewarded.</param>
+/// <param name="name">Name of the currency.</param>
+public QuestsRewardCurrency(int count = default(int), long count64 = default(long), string name = default(string))
+{
+    this.Count = count;
+    this.Count64 = count64;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardEnergy
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardEnergy" /> class.
+/// </summary>
+/// <param name="count">Count of the energy to be rewarded.</param>
+/// <param name="name">Name of the energy.</param>
+public QuestsRewardEnergy(int count = default(int), string name = default(string))
+{
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardInventoryItem
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardInventoryItem" /> class.
+/// </summary>
+/// <param name="containerContents">containerContents.</param>
+/// <param name="count">Count of the item to be rewarded.</param>
+/// <param name="name">Name of the item.</param>
+public QuestsRewardInventoryItem(QuestsContainerContents containerContents = default(QuestsContainerContents), int count = default(int), string name = default(string))
+{
+    this.ContainerContents = containerContents;
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardStatistic
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardStatistic" /> class.
+/// </summary>
+/// <param name="count">Count of the statistic to be rewarded (Deprecated: Use count_64).</param>
+/// <param name="count64">Count of the statistic to be rewarded.</param>
+/// <param name="name">Name of the statistic.</param>
+public QuestsRewardStatistic(int count = default(int), string count64 = default(string), string name = default(string))
+{
+    this.Count = count;
+    this.Count64 = count64;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardXp
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardXp" /> class.
+/// </summary>
+/// <param name="count">Count of the xp to be rewarded.</param>
+/// <param name="name">Name of the xp.</param>
+public QuestsRewardXp(int count = default(int), string name = default(string))
+{
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsTaskProgress
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsTaskProgress" /> class.
+/// </summary>
+/// <param name="completed">Whether the task is completed.</param>
+/// <param name="currentProgress">Current progress of the task (Deprecated: Use current_progress_64).</param>
+/// <param name="currentProgress64">Current progress of the task.</param>
+/// <param name="description">Description of the task.</param>
+/// <param name="goal">Goal of the task (Deprecated: Use goal_64).</param>
+/// <param name="goal64">Goal of the task.</param>
+/// <param name="metadata">Additional metadata to attached to task.</param>
+/// <param name="rewardCurrencies">Currencies to be rewarded on completion.</param>
+/// <param name="rewardEnergy">Energy to be rewarded on completion.</param>
+/// <param name="rewardInventoryItems">Items to be rewarded on completion.</param>
+/// <param name="rewardStatistics">Statistics to be rewarded on completion.</param>
+/// <param name="rewardXp">XP to be rewarded on completion.</param>
+/// <param name="status">Status of the task.</param>
+/// <param name="userMetadata">Additional metadata to attached to task for user.</param>
+public QuestsTaskProgress(bool completed = default(bool), int currentProgress = default(int), long currentProgress64 = default(long), string description = default(string), int goal = default(int), long goal64 = default(long), Object metadata = default(Object), Object rewardCurrencies = default(Object), Object rewardEnergy = default(Object), Object rewardInventoryItems = default(Object), Object rewardStatistics = default(Object), Object rewardXp = default(Object), string status = default(string), Object userMetadata = default(Object))
+{
+    this.Completed = completed;
+    this.CurrentProgress = currentProgress;
+    this.CurrentProgress64 = currentProgress64;
+    this.Description = description;
+    this.Goal = goal;
+    this.Goal64 = goal64;
+    this.Metadata = metadata;
+    this.RewardCurrencies = rewardCurrencies;
+    this.RewardEnergy = rewardEnergy;
+    this.RewardInventoryItems = rewardInventoryItems;
+    this.RewardStatistics = rewardStatistics;
+    this.RewardXp = rewardXp;
+    this.Status = status;
+    this.UserMetadata = userMetadata;
+}
+
+/// Snapser.Model for QuestsContainerContents
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsContainerContents" /> class.
+/// </summary>
+/// <param name="currencies">Currencies in the container.</param>
+/// <param name="dropTableContents">Drop table contents in the container.</param>
+/// <param name="dropTables">Drop tables in the container.</param>
+/// <param name="items">Items in the container.</param>
+public QuestsContainerContents(Dictionary<string, int> currencies = default(Dictionary<string, int>), Dictionary<string, QuestsDropTableContents> dropTableContents = default(Dictionary<string, QuestsDropTableContents>), Dictionary<string, int> dropTables = default(Dictionary<string, int>), Dictionary<string, int> items = default(Dictionary<string, int>))
+{
+    this.Currencies = currencies;
+    this.DropTableContents = dropTableContents;
+    this.DropTables = dropTables;
+    this.Items = items;
+}
+
+/// Snapser.Model for QuestsDropTableContents
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsDropTableContents" /> class.
+/// </summary>
+/// <param name="drops">Drops in the drop table.</param>
+public QuestsDropTableContents(List<QuestsDropTableDrops> drops = default(List<QuestsDropTableDrops>))
+{
+    this.Drops = drops;
+}
+
+/// Snapser.Model for QuestsDropTableDrops
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsDropTableDrops" /> class.
+/// </summary>
+/// <param name="currencies">Map of currency name to drop values.</param>
+/// <param name="items">Map of item name to drop values.</param>
+/// <param name="trackablesEnergy">Map of trackable energy name to drop values.</param>
+/// <param name="trackablesXp">Map of trackable xp name to drop values.</param>
+/// <param name="weight">Weight of item in the drop table (required).</param>
+public QuestsDropTableDrops(Dictionary<string, QuestsDropValues> currencies = default(Dictionary<string, QuestsDropValues>), Dictionary<string, QuestsDropValues> items = default(Dictionary<string, QuestsDropValues>), Dictionary<string, QuestsDropValues> trackablesEnergy = default(Dictionary<string, QuestsDropValues>), Dictionary<string, QuestsDropValues> trackablesXp = default(Dictionary<string, QuestsDropValues>), int weight = default(int))
+{
+    this.Weight = weight;
+    this.Currencies = currencies;
+    this.Items = items;
+    this.TrackablesEnergy = trackablesEnergy;
+    this.TrackablesXp = trackablesXp;
+}
+
+/// Snapser.Model for QuestsDropValues
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsDropValues" /> class.
+/// </summary>
+/// <param name="max">Maximum value of drop. Will be equal to min if not specified (Deprecated: Use max_64).</param>
+/// <param name="max64">Maximum value of drop. Will be equal to min if not specified.</param>
+/// <param name="min">Minimum value of drop (Deprecated: Use min_64).</param>
+/// <param name="min64">Minimum value of drop.</param>
+/// <param name="multiple">Increment value of the drop. Defaults to 1 (Deprecated: Use multiple_64).</param>
+/// <param name="multiple64">Increment value of the drop. Defaults to 1.</param>
+public QuestsDropValues(int max = default(int), string max64 = default(string), int min = default(int), string min64 = default(string), int multiple = default(int), string multiple64 = default(string))
+{
+    this.Max = max;
+    this.Max64 = max64;
+    this.Min = min;
+    this.Min64 = min64;
+    this.Multiple = multiple;
+    this.Multiple64 = multiple64;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserQuestsServiceApi::QuestsBatchIncrementTaskProgressRequest : public Request
+{
+public:
+    virtual ~QuestsBatchIncrementTaskProgressRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserQuestsBatchIncrementTaskProgressRequest Body;
+};
+
+class SNAPSER_API SnapserQuestsBatchIncrementTaskProgressRequest : public Model
+{
+public:
+    virtual ~SnapserQuestsBatchIncrementTaskProgressRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Requests for each user */
+    TOptional<TArray<SnapserQuestsIncrementTaskProgressRequest>> Requests;
+};
+
+class SNAPSER_API SnapserQuestsIncrementTaskProgressRequest : public Model
+{
+public:
+    virtual ~SnapserQuestsIncrementTaskProgressRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Progress to update (Deprecated: Use delta64) */
+    TOptional<int32> Delta;
+    /* Progress to update */
+    TOptional<int64> Delta64;
+    /* Name of the quest to update task progress */
+    FString QuestName;
+    /* Name of the task to update progress */
+    FString TaskName;
+    /* User id */
+    FString UserId;
+};
+
+// Response
+class SNAPSER_API SnapserQuestsServiceApi::QuestsBatchIncrementTaskProgressResponse : public Response
+{
+public:
+    virtual ~QuestsBatchIncrementTaskProgressResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserQuestsBatchIncrementTaskProgressResponse Content;
+};
+
+class SNAPSER_API SnapserQuestsBatchIncrementTaskProgressResponse : public Model
+{
+public:
+    virtual ~SnapserQuestsBatchIncrementTaskProgressResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Responses for each user */
+    TOptional<TArray<SnapserQuestsBatchIncrementTaskProgressSingleResponse>> Responses;
+};
+
+class SNAPSER_API SnapserQuestsBatchIncrementTaskProgressSingleResponse : public Model
+{
+public:
+    virtual ~SnapserQuestsBatchIncrementTaskProgressSingleResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Message for the request */
+    TOptional<FString> Message;
+    TOptional<SnapserQuestsIncrementTaskProgressRequest> Request;
+    TOptional<SnapserQuestsUserQuest> Response;
+    /* Whether the request was successful */
+    TOptional<bool> Success;
+};
+
+class SNAPSER_API SnapserQuestsUserQuest : public Model
+{
+public:
+    virtual ~SnapserQuestsUserQuest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Timestamp of when the quest was assigned */
+    TOptional<FString> AssignedAt;
+    /* Description of the quest */
+    TOptional<FString> Description;
+    /* Timestamp of when the quest resets */
+    TOptional<FString> ResetsAt;
+    /* Currencies to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardCurrency>> RewardCurrencies;
+    /* Energy to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardEnergy>> RewardEnergy;
+    /* Items to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardInventoryItem>> RewardInventoryItems;
+    /* Statistics to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardStatistic>> RewardStatistics;
+    /* XP to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardXp>> RewardXp;
+    /* Status of the quest */
+    TOptional<FString> Status;
+    /* Tags to categorize the quest */
+    TOptional<TArray<FString>> Tags;
+    /* Tasks to be completed to finish the quest */
+    TOptional<TMap<FString, SnapserQuestsTaskProgress>> Tasks;
+};
+
+class SNAPSER_API SnapserQuestsRewardCurrency : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardCurrency() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the currency to be rewarded (Deprecated: Use count_64) */
+    TOptional<int32> Count;
+    /* Count of the currency to be rewarded */
+    TOptional<int64> Count64;
+    /* Name of the currency */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardEnergy : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardEnergy() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the energy to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the energy */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardInventoryItem : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardInventoryItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserQuestsContainerContents> ContainerContents;
+    /* Count of the item to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the item */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardStatistic : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardStatistic() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the statistic to be rewarded (Deprecated: Use count_64) */
+    TOptional<int32> Count;
+    /* Count of the statistic to be rewarded */
+    TOptional<FString> Count64;
+    /* Name of the statistic */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardXp : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardXp() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the xp to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the xp */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsTaskProgress : public Model
+{
+public:
+    virtual ~SnapserQuestsTaskProgress() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether the task is completed */
+    TOptional<bool> Completed;
+    /* Current progress of the task (Deprecated: Use current_progress_64) */
+    TOptional<int32> CurrentProgress;
+    /* Current progress of the task */
+    TOptional<int64> CurrentProgress64;
+    /* Description of the task */
+    TOptional<FString> Description;
+    /* Goal of the task (Deprecated: Use goal_64) */
+    TOptional<int32> Goal;
+    /* Goal of the task */
+    TOptional<int64> Goal64;
+    /* Additional metadata to attached to task */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* Currencies to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardCurrencies;
+    /* Energy to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardEnergy;
+    /* Items to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardInventoryItems;
+    /* Statistics to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardStatistics;
+    /* XP to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardXp;
+    /* Status of the task */
+    TOptional<FString> Status;
+    /* Additional metadata to attached to task for user */
+    TOptional<TSharedPtr<FJsonObject>> UserMetadata;
+};
+
+class SNAPSER_API SnapserQuestsContainerContents : public Model
+{
+public:
+    virtual ~SnapserQuestsContainerContents() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Currencies in the container (Deprecated: Use currencies_64) */
+    TOptional<TMap<FString, int32>> Currencies;
+    /* Currencies in the container */
+    TOptional<TMap<FString, FString>> Currencies64;
+    /* Drop table contents in the container */
+    TOptional<TMap<FString, SnapserQuestsDropTableContents>> DropTableContents;
+    /* Drop tables in the container */
+    TOptional<TMap<FString, int32>> DropTables;
+    /* Items in the container */
+    TOptional<TMap<FString, int32>> Items;
+};
+
+class SNAPSER_API SnapserQuestsDropTableContents : public Model
+{
+public:
+    virtual ~SnapserQuestsDropTableContents() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Drops in the drop table */
+    TOptional<TArray<SnapserQuestsDropTableDrops>> Drops;
+};
+
+class SNAPSER_API SnapserQuestsDropTableDrops : public Model
+{
+public:
+    virtual ~SnapserQuestsDropTableDrops() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Map of currency name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> Currencies;
+    /* Map of item name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> Items;
+    /* Map of trackable energy name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> TrackablesEnergy;
+    /* Map of trackable xp name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> TrackablesXp;
+    /* Weight of item in the drop table */
+    int32 Weight = 0;
+};
+
+class SNAPSER_API SnapserQuestsDropValues : public Model
+{
+public:
+    virtual ~SnapserQuestsDropValues() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Maximum value of drop. Will be equal to min if not specified (Deprecated: Use max_64) */
+    TOptional<int32> Max;
+    /* Maximum value of drop. Will be equal to min if not specified */
+    TOptional<FString> Max64;
+    /* Minimum value of drop (Deprecated: Use min_64) */
+    TOptional<int32> Min;
+    /* Minimum value of drop */
+    TOptional<FString> Min64;
+    /* Increment value of the drop. Defaults to 1 (Deprecated: Use multiple_64) */
+    TOptional<int32> Multiple;
+    /* Increment value of the drop. Defaults to 1 */
+    TOptional<FString> Multiple64;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### QuestsClaimTaskRewards API
+<CodeGroup title="Claim rewards for a task" tag="POST" label="QuestsClaimTaskRewards">
+```csharp
+/// <summary>
+/// Claim rewards for a task Claim rewards for a task
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User id</param>
+/// <param name="questName">Name of the quest</param>
+/// <param name="taskName">Name of the task to claim rewards for</param>
+/// <param name="token">User session token</param>
+/// <returns>QuestsClaimTaskRewardsResponse</returns>
+public QuestsClaimTaskRewardsResponse QuestsClaimTaskRewards(string userId, string questName, string taskName, string token)
+{
+    Snapser.Client.ApiResponse<QuestsClaimTaskRewardsResponse> localVarResponse = QuestsClaimTaskRewardsWithHttpInfo(userId, questName, taskName, token);
+    return localVarResponse.Data;
+}
+
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsClaimTaskRewardsResponse" /> class.
+/// </summary>
+/// <param name="currenciesGranted">Currencies granted.</param>
+/// <param name="energyGranted">Energy granted.</param>
+/// <param name="failedCurrencies">Currencies that failed to grant.</param>
+/// <param name="failedEnergy">Energy that failed to grant.</param>
+/// <param name="failedItems">Items that failed to grant.</param>
+/// <param name="failedStatistics">Statistics that failed to grant.</param>
+/// <param name="failedXp">XP that failed to grant.</param>
+/// <param name="itemsGranted">Items granted.</param>
+/// <param name="statisticsGranted">Statistics granted.</param>
+/// <param name="xpGranted">XP granted.</param>
+public QuestsClaimTaskRewardsResponse(Dictionary<string, int> currenciesGranted = default(Dictionary<string, int>), Dictionary<string, int> energyGranted = default(Dictionary<string, int>), List<string> failedCurrencies = default(List<string>), List<string> failedEnergy = default(List<string>), List<string> failedItems = default(List<string>), List<string> failedStatistics = default(List<string>), List<string> failedXp = default(List<string>), Dictionary<string, int> itemsGranted = default(Dictionary<string, int>), Dictionary<string, int> statisticsGranted = default(Dictionary<string, int>), Dictionary<string, int> xpGranted = default(Dictionary<string, int>))
+{
+    this.CurrenciesGranted = currenciesGranted;
+    this.EnergyGranted = energyGranted;
+    this.FailedCurrencies = failedCurrencies;
+    this.FailedEnergy = failedEnergy;
+    this.FailedItems = failedItems;
+    this.FailedStatistics = failedStatistics;
+    this.FailedXp = failedXp;
+    this.ItemsGranted = itemsGranted;
+    this.StatisticsGranted = statisticsGranted;
+    this.XpGranted = xpGranted;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserQuestsServiceApi::QuestsClaimTaskRewardsRequest : public Request
+{
+public:
+    virtual ~QuestsClaimTaskRewardsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User id */
+    FString UserId;
+    /* Name of the quest */
+    FString QuestName;
+    /* Name of the task to claim rewards for */
+    FString TaskName;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserQuestsServiceApi::QuestsClaimTaskRewardsResponse : public Response
+{
+public:
+    virtual ~QuestsClaimTaskRewardsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserQuestsClaimTaskRewardsResponse Content;
+};
+
+class SNAPSER_API SnapserQuestsClaimTaskRewardsResponse : public Model
+{
+public:
+    virtual ~SnapserQuestsClaimTaskRewardsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Currencies granted */
+    TOptional<TMap<FString, int32>> CurrenciesGranted;
+    /* Energy granted */
+    TOptional<TMap<FString, int32>> EnergyGranted;
+    /* Currencies that failed to grant */
+    TOptional<TArray<FString>> FailedCurrencies;
+    /* Energy that failed to grant */
+    TOptional<TArray<FString>> FailedEnergy;
+    /* Items that failed to grant */
+    TOptional<TArray<FString>> FailedItems;
+    /* Statistics that failed to grant */
+    TOptional<TArray<FString>> FailedStatistics;
+    /* XP that failed to grant */
+    TOptional<TArray<FString>> FailedXp;
+    /* Items granted */
+    TOptional<TMap<FString, int32>> ItemsGranted;
+    /* Statistics granted */
+    TOptional<TMap<FString, int32>> StatisticsGranted;
+    /* XP granted */
+    TOptional<TMap<FString, int32>> XpGranted;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### QuestsUpdateTaskMetadata API
+<CodeGroup title="Update metadata to a task in a quest assigned to a user" tag="PUT" label="QuestsUpdateTaskMetadata">
+```csharp
+/// <summary>
+/// Update Task Metadata Update metadata to a task in a quest assigned to a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User id</param>
+/// <param name="questName">Name of the quest to update task progress</param>
+/// <param name="taskName">Name of the task to update progress</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>QuestsUserQuest</returns>
+public QuestsUserQuest QuestsUpdateTaskMetadata(string userId, string questName, string taskName, string token, UpdateTaskMetadataRequest body)
+{
+    Snapser.Client.ApiResponse<QuestsUserQuest> localVarResponse = QuestsUpdateTaskMetadataWithHttpInfo(userId, questName, taskName, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for UpdateTaskMetadataRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="UpdateTaskMetadataRequest" /> class.
+/// </summary>
+/// <param name="metadata">Metadata to attach to task (required).</param>
+public UpdateTaskMetadataRequest(Object metadata = default(Object))
+{
+    // to ensure "metadata" is required (not null)
+    if (metadata == null)
+    {
+        throw new ArgumentNullException("metadata is a required property for UpdateTaskMetadataRequest and cannot be null");
+    }
+    this.Metadata = metadata;
+}
+
+/// Snapser.Model for QuestsUserQuest
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsUserQuest" /> class.
+/// </summary>
+/// <param name="assignedAt">Timestamp of when the quest was assigned.</param>
+/// <param name="resetsAt">Timestamp of when the quest resets.</param>
+/// <param name="rewardCurrencies">Currencies to be rewarded on completion.</param>
+/// <param name="rewardEnergy">Energy to be rewarded on completion.</param>
+/// <param name="rewardInventoryItems">Items to be rewarded on completion.</param>
+/// <param name="rewardStatistics">Statistics to be rewarded on completion.</param>
+/// <param name="rewardXp">XP to be rewarded on completion.</param>
+/// <param name="status">Status of the quest.</param>
+/// <param name="tasks">Tasks to be completed to finish the quest.</param>
+public QuestsUserQuest(string assignedAt = default(string), string resetsAt = default(string), List<QuestsRewardCurrency> rewardCurrencies = default(List<QuestsRewardCurrency>), List<QuestsRewardEnergy> rewardEnergy = default(List<QuestsRewardEnergy>), List<QuestsRewardInventoryItem> rewardInventoryItems = default(List<QuestsRewardInventoryItem>), List<QuestsRewardStatistic> rewardStatistics = default(List<QuestsRewardStatistic>), List<QuestsRewardXp> rewardXp = default(List<QuestsRewardXp>), string status = default(string), Dictionary<string, QuestsTaskProgress> tasks = default(Dictionary<string, QuestsTaskProgress>))
+{
+    this.AssignedAt = assignedAt;
+    this.ResetsAt = resetsAt;
+    this.RewardCurrencies = rewardCurrencies;
+    this.RewardEnergy = rewardEnergy;
+    this.RewardInventoryItems = rewardInventoryItems;
+    this.RewardStatistics = rewardStatistics;
+    this.RewardXp = rewardXp;
+    this.Status = status;
+    this.Tasks = tasks;
+}
+
+/// Snapser.Model for QuestsRewardCurrency
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardCurrency" /> class.
+/// </summary>
+/// <param name="count">Count of the currency to be rewarded.</param>
+/// <param name="name">Name of the currency.</param>
+public QuestsRewardCurrency(int count = default(int), string name = default(string))
+{
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardEnergy
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardEnergy" /> class.
+/// </summary>
+/// <param name="count">Count of the energy to be rewarded.</param>
+/// <param name="name">Name of the energy.</param>
+public QuestsRewardEnergy(int count = default(int), string name = default(string))
+{
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardInventoryItem
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardInventoryItem" /> class.
+/// </summary>
+/// <param name="containerContents">containerContents.</param>
+/// <param name="count">Count of the item to be rewarded.</param>
+/// <param name="name">Name of the item.</param>
+public QuestsRewardInventoryItem(QuestsContainerContents containerContents = default(QuestsContainerContents), int count = default(int), string name = default(string))
+{
+    this.ContainerContents = containerContents;
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardStatistic
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsContainerContents" /> class.
+/// </summary>
+/// <param name="currencies">Currencies in the container.</param>
+/// <param name="dropTableContents">Drop table contents in the container.</param>
+/// <param name="dropTables">Drop tables in the container.</param>
+/// <param name="items">Items in the container.</param>
+public QuestsContainerContents(Dictionary<string, int> currencies = default(Dictionary<string, int>), Dictionary<string, QuestsDropTableContents> dropTableContents = default(Dictionary<string, QuestsDropTableContents>), Dictionary<string, int> dropTables = default(Dictionary<string, int>), Dictionary<string, int> items = default(Dictionary<string, int>))
+{
+    this.Currencies = currencies;
+    this.DropTableContents = dropTableContents;
+    this.DropTables = dropTables;
+    this.Items = items;
+}
+
+/// Snapser.Model for QuestsDropTableContents
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardStatistic" /> class.
+/// </summary>
+/// <param name="count">Count of the statistic to be rewarded.</param>
+/// <param name="name">Name of the statistic.</param>
+public QuestsRewardStatistic(int count = default(int), string name = default(string))
+{
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsRewardXp
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsRewardXp" /> class.
+/// </summary>
+/// <param name="count">Count of the xp to be rewarded.</param>
+/// <param name="name">Name of the xp.</param>
+public QuestsRewardXp(int count = default(int), string name = default(string))
+{
+    this.Count = count;
+    this.Name = name;
+}
+
+/// Snapser.Model for QuestsTaskProgress
+/// <summary>
+/// Initializes a new instance of the <see cref="QuestsTaskProgress" /> class.
+/// </summary>
+/// <param name="completed">Whether the task is completed.</param>
+/// <param name="currentProgress">Current progress of the task.</param>
+/// <param name="goal">Goal of the task.</param>
+/// <param name="metadata">Additional metadata to attached to task.</param>
+/// <param name="rewardCurrencies">Currencies to be rewarded on completion.</param>
+/// <param name="rewardEnergy">Energy to be rewarded on completion.</param>
+/// <param name="rewardInventoryItems">Items to be rewarded on completion.</param>
+/// <param name="rewardStatistics">Statistics to be rewarded on completion.</param>
+/// <param name="rewardXp">XP to be rewarded on completion.</param>
+/// <param name="status">Status of the task.</param>
+/// <param name="userMetadata">Additional metadata to attached to task for user.</param>
+public QuestsTaskProgress(bool completed = default(bool), int currentProgress = default(int), int goal = default(int), Object metadata = default(Object), Object rewardCurrencies = default(Object), Object rewardEnergy = default(Object), Object rewardInventoryItems = default(Object), Object rewardStatistics = default(Object), Object rewardXp = default(Object), string status = default(string), Object userMetadata = default(Object))
+{
+    this.Completed = completed;
+    this.CurrentProgress = currentProgress;
+    this.Goal = goal;
+    this.Metadata = metadata;
+    this.RewardCurrencies = rewardCurrencies;
+    this.RewardEnergy = rewardEnergy;
+    this.RewardInventoryItems = rewardInventoryItems;
+    this.RewardStatistics = rewardStatistics;
+    this.RewardXp = rewardXp;
+    this.Status = status;
+    this.UserMetadata = userMetadata;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserQuestsServiceApi::QuestsUpdateTaskMetadataRequest : public Request
+{
+public:
+    virtual ~QuestsUpdateTaskMetadataRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User id */
+    FString UserId;
+    /* Name of the quest to update task progress */
+    FString QuestName;
+    /* Name of the task to update progress */
+    FString TaskName;
+    /* User session token */
+    FString Token;
+    SnapserUpdateTaskMetadataRequest Body;
+};
+
+class SNAPSER_API SnapserUpdateTaskMetadataRequest : public Model
+{
+public:
+    virtual ~SnapserUpdateTaskMetadataRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Metadata to attach to task */
+    TSharedPtr<FJsonObject> Metadata;
+};
+
+// Response
+class SNAPSER_API SnapserQuestsServiceApi::QuestsUpdateTaskMetadataResponse : public Response
+{
+public:
+    virtual ~QuestsUpdateTaskMetadataResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserQuestsUserQuest Content;
+};
+
+class SNAPSER_API SnapserQuestsUserQuest : public Model
+{
+public:
+    virtual ~SnapserQuestsUserQuest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Timestamp of when the quest was assigned */
+    TOptional<FString> AssignedAt;
+    /* Timestamp of when the quest resets */
+    TOptional<FString> ResetsAt;
+    /* Currencies to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardCurrency>> RewardCurrencies;
+    /* Energy to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardEnergy>> RewardEnergy;
+    /* Items to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardInventoryItem>> RewardInventoryItems;
+    /* Statistics to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardStatistic>> RewardStatistics;
+    /* XP to be rewarded on completion */
+    TOptional<TArray<SnapserQuestsRewardXp>> RewardXp;
+    /* Status of the quest */
+    TOptional<FString> Status;
+    /* Tasks to be completed to finish the quest */
+    TOptional<TMap<FString, SnapserQuestsTaskProgress>> Tasks;
+};
+
+class SNAPSER_API SnapserQuestsRewardCurrency : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardCurrency() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the currency to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the currency */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardEnergy : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardEnergy() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the energy to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the energy */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardInventoryItem : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardInventoryItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserQuestsContainerContents> ContainerContents;
+    /* Count of the item to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the item */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardStatistic : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardStatistic() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the statistic to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the statistic */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsRewardXp : public Model
+{
+public:
+    virtual ~SnapserQuestsRewardXp() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the xp to be rewarded */
+    TOptional<int32> Count;
+    /* Name of the xp */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserQuestsTaskProgress : public Model
+{
+public:
+    virtual ~SnapserQuestsTaskProgress() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether the task is completed */
+    TOptional<bool> Completed;
+    /* Current progress of the task */
+    TOptional<int32> CurrentProgress;
+    /* Goal of the task */
+    TOptional<int32> Goal;
+    /* Additional metadata to attached to task */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* Currencies to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardCurrencies;
+    /* Energy to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardEnergy;
+    /* Items to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardInventoryItems;
+    /* Statistics to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardStatistics;
+    /* XP to be rewarded on completion */
+    TOptional<TSharedPtr<FJsonObject>> RewardXp;
+    /* Status of the task */
+    TOptional<FString> Status;
+    /* Additional metadata to attached to task for user */
+    TOptional<TSharedPtr<FJsonObject>> UserMetadata;
+};
+
+class SNAPSER_API SnapserQuestsContainerContents : public Model
+{
+public:
+    virtual ~SnapserQuestsContainerContents() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Currencies in the container */
+    TOptional<TMap<FString, int32>> Currencies;
+    /* Drop table contents in the container */
+    TOptional<TMap<FString, SnapserQuestsDropTableContents>> DropTableContents;
+    /* Drop tables in the container */
+    TOptional<TMap<FString, int32>> DropTables;
+    /* Items in the container */
+    TOptional<TMap<FString, int32>> Items;
+};
+
+class SNAPSER_API SnapserQuestsDropTableContents : public Model
+{
+public:
+    virtual ~SnapserQuestsDropTableContents() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Drops in the drop table */
+    TOptional<TArray<SnapserQuestsDropTableDrops>> Drops;
+};
+
+class SNAPSER_API SnapserQuestsDropTableDrops : public Model
+{
+public:
+    virtual ~SnapserQuestsDropTableDrops() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Map of currency name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> Currencies;
+    /* Map of item name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> Items;
+    /* Map of trackable energy name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> TrackablesEnergy;
+    /* Map of trackable xp name to drop values */
+    TOptional<TMap<FString, SnapserQuestsDropValues>> TrackablesXp;
+    /* Weight of item in the drop table */
+    int32 Weight = 0;
+};
+
+class SNAPSER_API SnapserQuestsDropValues : public Model
+{
+public:
+    virtual ~SnapserQuestsDropValues() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Maximum value of drop. Will be equal to min if not specified */
+    TOptional<int32> Max;
+    /* Minimum value of drop */
+    TOptional<int32> Min;
+    /* Increment value of the drop. Defaults to 1 */
+    TOptional<int32> Multiple;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/quests-api.png)
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code  | Variable                | Message                  | HTTP | gRPC            |
+| ----- | ----------------------- | ------------------------ | ---- | --------------- |
+| 15000 | ErrQuestNotFound        | quest not found          | 404  | NotFound        |
+| 15001 | ErrQuestAlreadyExists   | quest already exists     | 400  | AlreadyExists   |
+| 15002 | ErrTaskNotFound         | task not found           | 404  | NotFound        |
+| 15003 | ErrTaskAlreadyExists    | task already exists      | 400  | AlreadyExists   |
+| 15004 | ErrQuestAlreadyAssigned | quest already assigned   | 400  | AlreadyExists   |
+| 15005 | ErrQuestNotAvailable    | quest not available      | 400  | InvalidArgument |
+| 15006 | ErrQuestNotAssigned     | quest not assigned       | 404  | NotFound        |
+| 15007 | ErrTaskNotAssigned      | task not assigned        | 404  | NotFound        |
+| 15008 | ErrTaskAlreadyCompleted | task already completed   | 400  | InvalidArgument |
+| 15009 | ErrResourceNotTracked   | resource not tracked     | 404  | NotFound        |
+| 15010 | ErrQuestNotStarted      | quest not started        | 400  | InvalidArgument |
+| 15011 | ErrQuestExpired         | quest expired            | 400  | InvalidArgument |
+| 15012 | ErrQuestAlreadyActive   | quest already active     | 400  | InvalidArgument |
+| 15013 | ErrQuestNotActive       | quest not active         | 400  | InvalidArgument |
+| 15014 | ErrQuestNotCompleted    | quest not completed      | 400  | InvalidArgument |
+| 15015 | ErrTaskStatusUnclaimed  | task in unclaimed status | 400  | InvalidArgument |
+</div>
+
+
+### Websocket Events emitted by snap
+
+When [Web sockets](/docs/infra/snaps/hermes) are enabled on your snapends gateway, this snap can broadcast specific events related to quest changes directly to the game clients. These events are targeted to the appropriate user. Each event is uniquely identified by an enum, and the event payload is a well-structured protobuf message.
+These protobuf messages can be downloaded from the Downloads page.
+
+You can choose to enable/disable events from the `Emitters` tab in Quests Admin tool.
+
+| Event Id | Event Name             | Description                                               | Payload Message           |
+| -------- | ---------------------- | --------------------------------------------------------- | ------------------------- |
+| 1        | QUEST_ASSIGNED         | Published when a quest is assigned to the user            | EventQuestAssigned        |
+| 2        | QUEST_PROGRESS_UPDATED | Published when progress of any task in a quest is updated | EventQuestProgressUpdated |
+| 3        | QUEST_REWARD_CLAIMED   | Published when rewards for a quest are claimed            | EventQuestRewardClaimed   |
+
+## Additional Details
+
+### Data Stores
+
+Postgres, Couchbase
+
+### Service Dependencies
+
+The Quest service does not depend on any other service.
+
+### Recommended Services
+
+The Quest service is recommended to be used with the Inventory and Statistics.

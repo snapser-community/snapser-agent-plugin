@@ -1,0 +1,22 @@
+# User Auth Exemptions
+This tool allows you to lock down certain APIs to only be accessible via Server or Internal auth. This is useful
+when you have APIs that should not be accessible via client auth.
+
+## Example
+Inventory Snap has APIs to grant inventory items to a user. Some games may want to lock down this API to only be
+accessible via Server or Internal auth. This is because the API is a high value target for hackers. If the API is
+accessible via client auth, a hacker can easily call the API and grant themselves unlimited inventory items.
+This tool allows you to lock down the API to only be accessible via Server or Internal auth.
+
+To get started:
+1. Click on **User Auth Exemptions** from the side Nav.
+2. This will show you the tool UI, where you can select the Snap and the APIs you want to lock down.
+
+## Exemptions
+1. <u>Available Snaps</u> - You have to first select the Snaps that you want to lock down.
+2. <u>API List</u> - Once you pick the Snap, you will see a button that says **API Exemptions**. Clicking this
+   will show you a list of APIs that the Snap has. You can then use the API picker to select the APIs you want to lock down.
+   <Note>
+      In the API picker widget, do not forget to click the "Confirm" button to save your selection.
+   </Note>
+**IMPORTANT**: Do not forget to click the "Save" button to save your changes.

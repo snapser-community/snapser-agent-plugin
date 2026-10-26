@@ -1,0 +1,1127 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Manage relationships between social aspects",
+    "title" : "Social Graph",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "SocialGraphService"
+  } ],
+  "paths" : {
+    "/v1/social-graph/social-graph/{user_id}/blocks" : {
+      "get" : {
+        "description" : "Returns users blocked by the user",
+        "operationId" : "GetBlockedUsers",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Number of results returned. The maximum allowed is 50, defaults to 10 if not provided.",
+          "explode" : true,
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Number of results to skip from the start of the result set",
+          "explode" : true,
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/social_graphGetBlockedUsersResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Block",
+        "tags" : [ "SocialGraphService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "post" : {
+        "description" : "Creates a block association with the target user",
+        "operationId" : "Block",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/Block_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Block",
+        "tags" : [ "SocialGraphService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/social-graph/social-graph/{user_id}/blocks/{target_user_id}" : {
+      "delete" : {
+        "description" : "Removes a block association with the target user if it exists",
+        "operationId" : "Unblock",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User ID of the target user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "target_user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Block",
+        "tags" : [ "SocialGraphService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/social-graph/social-graph/{user_id}/follows" : {
+      "get" : {
+        "description" : "Returns user objects that are followers of the user or the user objects that the user is following",
+        "operationId" : "GetFollows",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Type of follows (following, followers)",
+          "explode" : true,
+          "in" : "query",
+          "name" : "type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Number of results returned. The maximum allowed is 50, defaults to 10 if not provided.",
+          "explode" : true,
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Number of results to skip from the start of the result set",
+          "explode" : true,
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/social_graphGetFollowsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Followers",
+        "tags" : [ "SocialGraphService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "post" : {
+        "description" : "Creates a follow association with the target user",
+        "operationId" : "Follow",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/Follow_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Followers",
+        "tags" : [ "SocialGraphService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/social-graph/social-graph/{user_id}/follows/count" : {
+      "get" : {
+        "description" : "Returns the count of followers or following for a user. Can view other users' follow counts if public visibility is enabled.",
+        "operationId" : "GetFollowsCount",
+        "parameters" : [ {
+          "description" : "User ID of the requesting user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User ID of the target user whose follows count to retrieve",
+          "explode" : true,
+          "in" : "query",
+          "name" : "target_user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Type of follows (following, followers)",
+          "explode" : true,
+          "in" : "query",
+          "name" : "type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/social_graphGetFollowsCountResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Followers",
+        "tags" : [ "SocialGraphService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/social-graph/social-graph/{user_id}/follows/{target_user_id}" : {
+      "delete" : {
+        "description" : "Removes a follow association with the target user if it exists",
+        "operationId" : "Unfollow",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User ID of the target user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "target_user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Followers",
+        "tags" : [ "SocialGraphService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/social-graph/social-graph/{user_id}/friend-requests" : {
+      "get" : {
+        "description" : "Returns friend requests sent or received by the user",
+        "operationId" : "GetFriendRequests",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Type of friend requests (sent, received)",
+          "explode" : true,
+          "in" : "query",
+          "name" : "type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Number of results returned. The maximum allowed is 50, defaults to 10 if not provided.",
+          "explode" : true,
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Number of results to skip from the start of the result set",
+          "explode" : true,
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/social_graphGetFriendRequestsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Friends",
+        "tags" : [ "SocialGraphService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "post" : {
+        "description" : "Creates a friend request association with the target user",
+        "operationId" : "SendFriendRequest",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/Follow_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Friends",
+        "tags" : [ "SocialGraphService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/social-graph/social-graph/{user_id}/friend-requests/{target_user_id}" : {
+      "delete" : {
+        "description" : "Removes a friend request that was sent to or received from the target user if it exists",
+        "operationId" : "DeleteFriendRequest",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User ID of the target user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "target_user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Friends",
+        "tags" : [ "SocialGraphService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/social-graph/social-graph/{user_id}/friends" : {
+      "get" : {
+        "description" : "Returns friends of the user",
+        "operationId" : "GetFriends",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Number of results returned. The maximum allowed is 50, defaults to 10 if not provided.",
+          "explode" : true,
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Number of results to skip from the start of the result set",
+          "explode" : true,
+          "in" : "query",
+          "name" : "offset",
+          "required" : false,
+          "schema" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Whether to include presence information for friends",
+          "explode" : true,
+          "in" : "query",
+          "name" : "include_presence",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/social_graphGetFriendsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Friends",
+        "tags" : [ "SocialGraphService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "post" : {
+        "description" : "Creates a friend association with the target user",
+        "operationId" : "AddFriend",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AddFriend_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Friends",
+        "tags" : [ "SocialGraphService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/social-graph/social-graph/{user_id}/friends/count" : {
+      "get" : {
+        "description" : "Returns the count of friends for a user. Can view other users' friend counts if public visibility is enabled.",
+        "operationId" : "GetFriendsCount",
+        "parameters" : [ {
+          "description" : "User ID of the requesting user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User ID of the target user whose friends count to retrieve",
+          "explode" : true,
+          "in" : "query",
+          "name" : "target_user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/social_graphGetFriendsCountResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Friends",
+        "tags" : [ "SocialGraphService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/social-graph/social-graph/{user_id}/friends/{target_user_id}" : {
+      "delete" : {
+        "description" : "Removes a friend association with the target user if it exists",
+        "operationId" : "RemoveFriend",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User ID of the target user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "target_user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Friends",
+        "tags" : [ "SocialGraphService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/social-graph/social-graph/{user_id}/settings" : {
+      "get" : {
+        "description" : "Returns the user's settings",
+        "operationId" : "GetUserSettings",
+        "parameters" : [ {
+          "description" : "User ID for the user whose data is being returned",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/social_graphUserSettings"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User",
+        "tags" : [ "SocialGraphService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Updated the user's settings",
+        "operationId" : "UpdateUserSettings",
+        "parameters" : [ {
+          "description" : "User ID for the user whose data is being returned",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateUserSettings_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User",
+        "tags" : [ "SocialGraphService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/social-graph/users/{user_id}/connections/{connection_type}/{target_user_id}" : {
+      "get" : {
+        "description" : "Checks if a user is connected to the target user",
+        "operationId" : "IsConnected",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Type of connection to check (friend, followed_by, following)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "connection_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "User ID of the target user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "target_user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/social_graphIsConnectedResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Associations",
+        "tags" : [ "SocialGraphService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/social-graph/users/{user_id}/friend-code" : {
+      "post" : {
+        "description" : "Returns the user's friend code, creates one if it doesn't exist",
+        "operationId" : "FriendCode",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "If the previous friend code should be invalidated",
+          "explode" : true,
+          "in" : "query",
+          "name" : "invalidate_previous",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/social_graphFriendCodeResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Friends",
+        "tags" : [ "SocialGraphService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/social-graph/users/{user_id}/metadata" : {
+      "put" : {
+        "description" : "Updates a user object's metadata",
+        "operationId" : "UpdateUserMetadata",
+        "parameters" : [ {
+          "description" : "User ID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateUserMetadata_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User",
+        "tags" : [ "SocialGraphService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "AddFriend_request" : {
+        "properties" : {
+          "metadata" : {
+            "description" : "JSON metadata for the friend association",
+            "type" : "object"
+          },
+          "target_user_id" : {
+            "description" : "User ID of the target user",
+            "type" : "string"
+          }
+        },
+        "required" : [ "target_user_id" ],
+        "type" : "object"
+      },
+      "Block_request" : {
+        "properties" : {
+          "metadata" : {
+            "description" : "JSON metadata for the follow association",
+            "type" : "object"
+          },
+          "target_user_id" : {
+            "description" : "User ID of the target user",
+            "type" : "string"
+          }
+        },
+        "required" : [ "target_user_id" ],
+        "type" : "object"
+      },
+      "Follow_request" : {
+        "properties" : {
+          "metadata" : {
+            "description" : "JSON metadata for the follow association",
+            "type" : "object"
+          },
+          "target_friend_code" : {
+            "description" : "Friend code of the target user",
+            "type" : "string"
+          },
+          "target_user_id" : {
+            "description" : "User ID of the target user",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "UpdateUserMetadata_request" : {
+        "properties" : {
+          "metadata" : {
+            "description" : "Metadata for the user",
+            "type" : "object"
+          }
+        },
+        "required" : [ "metadata" ],
+        "type" : "object"
+      },
+      "UpdateUserSettings_request" : {
+        "properties" : {
+          "friends_can_view_friends" : {
+            "description" : "If the user's friends can view their other friends",
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "friends_can_view_friends" ],
+        "type" : "object"
+      },
+      "protobufNullValue" : {
+        "default" : "NULL_VALUE",
+        "description" : "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value.",
+        "enum" : [ "NULL_VALUE" ],
+        "type" : "string"
+      },
+      "social_graphAssociationObject" : {
+        "properties" : {
+          "association_metadata" : {
+            "type" : "object"
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "object_metadata" : {
+            "type" : "object"
+          },
+          "timestamp" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "social_graphFriendCodeResponse" : {
+        "properties" : {
+          "friend_code" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "social_graphGetBlockedUsersResponse" : {
+        "properties" : {
+          "blocked" : {
+            "items" : {
+              "$ref" : "#/components/schemas/social_graphAssociationObject"
+            },
+            "type" : "array"
+          },
+          "total" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "social_graphGetFollowsCountResponse" : {
+        "properties" : {
+          "count" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "social_graphGetFollowsResponse" : {
+        "properties" : {
+          "follows" : {
+            "items" : {
+              "$ref" : "#/components/schemas/social_graphAssociationObject"
+            },
+            "type" : "array"
+          },
+          "total" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "social_graphGetFriendRequestsResponse" : {
+        "properties" : {
+          "friend_requests" : {
+            "items" : {
+              "$ref" : "#/components/schemas/social_graphAssociationObject"
+            },
+            "type" : "array"
+          },
+          "total" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "social_graphGetFriendsCountResponse" : {
+        "properties" : {
+          "count" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "social_graphGetFriendsResponse" : {
+        "properties" : {
+          "friends" : {
+            "items" : {
+              "$ref" : "#/components/schemas/social_graphAssociationObject"
+            },
+            "type" : "array"
+          },
+          "presences" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/social_graphUserPresence"
+            },
+            "type" : "object"
+          },
+          "total" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "social_graphIsConnectedResponse" : {
+        "properties" : {
+          "connected" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "social_graphUserPresence" : {
+        "properties" : {
+          "do_not_disturb" : {
+            "type" : "boolean"
+          },
+          "in_game_status" : {
+            "type" : "string"
+          },
+          "online" : {
+            "type" : "boolean"
+          },
+          "user_id" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "social_graphUserSettings" : {
+        "properties" : {
+          "friend_code" : {
+            "type" : "string"
+          },
+          "friends_can_view_friends" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

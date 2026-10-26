@@ -1,0 +1,40 @@
+# beta-0.35.0
+##### August 9, 2024
+
+## Snaps
+### Social Graph
+- **New Feature**: Social graph now supports friend codes. Users can now add friends using a friend code.
+
+### Inventory and Currency
+- **New Feature**: Inventory snap now keeps track of your entire global currency and makes it available via the app auth API.
+  A game studio can now, know exactly how many coins are in circulation.
+
+### Quests
+- Quests now supports searching quests with tags.
+- Quests tasks can now have metadata attached to them, which can be either at the Quest level or at a per user level.
+<Note>
+  You will need to upgrade your Snap to continue using the Configuration tool
+</Note>
+
+## Bug Fixes
+### Auth
+-  Added missing error log in one specific steam ticket login failure.
+
+### Game Server Fleet
+- Added better error handling for buffer % based inputs in the request to add or update a fleet.
+- Fixed a bug where if a game server was never getting in a ready state, due to a bad game server image, the fleet
+  deployment would be stuck in a pending state. This will not happen anymore. When the timeout is reached, the fleet will be marked as failed.
+
+## Web App
+- **UX**: Each snap configuration tool now has a helper text and a link to the tool documentation.
+- **Documentation**: Documentation has been added for all tooling docs for all snaps.
+
+## Business Intelligence
+- **Experiments Integration**: Added dynamically created Dashboards for each Experiment created within the Experiments Snap. These dashboards will now show Engagement, Retention, and Growth metrics separated by each experiment variant for easily parsing experiment results.
+
+## CLI Tool
+- BYOSnap and BYOGs commands now support a `--skip-build` flag. This flag will skip the build process and only deploy the snap or game server.
+<Note>
+  If you had created a BYOSnap build in the past, you will need to rebuild it once. And then you can use the `--skip-build` flag.
+  We basically have updated the tag and so an old tag wont be compatible.
+</Note>

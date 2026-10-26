@@ -1,0 +1,163 @@
+# Match Profiles
+
+This tool allows you to create and update Match Profiles.
+
+To get started:
+1. Click on `Match Profile` from the side Nav.
+2. Click on the `Add a Profile` button.
+3. You will then see a form where you can add or update your Match Profile.
+
+## Match Profile Details
+1. **Name**: The name of the Match Profile. The name should be unique across all Match Profiles. It should be any alphanumeric string without spaces.
+2. **Description**: An optional description of the Match Profile.
+3. **Enabled**: A toggle to enable or disable the Match Profile.
+
+## Match Configuration
+
+### Match Profile Size
+1. **Match size**: The size of the match. This is the number of players that will be in the match.
+   - **Min Players**: The minimum number of players required to create a match.
+   - **Max Players**: The maximum number of players allowed in a match.
+
+### Match Profile Acceptance
+1. **Match Acceptance**: A toggle to enable or disable match acceptance rules. If enabled, all players must accept the match before it can be created.
+2. **Timeout Seconds**: The number of seconds players have to accept the match before it is automatically cancelled. Only applicable when match acceptance is enabled.
+
+### Match Profile Queue Settings
+1. **Queue Settings**: When enabled, players will not be able to create tickets for this profile unless the queue custom settings are satisfied.
+2. **Min Party Size**: The minimum party size allowed to queue for this profile. Players in parties smaller than this will be rejected.
+3. **Max Party Size**: The maximum party size allowed to queue for this profile. Players in parties larger than this will be rejected.
+
+### Match Profile Backfilling
+1. **Backfilling**: A toggle to enable or disable backfilling. If enabled, the match will be created as soon as the min count has been reached, but then allow matches to be filled.
+2. **Timeout Seconds**: The duration in seconds that the backfill window stays open. After this timeout, no more players can be added to the match via backfilling.
+
+### Delay Partial Match
+1. **Delay Partial Match Seconds**: When set, the matchmaker will wait this many seconds before creating a partial match (a match that has between `min_players` and `max_players`). This gives the matchmaker additional time to find more players and create fuller matches. Full matches (at `max_players`) are always created immediately regardless of this setting. Set to `0` or leave unset to create partial matches as soon as the minimum player count is reached.
+
+### Match Profile Allocation
+1. **Select Allocation**: The allocation target for the match. The target can be `relay`, `fleet` or `lobby`. Leave empty if no server allocation is needed.
+2. **Select Geos**: The regions that the match should be allocated to. This is only applicable if the allocation target is `relay`.
+3. **Fleet Name**: The name of the fleet to allocate game servers from. Applicable when the allocation target is `fleet` or `lobby`.
+4. **Allocation Metadata (Custom Metadata)**: A map of key-value pairs that will be passed to the allocation destination. For a Lobby, this data is passed into the Lobby's `allocation_metadata` field. For a Fleet, this data is passed into the GameServer's annotations field, accessible via the Agones SDK.
+5. **Derived Metadata**: A read-only list of keys derived from any Custom String rule on the profile that is marked relative and has "Append to metadata" enabled. At match time the matchmaker fills each key with the actual string values shared by the matched tickets, and forwards the result to the allocation destination alongside the regular Allocation Metadata. Only available when the allocation is `fleet` or `lobby`. See [Custom String Rule](#custom-string-rule) for how to opt a rule in.
+6. **Lobby Start After Seconds**: When allocating to a lobby, this sets a delay (in seconds) before the lobby starts. This value is passed to the match data as `start_after_seconds`.
+
+<Note>
+  Key-value pairs in the allocation metadata are kept as is when passed to the
+  lobby or fleet. Other information that matchmaking passes along is prefixed
+  with "snap_matchmaking".
+</Note>
+
+## Match Profile Team Formation
+1. **Enabled**: A toggle to enable or disable team formation.
+2. **Number of teams**: The number of teams in the match.
+3. **Minimum players per team**: The minimum number of players required per team to start a match.
+4. **Allow Party Separation**: A toggle to enable or disable party separation. If disabled (the default), the matchmaker will attempt to keep all party members on the same team. If enabled, parties may be split across teams.
+5. **Strategy**: The strategy used to assign players to teams. Options are:
+   - **Least Populated**: Assign players to the team with the fewest players (default).
+   - **Alternate**: Assign players to teams in an alternating fashion based on the Strategy Argument value, ensuring teams are competitively balanced.
+6. **Strategy Argument**: The rule key (from a number-based rule such as a statistic, leaderboard tier, or custom number) used to sort and balance players across teams when the `Alternate` strategy is selected. For example, setting this to `elo` will distribute players so that teams have balanced average elo.
+
+## Rule Set Details
+1. **Name**: The name of the Rule Set. This can be any alphanumeric string without spaces.
+2. **Apply Rule After**: The duration (in seconds) after ticket creation before this rule set begins to apply. Use this to create fallback rule sets that activate after the primary rule set window expires.
+3. **Apply Rule For**: The duration (in seconds) for which the rule set is applied. Once the ticket is older than `Apply Rule After` + `Apply Rule For`, this rule set will no longer evaluate the ticket.
+
+<Note>
+  Only one rule set is evaluated at a time for a given ticket. Rule sets are evaluated in order -- once a ticket ages out of one rule set's window, it moves to the next.
+</Note>
+
+### Expansion Configuration
+
+Rules that support numeric range matching (Leaderboard, Statistics with counter type, Custom Number, and Latency) can be configured with expansion to gradually widen the search criteria over time. There are two modes:
+
+#### Auto Expansion
+
+Auto Expansion automatically widens the search range at a regular interval. Configure the following fields on the rule:
+
+1. **Initial Start / Initial End**: The starting range values (for absolute rules). For relative rules, the initial range is defined by the rule's From/To values.
+2. **Spread Interval (seconds)**: How often the range expands.
+3. **Spread Amount**: How much the range expands at each interval.
+4. **Maximum Spread**: The maximum total expansion allowed.
+5. **Spread Strategy**: How the expansion is applied:
+   - **Balanced**: Expands equally on both sides (half the spread added to the end, half subtracted from the start).
+   - **Right**: Expands only the upper bound.
+   - **Left**: Expands only the lower bound.
+
+#### Manual Expansion (Expansion Steps)
+
+Alternatively, you can define explicit expansion steps with precise time windows:
+
+1. **Start**: The lower bound of the range for this step.
+2. **End**: The upper bound of the range for this step.
+3. **Applies After (seconds)**: When this step activates, relative to ticket creation time.
+4. **Applies For (seconds)**: How long this step remains active. Set to `0` to indicate "indefinitely" (no expiry).
+
+You can add as many expansion steps as needed. The matchmaker evaluates them in order.
+
+#### Expansion Formation Strategy
+
+When expansion is configured, you can also set how candidates are selected when forming a match from the expanded pool:
+
+1. **Balanced**: Select candidates evenly from across the range.
+2. **Prefer Oldest**: Prefer candidates that have been waiting the longest.
+3. **Prefer Newest**: Prefer the most recently created candidates.
+
+### Leaderboard Rule
+1. **Leaderboard**: Select the leaderboard that you want to base your rule on.
+2. **Tier**: The tier to match on. In absolute mode, only tickets in this specific tier will match.
+3. **From**: The lower bound of the tier range. Only applicable in relative mode.
+4. **To**: The upper bound of the tier range. Only applicable in relative mode.
+5. **Absolute**: A toggle to switch between relative and absolute mode.
+6. **Expansion**: Optionally configure Auto Expansion or Manual Expansion steps (see [Expansion Configuration](#expansion-configuration) above).
+
+<Note>This rule can be used for host selection.</Note>
+
+### Statistic Rule
+1. **Statistic**: Select the statistic that you want to base your rule on.
+2. **Stat Type**: The type of statistic matching:
+   - **Counter** (numeric): Matches tickets using range-based filters. Supports expansion.
+   - **String**: Matches tickets using exact string equality. Expansion does not apply.
+3. **From**: The lower bound of the range. Only applicable for counter-type statistics.
+4. **To**: The upper bound of the range. Only applicable for counter-type statistics.
+5. **Value**: The exact string value to match on. Only applicable for string-type statistics.
+6. **Absolute**: A toggle to switch between relative and absolute mode. Only applicable for counter-type statistics.
+7. **Expansion**: Optionally configure Auto Expansion or Manual Expansion steps for counter-type statistics (see [Expansion Configuration](#expansion-configuration) above).
+
+<Note>This rule can be used for host selection (counter-type only).</Note>
+
+### Custom Number Rule
+1. **Key**: The key of the custom number (from the ticket's `double_args`).
+2. **From**: The lower bound of the range.
+3. **To**: The upper bound of the range.
+4. **Absolute**: A toggle to switch between relative and absolute mode.
+5. **Expansion**: Optionally configure Auto Expansion or Manual Expansion steps (see [Expansion Configuration](#expansion-configuration) above).
+
+<Note>This rule can be used for host selection.</Note>
+
+### Custom String Rule
+1. **Name (Key)**: The key of the custom string (from the ticket's `string_args`).
+2. **Value**: The value of the custom string. Only tickets with this exact key-value pair will match. Hidden when the rule is relative.
+3. **Absolute**: A toggle to switch between relative and absolute mode. When `Absolute` is checked, the rule matches only tickets whose value exactly equals the configured **Value**. When unchecked (relative), the rule matches tickets whose value equals the value on the ticket being evaluated -- i.e., "match this ticket with others that share the same value for this key". Available on matchmaking snap version `1.7.0` and above.
+4. **Append to metadata**: A checkbox that is only available when the rule is relative *and* the profile's Match Allocation is set to `fleet` or `lobby`. When enabled, the rule's key is added to the assignment's derived metadata at match time, with values dynamically populated by the matchmaker from the matched tickets. Available on matchmaking snap version `1.10.0` and above. See [Match Profile Allocation](#match-profile-allocation) for how the derived metadata is delivered to the allocation destination.
+
+### Custom Tag Rule
+1. **Tag**: The tag that you want to match on (from the ticket's `tags`). Only one tag per rule is allowed.
+
+### Latency Rule
+1. **Start**: The lower bound of the latency range in milliseconds.
+2. **End**: The upper bound of the latency range in milliseconds.
+3. **Expansion**: Optionally configure Auto Expansion or Manual Expansion steps (see [Expansion Configuration](#expansion-configuration) above).
+
+### Bot Rule
+1. **Chance**: The percentage chance (0-100) that a match will be filled with bot tickets when there are not enough real players. When triggered, the matchmaker creates synthetic tickets with the `bot` tag to reach the minimum player count.
+
+<Note>All absolute values are inclusive.</Note>
+
+## Host Selection
+
+1. **Enabled**: A toggle to enable or disable host selection.
+2. **Type**: Pick one of the supported types: leaderboard, statistic or custom number.
+3. **Value**: Based on the type selection, pick the appropriate rule key (e.g., the leaderboard name, statistic name, or custom number key).
+4. **Min or Max**: Pick if you want the host to be the player with the minimum or maximum value amongst all the matched players.

@@ -1,0 +1,91 @@
+# beta-0.48.0
+##### April 11, 2025
+
+## Breaking Changes
+- The Inventory Import tool, now takes in a new field called `sub-inventory`. This field is used to specify if the item supports a sub-inventory or not. Please add a new column, `sub-inventory`, after the column `purchasable` in the CSV / Excel file.
+
+## Snaps
+### Storage
+#### New Blob Type
+- Storage introduces a new blob type called `JSON`. This blob type allows studios to store data as a JSON blob and perform sub-document updates. Additionally, the game studio can define a JSON schema, and the snap will ensure that the data saved always adheres to this format, allowing game studios to store data in a structured format.
+
+### Inventory
+#### Sub-Inventory
+- You can now create catalog items that are designated as "Sub-Inventories". This is like a bag or pouch or whatever makes sense for the game.
+    - They can not be nested
+    - They can not be updated after that fact - you can not turn an existing item into a sub-inventory or visa versa
+    - They can't be marked as consumable, stackable, or as a container
+- Change to API: When granting or rewarding items to users you can provide a sub-inventory instance-id for the following APIs and the item will be granted into that sub-inventory:
+    - GrantInventoryItems
+    - GrantAndOpenContainer
+    - OpenContainer
+    - PurchaseItem
+    - GrantDropTable,
+- A new API `MoveItemsToSubInventory` allows you to move user items into or out of sub-inventories
+- Granting, searching, deleting, managing items has not changed
+- Deleting a sub-inventory will "unnest" it's contents into the main inventory
+- Future features for sub-inventory may include:
+    - Max size
+    - Auto-Granting items into sub-inventory by Tag: granting or rewarding items with particular tags automatically get assigned into a sub-inventory
+    - Class restrictions: only allow items of class ABC in this sub-inventory
+
+### Profile
+- The Profile snap now supports partial updates. There's no need to send the entire profile attribute list back and forth anymore.
+
+### Authentication
+- The Authentication snap now supports a Logout or Dissociate API. This API allows the game studio to log a user out of the game.
+
+#### New Auth Connectors
+We are also releasing new authentication connectors:
+1. **Username-Password**: A simple username-password connector that allows you to authenticate users using a username and password.
+1. **Email-Password**: A simple email-password connector that allows you to authenticate users using a valid email and password. A valid email is required for this connector.
+1. **Discord**: A simple Discord connector that allows you to authenticate users using their Discord code or access token.
+
+## Web App
+- One major upgrade we've made is to expose failures and events that occur in your Snapend. Previously, you only had visibility into logs coming from the Snap PODs in your Kubernetes cluster. Now, you also have access to gateway failures, SDK generation failures, and general infrastructure events. This is a significant step in reducing the time to resolution for issues within your Snapend and eliminating the perception of Snapser as a black box.
+2. We are releasing a new UI update with this release. The games, game, and snapend home pages have been updated, along with an update to the main CSS palette of the app. More enhancements are coming in future releases.
+3. The API Explorer now detects if a Snap has not enabled CORS and shows a message to the user.
+4. You can now access portal pages for partner snaps.
+
+## Snapctl
+### Features
+- The Dockerfile can now be present either at the root or in the resources path. Snapctl will automatically look for the Dockerfile in both locations.
+- Snapctl now throws a more informative warning when the swagger for the BYOSnap is not compatible with what the Snapser backend expects. You will receive the following warning message:
+```bash
+Warning Snapser enforces a strict schema for the swagger.json file. It needs to be a valid OpenAPI 3.0 spec. In addition, ever API needs an operationId. a summary and
+a non-empty description. This allows Snapser to generate your SDK and power the API explorer. If you do not wish to leverage this feature, just remove the
+swagger.json file.
+```
+- You can now use the `--skip-build` flag with the snapctl sync command. This allows you to skip the build step when syncing your Snapend resources.
+```bash
+byosnap sync --snapend-id $snapendId --byosnap-id $byosnapId --version $version --path $path --skip-build
+```
+
+### Fixes
+- Snapctl was failing when a tag containing a `:` was passed in. This has been fixed. It now checks for the presence of a `:` in the tag and throws an error during the input validation step.
+- The `byosnap generate` command was failing. This issue has been fixed.
+
+## Bug Fixes
+- The Access tool was not displaying users with higher-level access on child access pages, causing confusion. This has now been fixed.
+- The User Manager tool now correctly adheres to access permissions, allowing you to onboard your customer service team onto the Snapser platform.
+- The Snapser backend now rejects invalid BYOSnap Swagger files. This eliminates the confusion around why some Snapends containing BYOSnaps are unable to generate the SDK.
+- The "Get Messages" API in the Inbox snap was missing a header tag. This issue has been resolved.
+- API key’s cloned from a cloned snapend would be put in a bad state. This has been fixed.
+- If multiple quests tracked the same item, disabling one of the quest would stop progress for all other quests. This has been fixed.
+
+## Documentation
+- We have introduced a new section called Tutorials. This section contains a list of tutorials that will help you get started with Snapser. Some tutorials include:
+    - Create a Snapend
+    - Understand Snapend security
+    - Snapend tools
+    - Set up Snapser CLI
+    - Create a basic BYOSnap
+    - Create a basic BYOGs
+- We are releasing new starter BYOSnap codebases in the following languages:
+    - C#
+    - Go
+    - Python
+    - Node (Typescript)
+- We have added a new starter project for the following:
+    - Get a Unity C# game to deploy as a Discord activity using a fork of Dissonity that Snapser has created.
+- We made a new UI change to the docs to improve readability.

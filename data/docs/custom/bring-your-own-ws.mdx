@@ -1,0 +1,216 @@
+export const description = 'BYO WS'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Bring your Own Workstation
+
+Bring your own Workstation and attach it to your Snapend. This effectively allows you to run your code locally and debug it.
+
+## Concept
+
+With Snapser’s Bring Your Own Snap (BYOSnap) technology, you can bring your own server code — written in any language — and attach it to your backend as a Snap. This enables you to run your own microservices, macroservices, or even full monoliths. To make development even smoother, Snapser’s CLI tool, snapctl, also supports Bring Your Own Workstation (BYOWS). BYOWS lets you attach your local workstation, exposing your locally running BYOSnap code directly to your Snapend. This allows you to run and debug your code locally, as if it were part of the live backend.
+
+![BYOWs](/images/docs/tutorials/byosnap-byows.png)
+
+<Warning>
+  BYOWS only works for Development Snapends. You cannot attach your workstation to a Staging or a Production Snapend.
+</Warning>
+
+## Tutorials
+The best way to understand BYOSnaps and how to locally debug is to go through the following tutorial:
+1. [BYOSnap Intermediate](/docs/guides/tutorials/byosnap-intermediate): This tutorial builds on the basic tutorial to expose you to intra Snapend communication and local debugging. In this tutorial you will learn:
+    - Integrate the Internal SDK to communicate with other Snaps in your Snapend
+    - Use Snapser's BYOWS (Bring your own Workstation) technology to locally debug your BYOSnap
+    - Publish and test the BYOSnap
+
+<Note>
+  We highly recommend going through these tutorials, to understand the use and power of BYOSnaps.
+</Note>
+
+## Pre-requisites
+
+### 1. Python 3.X and Pip
+The Snapser CLI tool that you will use for BYOSnaps, has a dependency on Python 3.X and Pip.
+MacOS comes pre installed with Python. But please make sure you are running Python 3.X.
+On Windows, you can download Python 3.X from the Windows store.
+
+### 2. Docker
+Some of the commands also need docker. You can download the latest version of Docker from the
+[Docker website](https://www.docker.com/products/docker-desktop).
+
+<Note>
+  **IMPORTANT**: Open up Docker desktop and settings. Make sure this setting is **disabled**
+  **Use containerd for pulling and storing images**.
+  ![Docker Issue Pic](/images/docs/docker-setting.png)
+  This is because Snapser uses Docker
+  to build and push images to the Snapser registry. Having this setting enabled will
+  cause issues with the Snapser CLI tool.
+</Note>
+
+### 3. Snapser CLI
+
+Snapser requires customers to use the Snapser CLI tool to build, upload and
+push images to the Snapser registry. The The [Snapctl tool](https://pypi.org/project/snapctl/) is available on Pypi and
+can be installed via pip. The CLI tool supports both MacOSX and Windows OS.
+
+Detailed documentation on the Snapser CLI tool can be found [here](/docs/resources/cli).
+
+#### Installation
+<CodeGroup title="Install Snapctl" tag="bash">
+```bash
+pip install --user snapctl
+```
+</CodeGroup>
+
+<Note>
+  After you install snapctl you may have to add the python bin folder to your
+  path. For example, on MacOSX this is usually ~/Library/Python/3.9/bin . On
+  Windows this is usually
+  C:\Users\username\AppData\Roaming\Python\Python39\Scripts .
+</Note>
+
+#### Snapser CLI Setup
+
+##### Get your Snapser Access Key
+
+<Note>
+  You need to have one of the following roles to generate an API key:
+  - **company-admin**
+  - **company-edit**
+  - **game-admin**
+  - **game-edit**
+</Note>
+
+Log in to your Snapser account. Click on your user icon on the top right and select, User Account. In the left navigation click on **Developer** which will bring up your Personal API Key widget. If you have not generated an API Key yet click on the **Generate** button to generate a new key. You can generate upto 3 API Keys per user account.
+
+<Note>
+  Please make sure you save your API key in a safe place. You will not be able
+  to see it again.
+</Note>
+
+##### Setup a local config
+
+Create a file named `~/.snapser/config`. Open it using the editor of your choice and replace with your
+personal Snapser Access key. Save the file.
+
+<CodeGroup title="Snapser Config" tag="bash" label="~/.snapser/config">
+```bash
+[default]
+SNAPSER_API_KEY = <key>
+```
+</CodeGroup>
+
+Or you can run the following command
+
+on MacOSX
+
+<CodeGroup title="Snapser Config OSX" tag="bash" label="~/.snapser/config">
+```bash
+# $your_api_key = Your Snapser developer key
+echo -e "[default]\nSNAPSER_API_KEY=$your_api_key" > ~/.snapser/config
+```
+</CodeGroup>
+
+on Windows Powershell
+
+<CodeGroup title="Snapser Config Windows" tag="bash" label="~/.snapser/config">
+```bash
+# $your_api_key = Your Snapser developer key
+echo "[default]
+SNAPSER_API_KEY=$your_api_key" | Out-File -encoding utf8 ~\.snapser\config
+```
+</CodeGroup>
+
+##### Verify Snapctl installation
+
+<CodeGroup title="Snapctl validate setup" tag="bash">
+```bash
+snapctl validate
+```
+</CodeGroup>
+
+You should see the latest snapctl version in the output
+
+### 4. Snapend with your initial BYOSnap code
+You need to have a Snapend with your initial BYOSnap code. You can create a new Snapend with a basic BYOSnap by following the [BYOSnap Basic tutorial](/docs/guides/tutorials/byosnap-basic).
+
+<Note>
+  You can also use an existing Snapend with your BYOSnap code.
+</Note>
+
+## Usage
+### 1. Attaching your BYOSnap
+- Make sure you have a Snapend with your initial BYOSnap code running on Snapser.
+- Then, run the following command to attach your BYOSnap code to your Snapend.
+```bash
+# $snapend_id = Your Snapend ID
+# $byosnap_id = Your BYOSnap ID
+# $http_port = The port on which your BYOSnap code is running locally
+snapctl byows attach --snapend-id $snapendId --byosnap-id $byosnapId --http-port $serverPort
+ ____
+/ ___| _ __   __ _ _ __  ___  ___ _ __
+\___ \| '_ \ / _` | '_ \/ __|/ _ \ '__|
+ ___) | | | | (_| | |_) \__ \  __/ |
+|____/|_| |_|\__,_| .__/|___/\___|_|
+                  |_|
+
+Info Trying to extract API KEY from /Users/Aj/.snapser/config:profile playtest_ajco"
+Info Forwarding https://gateway-accel.snapser.com/k11voxwz/v1/byosnap-inter -> http://localhost:5003/*
+Your BYOSnap HTTP server should listen on: localhost:5003
+Connect to other snaps over HTTP on: localhost:4002
+Set the environment variables before starting your local server:
+
+SNAPEND_AUTH_GRPC_URL=localhost:4002
+SNAPEND_AUTH_HTTP_URL=http://localhost:4002
+SNAPEND_PROFILES_GRPC_URL=localhost:4002
+SNAPEND_PROFILES_HTTP_URL=http://localhost:4002
+
+Run the following command to set them in your session:
+
+    source /Users/Aj/.snapser/byows_env_setup.sh
+
+Press <ctrl-c> to stop forwarding
+```
+- This will ensure that any calls that are made to your Snapend BYOSnap will be routed to your local BYOSnap code instead.
+- **IMPORTANT**: If you are accessing other Snaps from your BYOSnap either directly or using the Internal SDK, you should follow the steps below to set up the environment variables.
+
+#### Supporting the Internal SDK
+- When you run the `snapctl byows` command, you will get a file called `byows_env_setup.sh` for MacOSX or `byows_env_setup.ps1` for Windows stored in the `~/.snapser/` directory. This file contains the environment variables that the BYOWS technology will beed to route internal calls to the appropriate Snaps.
+  <Note>
+    BYOWS smartly, will route both Internal and GRPC calls to the appropriate Snaps. Just make sure you have the environment variables set up correctly.
+  </Note>
+- To setup, the environment variables, run the following command in a different tab to set up the environment variables for your BYOSnap code.
+```bash
+# MacOSX
+source ~/.snapser/byows_env_setup.sh
+# Windows
+.\.snapser\byows_env_setup.ps1
+```
+- You should then start the BYOSnap local server in the same tab that has the environment variables set up. This will ensure that the BYOSnap code can access the internal SDK and other Snaps in your Snapend.
+
+<Warning>
+  **IMPORTANT**: At the moment, only one workstation from a single physical user can be attached to a Snapend. Meaning, if you as a dev have two BYOSnaps on your workstation, you can only attach one of them to a Snapend. If you try to attach the second one, it will fail with an error.
+</Warning>
+
+### 2. Reset BYOWS
+If you want to reset the BYOWS connection, you can run the following command:
+```bash
+# $snapend_id = Your Snapend ID
+snapctl byows reset --snapend-id $snapendId
+```
+This will remove the BYOWS connection and stop forwarding requests to your local BYOSnap code.
+
+<Note>
+  It should be noted that terminating the BYOWS attach via Ctrl-C or any other signal does clean up the BYOWS connection. However, this command can always be used to force reset the connection.
+</Note>
+
+## Networking
+When you run the above command, Snapser creates a secure tunnel between your workstation and your Snapend using Snapser's internal networking.
+Here's what happens:
+
+1. External calls to your Snapend BYOSnap are routed to your local BYOSnap code instead.
+    - **Example**: A request to https://gateway-accel.snapser.com/wsxo1j1c/v1/byosnap-basic/* will be routed to your local server running on the port you specified with the --http-port argument.
+1. Internal calls from your local BYOSnap to other Snaps in your Snapend are automatically handled.
+    - Inside your local code, when you call another Snap, you are expected to use the internal SDK and environment variable overrides. Thanks to the BYOWS environment setup, these calls will correctly route to the live Snaps in your Snapend — without any code changes.

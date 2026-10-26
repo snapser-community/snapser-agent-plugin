@@ -1,0 +1,53 @@
+# 1.4.0
+##### December 18, 2025
+
+## Spotlight
+1. You can now ship HTML/CSS/JS based tools with your BYOSnaps. This is both for your configuration tools and user manager tools. The old way of shipping tools built via the Snapser Configuration tool builder is still supported but we recommend moving to this new way of building tools as it gives you complete flexibility over the UI/UX and functionality of the tools you build. Please refer to the documentation for more details on how to build and ship these tools.
+
+## Breaking Changes
+1. We will be pushing a change to the following APIs that will change the SDKs for all languages for the latest version (1.4) of the snap. The API itself will not change over HTTP but the new SDK will cause compiler errors if you are using these APIs. These APIs have a field in them that can be any primitive type or an object or array, which some languages SDKs were not handling properly. The change made is now using a newly defined AnyValue object in the SDK instead of the native Object type for languages.
+
+The API list:
+```text
+Guilds.SearchGuild: (Request.MetadataFilter.Value field)
+Lobbies.SearchLobby: (Request.MetadataFilter.Value field)
+Parties.SearchParty: (Request.MetadataFilter.Value field)
+RemoteConfig.GetAppConfig (Response.Config field)
+RemoteConfig.GetUserConfig (Response.Config field)
+Storage.GetSubDocument (Response.Value field)
+Storage.UpsertSubDocument (Request.Updates[].Value field)
+Storage.AppendArrSubDocument (Request.Updates[].Value field)
+Storage.PrependArrSubDocument (Request.Updates[].Value field)
+KWS All apis that contain the Effective Value for the setting
+```
+
+## Snaps
+### Social-Graph
+1. You can now configure friend and follower counts to be public or private. By default, these counts are private.
+
+### Analytics
+1. We have made the number of properties per event to be dynamic. The default is 20. But if a customer wants more, they can reach out to support and we can increase this limit for them.
+
+### Inventory
+1. Inventory now supports item instance limits in a user inventory. For example, if you want an inventory user item to be unique, you can set the instance limit to 1. If you want a user to be able to have multiple instances of the same item, you can set the instance limit to a higher number.
+
+### Parties
+1. The UpdateParty API now does not need the owner Id to be passed when using internal auth.
+
+### Decorators
+1. `GetGuildForUserId` has been added to the Decorator Snap.
+
+## Web App
+1. Fixed an issue where you were able to clone or promote a Snapend that had dependent Snaps but not pick the configuration of the dependent Snap causing runtime issues. Now, when you clone or promote a Snapend, copying settings for all dependent Snaps is mandatory.
+2. FTUE for our enterprise customers had a bug. It should now be fixed.
+3. The Access tool now allows you to add multiple users via a comma separated list of emails. Addition of roles is also supported in this way.
+4. All configuration tools for Snaps now support a `View Mode`. This allows you to view the configuration without the risk of accidentally changing something.
+5. User logs tool now supports searching logs with case insensitive search.
+6. Fixed a bug where the Top Used Snaps and Top Request graphs were not populating data correctly.
+7. The Infra monitor graphs now show labels in the order they contribute the most to the data being shown.
+
+## Snapctl
+1. Updated the Snapctl to support BYOSnap configuration and user tool (HTML/JS/CSS) uploads.
+
+## Documentation
+1. Added a new BYOSnap Advanced II tutorial showing how to leverage the new HTML based BYOSnap configuration and user manager tools.

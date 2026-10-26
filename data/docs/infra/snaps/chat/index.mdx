@@ -1,0 +1,1029 @@
+
+
+export const description = 'Guilds'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Chat
+
+The Chat snap enables players in a game or app to communicate with each other in real time.
+
+## Chat Types
+
+The Chat snap currently supports the following types:
+
+1. **User to User Chat**: Allows users to send 1-on-1 messages to other users.
+2. **Guild Chat**: Allows users within a guild to participate in a common chat room. Messages are delivered to all the members of the guild.
+the members of the party.
+3. **Lobby Chat**: Allows users within a lobby to participate in a common chat room. Messages are delivered to all the
+members of the lobby.
+
+## Transport
+
+If you enable [Websocket](/docs/infra/snaps/hermes) in your Snapend gateway, messages will be delivered to the users in real time over their websocket session. This is the recommended way to use Chat.
+Without Websocket, you can still receive messages by polling the API to get messages between two users or for a guild. These APIs support passing in `from` and `to` parameters
+that enable polling by only returning messages that were send within that time frame.
+
+Note that this can only work if you have enabled message retention in the snap settings.
+
+### Web socket integration
+
+It is recommended to use Chat with Websocket. Doing so enables true real-time communication between your players. The overall flow is as follows -
+
+#### Direct Messages over Websocket
+
+1. **User A** and **User B** connect to Websocket over websocket connections.
+2. **User A** sends a message to Websocket of the type `chat_direct_message_send` specifying the `target_user_id` of User B and the message `content`.
+3. **User B** receives a message from Websocket of the type `chat_direct_message_received` with the message `content` and the User ID of the `sender` in real time.
+
+#### Guild Chat over Websocket
+
+1. **User A**, **User B**, and **User C** are three members of **Guild X** that connect to Websocket over websocket connections.
+2. **User A** and **User B** send a message to Websocket of the type `chat_guild_room_join` specifying the `guild_id` of **Guild X** to join its chat room. **User C**
+does not join the guild chat room.
+3. **User A** sends a message to Websocket of the type `chat_guild_message_send` specifying the `guild_id` of **Guild X** and the message `content`.
+4. **User B** receives a message from Websocket of the type `chat_guild_message_received` with the message `content`, along with the `guild_id` and the User ID of the `sender`.
+**User C** does not receive the message, since they did not join the guild chat room.
+
+
+## Chat History
+
+You can enable message retention in the Snap admin tool for both direct message chat and for guild chat. After doing this, the chat snap will
+start keeping track of any new messages that are sent. You can configure the number of days for which messages are retained, for a maximum of
+up to 28 days. You can get these messages by calling the appropriate APIs. You can pass in UNIX timestamps to the `from` and `to` parameters of
+these APIs to avoid fetching the entire message history.
+
+
+## Avoiding Spam
+
+You can configure Chat snap to require users to explicitly accept chat messages from other users, by turning on the **Require Chat Acceptance** setting in the Direct Message
+admin tool. After enabling this, Websocket will not send the `content` of message from users to the target user, if they have not accepted messages from them. Websocket will still notify
+the target user that someone is trying to send them chat messages by sending a message of the type `chat_unaccepted_direct_message_received` with the User ID of the sender.
+
+Users can also block other users if they no longer want to receive messages from them. Accepting or blocking direct messages for users can be done by calling the `SetPermission` API.
+
+## APIs
+
+The `Chat` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name           | HTTP Method | API Description                                   |
+| ------------------ | ----------- | ------------------------------------------------- |
+| [ChatJoinRoom](#chatjoinroom-api)           | POST        | Join a room chat                                  |
+| [ChatLeaveRoom](#chatleaveroom-api)          | POST        | Leave a room chat                                 |
+| [ChatGetRoomMessages](#chatgetroommessages-api)    | GET         | Get messages from a room chat                     |
+| [ChatSendRoomMessage](#chatsendroommessage-api)    | POST        | Send a message to the room                        |
+| [ChatGetConversations](#chatgetconversations-api)   | GET         | Get user conversations                            |
+| [ChatGetDirectMessages](#chatgetdirectmessages-api)  | GET         | Get direct messages from a chat with another user |
+| [ChatSendDirectMessage](#chatsenddirectmessage-api)  | POST        | Send a direct message to another user             |
+| [ChatGetUserPermissions](#chatgetuserpermissions-api) | GET         | Get the list permissions set for a user           |
+| [ChatSetUserPermission](#chatsetuserpermission-api)  | POST        | Set chat permissions for a user and target user   |
+</div>
+
+### Usage
+#### ChatJoinRoom API
+<CodeGroup title="Join a room chat" tag="POST" label="ChatJoinRoom">
+```csharp
+/// <summary>
+/// Join Chat Room Join a room chat
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="roomId">ID of the room</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>ChatJoinRoomResponse</returns>
+public ChatJoinRoomResponse ChatJoinRoom(string roomId, string token, ChatServiceJoinRoomBody body)
+{
+    Snapser.Client.ApiResponse<ChatJoinRoomResponse> localVarResponse = ChatJoinRoomWithHttpInfo(roomId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ChatServiceJoinRoomBody
+/// <summary>
+/// Initializes a new instance of the <see cref="ChatServiceJoinRoomBody" /> class.
+/// </summary>
+/// <param name="roomType">Origin service of the room. Values must be one of &#39;guild&#39; or &#39;lobby&#39; (required).</param>
+/// <param name="userId">UserID of the user (required).</param>
+/// <param name="userMetadata">Metadata of the user.</param>
+public ChatServiceJoinRoomBody(string roomType = default(string), string userId = default(string), Object userMetadata = default(Object))
+{
+    // to ensure "roomType" is required (not null)
+    if (roomType == null)
+    {
+        throw new ArgumentNullException("roomType is a required property for ChatServiceJoinRoomBody and cannot be null");
+    }
+    this.RoomType = roomType;
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for ChatServiceJoinRoomBody and cannot be null");
+    }
+    this.UserId = userId;
+    this.UserMetadata = userMetadata;
+}
+
+/// Snapser.Model for ChatJoinRoomResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="ChatJoinRoomResponse" /> class.
+/// </summary>
+/// <param name="onlineUsers">onlineUsers.</param>
+/// <param name="roomId">roomId.</param>
+/// <param name="roomType">roomType.</param>
+/// <param name="userId">userId.</param>
+public ChatJoinRoomResponse(List<string> onlineUsers = default(List<string>), string roomId = default(string), string roomType = default(string), string userId = default(string))
+{
+    this.OnlineUsers = onlineUsers;
+    this.RoomId = roomId;
+    this.RoomType = roomType;
+    this.UserId = userId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserChatServiceApi::ChatJoinRoomRequest : public Request
+{
+public:
+    virtual ~ChatJoinRoomRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the room */
+    FString RoomId;
+    /* User session token */
+    FString Token;
+    SnapserChatServiceJoinRoomBody Body;
+};
+
+class SNAPSER_API SnapserChatServiceJoinRoomBody : public Model
+{
+public:
+    virtual ~SnapserChatServiceJoinRoomBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Origin service of the room. Values must be one of 'guild' or 'lobby' */
+    FString RoomType;
+    /* UserID of the user */
+    FString UserId;
+    /* Metadata of the user */
+    TOptional<TSharedPtr<FJsonObject>> UserMetadata;
+};
+
+// Response
+class SNAPSER_API SnapserChatServiceApi::ChatJoinRoomResponse : public Response
+{
+public:
+    virtual ~ChatJoinRoomResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserChatJoinRoomResponse Content;
+};
+
+class SNAPSER_API SnapserChatJoinRoomResponse : public Model
+{
+public:
+    virtual ~SnapserChatJoinRoomResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<FString>> OnlineUsers;
+    TOptional<FString> RoomId;
+    TOptional<FString> RoomType;
+    TOptional<FString> UserId;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### ChatLeaveRoom API
+<CodeGroup title="Leave a room chat" tag="POST" label="ChatLeaveRoom">
+```csharp
+/// <summary>
+/// Leave Chat Room Leave a room chat
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="roomId">ID of the room</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object ChatLeaveRoom(string roomId, string token, ChatServiceLeaveRoomBody body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = ChatLeaveRoomWithHttpInfo(roomId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ChatServiceLeaveRoomBody
+/// <summary>
+/// Initializes a new instance of the <see cref="ChatServiceLeaveRoomBody" /> class.
+/// </summary>
+/// <param name="userId">UserID of the user (required).</param>
+public ChatServiceLeaveRoomBody(string userId = default(string))
+{
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for ChatServiceLeaveRoomBody and cannot be null");
+    }
+    this.UserId = userId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserChatServiceApi::ChatLeaveRoomRequest : public Request
+{
+public:
+    virtual ~ChatLeaveRoomRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the room */
+    FString RoomId;
+    /* User session token */
+    FString Token;
+    SnapserChatServiceLeaveRoomBody Body;
+};
+
+class SNAPSER_API SnapserChatServiceLeaveRoomBody : public Model
+{
+public:
+    virtual ~SnapserChatServiceLeaveRoomBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* UserID of the user */
+    FString UserId;
+};
+
+// Response
+class SNAPSER_API SnapserChatServiceApi::ChatLeaveRoomResponse : public Response
+{
+public:
+    virtual ~ChatLeaveRoomResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### ChatGetRoomMessages API
+<CodeGroup title="Get messages from a room chat" tag="GET" label="ChatGetRoomMessages">
+```csharp
+/// <summary>
+/// Chat Room Messages Get messages from a room chat
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="roomId">ID of the room</param>
+/// <param name="userId">UserID of the user</param>
+/// <param name="roomType">Origin service of the room. Values must be one of &#39;guild&#39; or &#39;lobby&#39;</param>
+/// <param name="to">Unix timestamp for the time to which messages should be returned</param>
+/// <param name="token">User session token</param>
+/// <param name="from">Unix timestamp for the time from which messages should be returned (optional)</param>
+/// <param name="order">Whether the messages should be sorted in ascending or descending order of timestamp (Default: desc) (optional)</param>
+/// <returns>ChatGetRoomMessagesResponse</returns>
+public ChatGetRoomMessagesResponse ChatGetRoomMessages(string roomId, string userId, string roomType, long to, string token, long? from = default(long?), string order = default(string))
+{
+    Snapser.Client.ApiResponse<ChatGetRoomMessagesResponse> localVarResponse = ChatGetRoomMessagesWithHttpInfo(roomId, userId, roomType, to, token, from, order);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ChatGetRoomMessagesResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="ChatGetRoomMessagesResponse" /> class.
+/// </summary>
+/// <param name="messages">messages.</param>
+public ChatGetRoomMessagesResponse(List<ChatTextMessage> messages = default(List<ChatTextMessage>))
+{
+    this.Messages = messages;
+}
+
+/// Snapser.Model for ChatTextMessage
+/// <summary>
+/// Initializes a new instance of the <see cref="ChatTextMessage" /> class.
+/// </summary>
+/// <param name="content">content.</param>
+/// <param name="id">id.</param>
+/// <param name="recipient">recipient.</param>
+/// <param name="sender">sender.</param>
+/// <param name="sentAt">sentAt.</param>
+public ChatTextMessage(string content = default(string), string id = default(string), string recipient = default(string), string sender = default(string), string sentAt = default(string))
+{
+    this.Content = content;
+    this.Id = id;
+    this.Recipient = recipient;
+    this.Sender = sender;
+    this.SentAt = sentAt;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserChatServiceApi::ChatGetRoomMessagesRequest : public Request
+{
+public:
+    virtual ~ChatGetRoomMessagesRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the room */
+    FString RoomId;
+    /* UserID of the user */
+    FString UserId;
+    /* Origin service of the room. Values must be one of 'guild' or 'lobby' */
+    FString RoomType;
+    /* Unix timestamp for the time to which messages should be returned */
+    int64 To = 0;
+    /* User session token */
+    FString Token;
+    /* Unix timestamp for the time from which messages should be returned */
+    TOptional<int64> From;
+    /* Whether the messages should be sorted in ascending or descending order of timestamp (Default: desc) */
+    TOptional<FString> Order;
+};
+
+// Response
+class SNAPSER_API SnapserChatServiceApi::ChatGetRoomMessagesResponse : public Response
+{
+public:
+    virtual ~ChatGetRoomMessagesResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserChatGetRoomMessagesResponse Content;
+};
+
+class SNAPSER_API SnapserChatGetRoomMessagesResponse : public Model
+{
+public:
+    virtual ~SnapserChatGetRoomMessagesResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserChatTextMessage>> Messages;
+};
+
+class SNAPSER_API SnapserChatTextMessage : public Model
+{
+public:
+    virtual ~SnapserChatTextMessage() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Content;
+    TOptional<FString> Id;
+    TOptional<FString> Recipient;
+    TOptional<FString> Sender;
+    TOptional<FString> SentAt;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### ChatSendRoomMessage API
+<CodeGroup title="Send a message to the room" tag="POST" label="ChatSendRoomMessage">
+```csharp
+/// <summary>
+/// Chat Room Message Send a message to the room
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="roomId">ID of the room</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object ChatSendRoomMessage(string roomId, string token, ChatServiceSendRoomMessageBody body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = ChatSendRoomMessageWithHttpInfo(roomId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ChatServiceSendRoomMessageBody
+/// <summary>
+/// Initializes a new instance of the <see cref="ChatServiceSendRoomMessageBody" /> class.
+/// </summary>
+/// <param name="message">Message to be sent (required).</param>
+/// <param name="messageId">ID of the message (required).</param>
+/// <param name="roomType">Origin service of the room. Values must be one of &#39;guild&#39; or &#39;lobby&#39; (required).</param>
+/// <param name="userId">UserID of the user (required).</param>
+public ChatServiceSendRoomMessageBody(string message = default(string), string messageId = default(string), string roomType = default(string), string userId = default(string))
+{
+    // to ensure "message" is required (not null)
+    if (message == null)
+    {
+        throw new ArgumentNullException("message is a required property for ChatServiceSendRoomMessageBody and cannot be null");
+    }
+    this.Message = message;
+    // to ensure "messageId" is required (not null)
+    if (messageId == null)
+    {
+        throw new ArgumentNullException("messageId is a required property for ChatServiceSendRoomMessageBody and cannot be null");
+    }
+    this.MessageId = messageId;
+    // to ensure "roomType" is required (not null)
+    if (roomType == null)
+    {
+        throw new ArgumentNullException("roomType is a required property for ChatServiceSendRoomMessageBody and cannot be null");
+    }
+    this.RoomType = roomType;
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for ChatServiceSendRoomMessageBody and cannot be null");
+    }
+    this.UserId = userId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserChatServiceApi::ChatSendRoomMessageRequest : public Request
+{
+public:
+    virtual ~ChatSendRoomMessageRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* ID of the room */
+    FString RoomId;
+    /* User session token */
+    FString Token;
+    SnapserChatServiceSendRoomMessageBody Body;
+};
+
+class SNAPSER_API SnapserChatServiceSendRoomMessageBody : public Model
+{
+public:
+    virtual ~SnapserChatServiceSendRoomMessageBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Message to be sent */
+    FString Message;
+    /* ID of the message */
+    FString MessageId;
+    /* Origin service of the room. Values must be one of 'guild' or 'lobby' */
+    FString RoomType;
+    /* UserID of the user */
+    FString UserId;
+};
+
+// Response
+class SNAPSER_API SnapserChatServiceApi::ChatSendRoomMessageResponse : public Response
+{
+public:
+    virtual ~ChatSendRoomMessageResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### ChatGetConversations API
+<CodeGroup title="Get user conversations" tag="GET" label="ChatGetConversations">
+```csharp
+/// <summary>
+/// Conversations Get user conversations
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">UserID of the user</param>
+/// <param name="token">User session token</param>
+/// <returns>ChatGetConversationsResponse</returns>
+public ChatGetConversationsResponse ChatGetConversations(string userId, string token)
+{
+    Snapser.Client.ApiResponse<ChatGetConversationsResponse> localVarResponse = ChatGetConversationsWithHttpInfo(userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ChatGetConversationsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="ChatGetConversationsResponse" /> class.
+/// </summary>
+/// <param name="conversations">conversations.</param>
+public ChatGetConversationsResponse(ChatConversations conversations = default(ChatConversations))
+{
+    this.Conversations = conversations;
+}
+
+/// Snapser.Model for ChatConversations
+/// <summary>
+/// Initializes a new instance of the <see cref="ChatConversations" /> class.
+/// </summary>
+/// <param name="users">users.</param>
+public ChatConversations(List<ChatUserConversation> users = default(List<ChatUserConversation>))
+{
+    this.Users = users;
+}
+
+/// Snapser.Model for ChatUserConversation
+/// <summary>
+/// Initializes a new instance of the <see cref="ChatUserConversation" /> class.
+/// </summary>
+/// <param name="id">id.</param>
+/// <param name="lastMessageAt">lastMessageAt.</param>
+public ChatUserConversation(string id = default(string), string lastMessageAt = default(string))
+{
+    this.Id = id;
+    this.LastMessageAt = lastMessageAt;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserChatServiceApi::ChatGetConversationsRequest : public Request
+{
+public:
+    virtual ~ChatGetConversationsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* UserID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserChatServiceApi::ChatGetConversationsResponse : public Response
+{
+public:
+    virtual ~ChatGetConversationsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserChatGetConversationsResponse Content;
+};
+
+class SNAPSER_API SnapserChatGetConversationsResponse : public Model
+{
+public:
+    virtual ~SnapserChatGetConversationsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserChatConversations> Conversations;
+};
+
+class SNAPSER_API SnapserChatConversations : public Model
+{
+public:
+    virtual ~SnapserChatConversations() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserChatUserConversation>> Users;
+};
+
+class SNAPSER_API SnapserChatUserConversation : public Model
+{
+public:
+    virtual ~SnapserChatUserConversation() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Id;
+    TOptional<FString> LastMessageAt;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### ChatGetDirectMessages API
+<CodeGroup title="Get direct messages from a chat with another user" tag="GET" label="ChatGetDirectMessages">
+```csharp
+/// <summary>
+/// Direct Messages Get direct messages from a chat with another user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">UserID of the user</param>
+/// <param name="targetUserId">UserID of the target user</param>
+/// <param name="to">Unix timestamp for the time to which messages should be returned</param>
+/// <param name="token">User session token</param>
+/// <param name="from">Unix timestamp for the time from which messages should be returned (optional)</param>
+/// <param name="order">Whether the messages should be sorted in ascending or descending order of timestamp (Default: desc) (optional)</param>
+/// <returns>ChatGetDirectMessagesResponse</returns>
+public ChatGetDirectMessagesResponse ChatGetDirectMessages(string userId, string targetUserId, long to, string token, long? from = default(long?), string order = default(string))
+{
+    Snapser.Client.ApiResponse<ChatGetDirectMessagesResponse> localVarResponse = ChatGetDirectMessagesWithHttpInfo(userId, targetUserId, to, token, from, order);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ChatGetDirectMessagesResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="ChatGetDirectMessagesResponse" /> class.
+/// </summary>
+/// <param name="messages">messages.</param>
+public ChatGetDirectMessagesResponse(List<ChatTextMessage> messages = default(List<ChatTextMessage>))
+{
+    this.Messages = messages;
+}
+
+/// Snapser.Model for ChatTextMessage
+/// <summary>
+/// Initializes a new instance of the <see cref="ChatTextMessage" /> class.
+/// </summary>
+/// <param name="content">content.</param>
+/// <param name="id">id.</param>
+/// <param name="recipient">recipient.</param>
+/// <param name="sender">sender.</param>
+/// <param name="sentAt">sentAt.</param>
+public ChatTextMessage(string content = default(string), string id = default(string), string recipient = default(string), string sender = default(string), string sentAt = default(string))
+{
+    this.Content = content;
+    this.Id = id;
+    this.Recipient = recipient;
+    this.Sender = sender;
+    this.SentAt = sentAt;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserChatServiceApi::ChatGetDirectMessagesRequest : public Request
+{
+public:
+    virtual ~ChatGetDirectMessagesRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* UserID of the user */
+    FString UserId;
+    /* UserID of the target user */
+    FString TargetUserId;
+    /* Unix timestamp for the time to which messages should be returned */
+    int64 To = 0;
+    /* User session token */
+    FString Token;
+    /* Unix timestamp for the time from which messages should be returned */
+    TOptional<int64> From;
+    /* Whether the messages should be sorted in ascending or descending order of timestamp (Default: desc) */
+    TOptional<FString> Order;
+};
+
+// Response
+class SNAPSER_API SnapserChatServiceApi::ChatGetDirectMessagesResponse : public Response
+{
+public:
+    virtual ~ChatGetDirectMessagesResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserChatGetDirectMessagesResponse Content;
+};
+
+class SNAPSER_API SnapserChatGetDirectMessagesResponse : public Model
+{
+public:
+    virtual ~SnapserChatGetDirectMessagesResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserChatTextMessage>> Messages;
+};
+
+class SNAPSER_API SnapserChatTextMessage : public Model
+{
+public:
+    virtual ~SnapserChatTextMessage() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Content;
+    TOptional<FString> Id;
+    TOptional<FString> Recipient;
+    TOptional<FString> Sender;
+    TOptional<FString> SentAt;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### ChatSendDirectMessage API
+<CodeGroup title="Send a direct message to another user" tag="POST" label="ChatSendDirectMessage">
+```csharp
+/// <summary>
+/// Direct Messages Send a direct message to another user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">UserID of the user</param>
+/// <param name="targetUserId">UserID of the target user</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object ChatSendDirectMessage(string userId, string targetUserId, string token, ChatServiceSendDirectMessageBody body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = ChatSendDirectMessageWithHttpInfo(userId, targetUserId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ChatServiceSendDirectMessageBody
+/// <summary>
+/// Initializes a new instance of the <see cref="ChatServiceSendDirectMessageBody" /> class.
+/// </summary>
+/// <param name="message">Message to be sent (required).</param>
+/// <param name="messageId">ID of the message.</param>
+public ChatServiceSendDirectMessageBody(string message = default(string), string messageId = default(string))
+{
+    // to ensure "message" is required (not null)
+    if (message == null)
+    {
+        throw new ArgumentNullException("message is a required property for ChatServiceSendDirectMessageBody and cannot be null");
+    }
+    this.Message = message;
+    this.MessageId = messageId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserChatServiceApi::ChatSendDirectMessageRequest : public Request
+{
+public:
+    virtual ~ChatSendDirectMessageRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* UserID of the user */
+    FString UserId;
+    /* UserID of the target user */
+    FString TargetUserId;
+    /* User session token */
+    FString Token;
+    SnapserChatServiceSendDirectMessageBody Body;
+};
+
+class SNAPSER_API SnapserChatServiceSendDirectMessageBody : public Model
+{
+public:
+    virtual ~SnapserChatServiceSendDirectMessageBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Message to be sent */
+    FString Message;
+    /* ID of the message */
+    TOptional<FString> MessageId;
+};
+
+// Response
+class SNAPSER_API SnapserChatServiceApi::ChatSendDirectMessageResponse : public Response
+{
+public:
+    virtual ~ChatSendDirectMessageResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### ChatGetUserPermissions API
+<CodeGroup title="Get the list permissions set for a user" tag="GET" label="ChatGetUserPermissions">
+```csharp
+/// <summary>
+/// Get User Permissions Get the list permissions set for a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">UserID of the user</param>
+/// <param name="token">User session token</param>
+/// <returns>ChatGetUserPermissionsResponse</returns>
+public ChatGetUserPermissionsResponse ChatGetUserPermissions(string userId, string token)
+{
+    Snapser.Client.ApiResponse<ChatGetUserPermissionsResponse> localVarResponse = ChatGetUserPermissionsWithHttpInfo(userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ChatGetUserPermissionsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="ChatGetUserPermissionsResponse" /> class.
+/// </summary>
+/// <param name="permissions">permissions.</param>
+public ChatGetUserPermissionsResponse(List<ChatUserPermission> permissions = default(List<ChatUserPermission>))
+{
+    this.Permissions = permissions;
+}
+
+/// Snapser.Model for ChatUserPermission
+/// <summary>
+/// Initializes a new instance of the <see cref="ChatUserPermission" /> class.
+/// </summary>
+/// <param name="permission">permission.</param>
+/// <param name="userId">userId.</param>
+public ChatUserPermission(string permission = default(string), string userId = default(string))
+{
+    this.Permission = permission;
+    this.UserId = userId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserChatServiceApi::ChatGetUserPermissionsRequest : public Request
+{
+public:
+    virtual ~ChatGetUserPermissionsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* UserID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserChatServiceApi::ChatGetUserPermissionsResponse : public Response
+{
+public:
+    virtual ~ChatGetUserPermissionsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserChatGetUserPermissionsResponse Content;
+};
+
+class SNAPSER_API SnapserChatGetUserPermissionsResponse : public Model
+{
+public:
+    virtual ~SnapserChatGetUserPermissionsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserChatUserPermission>> Permissions;
+};
+
+class SNAPSER_API SnapserChatUserPermission : public Model
+{
+public:
+    virtual ~SnapserChatUserPermission() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Permission;
+    TOptional<FString> UserId;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### ChatSetUserPermission API
+<CodeGroup title="Set chat permissions for a user and target user" tag="POST" label="ChatSetUserPermission">
+```csharp
+/// <summary>
+/// Set User Permissions Set chat permissions for a user and target user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object ChatSetUserPermission(string userId, string token, ChatServiceSetUserPermissionBody body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = ChatSetUserPermissionWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ChatServiceSetUserPermissionBody
+/// <summary>
+/// Initializes a new instance of the <see cref="ChatServiceSetUserPermissionBody" /> class.
+/// </summary>
+/// <param name="permission">Whether to mark the user as blocked or accepted, or as default (not blocked, or accepted) (required).</param>
+/// <param name="targetUserId">User ID of the target user (required).</param>
+public ChatServiceSetUserPermissionBody(string permission = default(string), string targetUserId = default(string))
+{
+    // to ensure "permission" is required (not null)
+    if (permission == null)
+    {
+        throw new ArgumentNullException("permission is a required property for ChatServiceSetUserPermissionBody and cannot be null");
+    }
+    this.Permission = permission;
+    // to ensure "targetUserId" is required (not null)
+    if (targetUserId == null)
+    {
+        throw new ArgumentNullException("targetUserId is a required property for ChatServiceSetUserPermissionBody and cannot be null");
+    }
+    this.TargetUserId = targetUserId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserChatServiceApi::ChatSetUserPermissionRequest : public Request
+{
+public:
+    virtual ~ChatSetUserPermissionRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserChatServiceSetUserPermissionBody Body;
+};
+
+class SNAPSER_API SnapserChatServiceSetUserPermissionBody : public Model
+{
+public:
+    virtual ~SnapserChatServiceSetUserPermissionBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to mark the user as blocked or accepted, or as default (not blocked, or accepted) */
+    FString Permission;
+    /* User ID of the target user */
+    FString TargetUserId;
+};
+
+// Response
+class SNAPSER_API SnapserChatServiceApi::ChatSetUserPermissionResponse : public Response
+{
+public:
+    virtual ~ChatSetUserPermissionResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/chat-api.png)
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code  | Variable                       | Message                                  | HTTP | gRPC             |
+| ----- | ------------------------------ | ---------------------------------------- | ---- | ---------------- |
+| 19000 | ErrDirectMessagesDisabled      | Direct messages are disabled             | 403  | PermissionDenied |
+| 19001 | ErrMessageSizeExceedsMaxLength | Size of message exceeds max length       | 400  | InvalidArgument  |
+| 19002 | ErrNotAllowedToDM              | User not allowed to DM target            | 403  | PermissionDenied |
+| 19003 | ErrChatRoomTypeDisabled        | The specified chat room type is disabled | 403  | PermissionDenied |
+| 19004 | ErrUserNotInRoom               | User is not in the specified room        | 403  | PermissionDenied |
+| 19005 | ErrUserAlreadyInRoom           | User is already in the specified room    | 403  | PermissionDenied |
+</div>
+
+
+## Additional Details
+
+### Data Stores
+
+Redis and POSTGRES
+
+### Service Dependencies
+
+The chat service does not depend on any other Snap.
+
+### Recommended Services
+
+The chat service works best with the Auth, Guilds, Lobbies and enabling Websocket in your Gateway settings.
+
+### Upcoming enhancements
+
+We will soon integrate Chat with the Party Snap.

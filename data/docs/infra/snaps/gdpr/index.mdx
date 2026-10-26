@@ -1,0 +1,408 @@
+
+
+export const description = 'GDPR'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# GDPR - CCPA
+
+GDPR (General Data Protection Regulation) and CCPA (California Consumer
+Privacy Act) are two significant data privacy regulations that aim to protect
+individuals' personal data and give them greater control over how their data
+is collected, processed, and used by organizations.
+
+## GDPR
+
+GDPR is a comprehensive data protection regulation that was implemented by the
+European Union (EU) to strengthen data privacy rights for individuals within
+the EU and European Economic Area (EEA). It came into effect on May 25, 2018.
+Key aspects of GDPR include:
+
+1. Consent: Organizations must obtain clear and explicit consent from individuals before collecting and processing their personal data.
+2. Data Breach Notification: Organizations are required to report data breaches to supervisory authorities and affected individuals within a specified time frame.
+3. Right to Access: Individuals have the right to request access to their personal data that organizations hold and to receive information about how their data is being used.
+4. Right to Erasure (Right to Be Forgotten): Individuals can request the deletion of their personal data in certain circumstances.
+5. Data Portability: Individuals have the right to receive their personal data in a structured, machine-readable format and to transfer it to another organization.
+6. Data Protection Officer (DPO): Some organizations are required to appoint a Data Protection Officer to oversee data protection activities.
+
+## CCPA
+
+CCPA is a data privacy law that was enacted in the state of California, United
+States. It went into effect on January 1, 2020. CCPA aims to enhance privacy
+rights and consumer protection for California residents. Key features of CCPA
+include:
+
+1. Right to Know: Consumers have the right to know what personal information is collected, used, shared, or sold by businesses.
+2. Right to Delete: Consumers can request the deletion of their personal information held by businesses.
+3. Right to Opt-Out: Consumers have the right to opt-out of the sale of their personal information.
+4. Non-Discrimination: Businesses cannot discriminate against consumers who exercise their CCPA rights.
+5. Data Breach Notification: Businesses are required to implement reasonable security practices and to notify consumers in the event of a data breach.
+
+## Solution
+
+Rather than dealing with the complexity of identifying the precise user
+location, dealing with location laws etc. the best practice is to offer the
+ability to get and delete all game/app data, to all users. You as a company
+can totally make a decision to not offer this functionality to users in
+certain regions. But we highly recommend that you offer this functionality to
+all users.
+
+<Note>
+  GDPR and CCPA are extremely strict laws with very high penalties. We highly
+  recommend that you consult with your legal team to ensure that you are
+  compliant with these laws.
+</Note>
+
+## User Consent
+
+Consent is something that should be offered by the app developer in the form of
+Terms of Service. Developers should only create an account on Snapser if the
+user gives consent.
+
+## User Data Requests
+
+Once your cluster has the GDPR snap, your app/game client can hit the GDPR GetPin
+API. Your app or game should show this PIN to the user in your app's UI. The developer
+should then show the user a UI where they can enter their own email and
+the PIN and hit the GetUserDetails API to request details of all their data
+stored on Snapser. Snapser will send the user an email with all the data as an
+attachment.
+
+## User Deletion Requests
+
+Once your cluster has the GDPR snap, your app client can hit the GDPR
+DeleteUserData API. It is recommended that you show a confirmation dialog to
+the user, because once the data is deleted it cannot be retrieved.
+
+## BYOSnap Integration
+If you have a BYOSnap that implements the GetUser and DeleteUser hooks, you
+can use the GDPR snap to manage user data in compliance with GDPR regulations.
+
+The following hooks should be implemented in your BYOSnap:
+
+### Get User Data hook
+Implement the following endpoint in your BYOSnap that retrieves user data based on the user ID.
+- Method: `GET`
+- URL: `/v1/$byosnapId/settings/users/<user_id>/data`
+- Response: Any JSON object containing user data.
+
+### Delete User Data hook
+Implement the following endpoint in your BYOSnap that deletes user data based on the user ID.
+- Method: `DELETE`
+- URL: `/v1/$byosnapId/settings/users/<user_id>/data`
+- Response: Empty object
+
+
+## APIs
+
+The `GDPR` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name          | HTTP Method | API Description                    |
+| ----------------- | ----------- | ---------------------------------- |
+| [GdprGetUserDetails](#gdprgetuserdetails-api)    | GET         | Get user details                   |
+| [GdprGetUserRequestLog](#gdprgetuserrequestlog-api) | GET         | Get user data-request logs         |
+| [GdprGetPin](#gdprgetpin-api)            | GET         | Get user pin                       |
+| [GdprDeleteUser](#gdprdeleteuser-api)    | DELETE      | Deletes user data of given user id |
+</div>
+
+### Usage
+#### GdprGetUserDetails API
+<CodeGroup title="Get user details" tag="GET" label="GdprGetUserDetails">
+```csharp
+/// <summary>
+/// Get User Details Get user details
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="emailId"></param>
+/// <param name="pin"></param>
+/// <param name="token">User session token</param>
+/// <returns>Object</returns>
+public Object GdprGetUserDetails(string emailId, string pin, string token)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = GdprGetUserDetailsWithHttpInfo(emailId, pin, token);
+    return localVarResponse.Data;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGdprServiceApi::GdprGetUserDetailsRequest : public Request
+{
+public:
+    virtual ~GdprGetUserDetailsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    FString EmailId;
+    FString Pin;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserGdprServiceApi::GdprGetUserDetailsResponse : public Response
+{
+public:
+    virtual ~GdprGetUserDetailsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GdprGetUserRequestLog API
+<CodeGroup title="Get user data-request logs" tag="GET" label="GdprGetUserRequestLog">
+```csharp
+/// <summary>
+/// Retrieves timestamps of user&#39;s data request events Get user data-request logs
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId"></param>
+/// <param name="token">User session token</param>
+/// <returns>GdprUserRequestLogResponse</returns>
+public GdprUserRequestLogResponse GdprGetUserRequestLog(string userId, string token)
+{
+    Snapser.Client.ApiResponse<GdprUserRequestLogResponse> localVarResponse = GdprGetUserRequestLogWithHttpInfo(userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for GdprUserRequestLogResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="GdprUserRequestLogResponse" /> class.
+/// </summary>
+/// <param name="timestamps">timestamps.</param>
+public GdprUserRequestLogResponse(List<string> timestamps = default(List<string>))
+{
+    this.Timestamps = timestamps;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGdprServiceApi::GdprGetUserRequestLogRequest : public Request
+{
+public:
+    virtual ~GdprGetUserRequestLogRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserGdprServiceApi::GdprGetUserRequestLogResponse : public Response
+{
+public:
+    virtual ~GdprGetUserRequestLogResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserGdprUserRequestLogResponse Content;
+};
+
+class SNAPSER_API SnapserGdprUserRequestLogResponse : public Model
+{
+public:
+    virtual ~SnapserGdprUserRequestLogResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<FString>> Timestamps;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GdprGetPin API
+<CodeGroup title="Get user pin" tag="GET" label="GdprGetPin">
+```csharp
+/// <summary>
+/// Get User Pin Get user pin
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId"></param>
+/// <param name="token">User session token</param>
+/// <returns>GdprGetPinResponse</returns>
+public GdprGetPinResponse GdprGetPin(string userId, string token)
+{
+    Snapser.Client.ApiResponse<GdprGetPinResponse> localVarResponse = GdprGetPinWithHttpInfo(userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for GdprGetPinResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="GdprGetPinResponse" /> class.
+/// </summary>
+/// <param name="pin">pin.</param>
+public GdprGetPinResponse(string pin = default(string))
+{
+    this.Pin = pin;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGdprServiceApi::GdprGetPinRequest : public Request
+{
+public:
+    virtual ~GdprGetPinRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserGdprServiceApi::GdprGetPinResponse : public Response
+{
+public:
+    virtual ~GdprGetPinResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserGdprGetPinResponse Content;
+};
+
+class SNAPSER_API SnapserGdprGetPinResponse : public Model
+{
+public:
+    virtual ~SnapserGdprGetPinResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Pin;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### GdprDeleteUser API
+<CodeGroup title="Deletes user data of given user id" tag="DELETE" label="GdprDeleteUser">
+```csharp
+/// <summary>
+/// Deletes User Deletes user data of given user id
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User ID of the user</param>
+/// <param name="token">User session token</param>
+/// <returns>GdprDeleteUserResponse</returns>
+public GdprDeleteUserResponse GdprDeleteUser(string userId, string token)
+{
+    Snapser.Client.ApiResponse<GdprDeleteUserResponse> localVarResponse = GdprDeleteUserWithHttpInfo(userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for GdprDeleteUserResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="GdprDeleteUserResponse" /> class.
+/// </summary>
+/// <param name="success">success.</param>
+public GdprDeleteUserResponse(bool success = default(bool))
+{
+    this.Success = success;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserGdprServiceApi::GdprDeleteUserRequest : public Request
+{
+public:
+    virtual ~GdprDeleteUserRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User ID of the user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserGdprServiceApi::GdprDeleteUserResponse : public Response
+{
+public:
+    virtual ~GdprDeleteUserResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserGdprDeleteUserResponse Content;
+};
+
+class SNAPSER_API SnapserGdprDeleteUserResponse : public Model
+{
+public:
+    virtual ~SnapserGdprDeleteUserResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<bool> Success;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/gdpr-api.png)
+
+### Error Codes returned by the service
+
+This service only returns [generic errors](../generic-errors).
+
+
+## FAQs
+### Are there plans to support terms of service within Snapser?
+
+Yes, Snapser will be working on an App settings snap. We plan to unlock this
+functionality within this Snap.
+
+### Is there any setup I need to do to activate the GDPR Snap?
+
+Nope! You just have to make sure you integrate with the APIs as per our
+documentation.
+
+
+## Additional Details
+
+### Data Stores
+
+POSTGRES
+
+### Service Dependencies
+
+The gdpr service does not depend on any other Snap.
+
+### Recommended Services
+
+The GDPR service does not depend on any other Snap.
+
+### Upcoming enhancements
+
+Support to store the Terms of Service (TOS).

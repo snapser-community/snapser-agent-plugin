@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "snapser-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "snapser-engine/snapser-agent-plugin"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "snapser@snapser-plugins": true
+  }
+}

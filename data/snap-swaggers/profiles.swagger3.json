@@ -1,0 +1,382 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "User profile management in a Snapser cluster",
+    "title" : "Profiles",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "ProfilesService"
+  } ],
+  "paths" : {
+    "/v1/profiles/batch/profiles" : {
+      "get" : {
+        "description" : "Gets a list of user profiles",
+        "operationId" : "BatchGetProfiles",
+        "parameters" : [ {
+          "description" : "User IDs to fetch profiles for",
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/profilesBatchGetProfilesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Profile",
+        "tags" : [ "ProfilesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/profiles/search" : {
+      "post" : {
+        "description" : "Searches for user profiles",
+        "operationId" : "SearchProfiles",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/profilesSearchProfilesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/profilesSearchProfilesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Search",
+        "tags" : [ "ProfilesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/profiles/user/{user_id}" : {
+      "delete" : {
+        "description" : "Deletes a user's profile",
+        "operationId" : "DeleteProfile",
+        "parameters" : [ {
+          "description" : "User ID of the user who's profile is being deleted",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Profile",
+        "tags" : [ "ProfilesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "get" : {
+        "description" : "Gets a user's profile",
+        "operationId" : "GetProfile",
+        "parameters" : [ {
+          "description" : "User ID of the user who's profile is being viewed",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/profilesGetProfileResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Profile",
+        "tags" : [ "ProfilesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "patch" : {
+        "description" : "Patches a user's profile",
+        "operationId" : "PatchProfile",
+        "parameters" : [ {
+          "description" : "User ID of the user who's profile is being patched",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PatchProfile_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/profilesPatchProfileResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Profile",
+        "tags" : [ "ProfilesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Insert or update a user's profile",
+        "operationId" : "UpsertProfile",
+        "parameters" : [ {
+          "description" : "User ID of the user who's profile is being upserted",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpsertProfile_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Profile",
+        "tags" : [ "ProfilesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "PatchProfile_request" : {
+        "properties" : {
+          "profile" : {
+            "description" : "JSON representation of the profile being patched",
+            "type" : "object"
+          }
+        },
+        "required" : [ "profile" ],
+        "type" : "object"
+      },
+      "SearchFieldOperator" : {
+        "default" : "UNSPECIFIED_OPERATOR",
+        "enum" : [ "UNSPECIFIED_OPERATOR", "EQUALS", "NOT_EQUALS", "CONTAINS" ],
+        "type" : "string"
+      },
+      "UpsertProfile_request" : {
+        "properties" : {
+          "profile" : {
+            "description" : "JSON representation of the profile being upserted",
+            "type" : "object"
+          }
+        },
+        "required" : [ "profile" ],
+        "type" : "object"
+      },
+      "profilesBatchGetProfilesResponse" : {
+        "properties" : {
+          "profiles" : {
+            "additionalProperties" : {
+              "type" : "object"
+            },
+            "type" : "object"
+          },
+          "responses" : {
+            "description" : "List of responses for each user ID",
+            "items" : {
+              "$ref" : "#/components/schemas/profilesBatchGetProfilesSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "profilesBatchGetProfilesSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/profilesGetProfileRequest"
+          },
+          "response" : {
+            "type" : "object"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "profilesGetProfileRequest" : {
+        "properties" : {
+          "user_id" : {
+            "description" : "User ID of the user who's profile is being viewed",
+            "type" : "string"
+          }
+        },
+        "required" : [ "user_id" ],
+        "title" : "Service Requests & Responses",
+        "type" : "object"
+      },
+      "profilesGetProfileResponse" : {
+        "properties" : {
+          "profile" : {
+            "description" : "JSON representation of the user's profile visible to the logged in user",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "profilesPatchProfileResponse" : {
+        "properties" : {
+          "profile" : {
+            "description" : "JSON representation of the user's profile after the patch",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "profilesSearchField" : {
+        "properties" : {
+          "key" : {
+            "description" : "Key of the field to search by",
+            "type" : "string"
+          },
+          "operator" : {
+            "$ref" : "#/components/schemas/SearchFieldOperator"
+          },
+          "value" : {
+            "description" : "Value of the field to search by",
+            "type" : "string"
+          }
+        },
+        "title" : "Message Types and Enums",
+        "type" : "object"
+      },
+      "profilesSearchProfilesRequest" : {
+        "properties" : {
+          "limit" : {
+            "description" : "Maximum number of profiles to return",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "offset" : {
+            "description" : "Number of profiles to skip before returning results",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "search_fields" : {
+            "description" : "List of search fields to filter profiles by",
+            "items" : {
+              "$ref" : "#/components/schemas/profilesSearchField"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "profilesSearchProfilesResponse" : {
+        "properties" : {
+          "profiles" : {
+            "additionalProperties" : {
+              "type" : "object"
+            },
+            "description" : "Map of user IDs to their respective profiles",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "protobufNullValue" : {
+        "default" : "NULL_VALUE",
+        "description" : "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value.",
+        "enum" : [ "NULL_VALUE" ],
+        "type" : "string"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

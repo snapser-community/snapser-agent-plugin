@@ -1,0 +1,616 @@
+export const description = 'Auth'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# X Login
+
+Click here to view all Auth Snap [connectors](/docs/infra/snaps/auth/connectors).
+
+## Overview
+
+X (formerly Twitter) Login is a connector that allows users to log into your application using their X credentials.
+This connector leverages the [X OAuth 2.0 API](https://developer.x.com/en/docs/authentication/using-oauth-2.0) to ensure a smooth and secure login experience.
+
+## Setup Requirements
+
+### Step 1: Create an X Developer Account
+
+* Visit the [X Developer Portal](https://developer.x.com/) and sign up or log in.
+* Create a new Project and App.
+* Under the App settings, generate the `Client ID` and `Client Secret`.
+* Set a valid Callback URL for your game or app that the X auth flow will redirect to after authentication.
+
+## How it works
+
+To implement X Login, developers must configure the connector via the Auth Configuration, Connector tool. X uses OAuth 2.0 PKCE flow for user authentication. Once setup is complete:
+
+1. Integrate X's OAuth 2.0 login flow in your app client.
+1. The player authenticates via X's UI and grants permission to your app.
+1. X returns a `code` to your client.
+1. At this point, you can either:
+
+   * Exchange the `code` for an `access_token` yourself, and then use the `access_token` to call the Snapser Auth Snap.
+   * Or pass the `code`, `code_verifier`, and `redirect_uri` directly in the Snapser Auth Snap to handle the token exchange for you.
+
+If you choose to exchange the `code` for an `access_token` yourself, your `XLogin` API call will look like this:
+
+```json
+{
+  "access_token": "string",
+  "create_user": true
+}
+```
+
+If you prefer Snapser to handle the token exchange, you can send the appropriate `code`, `code_verifier`, and `redirect_uri` to the Snapser Auth Snap:
+
+```json
+{
+  "code": "string",
+  "code_verifier": "string",
+  "redirect_uri": "string",
+  "create_user": true
+}
+```
+
+Finally, the Auth Snap verifies the details with X and issues a user ID and session token.
+
+You can either:
+
+* Start users as anonymous and upgrade to X login later.
+* Or directly begin the session with X login.
+
+Details below.
+
+## Configuration Tool
+
+The X Login configuration tool requires:
+
+### Credentials
+
+Open your X Developer portal to retrieve the following:
+
+1. **Client ID** – Unique identifier for your game or app.
+
+## Integration with X Authentication APIs
+
+Unlike Facebook or Google, X does not offer official SDKs for Unity or Unreal. You must implement OAuth manually or use community SDKs.
+
+### Unity Integration
+
+To integrate X login in Unity:
+
+1. Launch an in-app web view that opens the X OAuth 2.0 authorization URL.
+2. Let the user authorize your app and be redirected back with a `code`.
+3. Exchange the code for an `access_token` using your backend or client (not recommended from client).
+4. Submit the `access_token` to Snapser's Auth Snap via the `XLogin` API.
+
+You can also use third-party Unity plugins for OAuth2 that support webview authentication.
+
+### Unreal Engine Integration
+
+Similar to Unity, you’ll use an in-app browser:
+
+1. Open the X OAuth 2.0 URL.
+2. Handle the redirect URI to capture the `code`.
+3. Exchange it for the token via backend.
+4. Send token to Snapser Auth Snap.
+
+Manual implementations or community plugins (e.g., VaRest + WebBrowser) can be used.
+
+## Usage
+
+Developers can begin with Anonymous login and later upgrade to X login, or begin directly with X login. Store the `user_id` and `session_token` returned from the Auth Snap to continue session-based gameplay or app experience.
+
+### Example
+
+1. App client calls `AnonLogin` with a unique device ID.
+2. Auth Snap returns:
+
+   * `user_id=abc123`
+   * `session_token=xyz789`
+3. User decides to link their account to X.
+4. Client launches OAuth 2.0 login, retrieves `access_token` from X.
+5. Client calls `XLogin` with `create_user=true`.
+6. Auth Snap returns a new `user_id` + `session_token` tied to the X account.
+7. Use `AssociateLogins` to merge the two accounts.
+
+This ensures secure upgrades without exposing internal identifiers.
+
+## APIs
+
+<div className="apisTable">
+| API Name        | HTTP Method | API Description                          |
+| --------------- | ----------- | ---------------------------------------- |
+| [AssociateLogins](#associatelogins-api) | PUT         | Associates two logins via session tokens |
+| [AnonLogin](#anonlogin-api)       | PUT         | Anonymous user session creation          |
+| [XLogin](#xlogin-api)          | PUT         | Logs in user with token from X           |
+</div>
+
+> **Note:** X tokens expire quickly. Make sure your client handles token refresh or requests a fresh login.
+
+#### AssociateLogins API
+<CodeGroup title="Associates two logins based on their session tokens" tag="PUT" label="AssociateLogins">
+```csharp
+/// <summary>
+/// Associate Multiple Logins Associates two logins based on their session tokens
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object AssociateLogins(AuthAssociateLoginsRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = AssociateLoginsWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthAssociateLoginsRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAssociateLoginsRequest" /> class.
+/// </summary>
+/// <param name="discardUserToken">Token of the user to discard (required).</param>
+/// <param name="keepUserToken">Token of the user to keep (required).</param>
+public AuthAssociateLoginsRequest(string discardUserToken = default(string), string keepUserToken = default(string))
+{
+    // to ensure "discardUserToken" is required (not null)
+    if (discardUserToken == null)
+    {
+        throw new ArgumentNullException("discardUserToken is a required property for AuthAssociateLoginsRequest and cannot be null");
+    }
+    this.DiscardUserToken = discardUserToken;
+    // to ensure "keepUserToken" is required (not null)
+    if (keepUserToken == null)
+    {
+        throw new ArgumentNullException("keepUserToken is a required property for AuthAssociateLoginsRequest and cannot be null");
+    }
+    this.KeepUserToken = keepUserToken;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AssociateLoginsRequest : public Request
+{
+public:
+    virtual ~AssociateLoginsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthAssociateLoginsRequest Body;
+};
+
+class SNAPSER_API SnapserAuthAssociateLoginsRequest : public Model
+{
+public:
+    virtual ~SnapserAuthAssociateLoginsRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Token of the user to discard */
+    FString DiscardUserToken;
+    /* Token of the user to keep */
+    FString KeepUserToken;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AssociateLoginsResponse : public Response
+{
+public:
+    virtual ~AssociateLoginsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AnonLogin API
+<CodeGroup title="Logs in the user with an arbitrary identifier specified and returns a session" tag="PUT" label="AnonLogin">
+```csharp
+/// <summary>
+/// Anonymous Login Logs in the user with an arbitrary identifier specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthAnonLoginResponse</returns>
+public AuthAnonLoginResponse AnonLogin(AuthAnonLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthAnonLoginResponse> localVarResponse = AnonLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthAnonLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAnonLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="username">User&#39;s login ID (required).</param>
+public AuthAnonLoginRequest(bool createUser = default(bool), string username = default(string))
+{
+    // to ensure "username" is required (not null)
+    if (username == null)
+    {
+        throw new ArgumentNullException("username is a required property for AuthAnonLoginRequest and cannot be null");
+    }
+    this.Username = username;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthAnonLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAnonLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthAnonLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AnonLoginRequest : public Request
+{
+public:
+    virtual ~AnonLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthAnonLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthAnonLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthAnonLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* User's login ID */
+    FString Username;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AnonLoginResponse : public Response
+{
+public:
+    virtual ~AnonLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthAnonLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthAnonLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthAnonLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### XLogin API
+<CodeGroup title="Logs in the user based on the X token specified and returns a session" tag="PUT" label="XLogin">
+```csharp
+/// <summary>
+/// X Login Logs in the user based on the X login credentials specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthXLoginResponse</returns>
+public AuthXLoginResponse XLogin(AuthXLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthXLoginResponse> localVarResponse = XLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthXLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthXLoginRequest" /> class.
+/// </summary>
+/// <param name="accessToken">X access token generated on the client. One of code or access_token is required.</param>
+/// <param name="code">X code generated on the client. One of code or access_token is required.</param>
+/// <param name="codeVerifier">X code verifier generated on the client.</param>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="redirectUri">redirect url for client.</param>
+public AuthXLoginRequest(string accessToken = default(string), string code = default(string), string codeVerifier = default(string), bool createUser = default(bool), string redirectUri = default(string))
+{
+    this.AccessToken = accessToken;
+    this.Code = code;
+    this.CodeVerifier = codeVerifier;
+    this.CreateUser = createUser;
+    this.RedirectUri = redirectUri;
+}
+
+/// Snapser.Model for AuthXLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthXLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthXLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="logins">List of login IDs associated with the user.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), List<AuthLoginId> logins = default(List<AuthLoginId>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.Logins = logins;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthLoginId" /> class.
+/// </summary>
+/// <param name="id">id.</param>
+/// <param name="type">type.</param>
+public AuthLoginId(string id = default(string), AuthLoginTypeType? type = default(AuthLoginTypeType?))
+{
+    this.Id = id;
+    this.Type = type;
+}
+```
+```cpp
+/// Request
+class SNAPSER_API SnapserAuthServiceApi::XLoginRequest : public Request
+{
+public:
+    virtual ~XLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthXLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthXLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthXLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* X access token generated on the client. One of code or access_token is required */
+    TOptional<FString> AccessToken;
+    /* X code generated on the client. One of code or access_token is required */
+    TOptional<FString> Code;
+    /* X code verifier generated on the client */
+    TOptional<FString> CodeVerifier;
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* redirect url for client */
+    TOptional<FString> RedirectUri;
+};
+
+/// Response
+class SNAPSER_API SnapserAuthServiceApi::XLoginResponse : public Response
+{
+public:
+    virtual ~XLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthXLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthXLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthXLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* List of login IDs associated with the user */
+    TOptional<TArray<SnapserAuthLoginId>> Logins;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+
+class SNAPSER_API SnapserAuthLoginTypeType : public Model
+{
+public:
+    virtual ~SnapserAuthLoginTypeType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedLoginType,
+        Email,
+        Password,
+        Anon,
+        Facebook,
+        Google,
+        Apple,
+        Steam,
+        Xbox,
+        Epic,
+        App,
+        Discord,
+        EmailPassword,
+        UsernamePassword,
+        X,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserAuthLoginId : public Model
+{
+public:
+    virtual ~SnapserAuthLoginId() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Id;
+    TOptional<SnapserAuthLoginTypeType> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+// Coming soon
+```
+</CodeGroup>
+
+## See Also
+
+* [X Developer Docs](https://developer.x.com/en/docs)
+* [OAuth 2.0 Authorization Code Flow](https://developer.x.com/en/docs/authentication/using-oauth-2.0)
+
+---
+
+This guide ensures you can offer seamless X login in your game or app powered by Snapser's modular backend. If you're upgrading from FacebookLogin, swap out endpoints and client token exchange logic for X's OAuth flow.

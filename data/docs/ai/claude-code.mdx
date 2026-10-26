@@ -1,0 +1,73 @@
+export const description = 'Claude Code - Snapser Plugin for Claude Code'
+
+export const meta = {
+  author: 'AJ Apte'
+}
+
+# Claude Code Integration
+
+> ⚠️ **Alpha Release** — The Snapser Plugin for Claude Code is currently in **alpha** and available by invitation only. If you'd like early access, please reach out to **Snapser support** and we'll get you onboarded.
+
+## Snapser Plugin for Claude Code
+
+Snapser now ships as a **Claude Code plugin** — bringing your entire backend infrastructure workflow directly into your editor.
+Build and manage game backends without leaving Claude Code: create Snapends, deploy custom microservices, manage game server fleets, and download SDKs through natural conversation.
+
+Whether you're spinning up your first Snapend, iterating on a BYOSnap, or testing a game server fleet, the plugin lets Claude drive `snapctl` on your behalf while grounding every answer in the full, bundled Snapser documentation.
+
+## What the Plugin Can Do
+
+- ✅ **Create backends** — spin up a Snapend with the snaps you need in seconds
+- ✅ **Build web games** — prototype a playable browser game with a live Snapser backend end-to-end
+- ✅ **Full game backend wizard** — complete guided setup with snaps, BYOSnap, and SDK in one flow
+- ✅ **Deploy BYOSnaps** — build, publish, and direct-deploy your custom microservices
+- ✅ **Game server fleets (BYOGS)** — publish and deploy game server images with fleet management
+- ✅ **Local debugging (BYOWS)** — attach your workstation to a remote Snapend and debug live
+- ✅ **Download SDKs** — grab your Unity, Unreal, Roblox, or any other platform SDK instantly
+- ✅ **Manage Snapends** — list, update, clone, and check the health of your backends
+- ✅ **Answer questions offline** — the plugin ships with the full Snapser documentation and API specs locally, so Claude can answer questions without network calls
+
+It's like having a Snapser engineer sitting next to you inside Claude Code.
+
+
+## How to Enable and Use It
+
+1. **Request Early Access**
+   The plugin is in alpha and gated behind an invite. Contact **Snapser support** at [support@snapser.com](mailto:support@snapser.com) to request access to the private marketplace.
+
+2. **Install Claude Code**
+   Make sure you have [Claude Code](https://claude.com/claude-code) installed and signed in.
+
+3. **Install Prerequisites**
+   - `snapctl` — the Snapser CLI (`pipx install snapctl` on MacOS/Linux, `pip install --user snapctl` on Windows)
+   - Docker Desktop — required for BYOSnap and BYOGS publish commands
+
+   Verify your setup:
+   ```bash
+   snapctl validate
+   ```
+
+4. **Add the Marketplace and Install the Plugin**
+   Once you've been granted access to the private repo:
+   ```bash
+   claude plugin marketplace add snapser-engine/snapser-agent-plugin
+   claude plugin install snapser@snapser-plugins
+   ```
+
+5. **Just Talk to Claude**
+   Try prompts like:
+   - "Set up a new backend for my multiplayer game with auth and leaderboards"
+   - "Build me a flappy bird game with a leaderboard"
+   - "Publish my byosnap to my dev snapend"
+   - "I want to debug my microservice locally"
+   - "Download the Unity SDK for my dev backend"
+   - "How do I set up Steam authentication?"
+
+Claude will pick the right skill automatically, run the right `snapctl` commands, and walk you through the rest.
+
+
+## Notes and Privacy
+
+- The plugin runs entirely in your local Claude Code session and uses your own `snapctl` credentials — Snapser does not see your prompts or code.
+- All Snapser documentation, API specs, and settings references are bundled **locally** with the plugin, so Claude never reaches out to the web for Snapser answers.
+- Because the plugin is in alpha, behavior and skill names may change between releases. Please send feedback — and any bugs — to Snapser support so we can improve it before the public launch.

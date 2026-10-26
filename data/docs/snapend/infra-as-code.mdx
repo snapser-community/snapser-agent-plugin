@@ -1,0 +1,800 @@
+export const description = 'Infra as Code'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Infrastructure as Code
+Snapser supports Infrastructure as Code (IaC) for your Snapend. Every Snapend created on Snapser and then the snap specific configuration is all stored as a Snapend Manifest. The Snapend Manifest is a file that describes the desired state of your Snapend.
+
+<Warning>
+  The Snapser Snapend manifest file is a human readable file that describes the current state of your Snapend. It it Snapser's own version of the Infrastructure as Code and is not a terraform, cloudformation or a Kubernetes manifest.
+</Warning>
+
+## Snapend Manifest
+Manifest is a JSON or a YAML file that represents the present state of your Snapend. This includes the infrastructure, snaps, and their configurations. Developers can download this manifest and store it in their source control. This allows them to version control their Snapend configuration.
+
+Here is an example of a Snapend Manifest that includes two snaps, `analytics` and `auth`. As you can see, each snap has its own configuration and settings. It should be notes, that some Snaps allow you to configure different settings for different environments like `dev`, `prod`, and `stage`. These configurations are also a part of the Snapend Manifest.
+
+<CodeGroup title="Manifest Example">
+```json
+{
+  "version": "v1",
+  "id": "xjq5tmca",
+  "name": "test",
+  "environment": "DEVELOPMENT",
+  "service_definitions": [
+    {
+      "id": "analytics",
+      "language": "go",
+      "version": "v0.43.0",
+      "author_id": "snapser",
+      "category": "SNAPSER",
+      "subcategory": "SERVICE",
+      "data_dependencies": [
+        {
+          "type": "POSTGRES",
+          "postgres": {
+            "database": "analytics"
+          }
+        },
+        {
+          "type": "POSTGRES",
+          "postgres": {
+            "database": "analytics_settings"
+          }
+        }
+      ]
+    },
+    {
+      "id": "auth",
+      "language": "go",
+      "version": "v0.43.0",
+      "author_id": "snapser",
+      "category": "SNAPSER",
+      "subcategory": "SERVICE",
+      "data_dependencies": [
+        {
+          "type": "POSTGRES",
+          "postgres": {
+            "database": "auth"
+          }
+        },
+        {
+          "type": "POSTGRES",
+          "postgres": {
+            "database": "auth_settings"
+          }
+        },
+        {
+          "type": "REDIS",
+          "redis": {}
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "id": "analytics",
+      "data": {
+        "events": [
+          {
+            "created_at": "1734341662",
+            "is_snap_event": false,
+            "name": "custom_event",
+            "properties": [
+              {
+                "name": "custom_property",
+                "type": "string"
+              }
+            ],
+            "sample_rate": 100,
+            "type": "user"
+          },
+          {
+            "created_at": "1734049693",
+            "is_snap_event": true,
+            "name": "snap_campaign_runs",
+            "properties": [
+              {
+                "name": "campaign_id",
+                "type": "number"
+              },
+              {
+                "name": "started_at",
+                "type": "timestamp"
+              },
+              {
+                "name": "ended_at",
+                "type": "timestamp"
+              },
+              {
+                "name": "platform",
+                "type": "string"
+              },
+              {
+                "name": "successes",
+                "type": "number"
+              },
+              {
+                "name": "failures",
+                "type": "number"
+              }
+            ],
+            "sample_rate": 100,
+            "type": "app"
+          },
+          {
+            "created_at": "1734049693",
+            "is_snap_event": true,
+            "name": "snap_campaign_notification_events",
+            "properties": [
+              {
+                "name": "campaign_id",
+                "type": "number"
+              },
+              {
+                "name": "platform",
+                "type": "string"
+              },
+              {
+                "name": "action",
+                "type": "string"
+              }
+            ],
+            "sample_rate": 100,
+            "type": "user"
+          },
+          {
+            "created_at": "1734049693",
+            "is_snap_event": true,
+            "name": "snap_iap_purchases",
+            "properties": [
+              {
+                "name": "bundle_name",
+                "type": "string"
+              },
+              {
+                "name": "platform",
+                "type": "string"
+              },
+              {
+                "name": "quantity",
+                "type": "number"
+              },
+              {
+                "name": "price",
+                "type": "number"
+              },
+              {
+                "name": "currency",
+                "type": "string"
+              }
+            ],
+            "sample_rate": 100,
+            "type": "user"
+          },
+          {
+            "created_at": "1734049693",
+            "is_snap_event": true,
+            "name": "snap_advertisements",
+            "properties": [
+              {
+                "name": "type",
+                "type": "string"
+              },
+              {
+                "name": "action",
+                "type": "string"
+              },
+              {
+                "name": "placement",
+                "type": "string"
+              },
+              {
+                "name": "provider",
+                "type": "string"
+              },
+              {
+                "name": "failure_reason",
+                "type": "string"
+              }
+            ],
+            "sample_rate": 100,
+            "type": "user"
+          },
+          {
+            "created_at": "1734049693",
+            "is_snap_event": true,
+            "name": "snap_errors",
+            "properties": [
+              {
+                "name": "error_message",
+                "type": "string"
+              },
+              {
+                "name": "error_ts",
+                "type": "timestamp"
+              },
+              {
+                "name": "severity",
+                "type": "string"
+              }
+            ],
+            "sample_rate": 100,
+            "type": "user"
+          },
+          {
+            "created_at": "1734049693",
+            "is_snap_event": true,
+            "name": "snap_sessions",
+            "properties": [
+              {
+                "name": "action",
+                "type": "string"
+              },
+              {
+                "name": "platform",
+                "type": "string"
+              },
+              {
+                "name": "device",
+                "type": "string"
+              },
+              {
+                "name": "location",
+                "type": "string"
+              },
+              {
+                "name": "agent",
+                "type": "string"
+              }
+            ],
+            "sample_rate": 100,
+            "type": "user"
+          },
+          {
+            "created_at": "1734049693",
+            "is_snap_event": true,
+            "name": "snap_milestones",
+            "properties": [
+              {
+                "name": "milestone_name",
+                "type": "string"
+              },
+              {
+                "name": "milestone_date",
+                "type": "string"
+              },
+              {
+                "name": "milestone_ts",
+                "type": "timestamp"
+              },
+              {
+                "name": "milestone_step",
+                "type": "number"
+              },
+              {
+                "name": "client",
+                "type": "string"
+              },
+              {
+                "name": "server_ts",
+                "type": "timestamp"
+              },
+              {
+                "name": "client_ts",
+                "type": "timestamp"
+              },
+              {
+                "name": "category",
+                "type": "string"
+              }
+            ],
+            "sample_rate": 100,
+            "type": "user"
+          },
+          {
+            "created_at": "1734049693",
+            "is_snap_event": true,
+            "name": "snap_payments",
+            "properties": [
+              {
+                "name": "txn_id",
+                "type": "string"
+              },
+              {
+                "name": "payment_method",
+                "type": "string"
+              },
+              {
+                "name": "currency_name",
+                "type": "string"
+              },
+              {
+                "name": "currency_value",
+                "type": "number"
+              },
+              {
+                "name": "value_usd",
+                "type": "number"
+              },
+              {
+                "name": "category",
+                "type": "string"
+              },
+              {
+                "name": "subcategory",
+                "type": "string"
+              },
+              {
+                "name": "server_ts",
+                "type": "number"
+              },
+              {
+                "name": "client_ts",
+                "type": "number"
+              },
+              {
+                "name": "status",
+                "type": "string"
+              }
+            ],
+            "sample_rate": 100,
+            "type": "user"
+          },
+          {
+            "created_at": "1734049693",
+            "is_snap_event": true,
+            "name": "snap_economy",
+            "properties": [
+              {
+                "name": "currency_name",
+                "type": "string"
+              },
+              {
+                "name": "current_value",
+                "type": "number"
+              },
+              {
+                "name": "delta",
+                "type": "number"
+              },
+              {
+                "name": "direction",
+                "type": "string"
+              }
+            ],
+            "sample_rate": 100,
+            "type": "user"
+          },
+          {
+            "created_at": "1734049693",
+            "is_snap_event": true,
+            "name": "snap_segments",
+            "properties": [
+              {
+                "name": "segment_name",
+                "type": "string"
+              },
+              {
+                "name": "direction",
+                "type": "string"
+              }
+            ],
+            "sample_rate": 100,
+            "type": "user"
+          },
+          {
+            "created_at": "1734049693",
+            "is_snap_event": true,
+            "name": "snap_experiments",
+            "properties": [
+              {
+                "name": "experiment_name",
+                "type": "string"
+              },
+              {
+                "name": "variant_name",
+                "type": "string"
+              }
+            ],
+            "sample_rate": 100,
+            "type": "user"
+          },
+          {
+            "created_at": "1734049693",
+            "is_snap_event": true,
+            "name": "snap_logins",
+            "properties": [
+              {
+                "name": "ip",
+                "type": "string"
+              },
+              {
+                "name": "location",
+                "type": "string"
+              },
+              {
+                "name": "device",
+                "type": "string"
+              },
+              {
+                "name": "platform",
+                "type": "string"
+              },
+              {
+                "name": "agent",
+                "type": "string"
+              },
+              {
+                "name": "login_type",
+                "type": "string"
+              }
+            ],
+            "sample_rate": 100,
+            "type": "user"
+          },
+          {
+            "created_at": "1734049692",
+            "is_snap_event": true,
+            "name": "snap_installs",
+            "properties": [
+              {
+                "name": "ip",
+                "type": "string"
+              },
+              {
+                "name": "location",
+                "type": "string"
+              },
+              {
+                "name": "device",
+                "type": "string"
+              },
+              {
+                "name": "platform",
+                "type": "string"
+              },
+              {
+                "name": "agent",
+                "type": "string"
+              },
+              {
+                "name": "login_type",
+                "type": "string"
+              }
+            ],
+            "sample_rate": 100,
+            "type": "user"
+          }
+        ],
+        "reports": [
+          {
+            "created_at": "1734049693",
+            "last_run_at": "0",
+            "name": "snap_dau",
+            "query": "select count(distinct user_id) as dau, platform, date_trunc('day', created_at) as day from user_snap_logins where created_at >= now() - interval '7 days' group by day, platform order by day desc;",
+            "recipients": [],
+            "results": "{}",
+            "run_interval": "",
+            "updated_at": "1734049693"
+          }
+        ]
+      },
+      "version": "v0.43.0",
+      "exported_at": "1734341678"
+    },
+    {
+      "id": "auth",
+      "data": {
+        "dev": {
+          "anon": {
+            "enabled": true
+          },
+          "app_auth": {
+            "enabled": false
+          },
+          "app_verify": {
+            "client_secret": "",
+            "enabled": false
+          },
+          "apple": {
+            "enabled": false,
+            "key_id": "",
+            "private_key": "",
+            "service_id": "",
+            "team_id": ""
+          },
+          "email": {
+            "enabled": false,
+            "otp_length": 0,
+            "otp_rate_limit_settings": {
+              "allow_list": [],
+              "deny_list": [],
+              "duration_in_seconds": 60,
+              "limit": 5,
+              "lockout_duration_in_seconds": 60
+            },
+            "otp_validity": 0
+          },
+          "epic": {
+            "client_id": "",
+            "client_secret": "",
+            "enabled": false
+          },
+          "facebook": {
+            "client_id": "",
+            "client_secret": "",
+            "enabled": false
+          },
+          "google": {
+            "client_id": "",
+            "client_secret": "",
+            "enabled": false
+          },
+          "password": {
+            "enabled": false
+          },
+          "session_inactivity_timeout": 604800,
+          "session_token_validity": 2592000,
+          "steam": {
+            "api_key": "",
+            "app_id": 0,
+            "enabled": false,
+            "publisher_api_key": "",
+            "web_api_key": ""
+          },
+          "xbox": {
+            "client_id": "",
+            "client_secret": "",
+            "enabled": false
+          }
+        },
+        "prod": {
+          "anon": {
+            "enabled": false
+          },
+          "app_auth": {
+            "enabled": false
+          },
+          "app_verify": {
+            "client_secret": "",
+            "enabled": false
+          },
+          "apple": {
+            "enabled": false,
+            "key_id": "",
+            "private_key": "",
+            "service_id": "",
+            "team_id": ""
+          },
+          "email": {
+            "enabled": false,
+            "otp_length": 0,
+            "otp_rate_limit_settings": {
+              "allow_list": [],
+              "deny_list": [],
+              "duration_in_seconds": 60,
+              "limit": 5,
+              "lockout_duration_in_seconds": 60
+            },
+            "otp_validity": 0
+          },
+          "epic": {
+            "client_id": "",
+            "client_secret": "",
+            "enabled": false
+          },
+          "facebook": {
+            "client_id": "",
+            "client_secret": "",
+            "enabled": false
+          },
+          "google": {
+            "client_id": "",
+            "client_secret": "",
+            "enabled": false
+          },
+          "password": {
+            "enabled": false
+          },
+          "session_inactivity_timeout": 604800,
+          "session_token_validity": 2592000,
+          "steam": {
+            "api_key": "",
+            "app_id": 0,
+            "enabled": false,
+            "publisher_api_key": "",
+            "web_api_key": ""
+          },
+          "xbox": {
+            "client_id": "",
+            "client_secret": "",
+            "enabled": false
+          }
+        },
+        "stage": {
+          "anon": {
+            "enabled": false
+          },
+          "app_auth": {
+            "enabled": false
+          },
+          "app_verify": {
+            "client_secret": "",
+            "enabled": false
+          },
+          "apple": {
+            "enabled": false,
+            "key_id": "",
+            "private_key": "",
+            "service_id": "",
+            "team_id": ""
+          },
+          "email": {
+            "enabled": false,
+            "otp_length": 0,
+            "otp_rate_limit_settings": {
+              "allow_list": [],
+              "deny_list": [],
+              "duration_in_seconds": 60,
+              "limit": 5,
+              "lockout_duration_in_seconds": 60
+            },
+            "otp_validity": 0
+          },
+          "epic": {
+            "client_id": "",
+            "client_secret": "",
+            "enabled": false
+          },
+          "facebook": {
+            "client_id": "",
+            "client_secret": "",
+            "enabled": false
+          },
+          "google": {
+            "client_id": "",
+            "client_secret": "",
+            "enabled": false
+          },
+          "password": {
+            "enabled": false
+          },
+          "session_inactivity_timeout": 604800,
+          "session_token_validity": 2592000,
+          "steam": {
+            "api_key": "",
+            "app_id": 0,
+            "enabled": false,
+            "publisher_api_key": "",
+            "web_api_key": ""
+          },
+          "xbox": {
+            "client_id": "",
+            "client_secret": "",
+            "enabled": false
+          }
+        }
+      },
+      "version": "v0.43.0",
+      "exported_at": "1734341678"
+    }
+  ],
+  "applied_configuration": "{\"version\":\"v1\", \"id\":\"xjq5tmca\", \"name\":\"test\", \"environment\":\"DEVELOPMENT\", \"service_definitions\":[{\"id\":\"analytics\", \"language\":\"go\", \"version\":\"v0.43.0\", \"author_id\":\"snapser\", \"category\":\"SNAPSER\", \"subcategory\":\"SERVICE\", \"data_dependencies\":[{\"type\":\"POSTGRES\", \"postgres\":{\"database\":\"analytics\"}}, {\"type\":\"POSTGRES\", \"postgres\":{\"database\":\"analytics_settings\"}}]}, {\"id\":\"auth\", \"language\":\"go\", \"version\":\"v0.43.0\", \"author_id\":\"snapser\", \"category\":\"SNAPSER\", \"subcategory\":\"SERVICE\", \"data_dependencies\":[{\"type\":\"POSTGRES\", \"postgres\":{\"database\":\"auth\"}}, {\"type\":\"POSTGRES\", \"postgres\":{\"database\":\"auth_settings\"}}, {\"type\":\"REDIS\", \"redis\":{}}]}], \"settings\":[{\"id\":\"analytics\", \"data\":{\"events\":[{\"created_at\":\"1734341662\", \"is_snap_event\":false, \"name\":\"custom_event\", \"properties\":[{\"name\":\"custom_property\", \"type\":\"string\"}], \"sample_rate\":100, \"type\":\"user\"}, {\"created_at\":\"1734049693\", \"is_snap_event\":true, \"name\":\"snap_campaign_runs\", \"properties\":[{\"name\":\"campaign_id\", \"type\":\"number\"}, {\"name\":\"started_at\", \"type\":\"timestamp\"}, {\"name\":\"ended_at\", \"type\":\"timestamp\"}, {\"name\":\"platform\", \"type\":\"string\"}, {\"name\":\"successes\", \"type\":\"number\"}, {\"name\":\"failures\", \"type\":\"number\"}], \"sample_rate\":100, \"type\":\"app\"}, {\"created_at\":\"1734049693\", \"is_snap_event\":true, \"name\":\"snap_campaign_notification_events\", \"properties\":[{\"name\":\"campaign_id\", \"type\":\"number\"}, {\"name\":\"platform\", \"type\":\"string\"}, {\"name\":\"action\", \"type\":\"string\"}], \"sample_rate\":100, \"type\":\"user\"}, {\"created_at\":\"1734049693\", \"is_snap_event\":true, \"name\":\"snap_iap_purchases\", \"properties\":[{\"name\":\"bundle_name\", \"type\":\"string\"}, {\"name\":\"platform\", \"type\":\"string\"}, {\"name\":\"quantity\", \"type\":\"number\"}, {\"name\":\"price\", \"type\":\"number\"}, {\"name\":\"currency\", \"type\":\"string\"}], \"sample_rate\":100, \"type\":\"user\"}, {\"created_at\":\"1734049693\", \"is_snap_event\":true, \"name\":\"snap_advertisements\", \"properties\":[{\"name\":\"type\", \"type\":\"string\"}, {\"name\":\"action\", \"type\":\"string\"}, {\"name\":\"placement\", \"type\":\"string\"}, {\"name\":\"provider\", \"type\":\"string\"}, {\"name\":\"failure_reason\", \"type\":\"string\"}], \"sample_rate\":100, \"type\":\"user\"}, {\"created_at\":\"1734049693\", \"is_snap_event\":true, \"name\":\"snap_errors\", \"properties\":[{\"name\":\"error_message\", \"type\":\"string\"}, {\"name\":\"error_ts\", \"type\":\"timestamp\"}, {\"name\":\"severity\", \"type\":\"string\"}], \"sample_rate\":100, \"type\":\"user\"}, {\"created_at\":\"1734049693\", \"is_snap_event\":true, \"name\":\"snap_sessions\", \"properties\":[{\"name\":\"action\", \"type\":\"string\"}, {\"name\":\"platform\", \"type\":\"string\"}, {\"name\":\"device\", \"type\":\"string\"}, {\"name\":\"location\", \"type\":\"string\"}, {\"name\":\"agent\", \"type\":\"string\"}], \"sample_rate\":100, \"type\":\"user\"}, {\"created_at\":\"1734049693\", \"is_snap_event\":true, \"name\":\"snap_milestones\", \"properties\":[{\"name\":\"milestone_name\", \"type\":\"string\"}, {\"name\":\"milestone_date\", \"type\":\"string\"}, {\"name\":\"milestone_ts\", \"type\":\"timestamp\"}, {\"name\":\"milestone_step\", \"type\":\"number\"}, {\"name\":\"client\", \"type\":\"string\"}, {\"name\":\"server_ts\", \"type\":\"timestamp\"}, {\"name\":\"client_ts\", \"type\":\"timestamp\"}, {\"name\":\"category\", \"type\":\"string\"}], \"sample_rate\":100, \"type\":\"user\"}, {\"created_at\":\"1734049693\", \"is_snap_event\":true, \"name\":\"snap_payments\", \"properties\":[{\"name\":\"txn_id\", \"type\":\"string\"}, {\"name\":\"payment_method\", \"type\":\"string\"}, {\"name\":\"currency_name\", \"type\":\"string\"}, {\"name\":\"currency_value\", \"type\":\"number\"}, {\"name\":\"value_usd\", \"type\":\"number\"}, {\"name\":\"category\", \"type\":\"string\"}, {\"name\":\"subcategory\", \"type\":\"string\"}, {\"name\":\"server_ts\", \"type\":\"number\"}, {\"name\":\"client_ts\", \"type\":\"number\"}, {\"name\":\"status\", \"type\":\"string\"}], \"sample_rate\":100, \"type\":\"user\"}, {\"created_at\":\"1734049693\", \"is_snap_event\":true, \"name\":\"snap_economy\", \"properties\":[{\"name\":\"currency_name\", \"type\":\"string\"}, {\"name\":\"current_value\", \"type\":\"number\"}, {\"name\":\"delta\", \"type\":\"number\"}, {\"name\":\"direction\", \"type\":\"string\"}], \"sample_rate\":100, \"type\":\"user\"}, {\"created_at\":\"1734049693\", \"is_snap_event\":true, \"name\":\"snap_segments\", \"properties\":[{\"name\":\"segment_name\", \"type\":\"string\"}, {\"name\":\"direction\", \"type\":\"string\"}], \"sample_rate\":100, \"type\":\"user\"}, {\"created_at\":\"1734049693\", \"is_snap_event\":true, \"name\":\"snap_experiments\", \"properties\":[{\"name\":\"experiment_name\", \"type\":\"string\"}, {\"name\":\"variant_name\", \"type\":\"string\"}], \"sample_rate\":100, \"type\":\"user\"}, {\"created_at\":\"1734049693\", \"is_snap_event\":true, \"name\":\"snap_logins\", \"properties\":[{\"name\":\"ip\", \"type\":\"string\"}, {\"name\":\"location\", \"type\":\"string\"}, {\"name\":\"device\", \"type\":\"string\"}, {\"name\":\"platform\", \"type\":\"string\"}, {\"name\":\"agent\", \"type\":\"string\"}, {\"name\":\"login_type\", \"type\":\"string\"}], \"sample_rate\":100, \"type\":\"user\"}, {\"created_at\":\"1734049692\", \"is_snap_event\":true, \"name\":\"snap_installs\", \"properties\":[{\"name\":\"ip\", \"type\":\"string\"}, {\"name\":\"location\", \"type\":\"string\"}, {\"name\":\"device\", \"type\":\"string\"}, {\"name\":\"platform\", \"type\":\"string\"}, {\"name\":\"agent\", \"type\":\"string\"}, {\"name\":\"login_type\", \"type\":\"string\"}], \"sample_rate\":100, \"type\":\"user\"}], \"reports\":[{\"created_at\":\"1734049693\", \"last_run_at\":\"0\", \"name\":\"snap_dau\", \"query\":\"select count(distinct user_id) as dau, platform, date_trunc('day', created_at) as day from user_snap_logins where created_at >= now() - interval '7 days' group by day, platform order by day desc;\", \"recipients\":[], \"results\":\"{}\", \"run_interval\":\"\", \"updated_at\":\"1734049693\"}]}, \"version\":\"v0.43.0\", \"exported_at\":\"1734341678\"}, {\"id\":\"auth\", \"data\":{\"dev\":{\"anon\":{\"enabled\":true}, \"app_auth\":{\"enabled\":false}, \"app_verify\":{\"client_secret\":\"\", \"enabled\":false}, \"apple\":{\"enabled\":false, \"key_id\":\"\", \"private_key\":\"\", \"service_id\":\"\", \"team_id\":\"\"}, \"email\":{\"enabled\":false, \"otp_length\":0, \"otp_rate_limit_settings\":{\"allow_list\":[], \"deny_list\":[], \"duration_in_seconds\":60, \"limit\":5, \"lockout_duration_in_seconds\":60}, \"otp_validity\":0}, \"epic\":{\"client_id\":\"\", \"client_secret\":\"\", \"enabled\":false}, \"facebook\":{\"client_id\":\"\", \"client_secret\":\"\", \"enabled\":false}, \"google\":{\"client_id\":\"\", \"client_secret\":\"\", \"enabled\":false}, \"password\":{\"enabled\":false}, \"session_inactivity_timeout\":604800, \"session_token_validity\":2592000, \"steam\":{\"api_key\":\"\", \"app_id\":0, \"enabled\":false, \"publisher_api_key\":\"\", \"web_api_key\":\"\"}, \"xbox\":{\"client_id\":\"\", \"client_secret\":\"\", \"enabled\":false}}, \"prod\":{\"anon\":{\"enabled\":false}, \"app_auth\":{\"enabled\":false}, \"app_verify\":{\"client_secret\":\"\", \"enabled\":false}, \"apple\":{\"enabled\":false, \"key_id\":\"\", \"private_key\":\"\", \"service_id\":\"\", \"team_id\":\"\"}, \"email\":{\"enabled\":false, \"otp_length\":0, \"otp_rate_limit_settings\":{\"allow_list\":[], \"deny_list\":[], \"duration_in_seconds\":60, \"limit\":5, \"lockout_duration_in_seconds\":60}, \"otp_validity\":0}, \"epic\":{\"client_id\":\"\", \"client_secret\":\"\", \"enabled\":false}, \"facebook\":{\"client_id\":\"\", \"client_secret\":\"\", \"enabled\":false}, \"google\":{\"client_id\":\"\", \"client_secret\":\"\", \"enabled\":false}, \"password\":{\"enabled\":false}, \"session_inactivity_timeout\":604800, \"session_token_validity\":2592000, \"steam\":{\"api_key\":\"\", \"app_id\":0, \"enabled\":false, \"publisher_api_key\":\"\", \"web_api_key\":\"\"}, \"xbox\":{\"client_id\":\"\", \"client_secret\":\"\", \"enabled\":false}}, \"stage\":{\"anon\":{\"enabled\":false}, \"app_auth\":{\"enabled\":false}, \"app_verify\":{\"client_secret\":\"\", \"enabled\":false}, \"apple\":{\"enabled\":false, \"key_id\":\"\", \"private_key\":\"\", \"service_id\":\"\", \"team_id\":\"\"}, \"email\":{\"enabled\":false, \"otp_length\":0, \"otp_rate_limit_settings\":{\"allow_list\":[], \"deny_list\":[], \"duration_in_seconds\":60, \"limit\":5, \"lockout_duration_in_seconds\":60}, \"otp_validity\":0}, \"epic\":{\"client_id\":\"\", \"client_secret\":\"\", \"enabled\":false}, \"facebook\":{\"client_id\":\"\", \"client_secret\":\"\", \"enabled\":false}, \"google\":{\"client_id\":\"\", \"client_secret\":\"\", \"enabled\":false}, \"password\":{\"enabled\":false}, \"session_inactivity_timeout\":604800, \"session_token_validity\":2592000, \"steam\":{\"api_key\":\"\", \"app_id\":0, \"enabled\":false, \"publisher_api_key\":\"\", \"web_api_key\":\"\"}, \"xbox\":{\"client_id\":\"\", \"client_secret\":\"\", \"enabled\":false}}}, \"version\":\"v0.43.0\", \"exported_at\":\"1734341678\"}]}"
+}
+```
+</CodeGroup>
+
+<Note>
+  The Snapend Manifest has a key called `applied_configuration` that
+  contains the configuration that was applied to the Snapend. When you attempt to update a Snapend using a
+  manifest, Snapser will compare the `applied_configuration` with the new configuration in the manifest. If
+  there are any differences, that were applied by someone else or manually, Snapser will not apply the new
+  configuration.
+</Note>
+
+## BYOSnaps in the manifest
+
+If your Snapend runs any BYOSnaps, the manifest carries each one's deployment
+configuration — CPU, memory, replica counts, command, args, env vars, the HPA
+block, and any [Secrets Manager](/docs/custom/tools/secrets-manager) references
+it mounts.
+
+**The manifest is the source of truth for all of that.** It is what the deploy
+reads, and it is the only place a change to a running BYOSnap can come from.
+
+<Warning>
+  A BYOSnap's `snapser-byosnap-profile.json` seeds this manifest exactly once — at
+  the moment the BYOSnap is added to the Snapend. From then on the manifest owns
+  the configuration. Publishing an edited profile updates the BYOSnap's stored
+  template for future attaches, but does not change this manifest, and neither does
+  bumping the BYOSnap to a newer version. See
+  [Profile vs. Snapend Manifest](/docs/custom/bring-your-own-snap#profile-vs-snapend-manifest).
+</Warning>
+
+So there are exactly two ways to change what a BYOSnap runs with on a given
+Snapend:
+
+1. **Snapend → Customize Snapend** in the portal, then deploy.
+2. Download the manifest, edit it, and apply it — the CI-friendly path:
+
+<CodeGroup title="Editing a BYOSnap's config via the manifest" tag="bash">
+```bash
+# 1. Always download fresh - applying a stale manifest will be rejected.
+snapctl snapend download --snapend-id $snapend_id --category snapend-manifest --format json --out-path .
+
+# 2. Edit the BYOSnap's block in the downloaded manifest.
+
+# 3. Apply it back.
+snapctl snapend apply --manifest-path-filename ./snapser-$snapend_id-manifest.json --blocking
+```
+</CodeGroup>
+
+<Note>
+  To confirm what is live without reading JSON, open **Snapend → Infrastructure →
+  Dashboard**. It renders straight from this manifest and shows each BYOSnap's
+  CPU, memory, HPA state and its attached secrets, args and env vars.
+</Note>
+
+## Downloading a Snapend Manifest
+To download your Snapend manifest, first go to your Snapend home page. Then, you go to the
+Snapend > Tools > Downloads tool. Here you will see a widget called **Manifest** that allows you to download
+the manifest.
+There are two formats available for the manifest: JSON and YAML. You can select the format you want to download.
+
+
+## User Data
+It should be noted that a Snapend manifest does not contain any user data. This means, if you download
+a manifest and then upload it to a different Snapend, the user data will not be transferred. But the new
+Snapend will be a replica of the old Snapend in terms of infrastructure, snaps and the configuration.
+
+## Snapser CLI
+Snapser provides a CLI tool that allows you to download, clone and apply a Snapend Manifest.
+
+### Downloading a Snapend Manifest
+To download a Snapend Manifest, you can use the following command:
+
+<CodeGroup title="Download Manifest">
+```bash
+# Download a Snapend Manifest
+# snapend_id: The id of the Snapend you want to download the manifest for
+# format: The format of the manifest, can be either json or yaml
+# out_path: The path where you want to save the manifest
+snapctl snapend download --snapend-id $snapend_id --category snapend-manifest --format $format --out-path $out_path
+```
+</CodeGroup>
+
+### Clone a Snapend using a Manifest
+To clone a Snapend using a manifest, you can use the following command:
+<CodeGroup title="Clone a Snapend via a Manifest">
+```bash
+# Clone a Snapend from a manifest
+# game_id: The id of the Game or App; you can get this from the App home page
+# name: Any name for your Snapend. Should be alphanumeric and less than 50 characters and no spaces
+# env: This should be either development or staging
+# manifest_path_filename: The path to the manifest file. Including the file name
+# blocking (optional): If you want the command to block until the Snapend is created
+snapctl snapend clone --game-id $game_id --name $name --env $env --manifest-path-filename $manifest_path_filename --blocking
+```
+</CodeGroup>
+
+### Applying a Snapend Manifest
+To apply a Snapend Manifest, you can use the following command.
+
+<Note>
+You should have the latest manifest before applying changes. This is to prevent a user stomping over
+someone elses changes.
+</Note>
+
+<CodeGroup title="Apply updates to a Snapend via a Manifest">
+```bash
+# Apply updates to a Snapend via a manifest
+# manifest_path_filename: The path to the manifest file. Including the file name
+# blocking (optional): If you want the command to block until the Snapend is created
+snapctl snapend apply --manifest-path-filename $manifest_path_filename --blocking
+```
+</CodeGroup>
+

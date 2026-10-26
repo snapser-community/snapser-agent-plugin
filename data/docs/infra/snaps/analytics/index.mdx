@@ -1,0 +1,738 @@
+
+
+export const description = 'Analytics'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Analytics
+
+Every modern application needs analytics. Analyzing various aspects of your app gives you the insights you need to improve it.  Even simply just snapping the Analytics Snap gives specific metrics like DAU, MAU, etc., for free, out of the box without having to make explicit calls from your client. This simple yet powerful tool should be an essential Snap for every application, game or digital experience.
+
+## Analytics Events
+You can think of an analytics event as a table in the data warehouse where each property is a column. Every analytic events can have upto 12 properties. This snaps come with out of the box built-in events. You can also add your own custom events via the Snaps admin tool. The snap ensures the incoming request adheres to the event and its properties and forwards the data to a Data warehouse. Developers then have access to this Data warehouse where they can run ad-hoc queries, create charts and dashboards.
+
+## Default Events
+Snapser offers built-in events as part of the Analytics snap. Some of the events are automatically populated by other snaps viz. **Snap Event Tables** and some have been created by Snapser for you to leverage viz. **Pre-built Event Tables**.
+
+### Snap Event Tables
+<Note>
+	These tables get automatically populated by other snaps like Auth, Experiments, Inventory, IAP,	and Statistics. You can directly query these tables using the Olympus tool, to get insights into your application.
+</Note>
+
+1. **Logins**: Tracks user logins. This event is automatically populated by the [Auth Snap](/docs/infra/snaps/auth).
+1. **Installs**: Tracks app or game installs. This event is automatically populated by the [Auth Snap](/docs/infra/snaps/auth).
+1. **Experiments**: Tracks your app experiments. This event is automatically populated by the [Experiments Snap](/docs/infra/snaps/experiments).
+1. **Segments**: Tracks live user segments. This event is automatically populated by the [Statistics Snap](/docs/infra/snaps/statistics).
+1. **Payments**: Tracks virtual currency in your game or gamifieid app. This event is automatically populated by the [Inventory Snap](/docs/infra/snaps/inventory).
+1. **Economy**: Tracks your application or game economy. This event is automatically populated by the [Inventory Snap](/docs/infra/snaps/inventory).
+1. **IAP Purchases**: - Tracks your IAP purchases. This event is automatically populated by the [IAP Snap](/docs/infra/snaps/iap).
+
+### Pre-built Event Tables
+<Note>
+	These tables are created by Snapser for your convenience. It is the responsibility of the developer	to populate these tables by firing `Analytics.UserEvent` or `Analytics.AppEvent` calls from the client.
+
+	If you want a slightly different way for tracking sessions, ads, errors or milestones, you can always	ignore these default ones and create your own custom event tables.
+</Note>
+
+1. **Sessions** - Track user sessions in your application.
+1. **Advertisements** - Track your ad impressions, clicks, and conversions.
+1. **Errors** - Track errors in your application.
+1. **Milestones** - Track user milestones / funnels in your application.
+
+<Note>
+	It should be noted that Snapser provides the following properties with these pre-build events for free.
+	So you do not need to add them explicitly:
+	- **user_id** - The user id of the user who fired the event
+	- **session_id** - The session id of the user who fired the event
+	- **created_at** - The time the event was fired
+</Note>
+
+#### Milestone and Funnel Tracking
+Milestone or funnel tracking is a useful tool to determine drop-offs in your app. These can be drop offs during your FTUE/NUX or during a feature. Snapser provides you with a Milestones table that has properties like: milestone_name, milestone_step etc. Using this information you can easily identify the drop offs rates.
+
+Example: Say a game's first time user experience, has three major things that the user needs to do before they can start playing the game. Every time a user completes one of the steps, the game client will fire off an analytics call passing the appropriate step number. Using, the Snapser Business Intelligence Querying tool, a game studio will be able to figure out, the number of people completing step 1, 2 and 3. If users know that they have a 90% completion rate on Step 1 but only 20% completion rate on Step 3, it would tell them that their FTUE is too long or has an issue.
+
+
+## Custom Events
+Custom events give a way to your product or data analyst team to come up with their own
+taxonomy to track in-app activity. You can add custom events via the Snaps admin tool. Each event can have a type and a sample rate. The type can be either user or app. You should use the type user if you are going to fire this event from the client. Use the type app if you are going to fire an analytics call for your game in general which is not associated with any user or from your game server. Each even can have upto 12 properties to each event. Each property can be of type string, number, or timestamp.
+Snapser also provides properties with every event for free:
+- **user_id** - The user id of the user who fired the event
+- **session_id** - The session id of the user who fired the event
+- **created_at** - The time the event was fired
+
+## Query your Data Warehouse
+
+### Business Intelligence Tool
+
+Once you have added either a user or an app event, your team can start querying your data warehouse. You can use the **Business Intelligence** tool to run queries against your data
+warehouse.
+
+1. Click on Events tool from the side Nav and then on the **Business Intelligence** button.
+1. This will open up the Snapser Business Intelligence tool.
+1. Select the **SQL Editor** tab and click on **SQL Lab**.
+1. In the first drop down pick the data warehouse name - this name will be prefixed with your `snapend name`.
+1. Next, select `public` for `Schema`.
+1. Finally you can select the table name from the last drop down.
+	 ![Olympus Sql](/images/docs/olympus-sql.png)
+1. Let's say you had added a user event called view with a property
+   **category_one** . Snapser creates a table using the event_type and event_name viz. user_view where
+   user is the event type and view is the event name. All the properties become columns of that table.
+1. Using the example above you can execute a query like:
+
+    ```
+      select category_one from user_view;
+    ```
+1. Click `Run` Query to see the results.
+
+## Batching Events
+
+The analytics snap supports batch event uploads. Using the batch API your client can cache 100 events and send them once. The client can add a timestamp with every entry in the batch. If the client does not do this, then the Analytics snap adds the timestamp of when the payload was received. The client can also provide a time_offset so as to make sure data entering your data warehouse is in the timezone your team is in. Without this override, all the data stored in the data warehouse is in the Pacific Timezone.
+
+## Deleting Events
+Snapser does not allow you to delete any of the Pre-built tables. However, custom event tables created by a developers, can be deleted. It should be noted that, in case the deletion was un-intentional and to prevent any permanent data loss, Snapser does a soft delete of your table and it will be available for 7 days.  After 7 days, the deleted custom event tables will be permanently deleted.
+
+## APIs
+
+The `Analytics` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name            | HTTP Method | API Description                        |
+| ------------------- | ----------- | -------------------------------------- |
+| [AnalyticsCreateAppEvent](#analyticscreateappevent-api)        | POST        | Create a new app event                 |
+| [AnalyticsGetServerTime](#analyticsgetservertime-api)         | GET         | Get timezone adjusted server timestamp |
+| [AnalyticsCreateUserEvent](#analyticscreateuserevent-api)       | POST        | Create a new user event                |
+| [AnalyticsBatchCreateAppEvents](#analyticsbatchcreateappevents-api)  | PUT         | Create a multiple batch events         |
+| [AnalyticsBatchCreateUserEvents](#analyticsbatchcreateuserevents-api) | PUT         | Create multiple user events            |
+</div>
+
+### Usage
+#### AnalyticsCreateAppEvent API
+<CodeGroup title="Create a new app event" tag="POST" label="AnalyticsCreateAppEvent">
+```csharp
+/// <summary>
+/// App Events Create a new app event
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="varEvent">Event to be added</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object AnalyticsCreateAppEvent(string varEvent, CreateAppEventRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = AnalyticsCreateAppEventWithHttpInfo(varEvent, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for CreateAppEventRequest
+/// <param name="createdAt">Epoch timestamp of event in seconds, if this and offset are not provided, it will be the request time.</param>
+/// <param name="properties">Key value pairs of the properties.</param>
+/// <param name="timeOffset">Time offset in seconds with server time.</param>
+public CreateAppEventRequest(long createdAt = default(long), Dictionary<string, string> properties = default(Dictionary<string, string>), long timeOffset = default(long))
+{
+    this.CreatedAt = createdAt;
+    this.Properties = properties;
+    this.TimeOffset = timeOffset;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAnalyticsServiceApi::AnalyticsCreateAppEventRequest : public Request
+{
+public:
+    virtual ~AnalyticsCreateAppEventRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Event to be added */
+    FString Event;
+    SnapserCreateAppEventRequest Body;
+};
+
+class SNAPSER_API SnapserCreateAppEventRequest : public Model
+{
+public:
+    virtual ~SnapserCreateAppEventRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Epoch timestamp of event in seconds, if this and offset are not provided, it will be the request time */
+    TOptional<int64> CreatedAt;
+    /* Key value pairs of the properties */
+    TOptional<TMap<FString, FString>> Properties;
+    /* Time offset in seconds with server time */
+    TOptional<int64> TimeOffset;
+};
+
+// Response
+class SNAPSER_API SnapserAnalyticsServiceApi::AnalyticsCreateAppEventResponse : public Response
+{
+public:
+    virtual ~AnalyticsCreateAppEventResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AnalyticsGetServerTime API
+<CodeGroup title="Get timezone adjusted server timestamp" tag="GET" label="AnalyticsGetServerTime">
+```csharp
+/// <summary>
+/// GetServerTime Get timezone adjusted server timestamp
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <returns>AnalyticsServerTime</returns>
+public AnalyticsServerTime AnalyticsGetServerTime()
+{
+    Snapser.Client.ApiResponse<AnalyticsServerTime> localVarResponse = AnalyticsGetServerTimeWithHttpInfo();
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AnalyticsServerTime
+/// <summary>
+/// Initializes a new instance of the <see cref="AnalyticsServerTime" /> class.
+/// </summary>
+/// <param name="serverTime">serverTime.</param>
+public AnalyticsServerTime(string serverTime = default(string))
+{
+    this.ServerTime = serverTime;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAnalyticsServiceApi::AnalyticsGetServerTimeRequest : public Request
+{
+public:
+    virtual ~AnalyticsGetServerTimeRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+};
+
+// Response
+class SNAPSER_API SnapserAnalyticsServiceApi::AnalyticsGetServerTimeResponse : public Response
+{
+public:
+    virtual ~AnalyticsGetServerTimeResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAnalyticsServerTime Content;
+};
+
+class SNAPSER_API SnapserAnalyticsServerTime : public Model
+{
+public:
+    virtual ~SnapserAnalyticsServerTime() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> ServerTime;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AnalyticsCreateUserEvent API
+<CodeGroup title="Create a new user event" tag="POST" label="AnalyticsCreateUserEvent">
+```csharp
+/// <summary>
+/// User Events Create a new user event
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="varEvent">Event to be added</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object AnalyticsCreateUserEvent(string varEvent, string token, CreateUserEventRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = AnalyticsCreateUserEventWithHttpInfo(varEvent, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for CreateUserEventRequest
+/// <param name="createdAt">Epoch timestamp of event in seconds, if this and offset are not provided, it will be the request time.</param>
+/// <param name="properties">Key value pairs of the properties.</param>
+/// <param name="timeOffset">Time offset in seconds with server time.</param>
+/// <param name="userId">UserID of the affected user (required).</param>
+public CreateUserEventRequest(long createdAt = default(long), Dictionary<string, string> properties = default(Dictionary<string, string>), long timeOffset = default(long), string userId = default(string))
+{
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for CreateUserEventRequest and cannot be null");
+    }
+    this.UserId = userId;
+    this.CreatedAt = createdAt;
+    this.Properties = properties;
+    this.TimeOffset = timeOffset;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAnalyticsServiceApi::AnalyticsCreateUserEventRequest : public Request
+{
+public:
+    virtual ~AnalyticsCreateUserEventRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Event to be added */
+    FString Event;
+    /* User session token */
+    FString Token;
+    SnapserCreateUserEventRequest Body;
+};
+
+class SNAPSER_API SnapserCreateUserEventRequest : public Model
+{
+public:
+    virtual ~SnapserCreateUserEventRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Epoch timestamp of event in seconds, if this and offset are not provided, it will be the request time */
+    TOptional<int64> CreatedAt;
+    /* Key value pairs of the properties */
+    TOptional<TMap<FString, FString>> Properties;
+    /* Time offset in seconds with server time */
+    TOptional<int64> TimeOffset;
+    /* UserID of the affected user */
+    FString UserId;
+};
+
+// Response
+class SNAPSER_API SnapserAnalyticsServiceApi::AnalyticsCreateUserEventResponse : public Response
+{
+public:
+    virtual ~AnalyticsCreateUserEventResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AnalyticsBatchCreateAppEvents API
+<CodeGroup title="Create a multiple batch events" tag="PUT" label="AnalyticsBatchCreateAppEvents">
+```csharp
+/// <summary>
+/// Batch App Events Create a multiple batch events
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AnalyticsBatchCreateEventResponse</returns>
+public AnalyticsBatchCreateEventResponse AnalyticsBatchCreateAppEvents(AnalyticsBatchCreateAppEventRequest body)
+{
+    Snapser.Client.ApiResponse<AnalyticsBatchCreateEventResponse> localVarResponse = AnalyticsBatchCreateAppEventsWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AnalyticsBatchCreateAppEventRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AnalyticsBatchCreateAppEventRequest" /> class.
+/// </summary>
+/// <param name="data">Events array (required).</param>
+public AnalyticsBatchCreateAppEventRequest(List<AnalyticsGenericEvent> data = default(List<AnalyticsGenericEvent>))
+{
+    // to ensure "data" is required (not null)
+    if (data == null)
+    {
+        throw new ArgumentNullException("data is a required property for AnalyticsBatchCreateAppEventRequest and cannot be null");
+    }
+    this.Data = data;
+}
+
+/// Snapser.Model for AnalyticsBatchCreateEventResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AnalyticsBatchCreateEventResponse" /> class.
+/// </summary>
+/// <param name="eventsFailed">Count of failed events.</param>
+/// <param name="eventsIngested">Count of events successfully ingested.</param>
+/// <param name="responses">List of responses for each event.</param>
+public AnalyticsBatchCreateEventResponse(long eventsFailed = default(long), long eventsIngested = default(long), List<AnalyticsBatchCreateEventSingleResponse> responses = default(List<AnalyticsBatchCreateEventSingleResponse>))
+{
+    this.EventsFailed = eventsFailed;
+    this.EventsIngested = eventsIngested;
+    this.Responses = responses;
+}
+
+/// Snapser.Model for AnalyticsBatchCreateEventSingleResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AnalyticsBatchCreateEventSingleResponse" /> class.
+/// </summary>
+/// <param name="message">message.</param>
+/// <param name="request">request.</param>
+/// <param name="success">success.</param>
+public AnalyticsBatchCreateEventSingleResponse(string message = default(string), AnalyticsGenericEvent request = default(AnalyticsGenericEvent), bool success = default(bool))
+{
+    this.Message = message;
+    this.Request = request;
+    this.Success = success;
+}
+
+/// Snapser.Model for AnalyticsGenericEvent
+/// <summary>
+/// Initializes a new instance of the <see cref="AnalyticsGenericEvent" /> class.
+/// </summary>
+/// <param name="createdAt">Epoch timestamp of event in seconds, if this and offset are not provided, it will be the request time.</param>
+/// <param name="varEvent">Event to be added (required).</param>
+/// <param name="id">Order in which events will be ingested (required).</param>
+/// <param name="properties">Key value pairs of the properties.</param>
+/// <param name="timeOffset">Time offset in seconds with server time.</param>
+public AnalyticsGenericEvent(long createdAt = default(long), string varEvent = default(string), long id = default(long), Dictionary<string, string> properties = default(Dictionary<string, string>), long timeOffset = default(long))
+{
+    // to ensure "varEvent" is required (not null)
+    if (varEvent == null)
+    {
+        throw new ArgumentNullException("varEvent is a required property for AnalyticsGenericEvent and cannot be null");
+    }
+    this.VarEvent = varEvent;
+    this.Id = id;
+    this.CreatedAt = createdAt;
+    this.Properties = properties;
+    this.TimeOffset = timeOffset;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAnalyticsServiceApi::AnalyticsBatchCreateAppEventsRequest : public Request
+{
+public:
+    virtual ~AnalyticsBatchCreateAppEventsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAnalyticsBatchCreateAppEventRequest Body;
+};
+
+class SNAPSER_API SnapserAnalyticsBatchCreateAppEventRequest : public Model
+{
+public:
+    virtual ~SnapserAnalyticsBatchCreateAppEventRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Events array */
+    TArray<SnapserAnalyticsGenericEvent> Data;
+};
+
+class SNAPSER_API SnapserAnalyticsGenericEvent : public Model
+{
+public:
+    virtual ~SnapserAnalyticsGenericEvent() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Epoch timestamp of event in seconds, if this and offset are not provided, it will be the request time */
+    TOptional<int64> CreatedAt;
+    /* Event to be added */
+    FString Event;
+    /* Order in which events will be ingested */
+    int64 Id = 0;
+    /* Key value pairs of the properties */
+    TOptional<TMap<FString, FString>> Properties;
+    /* Time offset in seconds with server time */
+    TOptional<int64> TimeOffset;
+};
+
+// Response
+class SNAPSER_API SnapserAnalyticsServiceApi::AnalyticsBatchCreateAppEventsResponse : public Response
+{
+public:
+    virtual ~AnalyticsBatchCreateAppEventsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAnalyticsBatchCreateEventResponse Content;
+};
+
+class SNAPSER_API SnapserAnalyticsBatchCreateEventResponse : public Model
+{
+public:
+    virtual ~SnapserAnalyticsBatchCreateEventResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of failed events */
+    TOptional<int64> EventsFailed;
+    /* Count of events successfully ingested */
+    TOptional<int64> EventsIngested;
+    /* List of responses for each event */
+    TOptional<TArray<SnapserAnalyticsBatchCreateEventSingleResponse>> Responses;
+};
+
+class SNAPSER_API SnapserAnalyticsBatchCreateEventSingleResponse : public Model
+{
+public:
+    virtual ~SnapserAnalyticsBatchCreateEventSingleResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Message;
+    TOptional<SnapserAnalyticsGenericEvent> Request;
+    TOptional<bool> Success;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AnalyticsBatchCreateUserEvents API
+<CodeGroup title="Create multiple user events" tag="PUT" label="AnalyticsBatchCreateUserEvents">
+```csharp
+/// <summary>
+/// Batch User Events Create multiple user events
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>AnalyticsBatchCreateEventResponse</returns>
+public AnalyticsBatchCreateEventResponse AnalyticsBatchCreateUserEvents(string token, AnalyticsBatchCreateUserEventRequest body)
+{
+    Snapser.Client.ApiResponse<AnalyticsBatchCreateEventResponse> localVarResponse = AnalyticsBatchCreateUserEventsWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AnalyticsBatchCreateUserEventRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AnalyticsBatchCreateUserEventRequest" /> class.
+/// </summary>
+[JsonConstructorAttribute]
+protected AnalyticsBatchCreateUserEventRequest() {}
+/// <summary>
+/// Initializes a new instance of the <see cref="AnalyticsBatchCreateUserEventRequest" /> class.
+/// </summary>
+/// <param name="data">Events array (required).</param>
+/// <param name="userId">UserID of the affected user (required).</param>
+public AnalyticsBatchCreateUserEventRequest(List<AnalyticsGenericEvent> data = default(List<AnalyticsGenericEvent>), string userId = default(string))
+{
+    // to ensure "data" is required (not null)
+    if (data == null)
+    {
+        throw new ArgumentNullException("data is a required property for AnalyticsBatchCreateUserEventRequest and cannot be null");
+    }
+    this.Data = data;
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for AnalyticsBatchCreateUserEventRequest and cannot be null");
+    }
+    this.UserId = userId;
+}
+
+/// Snapser.Model for AnalyticsBatchCreateEventResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AnalyticsBatchCreateEventResponse" /> class.
+/// </summary>
+/// <param name="eventsFailed">Count of failed events.</param>
+/// <param name="eventsIngested">Count of events successfully ingested.</param>
+/// <param name="responses">List of responses for each event.</param>
+public AnalyticsBatchCreateEventResponse(long eventsFailed = default(long), long eventsIngested = default(long), List<AnalyticsBatchCreateEventSingleResponse> responses = default(List<AnalyticsBatchCreateEventSingleResponse>))
+{
+    this.EventsFailed = eventsFailed;
+    this.EventsIngested = eventsIngested;
+    this.Responses = responses;
+}
+
+/// Snapser.Model for AnalyticsBatchCreateEventSingleResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AnalyticsBatchCreateEventSingleResponse" /> class.
+/// </summary>
+/// <param name="message">message.</param>
+/// <param name="request">request.</param>
+/// <param name="success">success.</param>
+public AnalyticsBatchCreateEventSingleResponse(string message = default(string), AnalyticsGenericEvent request = default(AnalyticsGenericEvent), bool success = default(bool))
+{
+    this.Message = message;
+    this.Request = request;
+    this.Success = success;
+}
+
+/// Snapser.Model for AnalyticsGenericEvent
+/// <summary>
+/// Initializes a new instance of the <see cref="AnalyticsGenericEvent" /> class.
+/// </summary>
+/// <param name="createdAt">Epoch timestamp of event in seconds, if this and offset are not provided, it will be the request time.</param>
+/// <param name="varEvent">Event to be added (required).</param>
+/// <param name="id">Order in which events will be ingested (required).</param>
+/// <param name="properties">Key value pairs of the properties.</param>
+/// <param name="timeOffset">Time offset in seconds with server time.</param>
+public AnalyticsGenericEvent(long createdAt = default(long), string varEvent = default(string), long id = default(long), Dictionary<string, string> properties = default(Dictionary<string, string>), long timeOffset = default(long))
+{
+    // to ensure "varEvent" is required (not null)
+    if (varEvent == null)
+    {
+        throw new ArgumentNullException("varEvent is a required property for AnalyticsGenericEvent and cannot be null");
+    }
+    this.VarEvent = varEvent;
+    this.Id = id;
+    this.CreatedAt = createdAt;
+    this.Properties = properties;
+    this.TimeOffset = timeOffset;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAnalyticsServiceApi::AnalyticsBatchCreateUserEventsRequest : public Request
+{
+public:
+    virtual ~AnalyticsBatchCreateUserEventsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* UserID of the affected user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserServiceRequestsResponses Body;
+};
+
+class SNAPSER_API SnapserServiceRequestsResponses : public Model
+{
+public:
+    virtual ~SnapserServiceRequestsResponses() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Metadata associated with the ticket */
+    TOptional<TMap<FString, FString>> Metadata;
+    TOptional<SnapserMatchmakingSearchFields> SearchFields;
+};
+
+// Response
+class SNAPSER_API SnapserAnalyticsServiceApi::AnalyticsBatchCreateUserEventsResponse : public Response
+{
+public:
+    virtual ~AnalyticsBatchCreateUserEventsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAnalyticsBatchCreateEventResponse Content;
+};
+
+class SNAPSER_API SnapserAnalyticsBatchCreateEventResponse : public Model
+{
+public:
+    virtual ~SnapserAnalyticsBatchCreateEventResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of failed events */
+    TOptional<int64> EventsFailed;
+    /* Count of events successfully ingested */
+    TOptional<int64> EventsIngested;
+    /* List of responses for each event */
+    TOptional<TArray<SnapserAnalyticsBatchCreateEventSingleResponse>> Responses;
+};
+
+class SNAPSER_API SnapserAnalyticsBatchCreateEventSingleResponse : public Model
+{
+public:
+    virtual ~SnapserAnalyticsBatchCreateEventSingleResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Message;
+    TOptional<SnapserAnalyticsGenericEvent> Request;
+    TOptional<bool> Success;
+};
+
+class SNAPSER_API SnapserAnalyticsGenericEvent : public Model
+{
+public:
+    virtual ~SnapserAnalyticsGenericEvent() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Epoch timestamp of event in seconds, if this and offset are not provided, it will be the request time */
+    TOptional<int64> CreatedAt;
+    /* Event to be added */
+    FString Event;
+    /* Order in which events will be ingested */
+    int64 Id = 0;
+    /* Key value pairs of the properties */
+    TOptional<TMap<FString, FString>> Properties;
+    /* Time offset in seconds with server time */
+    TOptional<int64> TimeOffset;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/analytics-api.png)
+
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code | Variable                  | Message                      | HTTP | gRPC            |
+| ---- | ------------------------- | ---------------------------- | ---- | --------------- |
+| 2000 | ErrEventNotFound          | Event not found              | 404  | NotFound        |
+| 2001 | ErrEventAlreadyExists     | Event already exists         | 409  | AlreadyExists   |
+| 2002 | ErrInvalidPropertyName    | Invalid property name        | 400  | InvalidArgument |
+| 2003 | ErrInvalidPropertyValue   | Invalid property value       | 400  | InvalidArgument |
+| 2004 | ErrNotSampled             | Event not sampled            | 400  | InvalidArgument |
+| 2005 | ErrUserDataNotFound       | User data not found          | 404  | NotFound        |
+| 2006 | ErrCreateEventFailure     | Failed to create event       | 500  | Internal        |
+| 2007 | ErrDeleteEventFailure     | Failed to delete event       | 500  | Internal        |
+| 2008 | ErrGetEventsFailure       | Failed to get event          | 500  | Internal        |
+| 2009 | ErrGetEventFailure        | Failed to get event          | 500  | Internal        |
+| 2010 | ErrCreateUserEventFailure | Failed to create user event  | 500  | Internal        |
+| 2011 | ErrCreateAppEventFailure  | Failed to create app event   | 500  | Internal        |
+| 2012 | ErrGetUserDataFailure     | Failed to get user data      | 500  | Internal        |
+| 2013 | ErrSettingsExportFailed   | Failed to export settings    | 500  | Internal        |
+| 2014 | ErrSettingsImportFailed   | Failed to import settings    | 500  | Internal        |
+| 2015 | ErrInvalidQuery           | Invalid query                | 400  | InvalidArgument |
+</div>
+
+## Additional Details
+
+### Data Stores
+
+POSTGRES
+
+### Service Dependencies
+
+The Analytics service does not depend on any other Snap.
+
+### Recommended Services
+
+The Analytics service works best when paired with the Auth service.
+
+### Upcoming enhancements
+
+None planned at the moment.

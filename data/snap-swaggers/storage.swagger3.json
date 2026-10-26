@@ -1,0 +1,3366 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Blob storage",
+    "title" : "Storage",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "StorageService"
+  } ],
+  "paths" : {
+    "/v1/storage/batch/append-blobs" : {
+      "get" : {
+        "description" : "Retrieve all append blobs for the owners",
+        "operationId" : "BatchGetAppendBlobs",
+        "parameters" : [ {
+          "description" : "Access to the append-blob. (public/protected/private)",
+          "explode" : true,
+          "in" : "query",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Append-blob owners user IDs",
+          "explode" : true,
+          "in" : "query",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Append-blob key",
+          "explode" : true,
+          "in" : "query",
+          "name" : "append_blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageBatchGetAppendBlobsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Append Blobs",
+        "tags" : [ "StorageService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Apend to the existing blobs. Create a new one if it doesn't exist",
+        "operationId" : "BatchUpdateAppendBlob",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/storageBatchUpdateAppendBlobRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageBatchUpdateAppendBlobResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Append Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/batch/blobs" : {
+      "get" : {
+        "description" : "Retrieve all blobs for the owners",
+        "operationId" : "BatchGetBlobs",
+        "parameters" : [ {
+          "description" : "Access to the blob. (public/protected/private)",
+          "explode" : true,
+          "in" : "query",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Blob owners user IDs",
+          "explode" : true,
+          "in" : "query",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Blob key",
+          "explode" : true,
+          "in" : "query",
+          "name" : "blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageBatchGetBlobsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Blobs",
+        "tags" : [ "StorageService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      },
+      "post" : {
+        "description" : "Inserts multiple blobs. Will fail if the key already exists",
+        "operationId" : "BatchInsertBlob",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/storageBatchInsertBlobRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageBatchInsertBlobResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Replace multiple blobs. Optionally insert if it doesn't exist",
+        "operationId" : "BatchReplaceBlob",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/storageBatchReplaceBlobRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageBatchReplaceBlobResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/batch/counters" : {
+      "get" : {
+        "description" : "Retrieve all counters for the owners",
+        "operationId" : "BatchGetCounters",
+        "parameters" : [ {
+          "description" : "Access to the counter. (public/protected/private)",
+          "explode" : true,
+          "in" : "query",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Counter owners user IDs",
+          "explode" : true,
+          "in" : "query",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Counter key",
+          "explode" : true,
+          "in" : "query",
+          "name" : "counter_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageBatchGetCountersResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Counters",
+        "tags" : [ "StorageService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Increment multiple counters",
+        "operationId" : "BatchIncrementCounter",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/storageBatchIncrementCounterRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageBatchIncrementCounterResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Counters",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/batch/json-blobs" : {
+      "post" : {
+        "description" : "Retrieve all JSON blobs for the owners",
+        "operationId" : "BatchGetJsonBlobs",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/storageBatchGetJsonBlobsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageBatchGetJsonBlobsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "JSON Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/batch/json-blobs/sub-documents" : {
+      "post" : {
+        "description" : "Retrieve all sub-documents for the owners",
+        "operationId" : "BatchGetSubDocuments",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/storageBatchGetSubDocumentsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageBatchGetSubDocumentsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "JSON Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Upsert multiple sub-documents. Optionally insert if it doesn't exist",
+        "operationId" : "BatchUpsertSubDocuments",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/storageBatchUpsertSubDocumentsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageBatchUpsertSubDocumentsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "JSON Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/batch/json-blobs/sub-documents:append" : {
+      "put" : {
+        "description" : "Append to multiple array sub-documents",
+        "operationId" : "BatchAppendArrSubDocuments",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/storageBatchAppendArrSubDocumentsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageBatchAppendArrSubDocumentsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "JSON Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/batch/json-blobs/sub-documents:delete" : {
+      "post" : {
+        "description" : "Deletes multiple sub-documents",
+        "operationId" : "BatchDeleteSubDocuments",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/storageBatchDeleteSubDocumentsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageBatchDeleteSubDocumentsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "JSON Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/batch/json-blobs/sub-documents:prepend" : {
+      "put" : {
+        "description" : "Prepend to multiple array sub-documents",
+        "operationId" : "BatchPrependArrSubDocuments",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/storageBatchPrependArrSubDocumentsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageBatchPrependArrSubDocumentsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "JSON Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/batch/json-blobs:delete" : {
+      "post" : {
+        "description" : "Deletes multiple JSON blobs",
+        "operationId" : "BatchDeleteJsonBlobs",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/storageBatchDeleteJsonBlobsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageBatchDeleteJsonBlobsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "JSON Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/batch/json-blobs:insert" : {
+      "post" : {
+        "description" : "Inserts multiple JSON blobs. Will fail if the key already exists",
+        "operationId" : "BatchInsertJsonBlobs",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/storageBatchInsertJsonBlobsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageBatchInsertJsonBlobsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "JSON Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/batch/json-blobs:replace" : {
+      "put" : {
+        "description" : "Replace multiple JSON blobs. Optionally insert if it doesn't exist",
+        "operationId" : "BatchReplaceJsonBlobs",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/storageBatchReplaceJsonBlobsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageBatchReplaceJsonBlobsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "JSON Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/keys/{blob_key}/exists" : {
+      "get" : {
+        "description" : "Check if a storage key exists. Supports prefix/dynamic key matching (e.g., 'dynamic-key-uno' matches prefix key 'dynamic-key-').",
+        "operationId" : "BlobKeyExists",
+        "parameters" : [ {
+          "description" : "The key to check for existence. Can be an exact key or a key that matches a prefix/dynamic key pattern.",
+          "explode" : false,
+          "in" : "path",
+          "name" : "blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageBlobKeyExistsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Keys",
+        "tags" : [ "StorageService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/owner/{owner_id}/{access_type}/append-blobs/{append_blob_key}" : {
+      "delete" : {
+        "description" : "Deletes the append blob",
+        "operationId" : "DeleteAppendBlob",
+        "parameters" : [ {
+          "description" : "Append-blob owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the append-blob. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Append-blob key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "append_blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed",
+          "explode" : true,
+          "in" : "query",
+          "name" : "cas",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageDeleteAppendBlobResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Append Blobs",
+        "tags" : [ "StorageService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "get" : {
+        "description" : "Retrieve the value of an append blob",
+        "operationId" : "GetAppendBlob",
+        "parameters" : [ {
+          "description" : "Append-blob owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the append-blob. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Append-blob key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "append_blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageGetAppendBlobResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Append Blobs",
+        "tags" : [ "StorageService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Apend to the existing blob. Create a new one if it doesn't exist",
+        "operationId" : "UpdateAppendBlob",
+        "parameters" : [ {
+          "description" : "Append-blob owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the append-blob. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Append-blob key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "append_blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateAppendBlob_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageUpdateAppendBlobResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Append Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/owner/{owner_id}/{access_type}/blobs/{blob_key}" : {
+      "delete" : {
+        "description" : "Delete a blob",
+        "operationId" : "DeleteBlob",
+        "parameters" : [ {
+          "description" : "Blob owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the blob. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Blob key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed",
+          "explode" : true,
+          "in" : "query",
+          "name" : "cas",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageDeleteBlobResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Blobs",
+        "tags" : [ "StorageService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "get" : {
+        "description" : "Retrieve the blob for the key",
+        "operationId" : "GetBlob",
+        "parameters" : [ {
+          "description" : "Blob owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the blob. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Blob key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageGetBlobResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Blobs",
+        "tags" : [ "StorageService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "post" : {
+        "description" : "Inserts a blob. Will fail if the key already exists",
+        "operationId" : "InsertBlob",
+        "parameters" : [ {
+          "description" : "Blob owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the blob. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Blob key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InsertBlob_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageInsertBlobResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Replace a blob. Optionally insert if it doesn't exist",
+        "operationId" : "ReplaceBlob",
+        "parameters" : [ {
+          "description" : "Blob owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the blob. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Blob key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReplaceBlob_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageReplaceBlobResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/owner/{owner_id}/{access_type}/cas/{blob_key}" : {
+      "get" : {
+        "description" : "Retrieve the cas for the key",
+        "operationId" : "GetCas",
+        "parameters" : [ {
+          "description" : "Blob owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the blob. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Blob key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageGetCasResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Cas",
+        "tags" : [ "StorageService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/owner/{owner_id}/{access_type}/counters/{counter_key}" : {
+      "delete" : {
+        "description" : "Reset a counter value to 0",
+        "operationId" : "ResetCounter",
+        "parameters" : [ {
+          "description" : "Counter owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the counter. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Counter key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "counter_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageResetCounterResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Counters",
+        "tags" : [ "StorageService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "get" : {
+        "description" : "Retrieve a counter value",
+        "operationId" : "GetCounter",
+        "parameters" : [ {
+          "description" : "Counter owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the counter. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Counter key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "counter_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageGetCounterResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Counters",
+        "tags" : [ "StorageService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Increment the counter",
+        "operationId" : "IncrementCounter",
+        "parameters" : [ {
+          "description" : "Counter owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the counter. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Counter key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "counter_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/IncrementCounter_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageIncrementCounterResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Counters",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/owner/{owner_id}/{access_type}/json-blobs/{json_blob_key}" : {
+      "delete" : {
+        "description" : "Deletes the JSON blob",
+        "operationId" : "DeleteJsonBlob",
+        "parameters" : [ {
+          "description" : "Blob owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the blob. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Blob key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "json_blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed",
+          "explode" : true,
+          "in" : "query",
+          "name" : "cas",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageDeleteJsonBlobResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "JSON Blobs",
+        "tags" : [ "StorageService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "get" : {
+        "description" : "Retrieve the JSON blob for the key",
+        "operationId" : "GetJsonBlob",
+        "parameters" : [ {
+          "description" : "Blob owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the blob. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Blob key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "json_blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageGetJsonBlobResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "JSON Blobs",
+        "tags" : [ "StorageService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "post" : {
+        "description" : "Inserts a JSON blob. Will fail if the key already exists",
+        "operationId" : "InsertJsonBlob",
+        "parameters" : [ {
+          "description" : "Blob owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the blob. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Blob key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "json_blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InsertJsonBlob_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageInsertJsonBlobResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "JSON Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Replace a JSON blob. Optionally insert if it doesn't exist",
+        "operationId" : "ReplaceJsonBlob",
+        "parameters" : [ {
+          "description" : "Blob owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the blob. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Blob key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "json_blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReplaceJsonBlob_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageReplaceJsonBlobResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "JSON Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/owner/{owner_id}/{access_type}/json-blobs/{json_blob_key}/sub-documents" : {
+      "delete" : {
+        "description" : "Deletes the sub-document",
+        "operationId" : "DeleteSubDocument",
+        "parameters" : [ {
+          "description" : "Counter owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the counter. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Blob key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "json_blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Path to the sub-document",
+          "explode" : true,
+          "in" : "query",
+          "name" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed",
+          "explode" : true,
+          "in" : "query",
+          "name" : "cas",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageDeleteSubDocumentResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "JSON Blobs",
+        "tags" : [ "StorageService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "get" : {
+        "description" : "Retrieve the sub-document for the key",
+        "operationId" : "GetSubDocument",
+        "parameters" : [ {
+          "description" : "Counter owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the counter. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Blob key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "json_blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Path to the sub-document",
+          "explode" : true,
+          "in" : "query",
+          "name" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageGetSubDocumentResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "JSON Blobs",
+        "tags" : [ "StorageService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Upsert a sub-document. Optionally insert if it doesn't exist",
+        "operationId" : "UpsertSubDocument",
+        "parameters" : [ {
+          "description" : "Counter owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the counter. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Blob key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "json_blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpsertSubDocument_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageUpsertSubDocumentResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "JSON Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/owner/{owner_id}/{access_type}/json-blobs/{json_blob_key}/sub-documents:append" : {
+      "put" : {
+        "description" : "Append to an array sub-document",
+        "operationId" : "AppendArrSubDocument",
+        "parameters" : [ {
+          "description" : "Counter owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the counter. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Blob key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "json_blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AppendArrSubDocument_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storageAppendArrSubDocumentResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "JSON Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/storage/owner/{owner_id}/{access_type}/json-blobs/{json_blob_key}/sub-documents:prepend" : {
+      "put" : {
+        "description" : "Prepend to an array sub-document",
+        "operationId" : "PrependArrSubDocument",
+        "parameters" : [ {
+          "description" : "Counter owner's user ID",
+          "explode" : false,
+          "in" : "path",
+          "name" : "owner_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Access to the counter. (public/protected/private)",
+          "explode" : false,
+          "in" : "path",
+          "name" : "access_type",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Blob key",
+          "explode" : false,
+          "in" : "path",
+          "name" : "json_blob_key",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrependArrSubDocument_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/storagePrependArrSubDocumentResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "JSON Blobs",
+        "tags" : [ "StorageService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "AnyValue" : {
+        "description" : "Can be of any type",
+        "nullable" : true,
+        "oneOf" : [ {
+          "type" : "string"
+        }, {
+          "type" : "number"
+        }, {
+          "type" : "boolean"
+        }, {
+          "type" : "integer"
+        }, {
+          "type" : "object"
+        }, {
+          "items" : {
+            "type" : "object"
+          },
+          "type" : "array"
+        } ]
+      },
+      "AppendArrSubDocument_request" : {
+        "properties" : {
+          "cas" : {
+            "description" : "Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed",
+            "type" : "string"
+          },
+          "updates" : {
+            "description" : "Fragments to be appended",
+            "items" : {
+              "$ref" : "#/components/schemas/storageJsonFragment"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "updates" ],
+        "type" : "object"
+      },
+      "IncrementCounter_request" : {
+        "properties" : {
+          "count" : {
+            "description" : "Value to increment the counter by. Use negative to decrement",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "count" ],
+        "type" : "object"
+      },
+      "InsertBlob_request" : {
+        "properties" : {
+          "ttl" : {
+            "description" : "Optional TTL for the blob",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "value" : {
+            "description" : "Blob value to be inserted",
+            "type" : "string"
+          }
+        },
+        "required" : [ "value" ],
+        "type" : "object"
+      },
+      "InsertJsonBlob_request" : {
+        "properties" : {
+          "ttl" : {
+            "description" : "Optional TTL for the blob",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "value" : {
+            "description" : "JSON value to be inserted",
+            "type" : "object"
+          }
+        },
+        "required" : [ "value" ],
+        "type" : "object"
+      },
+      "PrependArrSubDocument_request" : {
+        "properties" : {
+          "cas" : {
+            "description" : "Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed",
+            "type" : "string"
+          },
+          "updates" : {
+            "description" : "Fragments to be prepended",
+            "items" : {
+              "$ref" : "#/components/schemas/storageJsonFragment"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "updates" ],
+        "type" : "object"
+      },
+      "ReplaceBlob_request" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value retrieved from the last operation",
+            "type" : "string"
+          },
+          "create" : {
+            "description" : "Whether the blob should be created if it doesn't exist",
+            "type" : "boolean"
+          },
+          "ttl" : {
+            "description" : "Optional TTL for the blob",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "value" : {
+            "description" : "Blob value to be inserted",
+            "type" : "string"
+          }
+        },
+        "required" : [ "value" ],
+        "type" : "object"
+      },
+      "ReplaceJsonBlob_request" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value retrieved from the last operation",
+            "type" : "string"
+          },
+          "create" : {
+            "description" : "Whether the json blob should be created if it doesn't exist",
+            "type" : "boolean"
+          },
+          "ttl" : {
+            "description" : "Optional TTL for the json blob",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "value" : {
+            "description" : "JSON value to be inserted",
+            "type" : "object"
+          }
+        },
+        "required" : [ "value" ],
+        "type" : "object"
+      },
+      "UpdateAppendBlob_request" : {
+        "properties" : {
+          "value" : {
+            "description" : "Value to be appended",
+            "type" : "string"
+          }
+        },
+        "required" : [ "value" ],
+        "type" : "object"
+      },
+      "UpsertSubDocument_request" : {
+        "properties" : {
+          "cas" : {
+            "description" : "Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed",
+            "type" : "string"
+          },
+          "updates" : {
+            "description" : "Fragments to be upserted",
+            "items" : {
+              "$ref" : "#/components/schemas/storageJsonFragment"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "updates" ],
+        "type" : "object"
+      },
+      "protobufNullValue" : {
+        "default" : "NULL_VALUE",
+        "description" : "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value.",
+        "enum" : [ "NULL_VALUE" ],
+        "type" : "string"
+      },
+      "storageAppendArrSubDocumentRequest" : {
+        "properties" : {
+          "access_type" : {
+            "description" : "Access to the counter. (public/protected/private)",
+            "enum" : [ "public", "private", "protected" ],
+            "type" : "string"
+          },
+          "cas" : {
+            "description" : "Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed",
+            "type" : "string"
+          },
+          "json_blob_key" : {
+            "description" : "Blob key",
+            "type" : "string"
+          },
+          "owner_id" : {
+            "description" : "Counter owner's user ID",
+            "type" : "string"
+          },
+          "updates" : {
+            "description" : "Fragments to be appended",
+            "items" : {
+              "$ref" : "#/components/schemas/storageJsonFragment"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "access_type", "json_blob_key", "owner_id", "updates" ],
+        "type" : "object"
+      },
+      "storageAppendArrSubDocumentResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageAppendBlobAndOwner" : {
+        "properties" : {
+          "cas" : {
+            "type" : "string"
+          },
+          "key" : {
+            "type" : "string"
+          },
+          "owner_id" : {
+            "type" : "string"
+          },
+          "value" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchAppendArrSubDocumentSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/storageAppendArrSubDocumentRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/storageAppendArrSubDocumentResponse"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchAppendArrSubDocumentsRequest" : {
+        "properties" : {
+          "sub_documents" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageAppendArrSubDocumentRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchAppendArrSubDocumentsResponse" : {
+        "properties" : {
+          "results" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageBatchAppendArrSubDocumentSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchDeleteJsonBlobsRequest" : {
+        "properties" : {
+          "blobs" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageDeleteJsonBlobRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchDeleteJsonBlobsResponse" : {
+        "properties" : {
+          "results" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageBatchDeleteJsonBlobsSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchDeleteJsonBlobsSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/storageDeleteJsonBlobRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/storageDeleteJsonBlobResponse"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchDeleteSubDocumentSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/storageDeleteSubDocumentRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/storageDeleteSubDocumentResponse"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchDeleteSubDocumentsRequest" : {
+        "properties" : {
+          "sub_documents" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageDeleteSubDocumentRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchDeleteSubDocumentsResponse" : {
+        "properties" : {
+          "results" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageBatchDeleteSubDocumentSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchGetAppendBlobsResponse" : {
+        "properties" : {
+          "append_blobs" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageUserAppendBlobResponse"
+            },
+            "type" : "array"
+          },
+          "results" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageBatchGetAppendBlobsSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchGetAppendBlobsSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/storageGetAppendBlobRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/storageUserAppendBlobResponse"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchGetBlobsResponse" : {
+        "properties" : {
+          "blobs" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageUserBlobResponse"
+            },
+            "type" : "array"
+          },
+          "results" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageBatchGetBlobsSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchGetBlobsSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/storageGetBlobRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/storageUserBlobResponse"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchGetCountersResponse" : {
+        "properties" : {
+          "counters" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageUserCounterResponse"
+            },
+            "type" : "array"
+          },
+          "results" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageBatchGetCountersSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchGetCountersSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/storageGetCounterRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/storageUserCounterResponse"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchGetJsonBlobsRequest" : {
+        "properties" : {
+          "blobs" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageGetJsonBlobRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchGetJsonBlobsResponse" : {
+        "properties" : {
+          "results" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageBatchGetJsonBlobsSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchGetJsonBlobsSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/storageGetJsonBlobRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/storageGetJsonBlobResponse"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchGetSubDocumentsRequest" : {
+        "properties" : {
+          "sub_documents" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageGetSubDocumentRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchGetSubDocumentsResponse" : {
+        "properties" : {
+          "results" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageBatchGetSubDocumentsSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchGetSubDocumentsSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/storageGetSubDocumentRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/storageGetSubDocumentResponse"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchIncrementCounterRequest" : {
+        "properties" : {
+          "counters" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageIncrementCounterRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchIncrementCounterResponse" : {
+        "properties" : {
+          "counters" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageBatchSingleIncrementCounterResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchInsertBlobRequest" : {
+        "properties" : {
+          "blobs" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageInsertBlobRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchInsertBlobResponse" : {
+        "properties" : {
+          "results" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageBatchSingleBlobResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchInsertJsonBlobSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/storageInsertJsonBlobRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/storageInsertJsonBlobResponse"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchInsertJsonBlobsRequest" : {
+        "properties" : {
+          "blobs" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageInsertJsonBlobRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchInsertJsonBlobsResponse" : {
+        "properties" : {
+          "results" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageBatchInsertJsonBlobSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchPrependArrSubDocumentSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/storagePrependArrSubDocumentRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/storagePrependArrSubDocumentResponse"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchPrependArrSubDocumentsRequest" : {
+        "properties" : {
+          "sub_documents" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storagePrependArrSubDocumentRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchPrependArrSubDocumentsResponse" : {
+        "properties" : {
+          "results" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageBatchPrependArrSubDocumentSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchReplaceBlobRequest" : {
+        "properties" : {
+          "blobs" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageReplaceBlobRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchReplaceBlobResponse" : {
+        "properties" : {
+          "results" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageBatchSingleReplaceBlobResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchReplaceJsonBlobSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/storageReplaceJsonBlobRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/storageReplaceJsonBlobResponse"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchReplaceJsonBlobsRequest" : {
+        "properties" : {
+          "blobs" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageReplaceJsonBlobRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchReplaceJsonBlobsResponse" : {
+        "properties" : {
+          "results" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageBatchReplaceJsonBlobSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchSingleBlobResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/storageInsertBlobRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/storageBlobAndOwner"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchSingleIncrementCounterResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/storageIncrementCounterRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/storageCounterAndOwner"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchSingleReplaceBlobResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/storageReplaceBlobRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/storageBlobAndOwner"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchSingleUpdateAppendBlobResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/storageUpdateAppendBlobRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/storageAppendBlobAndOwner"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchUpdateAppendBlobRequest" : {
+        "properties" : {
+          "appendBlobs" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageUpdateAppendBlobRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchUpdateAppendBlobResponse" : {
+        "properties" : {
+          "results" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageBatchSingleUpdateAppendBlobResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchUpsertSubDocumentSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/storageUpsertSubDocumentRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/storageUpsertSubDocumentResponse"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchUpsertSubDocumentsRequest" : {
+        "properties" : {
+          "sub_documents" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageUpsertSubDocumentRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBatchUpsertSubDocumentsResponse" : {
+        "properties" : {
+          "results" : {
+            "items" : {
+              "$ref" : "#/components/schemas/storageBatchUpsertSubDocumentSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBlobAndOwner" : {
+        "properties" : {
+          "access_type" : {
+            "type" : "string"
+          },
+          "cas" : {
+            "type" : "string"
+          },
+          "key" : {
+            "type" : "string"
+          },
+          "owner_id" : {
+            "type" : "string"
+          },
+          "scope" : {
+            "type" : "string"
+          },
+          "value" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageBlobKeyExistsResponse" : {
+        "properties" : {
+          "exists" : {
+            "description" : "Whether the key exists (either as an exact match or via prefix key matching)",
+            "type" : "boolean"
+          },
+          "key" : {
+            "$ref" : "#/components/schemas/storageKey"
+          }
+        },
+        "type" : "object"
+      },
+      "storageCounterAndOwner" : {
+        "properties" : {
+          "count" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "key" : {
+            "type" : "string"
+          },
+          "owner_id" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageDeleteAppendBlobResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageDeleteBlobResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageDeleteJsonBlobRequest" : {
+        "properties" : {
+          "access_type" : {
+            "description" : "Access to the blob. (public/protected/private)",
+            "enum" : [ "public", "private", "protected" ],
+            "type" : "string"
+          },
+          "cas" : {
+            "description" : "Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed",
+            "type" : "string"
+          },
+          "json_blob_key" : {
+            "description" : "Blob key",
+            "type" : "string"
+          },
+          "owner_id" : {
+            "description" : "Blob owner's user ID",
+            "type" : "string"
+          }
+        },
+        "required" : [ "access_type", "json_blob_key", "owner_id" ],
+        "type" : "object"
+      },
+      "storageDeleteJsonBlobResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageDeleteSubDocumentRequest" : {
+        "properties" : {
+          "access_type" : {
+            "description" : "Access to the counter. (public/protected/private)",
+            "enum" : [ "public", "private", "protected" ],
+            "type" : "string"
+          },
+          "cas" : {
+            "description" : "Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed",
+            "type" : "string"
+          },
+          "json_blob_key" : {
+            "description" : "Blob key",
+            "type" : "string"
+          },
+          "owner_id" : {
+            "description" : "Counter owner's user ID",
+            "type" : "string"
+          },
+          "path" : {
+            "description" : "Path to the sub-document",
+            "type" : "string"
+          }
+        },
+        "required" : [ "access_type", "json_blob_key", "owner_id", "path" ],
+        "type" : "object"
+      },
+      "storageDeleteSubDocumentResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageGetAppendBlobRequest" : {
+        "properties" : {
+          "access_type" : {
+            "description" : "Access to the append-blob. (public/protected/private)",
+            "enum" : [ "public", "private", "protected" ],
+            "type" : "string"
+          },
+          "append_blob_key" : {
+            "description" : "Append-blob key",
+            "type" : "string"
+          },
+          "owner_id" : {
+            "description" : "Append-blob owner's user ID",
+            "type" : "string"
+          }
+        },
+        "required" : [ "access_type", "append_blob_key", "owner_id" ],
+        "type" : "object"
+      },
+      "storageGetAppendBlobResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          },
+          "value" : {
+            "description" : "Blob value",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageGetBlobRequest" : {
+        "properties" : {
+          "access_type" : {
+            "description" : "Access to the blob. (public/protected/private)",
+            "enum" : [ "public", "private", "protected" ],
+            "type" : "string"
+          },
+          "blob_key" : {
+            "description" : "Blob key",
+            "type" : "string"
+          },
+          "owner_id" : {
+            "description" : "Blob owner's user ID",
+            "type" : "string"
+          }
+        },
+        "required" : [ "access_type", "blob_key", "owner_id" ],
+        "type" : "object"
+      },
+      "storageGetBlobResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          },
+          "value" : {
+            "description" : "Blob value",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageGetCasResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageGetCounterRequest" : {
+        "properties" : {
+          "access_type" : {
+            "description" : "Access to the counter. (public/protected/private)",
+            "enum" : [ "public", "private", "protected" ],
+            "type" : "string"
+          },
+          "counter_key" : {
+            "description" : "Counter key",
+            "type" : "string"
+          },
+          "owner_id" : {
+            "description" : "Counter owner's user ID",
+            "type" : "string"
+          }
+        },
+        "required" : [ "access_type", "counter_key", "owner_id" ],
+        "type" : "object"
+      },
+      "storageGetCounterResponse" : {
+        "properties" : {
+          "count" : {
+            "description" : "Value of the counter",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "count" ],
+        "type" : "object"
+      },
+      "storageGetJsonBlobRequest" : {
+        "properties" : {
+          "access_type" : {
+            "description" : "Access to the blob. (public/protected/private)",
+            "enum" : [ "public", "private", "protected" ],
+            "type" : "string"
+          },
+          "json_blob_key" : {
+            "description" : "Blob key",
+            "type" : "string"
+          },
+          "owner_id" : {
+            "description" : "Blob owner's user ID",
+            "type" : "string"
+          }
+        },
+        "required" : [ "access_type", "json_blob_key", "owner_id" ],
+        "type" : "object"
+      },
+      "storageGetJsonBlobResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          },
+          "value" : {
+            "description" : "Value of the blob",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "storageGetSubDocumentRequest" : {
+        "properties" : {
+          "access_type" : {
+            "description" : "Access to the counter. (public/protected/private)",
+            "enum" : [ "public", "private", "protected" ],
+            "type" : "string"
+          },
+          "json_blob_key" : {
+            "description" : "Blob key",
+            "type" : "string"
+          },
+          "owner_id" : {
+            "description" : "Counter owner's user ID",
+            "type" : "string"
+          },
+          "path" : {
+            "description" : "Path to the sub-document",
+            "type" : "string"
+          }
+        },
+        "required" : [ "access_type", "json_blob_key", "owner_id", "path" ],
+        "type" : "object"
+      },
+      "storageGetSubDocumentResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          },
+          "value" : {
+            "$ref" : "#/components/schemas/AnyValue"
+          }
+        },
+        "type" : "object"
+      },
+      "storageIncrementCounterRequest" : {
+        "properties" : {
+          "access_type" : {
+            "description" : "Access to the counter. (public/protected/private)",
+            "enum" : [ "public", "private", "protected" ],
+            "type" : "string"
+          },
+          "count" : {
+            "description" : "Value to increment the counter by. Use negative to decrement",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "counter_key" : {
+            "description" : "Counter key",
+            "type" : "string"
+          },
+          "owner_id" : {
+            "description" : "Counter owner's user ID",
+            "type" : "string"
+          }
+        },
+        "required" : [ "access_type", "count", "counter_key", "owner_id" ],
+        "type" : "object"
+      },
+      "storageIncrementCounterResponse" : {
+        "properties" : {
+          "count" : {
+            "description" : "Value of the counter",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "count" ],
+        "type" : "object"
+      },
+      "storageInsertBlobRequest" : {
+        "properties" : {
+          "access_type" : {
+            "description" : "Access to the blob. (public/protected/private)",
+            "enum" : [ "public", "private", "protected" ],
+            "type" : "string"
+          },
+          "blob_key" : {
+            "description" : "Blob key",
+            "type" : "string"
+          },
+          "owner_id" : {
+            "description" : "Blob owner's user ID",
+            "type" : "string"
+          },
+          "ttl" : {
+            "description" : "Optional TTL for the blob",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "value" : {
+            "description" : "Blob value to be inserted",
+            "type" : "string"
+          }
+        },
+        "required" : [ "access_type", "blob_key", "owner_id", "value" ],
+        "type" : "object"
+      },
+      "storageInsertBlobResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageInsertJsonBlobRequest" : {
+        "properties" : {
+          "access_type" : {
+            "description" : "Access to the blob. (public/protected/private)",
+            "enum" : [ "public", "private", "protected" ],
+            "type" : "string"
+          },
+          "json_blob_key" : {
+            "description" : "Blob key",
+            "type" : "string"
+          },
+          "owner_id" : {
+            "description" : "Blob owner's user ID",
+            "type" : "string"
+          },
+          "ttl" : {
+            "description" : "Optional TTL for the blob",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "value" : {
+            "description" : "JSON value to be inserted",
+            "type" : "object"
+          }
+        },
+        "required" : [ "access_type", "json_blob_key", "owner_id", "value" ],
+        "type" : "object"
+      },
+      "storageInsertJsonBlobResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageJsonFragment" : {
+        "properties" : {
+          "path" : {
+            "description" : "Path to the fragment",
+            "type" : "string"
+          },
+          "value" : {
+            "$ref" : "#/components/schemas/AnyValue"
+          }
+        },
+        "type" : "object"
+      },
+      "storageKey" : {
+        "properties" : {
+          "access_type" : {
+            "description" : "Access scope of the key: public, protected, or private.",
+            "enum" : [ "public", "protected", "private" ],
+            "type" : "string"
+          },
+          "is_prefix_key" : {
+            "description" : "When true, treat the name as a prefix that matches any key starting with it.",
+            "type" : "boolean"
+          },
+          "key" : {
+            "description" : "Storage key name. Unique within the snapend.",
+            "type" : "string"
+          },
+          "schema" : {
+            "description" : "Optional JSON schema used to validate values stored under this key.",
+            "type" : "object"
+          },
+          "scope" : {
+            "description" : "Visibility scope: internal (server-only) or external (client-accessible).",
+            "enum" : [ "internal", "external" ],
+            "type" : "string"
+          },
+          "storage_type" : {
+            "description" : "Storage type for the key: blob, append-blob, counter, or json.",
+            "enum" : [ "blob", "append-blob", "counter", "json" ],
+            "type" : "string"
+          },
+          "strict_array_validation" : {
+            "description" : "When true, validate every element of array values against the schema.",
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "access_type", "key", "scope", "storage_type" ],
+        "type" : "object"
+      },
+      "storagePrependArrSubDocumentRequest" : {
+        "properties" : {
+          "access_type" : {
+            "description" : "Access to the counter. (public/protected/private)",
+            "enum" : [ "public", "private", "protected" ],
+            "type" : "string"
+          },
+          "cas" : {
+            "description" : "Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed",
+            "type" : "string"
+          },
+          "json_blob_key" : {
+            "description" : "Blob key",
+            "type" : "string"
+          },
+          "owner_id" : {
+            "description" : "Counter owner's user ID",
+            "type" : "string"
+          },
+          "updates" : {
+            "description" : "Fragments to be prepended",
+            "items" : {
+              "$ref" : "#/components/schemas/storageJsonFragment"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "access_type", "json_blob_key", "owner_id", "updates" ],
+        "type" : "object"
+      },
+      "storagePrependArrSubDocumentResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageReplaceBlobRequest" : {
+        "properties" : {
+          "access_type" : {
+            "description" : "Access to the blob. (public/protected/private)",
+            "enum" : [ "public", "private", "protected" ],
+            "type" : "string"
+          },
+          "blob_key" : {
+            "description" : "Blob key",
+            "type" : "string"
+          },
+          "cas" : {
+            "description" : "CAS value retrieved from the last operation",
+            "type" : "string"
+          },
+          "create" : {
+            "description" : "Whether the blob should be created if it doesn't exist",
+            "type" : "boolean"
+          },
+          "owner_id" : {
+            "description" : "Blob owner's user ID",
+            "type" : "string"
+          },
+          "ttl" : {
+            "description" : "Optional TTL for the blob",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "value" : {
+            "description" : "Blob value to be inserted",
+            "type" : "string"
+          }
+        },
+        "required" : [ "access_type", "blob_key", "owner_id", "value" ],
+        "type" : "object"
+      },
+      "storageReplaceBlobResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageReplaceJsonBlobRequest" : {
+        "properties" : {
+          "access_type" : {
+            "description" : "Access to the blob. (public/protected/private)",
+            "enum" : [ "public", "private", "protected" ],
+            "type" : "string"
+          },
+          "cas" : {
+            "description" : "CAS value retrieved from the last operation",
+            "type" : "string"
+          },
+          "create" : {
+            "description" : "Whether the json blob should be created if it doesn't exist",
+            "type" : "boolean"
+          },
+          "json_blob_key" : {
+            "description" : "Blob key",
+            "type" : "string"
+          },
+          "owner_id" : {
+            "description" : "Blob owner's user ID",
+            "type" : "string"
+          },
+          "ttl" : {
+            "description" : "Optional TTL for the json blob",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "value" : {
+            "description" : "JSON value to be inserted",
+            "type" : "object"
+          }
+        },
+        "required" : [ "access_type", "json_blob_key", "owner_id", "value" ],
+        "type" : "object"
+      },
+      "storageReplaceJsonBlobResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageResetCounterResponse" : {
+        "properties" : {
+          "count" : {
+            "description" : "Value of the counter",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "count" ],
+        "type" : "object"
+      },
+      "storageUpdateAppendBlobRequest" : {
+        "properties" : {
+          "access_type" : {
+            "description" : "Access to the append-blob. (public/protected/private)",
+            "enum" : [ "public", "private", "protected" ],
+            "type" : "string"
+          },
+          "append_blob_key" : {
+            "description" : "Append-blob key",
+            "type" : "string"
+          },
+          "owner_id" : {
+            "description" : "Append-blob owner's user ID",
+            "type" : "string"
+          },
+          "value" : {
+            "description" : "Value to be appended",
+            "type" : "string"
+          }
+        },
+        "required" : [ "access_type", "append_blob_key", "owner_id", "value" ],
+        "type" : "object"
+      },
+      "storageUpdateAppendBlobResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageUpsertSubDocumentRequest" : {
+        "properties" : {
+          "access_type" : {
+            "description" : "Access to the counter. (public/protected/private)",
+            "enum" : [ "public", "private", "protected" ],
+            "type" : "string"
+          },
+          "cas" : {
+            "description" : "Optional CAS value retrieved from the last operation. CAS mismatch will be ignored if not passed",
+            "type" : "string"
+          },
+          "json_blob_key" : {
+            "description" : "Blob key",
+            "type" : "string"
+          },
+          "owner_id" : {
+            "description" : "Counter owner's user ID",
+            "type" : "string"
+          },
+          "updates" : {
+            "description" : "Fragments to be upserted",
+            "items" : {
+              "$ref" : "#/components/schemas/storageJsonFragment"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "access_type", "json_blob_key", "owner_id", "updates" ],
+        "type" : "object"
+      },
+      "storageUpsertSubDocumentResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageUserAppendBlobResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          },
+          "owner_id" : {
+            "description" : "Append-blob owner's user ID",
+            "type" : "string"
+          },
+          "value" : {
+            "description" : "Append-blob value",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageUserBlobResponse" : {
+        "properties" : {
+          "cas" : {
+            "description" : "CAS value used for future operations",
+            "type" : "string"
+          },
+          "owner_id" : {
+            "description" : "Blob owner's user ID",
+            "type" : "string"
+          },
+          "value" : {
+            "description" : "Blob value",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "storageUserCounterResponse" : {
+        "properties" : {
+          "count" : {
+            "description" : "Value of the counter",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "owner_id" : {
+            "description" : "Counter owner's user ID",
+            "type" : "string"
+          }
+        },
+        "required" : [ "count" ],
+        "type" : "object"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

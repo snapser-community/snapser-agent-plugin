@@ -1,0 +1,65 @@
+# Quests Settings
+This tool allows you to create and update your Quests.
+
+To get started:
+1. Click on `Quests` from the side Nav.
+2. Click on the `Add a Quest` button.
+3. You will then see a form where you can add or update your quest.
+
+## Quest Details
+1. **Name**: The name of the quest. The name can be an alphanumeric string and should be unique.
+2. **Description**: An optional description of the quest.
+3. **Active Toggle**: A toggle to activate or deactivate the quest.
+4. **Tags**: Optional comma separated list of tags to categorize the quest. The tags can be used to filter quests.
+
+## Quest Audience Target
+1. **Target**: The audience target for the quest. The quest can be targeted to all users or a specific segment.
+    <Note>
+      You need the Statistics & Segmentation snap to be part of your snapend to use the segment feature.
+    </Note>
+
+## Quest Assignment Details
+1. **Auto Assign**: A toggle to enable auto assignment of the quest. If enabled, the quest will be assigned to the user dynamically at runtime. Without this, the quest needs to be manually assigned to the user by calling the AssignQuest API.
+
+## Quest Schedule
+1. **Category**: The category of the quest. The category can be recurring or non-recurring.
+2. **Cron Expression**: The cron expression that will be used to start/reset the recurring quest.
+<Note>
+  Quest start for both recurring or non-recurring quests is evaluated every 2 minutes.
+  For example: If you setup a non-recurring quest to start at 1:00, the quest will start at 1:02.
+</Note>
+
+## Quests Tasks
+You can add multiple tasks to a quest. Each task has a goal that needs to be achieved to complete the task.
+1. Click on the `Add a Task` button to get started
+
+## Quest Task Details
+1. **Task Name**: The name of the task. The name can be an alphanumeric string and should be unique.
+2. **Description**: An optional description of the task.
+3. **Metadata**: Optional metadata for the task. This can be any stringified object. The metadata can be used to store additional information about the task.
+
+## Quest Task Goal
+1. **Goal attribute**: The goal attribute for the task. The goal attribute can be a counter, item, currency, a counter based statistic or a trackable. Goal attribute type item, currency, statistic and trackable can be absolute or relative. Counter goals are always absolute.
+2. **Goal attribute name**: If you pick item, currency, or statistic as the goal attribute, you will need to provide the name of the item, currency, or statistic.
+3. **Goal**: The goal for the task. The goal can be a positive or negative number.
+4. **Absolute**: The goal type can be absolute or delta. The absolute goal type tracks the absolute value of the item, currency, and statistic. The delta goal type tracks the increase or decrease in the count of the item, currency, and statistic.
+
+## Quest Task Rewards
+These are the rewards to be granted on completing the task. Task rewards are optional. You can add multiple rewards for a task.
+1. **Reward Type**: The reward type can be a catalog item, currency, statistic or trackable.
+2. **Reward Name**: The name of the item, currency, statistic or trackable.
+3. **Reward Count**: The count of the item, currency, statistic or trackable to be granted as a reward for completing the task.
+<Note>
+  You need the Inventory, Statistics or Trackable snaps to be part of your snapend to use the rewards feature.
+</Note>
+
+## Quest Rewards
+The rewards to be granted on completing the entire quest. Quest rewards are optional. You can add multiple rewards for a quest.
+1. **Reward Type**: The reward type can be a catalog item, currency, statistic or trackable.
+2. **Reward Name**: The name of the item, currency, statistic or trackable.
+3. **Reward Count**: The count of the item, currency, statistic or trackable to be granted as a reward for completing the task.
+<Note>
+  You need the Inventory, Statistics or Trackable snaps to be part of your snapend to use the rewards feature.
+</Note>
+
+![Admin Pic](/images/docs/quests-admin.png)

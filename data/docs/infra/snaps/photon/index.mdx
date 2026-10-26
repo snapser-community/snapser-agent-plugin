@@ -1,0 +1,56 @@
+export const description = 'Photon Snap Guide'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Photon
+
+The Photon Snap allows you to integrate Snapser authentication with the Photon game backend. This integration enables consistent user IDs across Photon and Snapser.
+
+<Warning>
+  This is a Premium snap. You will need to be on a Premium plan to use it.
+</Warning>
+
+## Setup
+
+When you access the Photon Snap admin tool, it generates a URL and a secret key that are required to set up Custom Authentication on the Photon dashboard.
+
+![photon](/images/docs/photon.png)
+
+To use Snapser as an authentication provider for Photon, you need to configure your Photon app with [Custom Authentication Backend](https://doc.photonengine.com/realtime/current/connection-and-authentication/authentication/custom-authentication). Add `client_secret` to the **Optional Key Value Pairs** section and its value should be `Client Secret` as shown in the Snapser Photon admin tool.
+The value of `Authentication URL` should be the `Callback URL` from the Snapser Photon admin tool.
+
+![photon-custom-auth-setup](/images/docs/photon-auth-setup.png)
+
+## Workflow
+Once you've applied the settings, the flow for authenticating a game client is as follows:
+
+1. The game client uses the Snapser SDK to log in and receive a session token.
+2. The game client then uses the Photon SDK to authenticate. The Authenticate method can accept any string query parameters. Pass the session token acquired from the Snapser Login call here. Below is an example of how to do this using the Photon Realtime Javascript SDK.
+   ```
+   var client = new Photon.LoadBalancing.LoadBalancingClient(
+   Photon.ConnectionProtocol.Wss,
+   DemoAppId,
+   DemoAppVersion
+   )
+   client.setCustomAuthentication('session_token=ST1', 0)
+   ```
+3. The Photon SDK then contacts the Photon Server, which in turn makes an App Verify endpoint call to verify the session token. The Photon Server also attaches the `client_secret` with the request.
+4. The App Verify Endpoint verifies this call and returns a response that the Photon Server enforces, along with a User ID that Photon will use.
+
+To better understand the authentication flow, refer to the swimlane diagrams below:
+
+![Authentication Flow Diagram](/images/docs/photon-anon.png)
+
+![Authentication Flow with Facebook/Google/other auth providers](/images/docs/photon-fb.png)
+
+## Additional Details
+
+### Data Stores
+
+None
+
+### Service Dependencies
+
+The photon service does depend on the **Auth** Snap.

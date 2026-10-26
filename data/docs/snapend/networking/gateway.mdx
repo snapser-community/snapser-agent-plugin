@@ -1,0 +1,35 @@
+export const description = 'Gateway'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Snapend Gateway
+
+Every Snapend has a Gateway, which is a highly scalable, DDoS protected, and secure gateway to your infrastructure. It is a reverse proxy that routes traffic to your infrastructure based on routing rules.
+
+![Gateway](/images/docs/gateway/gateway-simple.png)
+
+## Protocols
+
+Your Snapend gateway supports HTTPS and Web Sockets.
+
+<Note>
+  You can enable Web Sockets in the **Gateway Customization** step of your Snapend add or update.
+</Note>
+
+## Endpoint URLs
+
+Every Snapend, has a unique HTTPs and Websocket URL (If you enabled Web Socket in the
+**Gateway Customization** step of your Snapend update). You can find your Snapend URL in the Snapend dashboard. Click on the Copy Icon to copy the URL to your clipboard.
+
+![Gateway URL](/images/docs/gateway/gateway-urls.png)
+
+## Game Server Fleets
+
+The Game Servers that you spin up using the Game Server Fleet snap are not accessed via the Gateway. Every server in a Snapser server fleet has their own URL and Port. Game Servers currently support the UDP protocol.
+
+<br />
+<Note>
+In the next section, lets dive in deeper into understanding your Snapends networking and security.
+</Note>

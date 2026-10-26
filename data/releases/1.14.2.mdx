@@ -1,0 +1,17 @@
+# 1.14.2
+##### September 22, 2026
+
+## Bug Fixes
+
+### Web App
+
+#### Promote to Prod
+1. **Settings promotion** — fixed issues affecting the promotion of settings to prod.
+
+### Snaps
+
+#### Quests
+1. **Array fields annotated as objects** — some array fields carried an object annotation. The generated SDKs modeled them as objects instead of arrays. The annotations now match the array type. Fixed.
+
+#### Inventory
+1. **Item grant and consume** — granting or consuming an item did not update quest progress. Both actions now report to the Quests snap. Fixed.

@@ -1,0 +1,146 @@
+# 1.16.0
+##### October 19, 2026
+
+## Spotlight
+1. **Admissions Queue** — the Auth snap can hold arriving users in a queue and admit them at a rate you control. A launch spike becomes a flat, predictable line instead of an outage. See [Admissions Queue](/docs/infra/snaps/auth/config-tools/admissions-queue).
+2. **Direct sign-in to Olympus** — sign in to Olympus from its own home page. You no longer go through the Web App first.
+3. **Multi-user inventory grants** — the Inventory snap can grant items to many users in one call. Reward a whole event or cohort without a request per user.
+4. **Sender display name for emails** — emails sent through Snapser can show a sender name you choose, not a bare address.
+
+## Breaking Changes
+
+The wire format does not change in any of these items. Only the generated SDK types change. Each item links to its exact affected symbols in the [Appendix](#appendix--exact-affected-symbols) at the end of these notes.
+
+### Admin SDK
+
+**Hard breaks** — code will not build until you update it.
+1. **Quests collections are now typed lists** — reward, task, and quest fields change from untyped objects to typed lists, and `tags` changes from a string to a list of strings. Update any code that built or read these as objects, or read `tags` as a string. [Affected symbols](#admin-sdk-quests-collections-re-typed-to-lists).
+
+**Source breaks** — recoverable with small changes.
+1. **C# constructor arguments shifted** — new optional fields on some Auth and Matchmaking models shift the arguments after them, because C# orders constructor arguments alphabetically. Switch C# positional callers to named arguments. Other languages are unaffected. [Affected symbols](#admin-sdk-constructor-argument-shift).
+
+### Client SDK
+
+**Hard breaks** — code will not build until you update it.
+1. **Some fields and one parameter are now lists** — fields that were a single string or an untyped object are now lists. Update any code that read them as a single value. In the typed languages this is a compile error until updated. [Affected symbols](#client-sdk-fields-and-params-re-typed-to-lists).
+2. **`notifications/send-email` was removed** from `user` scope — the method and its two models are gone in every language. Code that called it, or imported those types, no longer builds. Other notification endpoints are unchanged. [Affected symbols](#client-sdk-removed-email-endpoint).
+
+**Source breaks** — recoverable with small changes.
+1. **C# constructor arguments shifted** — new optional fields on some models shift the arguments after them. Switch C# positional callers to named arguments. These are response models, so only code that builds them by hand is affected. [Affected symbols](#client-sdk-constructor-argument-shift).
+
+---
+
+## Snaps
+
+### Auth
+1. **Admissions Queue** — A new feature that enables game studios to hold arriving users in a queue and admit them at a particular rate.
+
+### Inbox
+1. **Send system messages with an API key** — the send-message API now accepts `system` messages under the `api-key` scope.
+
+### Inventory
+1. **Multi-user grants** — a new `BatchGrantRewards` API grants items, drop tables and currencies to several users in one request.
+2. **Expired items are removed** — expired items are now lazily removed from the user's inventory while sub-inventory items are unnested.
+
+### Leaderboards
+1. **Settings import and export** — a settings import or export failed when a leaderboard's start time differed from the saved one. Both now handle the start-time difference correctly.
+
+### Matchmaking
+1. **Configurable Game Server Fleets retries** — you can set how many times Matchmaking retries a Game Server Fleets allocation for a match. This setting is available only through the Admin API.
+2. **Lobby backfill closes on match start** — backfill for a lobby-based match profile fills the lobby only while the lobby is open. Once `StartMatch` runs, the lobby is closed. A late backfill ticket stays in the queue, and normal matching places the player in a new lobby.
+
+### Notifications
+1. **Sender display name** — set a display name for outgoing emails. Recipients see the name, not only the sender address. The same setting covers Auth and GDPR emails.
+2. **Email template variables** — Fixed an issue where some email templates did not fill in their variables.
+
+### Profiles
+1. **Settings import and export** — a settings import or export failed on a `searchable_column` attribute. Both now handle it correctly.
+
+### Quests
+1. **Quest details for users** — the user-facing Quests APIs now return quest details such as metadata and task requirements. These were available only through the settings APIs before.
+2. **Progress race condition** — two progress updates that arrived together could overwrite each other. Concurrent updates now apply in full.
+
+### Scheduler
+1. **Scheduler in the Admin SDK** — the Admin SDK includes the Scheduler snap APIs.
+
+### Storage
+1. **No error log for missing blobs** — a Get Blob call for a key that did not exist wrote an error to the snap logs. A missing key no longer logs an error.
+
+### Eventbus
+1. **Webhook** - You now receive a unique message Id with every webhook call.
+
+---
+
+## Web App
+
+### Snap Tools
+1. **Create blobs in the Storage tool** — the Storage Snap Tool can create a new blob for a user, not only view and edit existing ones.
+2. **Sender display name field** — the Notifications, Auth and GDPR Snap Tools have a field for the email sender display name.
+3. **Matchmaking metadata with fleet regions** — removing regions from a fleet disabled the **Add to metadata** option on string rules, with no explanation. The Matchmaking tool now handles this case clearly.
+4. **Consistent metadata editor in Quests** — the Quests tool showed different metadata editors for quests and tasks. Both now use the same editor.
+5. **Correct table sorting** — Snap Tool tables showed the sort arrow in the wrong direction. Sorting was also case-sensitive, so "Zeta" came before "alpha". Sorting is now case-insensitive, and the arrow matches the order. Fleets and Queues now open sorted A–Z.
+6. **Faster Fleet Monitor** — the Fleet Monitor page slowed down for fleets under load. It now stays responsive.
+
+### User Manager Tools
+1. **User Manager table fixes** — the Profile section of User Manager now sorts its attributes.
+
+### Logs
+1. **Import errors in the deployment log** — settings validation and import failures now appear in the Snapend deployment log.
+
+### Olympus
+1. **Sign in from the Olympus home page** — users can now sign in on the Olympus home page with their Snapser account.
+2. **Olympus reports** — reports scheduled from a dashboard or from **Settings > Alerts & Reports** did not send emails. Fixed.
+
+---
+
+## Appendix — exact affected symbols
+
+Reference detail for the [Breaking Changes](#breaking-changes) above. The wire format is unchanged in every case — the serialized JSON is identical, and the corrected types deserialize it accurately.
+
+### Admin SDK Quests collections re-typed to lists
+**Languages/libraries:** all 8 (Python `sdk-python`, Go `sdk-go`, TypeScript `sdk-typescript-node` / `-axios` / `-fetch`, C# `sdk-csharp-httpclient` / `sdk-csharp-unitywebrequest`, C++ `sdk-cpp-ue4`). Per-language type spelling: `List[...]` (Py) / `[]...` (Go) / `Array<...>` (TS) / `List<...>` (C#) / `TArray<...>` (C++).
+
+| Model (kind) | Fields | Change (old → new) |
+|---|---|---|
+| `QuestsCreateQuestRequest` (request) | `reward_currencies`, `reward_energy`, `reward_inventory_items`, `reward_statistics`, `reward_xp` | untyped object/map → list of the matching `QuestsReward*` type |
+| `QuestsCreateQuestRequest` (request) | `tasks` | object/map → list of `QuestsTask` |
+| `QuestsCreateQuestRequest` (request) | `tags` | single string → list of strings |
+| `QuestsServiceUpdateQuestBody` (request) | same fields as `QuestsCreateQuestRequest` | same as above |
+| `QuestsGetQuestsResponse` (response) | `quests` | object/map → list of `QuestsQuest` |
+| `QuestsClaimTaskRewardsResponse` (response) | `user_inventory_items` | object/map → list of `QuestsUserInventoryItem` |
+
+### Admin SDK constructor argument shift
+**Languages/libraries:** C# only — `sdk-csharp-httpclient` and `sdk-csharp-unitywebrequest`. Non-breaking in Python, Go, TypeScript, and C++ (named/property args). `.sln`/`.csproj` GUID churn is not a break.
+
+**(a) Auth email templates**
+- `AuthEmailTemplate`: new `senderDisplayName` inserted after `sender`.
+
+**(b) Matchmaking**
+- `MatchmakingAssignmentSettings`: new `allocationRetrySettings` (`MatchmakingAllocationRetrySettings`) inserted at the front of the argument list.
+- `MatchmakingSimulatorRun`, `MatchmakingSimulatorRunInfo`, `MatchmakingSimulatorRunListEntry`: new `error` and `state` inserted alphabetically.
+
+### Client SDK fields and params re-typed to lists
+**Languages/libraries:** all SDKs the scope ships (Python `sdk-python`, Go `sdk-go`, TypeScript `sdk-typescript-node` / `-axios[-web]` / `-fetch[-web]`, C# `sdk-csharp-httpclient` / `sdk-csharp-unitywebrequest[-unity]`, C++ `sdk-cpp-ue4[-unreal]`). Per-language type spelling: `List[StrictStr]` (Py) / `[]string` (Go) / `Array<string>` (TS) / `List<string>` (C#) / `TArray<FString>` (C++).
+
+| Symbol | Scopes | Change (old → new) |
+|---|---|---|
+| `QuagoGetUserResponse` — `countries`, `device_model`, `emu_models`, `input_devices_found`, `platforms`, `system_version` | `unified`, `user`, `internal`, `api-key` | single string → list of strings |
+| `QuestsClaimTaskRewardsResponse.user_inventory_items` | `unified`, `user`, `internal`, `api-key` | untyped object/map → list of `QuestsUserInventoryItem` |
+| `matchmaking_batch_get_tickets` — `ticket_ids` parameter | `unified`, `internal`, `api-key` (not `user` — no batch endpoint) | single string → list of strings |
+
+### Client SDK removed email endpoint
+**Languages/libraries:** all 8 (the `user` scope ships all 8).
+- Method removed: `notifications_send_email` (and its `*_with_http_info` / `*_without_preload_content` variants).
+- Models deleted: `NotificationsSendEmailRequest`, `NotificationsSendEmailResponse` — including the C# `Model/*.cs` files and the C++/Unreal `Snapser...SendEmailRequest` / `...Response` `.h` / `.cpp` pairs (broken includes/imports for any referencing code).
+- Unaffected: other notification endpoints (e.g. `notifications_send_roblox_notification`).
+
+### Client SDK constructor argument shift
+**Languages/libraries:** C# only — `sdk-csharp-httpclient` (scopes `unified`, `user`, `internal`, `api-key`) and `sdk-csharp-unitywebrequest-unity` (scopes `unified`, `user`). Non-breaking in Python, Go, TypeScript, and C++ (named/property args). `.sln`/`.csproj` GUID churn is not a break.
+
+**(a) Auth admissions queue**
+- `AuthUser`: new `queue` (`AuthQueueStatus`) inserted after `logins`.
+- `AuthValidateResponse`: new `admittedAt` (`long`) inserted before `user`.
+
+**(b) Quests — quest metadata + richer task tracking**
+- `QuestsAvailableQuest`, `QuestsUserQuest`: new `metadata` inserted after `description`.
+- `QuestsTaskProgress`: new `autoProgress`, `comparisonType`, `goalSign`, `goalType`, `trackingObjectName`, `trackingObjectType` inserted alphabetically through the argument list.

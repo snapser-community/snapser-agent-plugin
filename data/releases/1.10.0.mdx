@@ -1,0 +1,82 @@
+# 1.10.0
+##### June 1, 2026
+
+## Breaking Changes
+1. BYOSnap 2.0 - As part of this massive change we have de-coupled the BYOSnap profile from a version of a BYOSnap. Now, you just setup the BYOSnap profile during creation and all versions derive from that. As a result of this, we have updated the BYOSnap creation and update flow. Although we have kept the old flow backward compatible, we highly recommend you understand and migrate to the new flow.
+
+## Spotlight
+1. **BYOSnap 2.0** — the entire BYOSnap workflow has been rebuilt around a single `snapser-byosnap-profile.json` that drives creation, updates, customization, and promotion to prod. CPU and memory are now free-form inputs within sensible min/max bounds (sliders removed), and a new HPA section in the profile lets you define autoscaling inputs directly. Web App and snapctl have been updated end-to-end to match.
+2. **Alerts** — a new Alerts tool for your Snapend. Subscribe to pre-configured Snapend alerts and be notified over email, Slack or pager duty.
+3. **Streaks (Trackables)** — Streaks are now a first-class concept inside the Trackables snap. Configure rolling-window streaks, repeatable rewards, and loop-on-complete behavior alongside your existing XP and counters.
+4. **Snapend Redeploy** — a redeploy button is now available under Settings → Admin so you can re-roll a Snapend without touching the CLI. The supporting backend API is wired up through the frontend.
+
+---
+
+## Snaps
+
+### Trackables
+1. **Streaks** are now a first-class trackable type. The new admin sub-section lets you configure streaks with options for `repeatable_rewards` (re-grant rewards every traversal vs once per lifetime) and `loop_on_complete` (wrap to rung 1 after the final rung vs stick at max). Rolling-window streaks are supported.
+
+### Matchmaking
+1. **Team Formation with eviction** — teams can now be formed with eviction support, so partially filled teams can release tickets back to the pool instead of stalling.
+2. Match metadata now supports **tag/string values from configured string rules**. As part of configuring an allocation profile, you can pick string values from existing string rules and have them pulled from the ticket into the metadata at allocation time (e.g. one profile with 8 possible maps driven by a relative string rule).
+3. The `no_rules_apply` rule has been **removed for FIFO flows**, where it was redundant and could lead to unexpected ticket behavior.
+4. Allocation save failures now fire an **error event** so operators can detect and react to allocation problems.
+
+### Lobbies
+1. A new **`LobbyMetadataUpdated` eventbus event** now fires when match-level lobby metadata changes. Previously only member metadata updates emitted an event.
+
+### Auth
+1. Logging improvements shipped so that relevant metadata is consistently included in auth-related log lines for better traceability.
+2. Auth snap now supports multi user search that powers the search in the new User manager tool.
+
+### Quests
+1. Logging improvements shipped so that relevant metadata is consistently included in quest-related log lines for better traceability.
+
+---
+
+## Web App
+
+### New Tools
+1. **Alerts** — We are releasing a new tool for subscribing to pre-configured snapend alerts. You can choose to be notified over email, Slack, or PagerDuty when an alert fires.
+2. **Streaks Admin Tool** — a dedicated sub-section under Trackables for configuring streaks (see Snaps → Trackables above for the data model).
+
+### BYOSnap 2.0
+1. The BYOSnap **creation flow** has been rebuilt to take a `snapser-byosnap-profile.json` as input, replacing the previous form-based flow. The profile defines compute, scaling, and customization inputs in one place.
+2. A new **update flow** lets you update an existing BYOSnap's profile without recreating it.
+3. The **Add/Update Snapend** customization UI for BYOSnaps has been refreshed to reflect the new profile-driven inputs.
+4. The **Promote to Prod** UX has been updated to show the relevant profile diffs and CPU/memory/HPA changes clearly before promotion.
+5. **CPU and memory sliders have been replaced** with free-form numeric inputs constrained to min/max bounds. Use the scaled numeric format (e.g. `100-5000m` for CPU, similar for memory).
+6. **HPA inputs** (autoscaling targets) are now configurable from a new section in the BYOSnap profile tool and surfaced in the service details view.
+7. Numeric type fields in BYOSnap configuration are now **free-form number inputs** to future-proof for new value ranges.
+
+### Snapend Operations
+1. **Redeploy button** added to Settings → Admin. Triggers a redeploy of the Snapend without requiring CLI access.
+2. **Fleet deletion** now shows a warning that if the fleet is used in a Matchmaking profile, MM may misbehave after deletion.
+3. **Application deletion** now shows an explanatory alert when deletion is blocked because a prod cluster is still attached.
+4. **Game name** validation regex now matches the backend, so names that pass portal validation will no longer be rejected server-side.
+
+### Improvements
+1. **Profile Decorators** — the dropdown in the API Explorer now stays open while you select multiple profile attributes, instead of closing after each selection.
+2. **Pricing page** — the Support section no longer renders text overlapping the section above it.
+3. **Resources page** — added a Tebex integration entry alongside the existing connector resources.
+
+### Bug fix
+1. The context tool of the logs tool was crashing on some log lines and has the wrong sort order for the after context logs. This has now been fixed.
+
+---
+
+## Snapctl
+1. **BYOSnap 2.0 support end-to-end** — snapctl has been updated to match the new BYOSnap profile-driven workflow.
+2. New **BYOSnap update command** for updating an existing BYOSnap from a profile file.
+3. The **BYOSnap creation command** has been updated to consume the new profile format (CPU/memory limits, HPA inputs, customization).
+4. The **Snapend update and direct-deploy command** have been updated to take in the BYOSnap profile.
+5. **HPA support** — snapctl now generates and validates the HPA section in the BYOSnap profile and supports it in create/update flows.
+6. **Free-form CPU and memory values** within min/max limits are now accepted, matching the Web App behavior.
+7. **Quiet mode fix** — `snapctl` no longer prints config-check log lines when `--quiet` is set.
+
+---
+
+## Infrastructure
+1. **Soft-delete for clusters** — deleting a cluster now soft-deletes it, with a cronjob fully removing it after 2 months. This adds a safety window in case a deletion needs to be undone.
+2. **WebSocket Tool** — service protos are now bundled into the client at build time, so newly deployed services are available in the tool without a manual refresh.

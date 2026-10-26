@@ -1,0 +1,69 @@
+export const description = 'Auth Connectors'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Authentication Connectors
+
+Click here to go to the Auth Snap [documentation](/docs/infra/snaps/auth#authentication-connectors).
+
+## Connectors
+
+Explore the diverse authentication connectors available to enhance security and streamline user access within your game or app.
+
+1. **[Anonymous](/docs/infra/snaps/auth/connectors/anon)** - Initiate user sessions without requiring authentication credentials. Typically, a device identifier is used for anonymous authentication, providing a simple, seamless entry point for users.
+
+1. **[Apple](/docs/infra/snaps/auth/connectors/apple)** - Essential for iOS games or apps, particularly if incorporating other third-party authentications like Facebook or Google. Apple's guidelines mandate the use of 'Sign in with Apple'. Integrate this feature to comply and enhance user onboarding. A single Apple connector covers both native app login, via your Bundle Id, and web login, via an Apple Service Id.
+
+1. **[Discord](/docs/infra/snaps/auth/connectors/discord)** - Integrate Discord connect to unlock the potential of Discord's social features. This connector is ideal for games that leverage Discord activities or its community engagement tools, allowing users to authenticate using their Discord accounts.
+
+1. **[Email OTP](/docs/infra/snaps/auth/connectors/email)** - Utilize email authentication, which foregoes traditional passwords in favor of a one-time password (OTP) sent directly to the user’s email. This method ensures user email ownership and eliminates the risks associated with storing passwords.
+
+1. **[Email Password](/docs/infra/snaps/auth/connectors/email-password)** - Utilize email password based authentication. Snapser validates the email ensuring the user is claiming ownership of the email. This method is ideal for games or apps that require a more traditional authentication approach.
+
+1. **[Epic](/docs/infra/snaps/auth/connectors/epic)** - For games destined for the Epic Games Store, the Epic connector is a requirement. Integrate to facilitate user authentication through Epic's platform.
+
+1. **[Google](/docs/infra/snaps/auth/connectors/google)** - Integrate 'Google Connect' for Android games or apps to provide a familiar and secure authentication option for Google users.
+
+1. **[Facebook](/docs/infra/snaps/auth/connectors/facebook)** - Ideal for games or apps utilizing Facebook’s social graph or developing for AR/VR platforms like Oculus. This connector simplifies integration with Facebook Connect, enhancing social features and user engagement.
+
+1. **[Steam](/docs/infra/snaps/auth/connectors/steam)** - For games on the Steam platform, use the Steam connector to integrate Steam’s authentication mechanism, offering a seamless login experience for Steam users.
+
+1. **[Username Password](/docs/infra/snaps/auth/connectors/username-password)** - For apps or games that require a traditional username-password authentication method, this connector provides a straightforward solution. It allows users to create accounts using a username and password combination.
+
+1. **[X](/docs/infra/snaps/auth/connectors/x)** - Ideal for games or apps that want to leverage the X (formerly Twitter) platform for user authentication. This connector allows users to log in using their X accounts, enhancing social connectivity within your app.
+
+1. **[Xbox](/docs/infra/snaps/auth/connectors/xbox)** - Games developed for the Xbox platform should integrate the Xbox connector to enable login with Xbox credentials, ensuring a smooth user experience aligned with Xbox security standards.
+
+<Note>
+  Your app client needs to download the respective third-party SDKs and integrate them
+  into your app client. After a successful login/sign-in on the client, the client
+  should make a call to the appropriate API exposed by the auth snap to login or associate accounts.
+</Note>
+
+## Removing your connectors
+You can remove any active connector from the Snaps Configuration tool.
+It should be noted that the changes take effect immediately and so this should
+be done with utmost caution. All active calls made to login, sign up or associate for
+the connector will stop working, once the connector is removed.
+
+## Associating Accounts
+
+Snapser also allows games to associate the same user with multiple types of auth methods.
+For example, an app can start a user under Anonymous auth, reducing the
+friction for your users to start the app. But later in the app or game experience, you can have
+an option for the user to connect to Facebook, Apple, etc. Snapser provides an
+associate endpoint, allowing your app to link the anonymous and FB auth for
+the user. Once you do this, the user can use either auth method to talk to
+your Snapser services.
+
+<Note>
+  You can associate only one third-party login once. E.g., If you associated FB
+  auth with an anonymous auth account. You cannot now associate the same FB
+  account with another anonymous account.
+</Note>
+
+**IMPORTANT**: Snapser Authentication can be thought of as a keychain. The user can have multiple
+keys to open the same lock. The lock here is your Snapser services.

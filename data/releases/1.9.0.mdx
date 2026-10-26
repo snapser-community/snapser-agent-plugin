@@ -1,0 +1,84 @@
+# 1.9.0
+##### May 12, 2026
+
+## Spotlight
+1. **Snap Tools** — We have added a new group of tools called `Snap Tools` for snaps like Guilds, Leaderboards, Lobbies and Storage. These tools allow you to view and manipulate data that is stored in snaps, such as guild rosters, leaderboard entries, lobby details, and storage blobs. Snap Tools are designed to be user-friendly interfaces for managing snap data without needing to use the API directly, making it easier for developers and non-developers alike to interact with snap content. More tools will be added to this section in future releases as we expand the capabilities of Snap Tools across more snaps.
+2. **XP as Rewards** — XP can now be configured as a reward for other XP levels. When a player reaches a specific XP threshold, they can be granted XP in a different trackable, enabling layered progression systems.
+3. **API Key Rotation for Expired Keys** — expired API keys can now be rotated directly, eliminating the need to create and distribute entirely new keys. Rotation is available for Auth Snap 1.9 and above.
+4. **Unified Image Manager** — BYOSnap and BYOGS image management has been combined into a single Image Manager tool with dedicated tabs, making it easier to manage all custom images in one place.
+5. **GSF Bandwidth Graphs** — new bandwidth usage graphs are now available in fleet monitoring, giving you visibility into game server network traffic alongside existing metrics.
+6. **BYOSnap Admin Tools 2.0** - BYOSnap admin tools now support forwarding API calls to multiple pods simultaneously. This allows you to perform actions like syncing configuration or managing images across all pods in a cluster with a single request, improving efficiency and consistency.
+
+---
+
+## Breaking Changes
+1. **Storage Blob Manager** tool has been moved from the Snap Configuration section to the Snap tool section.
+2. **Image Manager** has been moved from the BYOSnap and BYOGs navigation to a dedicated application-level tool that now shows both BYOSnap and BYOGS images.
+
+---
+
+## Snaps
+### Auth
+1. Expired API keys can now be rotated instead of requiring the creation of new keys. This simplifies key lifecycle management for long-running services.
+
+### In-App Purchases
+1. Apple Sandbox Allowlist — you can now configure an allowlist to enable Apple sandbox receipt validation for specific users. This allows controlled testing of in-app purchases in a production environment without affecting other users.
+
+### Lobbies
+1. `StartMatch` now verifies that the caller is the lobby owner before starting a match, preventing unauthorized users from triggering matches on lobbies they do not own.
+2. `GetLobby` no longer exposes the lobby password to non-owner callers. Previously, any authenticated caller could retrieve a lobby's password by ID.
+3. User metadata is now passed to GSF when calling `StartMatch`, allowing game servers to access lobby participant data at match start.
+4. Fixed backfill bugs that could cause issues when filling open lobby slots with new players.
+
+### Inventory
+1. Drop tables now support mixed reward types, allowing a single drop table to contain different kinds of rewards (items, currencies, energy) in the same table.
+
+### Trackables
+1. XP can now be configured as a reward for reaching XP levels in other trackables. This extends the existing reward system that already supported energy as an XP reward.
+
+### Storage
+1. Blob key creation now enforces prefix conflict checks. New keys that would overlap with existing prefix keys (or vice versa) are rejected to prevent ambiguous key resolution. Three conflict scenarios are now validated: exact match with opposite prefix flag, non-prefix key falling under an existing prefix key namespace, and prefix key claiming a namespace containing existing non-prefix keys.
+
+### Stats
+1. Fixed a bug where duplicate stat keys could be created, leading to inconsistent data.
+
+### Matchmaking
+1. Debug players are no longer imported during matchmaking, preventing test data from interfering with live match pools.
+
+---
+
+## Web App
+
+### New Tools
+1. **Snap Tools** — We have added a new group of tools called `Snap Tools` for snaps like Guilds, Leaderboards, Lobbies and Storage. More tools will be added to this section in future releases as we expand the capabilities of Snap Tools across more snaps.
+
+### Improvements
+1. Multi-User tool has been renamed as `Snap Tools` with a cleaner layout and better tool grouping.
+2. User Details component has been redesigned with improved section styling and background separation for better readability.
+3. User Manager tools under Social Graph now display the user info widget in their forms, making it easier to identify users while performing actions.
+4. User Manager currency tool now uses a single input field for adjusting currency values (increment or set) instead of the previous radio button approach. The tool calculates the delta automatically when using "set" mode.
+5. Snap review widget now always displays the snap version, even when no version change has occurred.
+6. Sync Configuration tool now shows Snapend IDs in the cluster selection dropdown for easier identification.
+7. BYOSnap versions in the Snap Private Widget are now displayed in descending order (newest first).
+9. Image Manager can now delete image indexes, preventing orphaned images from accumulating in the ECR repository.
+10. Storage blob key configuration UI now shows warnings when creating keys that would conflict with existing prefix keys.
+11. GSF bandwidth graphs added to fleet monitoring dashboards.
+12. Reduced extra padding across all three Snapend tool layouts for a more compact interface.
+
+### Bug Fixes
+1. Admin tools version check now works correctly for non-engineering view modes.
+2. Snapend service byosnap roles can now access snap configuration pages. Previously, service roles received a 403 error when loading admin tools.
+3. Sync Configuration tool: fixed the dropdown showing the current snapend as a sync target, the JSON diff view being overwritten after a few seconds, and missing "go to logs" button on failure.
+4. Log tool labels now render correctly in non-live environments.
+5. User Manager suspend duration input no longer shows NaN when the value is cleared. Previously, backspacing the duration field would set it to NaN with no way to recover without reopening the dialog.
+6. Remote Config compact JSON button no longer removes spaces from within string values.
+7. Fleet log label fetching now works correctly when selecting custom start and end date. Previously, selecting a custom date range would not trigger label fetching, leaving the label filters empty.
+8. Updating Apple or Steam connector settings was incorrectly overriding the Apple private key or Steam API keys. This has now been fixed.
+---
+
+## Documentation
+1. Updated Steam auth connector documentation for Unreal Engine. The recommended approach is now to use `GetLinkedAccountAuthToken` with the `WebAPI` token type instead of `GetAuthToken`, which resolves intermittent "Invalid ticket" errors caused by not waiting for the Steam callback.
+2. BYOSnap documentation now renders correctly in dark mode, has improved navigation back to the Snapend admin, and is accessible to users before adding a BYOSnap to their Snapend.
+3. Added Notification Preferences API documentation.
+4. Added Matchmaking profile examples covering common configurations: teams vs teams, 5v5, with GSF allocation, and with relay allocation.
+5. Documented a fix for inventory snap upgrade failures when upgrading from older versions to the latest.

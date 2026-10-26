@@ -1,0 +1,48 @@
+export const description = 'Olympus SQL Lab'
+
+export const meta = {
+  author: 'Sicilia Pompa',
+}
+
+# SQL Lab
+
+SQL Lab is a powerful SQL IDE that works with all SQLAlchemy compatible databases. It allows you to write and run complex queries, explore different tables,
+and preview your data before creating a chart. With this feature your can write
+and run your SQL queries and do your data analysis.
+
+## Interface
+
+The SQL Lab interface is primarily divided into three key areas:
+
+**Database and Schema Selection:** On the left, you'll find a panel where you can select your database,
+schema, and see a list of tables within that schema. Clicking on a table name will show you its columns
+and data types.
+
+**SQL Editor:** This is the main area where you write and edit your SQL queries. It features helpful tools
+like syntax highlighting and autocompletion to make writing SQL faster and more accurate.
+
+**Results and History:** Below the editor, you can view the results of your executed queries. There's also
+a Query History tab that shows a log of all the queries you've run, allowing you to easily revisit or reuse
+them.
+
+## How it works?
+
+Once you go to the SQL Lab tab you will get to pick the Database you want to do your analysis on. In this case
+you should be able to see all of your cluster Dataset, for example this can be the production cluster of the game you work on. Next you can select the Public schema from the
+Schema dropdown which will show all the tables you have access to in the "See Table Schema". You can then pick a table or
+multiple tables to run your queries. Olympus also shows you a preview section of the data you have selected.
+This is very useful to see if you have selected the right data. In the main section of the tool you can run
+your queries and get your results.
+
+Olympus also allows you to create a dataset or a chart directly from these retrieved results. You can read more about this feature in the Charts page.
+
+![Olympus Sql](/images/docs/olympus-sql.png)
+
+### Datasets
+
+The Datasets section is pretty standard. Once you run your query, you can click
+on the "Save Dataset" to store the query results into a table or optionally,
+you can access the Datasets page and similar to the SQL Lab, select your cluster,
+select the Public Schema and pick the table you want to create a dataset for.
+
+![Olympus Datasets](/images/docs/olympus-dataset.png)

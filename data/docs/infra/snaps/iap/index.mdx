@@ -1,0 +1,874 @@
+export const description = 'In-App Purchases'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# In-app purchases
+
+The IAP snap supports granting of items to users based on their purchases. It supports validation of purchase receipts from the respective game or app stores. The IAP Snap supports receipt validation for Google Play, Apple App Store, Steam, and Tebex.
+
+## Concept
+
+The IAP service is mainly responsible for the following:
+
+1. Setup bundles to be granted to users based on their purchases
+2. Purchase receipt validation for Google Play, Apple App Store, Steam, and Tebex
+3. Storing user purchase and failed transaction history
+4. Auto-grant inventory items on successful validation of purchase receipt
+
+## Requirements
+
+You need at least one of the following connectors to setup IAP:
+
+1. **Google**: You need a Service Account credentials JSON file from the Google Cloud Console.
+2. **Apple**: You need a private key (.p8) and identifiers from your Apple Developer Account.
+3. **Steam**: You need the App ID and Web API Key from your Steamworks Dashboard.
+4. **Tebex**: You need the Private Key and Public Token from your Tebex Control Panel.
+
+## Apple Setup
+To validate Apple in-app purchases, Snapser requires a private key (.p8) and identifiers from your Apple Developer Account. This allows Snapser to verify purchase receipts directly with Apple’s App Store Server API.
+
+---
+#### A. Log In to the Apple Developer Account
+1. Go to the [Apple Developer Console](https://developer.apple.com/account/).
+2. Make sure you have access to the correct Team ID (found under Membership in your account settings).
+
+---
+
+#### B. Create an App Store Connect API Key
+1. In your [App Store Connect](https://appstoreconnect.apple.com) account, navigate to **Users and Access → Keys**.
+    ![App Store Connect Home](/images/docs/app-store-connect-home.png)
+2. Click on the **Integrations** tab.
+3. Click the **+** button to create a new key.
+    ![App Store Connect Api](/images/docs/app-store-connect-api.png)
+4. In the popup:
+   - Enter a **name** for the key (e.g., *My IAP Key*).
+   - Select `Admin` or `Finance` for the access level.
+   - Click **Generate**.
+    ![App Store Connect Gen Key](/images/docs/app-store-iap-key-generate.png)
+5. Download the `.p8` file (you can only download it once).
+    <Warning>
+        Important: Save this `.p8` file securely. Apple will not let you re-download it later.
+    </Warning>
+
+---
+
+#### C. Retrieve Required Identifiers
+From App Store Connect and your Apple Developer Account, gather the following information:
+
+##### Apple Store Connect
+1. Go to the [App Store Connect](https://appstoreconnect.apple.com) account and navigate to **Users and Access → Integrations → Keys**.
+1. Key ID: Shown next to your API key.
+1. Issuer ID: Found at the top of the Keys page.
+    ![App Store Key id](/images/docs/app-store-key-issuer-id.png)
+
+##### Apple Developer Account
+1. Go to the [Apple Developer Console](https://developer.apple.com/account/).
+1. Bundle ID: From your app’s App ID (e.g., com.yourcompany.yourapp).
+1. Team ID: Found under Membership in your Apple Developer Account
+    ![App Store Key id](/images/docs/apple-dev-console-team-bundle-id.png)
+
+---
+
+#### D. Upload Credentials to Snapser
+1. Open the **Snapser Admin Tool**.
+1. Navigate to **IAP Snap → Connectors**.
+1. Click **Add Connector** and select **Apple**.
+1. Fill in the required fields:
+   - **Key ID**: Your API Key ID from App Store Connect.
+    - **Bundle ID**: Your app’s Bundle ID from the Apple Developer Console.
+    - **Issuer ID**: Your Issuer ID from App Store Connect.
+    - **Apple IAP Server API Key file**: Upload the `.p8` file you downloaded.
+1. (Optional) Toggle **Sandbox** to `true` if you are testing in the sandbox environment.
+1. Save your configuration.
+![Admin Apple IAP Pic](/images/docs/iap-admin-2.png)
+
+## Google Setup
+
+To enable in-app purchase receipt validation through Snapser’s **IAP Snap**, you’ll need to create a Google Cloud **Service Account** and connect it to your Google Play Console. This lets Snapser securely verify transactions and ensure only legitimate purchases reward your users.
+
+---
+
+#### A. Create a Firebase (Google Cloud) Project
+1. Go to the [Firebase Console](https://console.firebase.google.com/)
+1. Click **Add project** and enter your project name
+1. Follow the setup steps to create a new Firebase project
+
+> Google automatically creates a corresponding **Google Cloud project** behind the scenes when you create a Firebase project.
+
+---
+
+#### B. Create a Service Account for IAP
+1. In the Firebase console, select your project.
+1. Click the **gear icon** next to *Project Overview* → **Project settings**.
+1. Under the **Cloud Messaging** tab (or any tab), click the **Manage Service Accounts** link — this will take you to the Google Cloud Console.
+1. On the [Google Cloud Console](https://console.cloud.google.com/), confirm your project is selected.
+1. Navigate to **IAM & Admin > Service Accounts**.
+1. Click **Create Service Account**.
+    ![GCP Service Account](/images/docs/gcp-service-account.png)
+1. Enter a name and description (e.g., *$name IAP Validation Service*), then click **Create**.
+1. Under *Permissions*, choose the role:
+    - **Service Account User**
+    - You can also grant additional roles here, but the critical ones will be linked in the Play Console next.
+    ![GCP SA Create Step 1](/images/docs/gcp-sa-create-step-1.png)
+1. Optionally add *Principals with Access* (users who can manage this account).
+    ![GCP SA Create Step 3](/images/docs/gcp-sa-create-step-3.png)
+1. Click **Done** to finish creating the service account.
+
+---
+
+#### C. Create and Download Service Account Credentials (JSON)
+1. In the Google Cloud Console, go to **IAM & Admin > Service Accounts**.
+1. Select the service account you just created.
+1. Go to the **Keys** tab.
+1. Click **Add Key → Create new key**.
+1. Choose **JSON** as the key type and click **Create**.
+    ![GCP SA JSON Key](/images/docs/gcp-sa-create-json-key.png)
+1. The JSON credentials file will automatically download — **keep it safe** (it contains your private key).
+
+---
+
+#### D. Authorize the Service Account in Google Play Console
+1. Go to the [Google Play Console](https://play.google.com/console/).
+2. Navigate to **Users & permissions** (or **Settings > Users & permissions**).
+3. Click **Invite new user**.
+    ![GCP Console](/images/docs/gcp-console-new-user.png)
+4. Enter the **service account email address** (from the Google Cloud Console)
+    ![GCP SA email](/images/docs/gcp-service-account-email.png)
+    ![GCP SA email paste](/images/docs/gcp-new-user-email-paste.png)
+5. Now, under the `Permissions` section:
+    - Select the `App Permissions` tab
+    - Select the app you want to link the service account to
+    - Click `Apply`
+    ![GCP SA app perms](/images/docs/gcp-new-user-app-permissions.png)
+5. Set the permissions as follows:
+   - Permissions (for IAP receipt validation):
+     - `View financial data`
+     - `Manage orders and subscriptions`
+     - `View app information`
+    ![GCP SA perms apply](/images/docs/gcp-new-user-permissions-apply.png)
+5. Click **Apply**.
+    <Note>
+    Once this is done, the service account has the rights to let Snapser validate purchases securely with the Google Play Developer API.
+    </Note>
+
+---
+
+#### E. Upload the JSON File to Snapser
+1. Open the **Snapser Admin Tool**.
+1. Navigate to **IAP Snap → Connectors**.
+1. Click **Add Connector** and select **Google**.
+1. Upload the JSON file you downloaded from Google Cloud Console.
+1. Save your configuration.
+
+![Admin Google IAP Pic](/images/docs/iap-admin-1.png)
+
+## Steam Setup
+
+To validate Steam in-app purchases, Snapser requires your game's **App ID** and a **Publisher Web API Key** from the Steamworks platform.
+
+---
+
+#### A. Retrieve Your Steam Credentials
+1. Log in to the [Steamworks Dashboard](https://partner.steamgames.com/).
+2. Find your **App ID** — this is the numeric identifier for your game (e.g., `240760`). It is visible on your app's landing page in Steamworks.
+3. Navigate to **Users & Permissions → Manage Groups** and locate your **Publisher Web API Key**. If you do not have one, you can create a new key from this page.
+
+---
+
+#### B. Upload Credentials to Snapser
+1. Open the **Snapser Admin Tool**.
+2. Navigate to **IAP Snap → Connectors**.
+3. Click **Add Connector** and select **Steam**.
+4. Fill in the required fields:
+   - **App ID**: Your game's Steam App ID.
+   - **Web API Key**: Your Publisher Web API Key from Steamworks.
+5. Save your configuration.
+
+## Tebex Setup
+
+[Tebex](https://www.tebex.io/) is a web-based game monetization platform that provides a storefront for selling in-game items, currency, and ranks. Snapser can validate Tebex purchase receipts through the Tebex Headless API, allowing you to automatically grant items to players after a verified purchase.
+
+---
+
+#### A. Log In to the Tebex Control Panel
+1. Go to the [Tebex Creator Panel](https://creator.tebex.io/) and log in with your account.
+2. Select the project (game server or store) that you want to connect to Snapser.
+
+---
+
+#### B. Retrieve Your Credentials
+1. In the Tebex Creator Panel, navigate to **Developer → API Keys** (or **Integrations → API Keys** depending on your panel version).
+2. Locate the following two values:
+   - **Private Key** (Secret Key): This is your server-side secret used to authenticate API requests. It should never be exposed to clients.
+   - **Public Token**: This is the key used to access any public-facing Tebex APIs (e.g., the Headless API for storefronts).
+3. Copy both values — you will need them in the next step.
+    <Warning>
+        Keep your Private Key secure. Do not share it or commit it to source control.
+    </Warning>
+
+---
+
+#### C. Upload Credentials to Snapser
+1. Open the **Snapser Admin Tool**.
+2. Navigate to **IAP Snap → Connectors**.
+3. Click **Add Connector** and select **Tebex**.
+4. Fill in the required fields:
+   - **Private Key**: Your secret key from the Tebex Creator Panel.
+   - **Public Token**: Your public-facing API token from the Tebex Creator Panel.
+5. Save your configuration.
+
+## Bundles
+All the stores make you group your virtual currency and items into bundles. You can create a bundle by clicking on the **Bundles** tab in the IAP Snap. Bundles can be created from items and containers from the Inventory Snap. You can also set the price of the bundle in the currency of the store.
+
+## APIs
+
+The `IAP` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name                | HTTP Method | API Description                                   |
+| ----------------------- | ----------- | ------------------------------------------------- |
+| [IapVerifyAppleTransaction](#iapverifyappletransaction-api)  | POST        | Verify Apple App Store In-App Purchase for a user |
+| [IapVerifyGoogleTransaction](#iapverifygoogletransaction-api) | POST       | Verify Google Play In-App Purchase for a user     |
+| [IapVerifySteamTransaction](#iapverifysteamtransaction-api)   | POST       | Verify Steam In-App Purchase for a user           |
+| [IapVerifyTebexTransaction](#iapverifytebextransaction-api)   | POST       | Verify Tebex In-App Purchase for a user           |
+</div>
+
+### Usage
+#### IapVerifyAppleTransaction API
+<CodeGroup title="Verify Apple App Store In-App Purchase for a user" tag="POST" label="IapVerifyAppleTransaction">
+```csharp
+/// <summary>
+/// Verify Apple Transaction Verify Apple App Store In-App Purchase for a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>IapTransaction</returns>
+public IapTransaction IapVerifyAppleTransaction(string token, IapVerifyAppleTransactionRequest body)
+{
+    Snapser.Client.ApiResponse<IapTransaction> localVarResponse = IapVerifyAppleTransactionWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for IapVerifyAppleTransactionRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="IapVerifyAppleTransactionRequest" /> class.
+/// </summary>
+/// <param name="currency">Currency of the purchase.</param>
+/// <param name="price">Price of the purchase.</param>
+/// <param name="transactionId">transactionId.</param>
+/// <param name="userId">User identifier who purchased a product (required).</param>
+public IapVerifyAppleTransactionRequest(string currency = default(string), float price = default(float), string transactionId = default(string), string userId = default(string))
+{
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for IapVerifyAppleTransactionRequest and cannot be null");
+    }
+    this.UserId = userId;
+    this.Currency = currency;
+    this.Price = price;
+    this.TransactionId = transactionId;
+}
+
+/// Snapser.Model for IapTransaction
+/// <summary>
+/// Initializes a new instance of the <see cref="IapTransaction" /> class.
+/// </summary>
+/// <param name="bundleName">bundleName.</param>
+/// <param name="createdAt">createdAt.</param>
+/// <param name="grantStatus">grantStatus.</param>
+/// <param name="id">id.</param>
+/// <param name="provider">provider.</param>
+/// <param name="purchasedAt">purchasedAt.</param>
+/// <param name="receipt">receipt.</param>
+/// <param name="transactionId">transactionId.</param>
+/// <param name="updatedAt">updatedAt.</param>
+/// <param name="userId">userId.</param>
+/// <param name="verificationStatus">verificationStatus.</param>
+public IapTransaction(string bundleName = default(string), string createdAt = default(string), string grantStatus = default(string), string id = default(string), string provider = default(string), string purchasedAt = default(string), byte[] receipt = default(byte[]), string transactionId = default(string), string updatedAt = default(string), string userId = default(string), string verificationStatus = default(string))
+{
+    this.BundleName = bundleName;
+    this.CreatedAt = createdAt;
+    this.GrantStatus = grantStatus;
+    this.Id = id;
+    this.Provider = provider;
+    this.PurchasedAt = purchasedAt;
+    this.Receipt = receipt;
+    this.TransactionId = transactionId;
+    this.UpdatedAt = updatedAt;
+    this.UserId = userId;
+    this.VerificationStatus = verificationStatus;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserIAPServiceApi::IapVerifyAppleTransactionRequest : public Request
+{
+public:
+    virtual ~IapVerifyAppleTransactionRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserIapVerifyAppleTransactionRequest Body;
+};
+
+class SNAPSER_API SnapserIapVerifyAppleTransactionRequest : public Model
+{
+public:
+    virtual ~SnapserIapVerifyAppleTransactionRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Currency of the purchase */
+    TOptional<FString> Currency;
+    /* Price of the purchase */
+    TOptional<float> Price;
+    TOptional<FString> TransactionId;
+    /* User identifier who purchased a product */
+    FString UserId;
+};
+
+// Response
+class SNAPSER_API SnapserIAPServiceApi::IapVerifyAppleTransactionResponse : public Response
+{
+public:
+    virtual ~IapVerifyAppleTransactionResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserIapTransaction Content;
+};
+
+class SNAPSER_API SnapserIapTransaction : public Model
+{
+public:
+    virtual ~SnapserIapTransaction() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> BundleName;
+    TOptional<FString> CreatedAt;
+    TOptional<FString> GrantStatus;
+    TOptional<FString> Id;
+    TOptional<FString> Provider;
+    TOptional<FString> PurchasedAt;
+    TOptional<TArray<uint8>> Receipt;
+    TOptional<FString> TransactionId;
+    TOptional<FString> UpdatedAt;
+    TOptional<FString> UserId;
+    TOptional<FString> VerificationStatus;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### IapVerifyGoogleTransaction API
+<CodeGroup title="Verify Google Play In-App Purchase for a user" tag="POST" label="IapVerifyGoogleTransaction">
+```csharp
+/// <summary>
+/// Verify Google Transaction Verify Google Play In-App Purchase for a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>IapTransaction</returns>
+public IapTransaction IapVerifyGoogleTransaction(string token, IapVerifyGoogleTransactionRequest body)
+{
+    Snapser.Client.ApiResponse<IapTransaction> localVarResponse = IapVerifyGoogleTransactionWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for IapVerifyGoogleTransactionRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="IapVerifyGoogleTransactionRequest" /> class.
+/// </summary>
+/// <param name="currency">Currency of the purchase.</param>
+/// <param name="packageName">Package name of an app a product purchased from (required).</param>
+/// <param name="price">Price of the purchase.</param>
+/// <param name="productId">Identifier of a product purchased (required).</param>
+/// <param name="purchaseToken">Purchase token received from google after purchase (required).</param>
+/// <param name="userId">User identifier who purchased a product (required).</param>
+public IapVerifyGoogleTransactionRequest(string currency = default(string), string packageName = default(string), float price = default(float), string productId = default(string), string purchaseToken = default(string), string userId = default(string))
+{
+    // to ensure "packageName" is required (not null)
+    if (packageName == null)
+    {
+        throw new ArgumentNullException("packageName is a required property for IapVerifyGoogleTransactionRequest and cannot be null");
+    }
+    this.PackageName = packageName;
+    // to ensure "productId" is required (not null)
+    if (productId == null)
+    {
+        throw new ArgumentNullException("productId is a required property for IapVerifyGoogleTransactionRequest and cannot be null");
+    }
+    this.ProductId = productId;
+    // to ensure "purchaseToken" is required (not null)
+    if (purchaseToken == null)
+    {
+        throw new ArgumentNullException("purchaseToken is a required property for IapVerifyGoogleTransactionRequest and cannot be null");
+    }
+    this.PurchaseToken = purchaseToken;
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for IapVerifyGoogleTransactionRequest and cannot be null");
+    }
+    this.UserId = userId;
+    this.Currency = currency;
+    this.Price = price;
+}
+
+/// Snapser.Model for IapTransaction
+/// <summary>
+/// Initializes a new instance of the <see cref="IapTransaction" /> class.
+/// </summary>
+/// <param name="bundleName">bundleName.</param>
+/// <param name="createdAt">createdAt.</param>
+/// <param name="grantStatus">grantStatus.</param>
+/// <param name="id">id.</param>
+/// <param name="provider">provider.</param>
+/// <param name="purchasedAt">purchasedAt.</param>
+/// <param name="receipt">receipt.</param>
+/// <param name="transactionId">transactionId.</param>
+/// <param name="updatedAt">updatedAt.</param>
+/// <param name="userId">userId.</param>
+/// <param name="verificationStatus">verificationStatus.</param>
+public IapTransaction(string bundleName = default(string), string createdAt = default(string), string grantStatus = default(string), string id = default(string), string provider = default(string), string purchasedAt = default(string), byte[] receipt = default(byte[]), string transactionId = default(string), string updatedAt = default(string), string userId = default(string), string verificationStatus = default(string))
+{
+    this.BundleName = bundleName;
+    this.CreatedAt = createdAt;
+    this.GrantStatus = grantStatus;
+    this.Id = id;
+    this.Provider = provider;
+    this.PurchasedAt = purchasedAt;
+    this.Receipt = receipt;
+    this.TransactionId = transactionId;
+    this.UpdatedAt = updatedAt;
+    this.UserId = userId;
+    this.VerificationStatus = verificationStatus;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserIAPServiceApi::IapVerifyGoogleTransactionRequest : public Request
+{
+public:
+    virtual ~IapVerifyGoogleTransactionRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserIapVerifyGoogleTransactionRequest Body;
+};
+
+class SNAPSER_API SnapserIapVerifyGoogleTransactionRequest : public Model
+{
+public:
+    virtual ~SnapserIapVerifyGoogleTransactionRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Currency of the purchase */
+    TOptional<FString> Currency;
+    /* Package name of an app a product purchased from */
+    FString PackageName;
+    /* Price of the purchase */
+    TOptional<float> Price;
+    /* Identifier of a product purchased */
+    FString ProductId;
+    /* Purchase token received from google after purchase */
+    FString PurchaseToken;
+    /* User identifier who purchased a product */
+    FString UserId;
+};
+
+// Response
+class SNAPSER_API SnapserIAPServiceApi::IapVerifyGoogleTransactionResponse : public Response
+{
+public:
+    virtual ~IapVerifyGoogleTransactionResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserIapTransaction Content;
+};
+
+class SNAPSER_API SnapserIapTransaction : public Model
+{
+public:
+    virtual ~SnapserIapTransaction() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> BundleName;
+    TOptional<FString> CreatedAt;
+    TOptional<FString> GrantStatus;
+    TOptional<FString> Id;
+    TOptional<FString> Provider;
+    TOptional<FString> PurchasedAt;
+    TOptional<TArray<uint8>> Receipt;
+    TOptional<FString> TransactionId;
+    TOptional<FString> UpdatedAt;
+    TOptional<FString> UserId;
+    TOptional<FString> VerificationStatus;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### IapVerifySteamTransaction API
+<CodeGroup title="Verify Steam In-App Purchase for a user" tag="POST" label="IapVerifySteamTransaction">
+```csharp
+/// <summary>
+/// Verify Transaction Verify Steam In-App Purchase for a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>IapTransaction</returns>
+public IapTransaction IapVerifySteamTransaction(string token, IapVerifySteamTransactionRequest body)
+{
+    Snapser.Client.ApiResponse<IapTransaction> localVarResponse = IapVerifySteamTransactionWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for IapVerifySteamTransactionRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="IapVerifySteamTransactionRequest" /> class.
+/// </summary>
+/// <param name="currency">Currency of the purchase.</param>
+/// <param name="orderId">Steam order/transaction ID from the purchase (required).</param>
+/// <param name="price">Price of the purchase.</param>
+/// <param name="productId">Identifier of the product/bundle purchased (required).</param>
+/// <param name="userId">User identifier who purchased a product (required).</param>
+public IapVerifySteamTransactionRequest(string currency = default, string orderId = default, float price = default, string productId = default, string userId = default)
+{
+    // to ensure "orderId" is required (not null)
+    if (orderId == null)
+    {
+        throw new ArgumentNullException("orderId is a required property for IapVerifySteamTransactionRequest and cannot be null");
+    }
+    this.OrderId = orderId;
+    // to ensure "productId" is required (not null)
+    if (productId == null)
+    {
+        throw new ArgumentNullException("productId is a required property for IapVerifySteamTransactionRequest and cannot be null");
+    }
+    this.ProductId = productId;
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for IapVerifySteamTransactionRequest and cannot be null");
+    }
+    this.UserId = userId;
+    this.Currency = currency;
+    this.Price = price;
+}
+
+/// Snapser.Model for IapTransaction
+/// <summary>
+/// Initializes a new instance of the <see cref="IapTransaction" /> class.
+/// </summary>
+/// <param name="bundleName">bundleName.</param>
+/// <param name="createdAt">createdAt.</param>
+/// <param name="grantStatus">grantStatus.</param>
+/// <param name="id">id.</param>
+/// <param name="provider">provider.</param>
+/// <param name="purchasedAt">purchasedAt.</param>
+/// <param name="receipt">receipt.</param>
+/// <param name="transactionId">transactionId.</param>
+/// <param name="updatedAt">updatedAt.</param>
+/// <param name="userId">userId.</param>
+/// <param name="verificationStatus">verificationStatus.</param>
+public IapTransaction(string bundleName = default, string createdAt = default, string grantStatus = default, string id = default, string provider = default, string purchasedAt = default, byte[] receipt = default, string transactionId = default, string updatedAt = default, string userId = default, string verificationStatus = default)
+{
+    this.BundleName = bundleName;
+    this.CreatedAt = createdAt;
+    this.GrantStatus = grantStatus;
+    this.Id = id;
+    this.Provider = provider;
+    this.PurchasedAt = purchasedAt;
+    this.Receipt = receipt;
+    this.TransactionId = transactionId;
+    this.UpdatedAt = updatedAt;
+    this.UserId = userId;
+    this.VerificationStatus = verificationStatus;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserIAPServiceApi::IapVerifySteamTransactionRequest : public Request
+{
+public:
+    virtual ~IapVerifySteamTransactionRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserIapVerifySteamTransactionRequest Body;
+};
+
+class SNAPSER_API SnapserIapVerifySteamTransactionRequest : public Model
+{
+public:
+    virtual ~SnapserIapVerifySteamTransactionRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Currency of the purchase */
+    TOptional<FString> Currency;
+    /* Steam order/transaction ID from the purchase */
+    FString OrderId;
+    /* Price of the purchase */
+    TOptional<float> Price;
+    /* Identifier of the product/bundle purchased */
+    FString ProductId;
+    /* User identifier who purchased a product */
+    FString UserId;
+};
+
+// Response
+class SNAPSER_API SnapserIAPServiceApi::IapVerifySteamTransactionResponse : public Response
+{
+public:
+    virtual ~IapVerifySteamTransactionResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserIapTransaction Content;
+};
+
+class SNAPSER_API SnapserIapTransaction : public Model
+{
+public:
+    virtual ~SnapserIapTransaction() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> BundleName;
+    TOptional<FString> CreatedAt;
+    TOptional<FString> GrantStatus;
+    TOptional<FString> Id;
+    TOptional<FString> Provider;
+    TOptional<FString> PurchasedAt;
+    TOptional<TArray<uint8>> Receipt;
+    TOptional<FString> TransactionId;
+    TOptional<FString> UpdatedAt;
+    TOptional<FString> UserId;
+    TOptional<FString> VerificationStatus;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### IapVerifyTebexTransaction API
+<CodeGroup title="Verify Tebex Store In-App Purchase for a user" tag="POST" label="IapVerifyTebexTransaction">
+```csharp
+/// <summary>
+/// Verify Tebex Transaction Verify Tebex Headless In-App Purchase for a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>IapTransaction</returns>
+public IapTransaction IapVerifyTebexTransaction(string token, IapVerifyTebexTransactionRequest body)
+{
+    Snapser.Client.ApiResponse<IapTransaction> localVarResponse = IapVerifyTebexTransactionWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for IapVerifyTebexTransactionRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="IapVerifyTebexTransactionRequest" /> class.
+/// </summary>
+/// <param name="basketId">Tebex basket identifier (required).</param>
+/// <param name="currency">Currency of the purchase.</param>
+/// <param name="price">Price of the purchase.</param>
+/// <param name="productId">Bundle name to grant (required).</param>
+/// <param name="userId">User identifier who purchased a product (required).</param>
+public IapVerifyTebexTransactionRequest(string basketId = default, string currency = default, float price = default, string productId = default, string userId = default)
+{
+    // to ensure "basketId" is required (not null)
+    if (basketId == null)
+    {
+        throw new ArgumentNullException("basketId is a required property for IapVerifyTebexTransactionRequest and cannot be null");
+    }
+    this.BasketId = basketId;
+    // to ensure "productId" is required (not null)
+    if (productId == null)
+    {
+        throw new ArgumentNullException("productId is a required property for IapVerifyTebexTransactionRequest and cannot be null");
+    }
+    this.ProductId = productId;
+    // to ensure "userId" is required (not null)
+    if (userId == null)
+    {
+        throw new ArgumentNullException("userId is a required property for IapVerifyTebexTransactionRequest and cannot be null");
+    }
+    this.UserId = userId;
+    this.Currency = currency;
+    this.Price = price;
+}
+
+/// Snapser.Model for IapTransaction
+/// <summary>
+/// Initializes a new instance of the <see cref="IapTransaction" /> class.
+/// </summary>
+/// <param name="bundleName">bundleName.</param>
+/// <param name="createdAt">createdAt.</param>
+/// <param name="grantStatus">grantStatus.</param>
+/// <param name="id">id.</param>
+/// <param name="provider">provider.</param>
+/// <param name="purchasedAt">purchasedAt.</param>
+/// <param name="receipt">receipt.</param>
+/// <param name="transactionId">transactionId.</param>
+/// <param name="updatedAt">updatedAt.</param>
+/// <param name="userId">userId.</param>
+/// <param name="verificationStatus">verificationStatus.</param>
+public IapTransaction(string bundleName = default, string createdAt = default, string grantStatus = default, string id = default, string provider = default, string purchasedAt = default, byte[] receipt = default, string transactionId = default, string updatedAt = default, string userId = default, string verificationStatus = default)
+{
+    this.BundleName = bundleName;
+    this.CreatedAt = createdAt;
+    this.GrantStatus = grantStatus;
+    this.Id = id;
+    this.Provider = provider;
+    this.PurchasedAt = purchasedAt;
+    this.Receipt = receipt;
+    this.TransactionId = transactionId;
+    this.UpdatedAt = updatedAt;
+    this.UserId = userId;
+    this.VerificationStatus = verificationStatus;
+}
+```
+```cpp
+/// Request
+class SNAPSER_API SnapserIAPServiceApi::IapVerifyTebexTransactionRequest : public Request
+{
+public:
+    virtual ~IapVerifyTebexTransactionRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserIapVerifyTebexTransactionRequest Body;
+};
+
+class SNAPSER_API SnapserIapVerifyTebexTransactionRequest : public Model
+{
+public:
+    virtual ~SnapserIapVerifyTebexTransactionRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Tebex basket identifier */
+    FString BasketId;
+    /* Currency of the purchase */
+    TOptional<FString> Currency;
+    /* Price of the purchase */
+    TOptional<float> Price;
+    /* Bundle name to grant */
+    FString ProductId;
+    /* User identifier who purchased a product */
+    FString UserId;
+};
+
+/// Response
+class SNAPSER_API SnapserIAPServiceApi::IapVerifyTebexTransactionResponse : public Response
+{
+public:
+    virtual ~IapVerifyTebexTransactionResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserIapTransaction Content;
+};
+
+class SNAPSER_API SnapserIapTransaction : public Model
+{
+public:
+    virtual ~SnapserIapTransaction() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> BundleName;
+    TOptional<FString> CreatedAt;
+    TOptional<FString> GrantStatus;
+    TOptional<FString> Id;
+    TOptional<FString> Provider;
+    TOptional<FString> PurchasedAt;
+    TOptional<TArray<uint8>> Receipt;
+    TOptional<FString> TransactionId;
+    TOptional<FString> UpdatedAt;
+    TOptional<FString> UserId;
+    TOptional<FString> VerificationStatus;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/iap-api.png)
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code | Variable                 | Message                     | HTTP | gRPC          |
+| ---- | ------------------------ | --------------------------- | ---- | ------------- |
+| 7000 | ErrInvalidPurchase       | Invalid Purchase            | 400  | InvalidArgument |
+| 7001 | ErrTransectionUpsertion  | Transaction upsertion error | 500  | Internal      |
+| 7002 | ErrSettingsReadFailure   | Failed to read settings     | 500  | Internal      |
+| 7003 | ErrSettingsUpdateFailure | Failed to update settings   | 500  | Internal      |
+| 7004 | ErrDuplicateTransaction  | Duplicate transaction       | 409  | AlreadyExists |
+</div>
+
+## Additional Details
+
+### Data Stores
+
+Postgres
+
+### Service Dependencies
+
+The IAP service depends on inventory snap.
+
+### Recommended Services
+
+The IAP service works best when paired with the Auth service.
+
+### Upcoming enhancements
+
+We will very soon release a newer version of iap that will have ability to
+manage subscriptions.

@@ -1,0 +1,74 @@
+# 1.8.0
+##### April 14, 2026
+
+## Spotlight
+1. **Unified SDK** — a new SDK type that combines user, api-key, and internal auth APIs into a single SDK. Set your auth header once and mix and match calls across all auth types without juggling multiple SDKs.
+2. **Multi-User WebSocket Tester** — a new tool for testing real-time events with up to 25 simultaneous connections. Connect multiple users, fire API calls, and watch events propagate live.
+3. **Production Environment Banner** — a warning banner now appears when working on a production Snapend, helping prevent accidental changes to live environments.
+4. **Snapctl `snap-configuration` Subcommand** — retrieve snap configurations directly from the CLI using `snapctl snap-configuration get-config`, making it easier to inspect and automate your Snapend setup.
+5. **Snapctl `--verbose` and `--quiet` Flags** — fine-tune CLI output across all commands for scripting or debugging workflows.
+
+
+## Snaps
+### Inventory
+1. Nested Drop Tables — drop tables can now contain other drop tables, up to a maximum depth of 10. This enables more complex and layered reward structures without needing to flatten everything into a single table.
+2. Reward items can now reference drop tables directly. When a reward is granted, the referenced drop table is evaluated and its result is given to the player. This applies across Quests, XP, and IAP reward flows.
+
+### Game Server Fleet
+1. Improved `AllocateServer` API descriptions in the GSF OpenAPI spec for clearer SDK documentation.
+
+### GDPR
+1. Custom Email Templates — you can now upload custom HTML email templates for GDPR user data requests. This lets game studios personalize the look and feel of the data request email sent to players. A preview is available before saving.
+
+### In-App Purchases
+1. Tebex Connector — added a new IAP connector for Tebex web store receipt validation. You can now validate Tebex purchases server-side alongside existing Google, Apple, and Steam connectors.
+
+### Lobbies
+1. Custom Metadata — the Lobbies admin configuration now supports a metadata map (`map<string, string>`), similar to Matchmaking. This allows you to attach arbitrary key-value data to lobby configurations.
+
+### Leaderboards
+1. `GetScores` for global leaderboards no longer requires a `userID` when querying top or bottom scores. You can now fetch global leaderboard rankings without specifying a user.
+
+### Scheduler
+1. Tasks that have not yet started can now have all of their fields modified. Previously, some fields were locked even before execution began.
+
+### Auth
+1. Fixed an issue where `DeleteUser` did not clean up the `suspended_users` table, which could cause a foreign key constraint error on subsequent operations.
+
+## SDK
+1. Unified SDK — a new SDK type that combines all APIs across user, api-key, and internal auth into a single SDK. Set the auth header once in the constructor (`Token`, `Api-Key`, or `Gateway: internal`) and make calls across all auth types without switching SDKs. Available for download from the Snapend home page or via `snapctl snapend download`.
+2. Fixed `google.protobuf.Value` fields generating incorrect `JSONObject` types in the C++ SDK.
+3. Made an update to the SDK tech to support nullable protos.
+
+
+## Web App
+### New Tools
+1. **Multi-User WebSocket Tester** — a new tool for testing real-time events across multiple simultaneous connections (up to 25). Connect multiple users, execute API calls from each, and observe events propagated across connections in real-time. Useful for testing Lobbies, Parties, and other multiplayer flows. Accessible from the Snapend home page under Quick Links.
+
+### Improvements
+1. Production Environment Banner — a warning banner now appears when you are working on a production Snapend, helping prevent accidental changes to live environments.
+2. Infra Logs Tool now dynamically renders filter labels. When you select a snap or fleet, the tool fetches available filter values (level, group, region, server) from the backend instead of using hardcoded options. This now allows you to view logs for servers that have been spun down.
+3. Snaps Monitor and Fleet Monitor have been combined into a single unified tool with tabs for a more consistent monitoring experience alongside the Logs and Heatmap tools.
+4. Snapend updates are now blocked during portal maintenance windows, preventing configuration changes while the platform is being updated.
+5. Logs tool now shows tags under the log line, giving more details about the log line to the user. Eg: Log coming from a Snap shows the snap name, log level and log group. Log coming from a Fleet server, shows the region, fleet name and the game server Id.
+6. Log Context mode was making a query without the appropriate filters. This has now been fixed.
+7. Fixed Fleet Monitor and other metric charts crashing with "No data available" when more than 32 series are returned (e.g. busy fleets with high game server churn).
+
+### User Manager Tool
+1. Fixed the User Manager Tool displaying negative currency values when amounts exceed 32-bit integer limits.
+
+## Snapctl
+1. Snapctl now supports downloading the new Unified SDK via the `snapctl snapend download` command.
+2. New `snap-configuration` subcommand — retrieve snap configurations for one or more snaps using `snapctl snap-configuration get-config --snaps <snap1,snap2> --snapend-id <id>`.
+3. Success responses have been standardized to follow the same format as error responses for consistent CLI output parsing.
+```json
+{"error": $errorBool, "code": $responseCode, "msg": $message, "data": $object}
+```
+4. Added `--verbose` and `--quiet` flags for controlling the level of output detail across all snapctl commands.
+
+## Documentation
+1. Added documentation for GDPR custom email templates, including setup and preview workflow.
+2. Added documentation for nested drop tables in the Inventory snap, explaining depth limits and configuration.
+3. Added and reviewed Tebex connector documentation in the IAP snap docs.
+4. Added documentation for the new Multi-User WebSocket Tester tool with usage guides and prerequisites.
+5. Added documentation for the Unified SDK, including download instructions and auth header setup.

@@ -1,0 +1,21 @@
+# Scheduler Tasks
+This tool allows you to add, edit and delete scheduled tasks. You can also see the status of the tasks that have been run.
+
+To get started:
+1. Click on `Tasks` from the side Nav.
+2. Click on the `Add a Scheduled Task` button.
+3. You will then see a form where you can add or update your configuration.
+
+## Scheduler Tasks Details
+- **Name** - A unique name for the task. The string should be alphanumeric without spaces.
+
+## Scheduler Tasks Schedule
+- **Type** - The type of schedule you want to set. You can choose between `One Time` and `Cron`.
+- **Start Time** - The time at which you want the task to start.
+- **End Time** - The time at which you want the task to end. This is only applicable for `Cron` schedules.
+- **Cron Selector** - If you choose `Cron` you will see a text box where you can enter your cron string. You can also use the Cron builder to help you build your cron string.
+
+## Scheduler Tasks Action
+- **Add a HTTP Action** - Click on this button to add an action to your task. You can then select the Snap and the API you want to call and add the appropriate parameters.
+
+![Task Pic](/images/docs/scheduler-task.png)

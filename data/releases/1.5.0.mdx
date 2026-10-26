@@ -1,0 +1,54 @@
+# 1.5.0
+##### February 02, 2026
+
+## Spotlight
+1. Diff tool for Snapends is now available. You can compare one primary Snapend with all other Snapends in the same game to see what has changed between them. This includes changes in Snap configurations, Snap versions, and Snap settings. This view helps you get a birds eye view of your entire setup.
+2. We have upgraded our generation library to OpenAPI Generator v7.18.0. This upgrade brings several improvements and bug fixes to the SDK generation process, enhancing the overall developer experience. There should be no breaking changes, but please report any issues you encounter.
+
+## Networking
+### Gateway
+1. Once you upgrade your Auth snap to `v1.5.0`, the underlying BYOSnap in the Snapend, will now get the `api-key` name in a header when the external call comes in via `api-key` auth.
+
+### WebSocket / Hermes
+1. Hermes now supports an internal only `Notify` endpoint that can be used by other snaps to send notifications to specific or all connected clients.
+
+## Snaps
+### Guilds
+1. Added a new Batch GetMember API to fetch multiple guild members in a single request. This improves efficiency when retrieving member information for large guilds.
+
+### Matchmaking
+1. Major performance improvements have been made to the Matchmaking snap, resulting in faster match creation times and reduced latency for players joining matches.
+
+## Web App
+1. Any logged in user can now create an API key from the Developer center.
+2. You can now see the metrics for the Matchmaking snap if your Snapend has it. The tool exposes graphs for:
+  - Ticket Queue Size
+  - Match Created
+  - Tickets Created per Second
+  - Tickets Deleted per Second
+  - Tickets Expired per Second
+3. Minor changes to the landing page and the product details pages.
+4. Fixed a minor bug where editing roles in the Access page table was defaulting to the first page. This is now resolved.
+5. Fixed an issue where the Storage configuration tool was not displaying the JSON schema correctly. This is now resolved.
+6. Fixed a bug where the releases page was not showing some entries correctly. This is now resolved.
+7. We have started upgrading the Snap configuration tools to detect unsaved changes, allowing users to avoid making unintended modifications. This feature is being rolled out gradually across different Snap configuration pages. With this release the following tools are getting this feature. In the upcoming releases, more tools will get this feature.
+  - Matchmaking
+  - XP
+  - Energy
+  - Segments
+  - Profiles
+  - Leaderboards
+  - Items
+  - Currencies
+  - Containers
+  - Exclusion Groups
+  - Experiments
+  - Buckets
+
+## Snapctl
+1. Fixed a bug where `snapctl snaps` and `snapctl snapend-manifest` commands were not working for BYOSnaps. This is now resolved.
+2. Fixed a bug where snapctl was allowing byosnaps to be created while not following the naming conventions. This is now resolved.
+3. Fixed a bug with `yaml` based manifest when using it with the `snapctl snapend apply --manifest-path ...yaml` command. This is now resolved.
+
+## Documentation
+1. Minor updates to the documentation for clarity and accuracy across various sections.

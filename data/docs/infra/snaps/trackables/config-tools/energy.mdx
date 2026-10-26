@@ -1,0 +1,28 @@
+# Energy
+This tool allows you to setup and manage the Energy you want to expose to your game.
+
+To get started:
+1. Click on `Energy` from the side Nav.
+2. Click on the `Add a Energy` button.
+3. You will then see a form where you can add or update your Energy.
+
+## Energy Details
+1. **Name**: Name of the Energy. This is a unique identifier for the Energy. This should be an alphanumeric string without spaces.
+
+## Energy Access
+1. **Scope**: The scope of the Energy. This can be external or internal. External Energy can be updated by the client, over app auth. Internal Energy can only be updated by other snaps within your cluster or using app auth.
+
+## Energy Parameters
+1. **Maximum Energy**: Maximum energy that a user can have. This should be a positive integer.
+2. **Time to recover**: Time taken to recover 1 energy. This should be in seconds.
+
+## Energy Default
+1. **Default Energy**: The default energy that a user will have when they start the game.
+
+## Energy Overflow
+1. **Overflow Toggle**: This toggle allows you to enable or disable the overflow of energy. If enabled, the energy can overflow beyond the maximum energy. Otherwise, the energy will be capped at the maximum energy.
+<Note>
+  If overflow is enabled, it should be noted that replenish will only kick in when the energy drops below the maximum energy.
+</Note>
+
+![Admin Pic](/images/docs/energy-admin.png)

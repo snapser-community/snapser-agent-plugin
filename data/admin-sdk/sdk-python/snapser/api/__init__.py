@@ -1,0 +1,22 @@
+# flake8: noqa
+
+# import apis into api package
+from snapser.api.auth_service_api import AuthServiceApi
+from snapser.api.experiments_service_api import ExperimentsServiceApi
+from snapser.api.game_server_fleets_service_api import GameServerFleetsServiceApi
+from snapser.api.guilds_service_api import GuildsServiceApi
+from snapser.api.iap_service_api import IAPServiceApi
+from snapser.api.inventory_service_api import InventoryServiceApi
+from snapser.api.leaderboards_service_api import LeaderboardsServiceApi
+from snapser.api.lobbies_service_api import LobbiesServiceApi
+from snapser.api.matchmaking_service_api import MatchmakingServiceApi
+from snapser.api.parties_service_api import PartiesServiceApi
+from snapser.api.profiles_service_api import ProfilesServiceApi
+from snapser.api.quests_service_api import QuestsServiceApi
+from snapser.api.queues_service_api import QueuesServiceApi
+from snapser.api.remote_config_service_api import RemoteConfigServiceApi
+from snapser.api.scheduler_service_api import SchedulerServiceApi
+from snapser.api.statistics_service_api import StatisticsServiceApi
+from snapser.api.storage_service_api import StorageServiceApi
+from snapser.api.trackables_service_api import TrackablesServiceApi
+

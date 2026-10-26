@@ -1,0 +1,55 @@
+export const description = 'Auth App Verify Guide'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# App Verify
+
+The Auth Snap's App Verify feature allows you to integrate Snapser authentication with various third-party app backends. This integration enables consistent user IDs across different app backends. This guide illustrates how to use Snapser as an authentication provider for a third-party engine, Photon.
+
+## Setting up App Verify
+
+To enable App Verify, navigate to the App Verify admin tool and toggle the switch. You will be prompted to enter a client secret. Snapser uses this secret to verify the authenticity of calls to the endpoint.
+
+![app-verify-admin](/images/docs/app-verify-admin.png)
+
+With App Verify enabled, the authentication flow is as follows:
+
+1. The App Client uses the Snapser SDK to log in and receive a session token.
+2. The A Client then uses another SDK (i.e. a game engine SDK) to contact the App Verify endpoint with the session token and the client secret entered during the App Verify setup.
+3. The App Verify endpoint returns a response that, in this example, game engine accepts, thereby authenticating the App Client.
+
+## App Verify with the Photon Engine
+
+To use Snapser as an authentication provider for Photon, you need to set up your Photon app with [Custom Authentication Backend](https://doc.photonengine.com/realtime/current/connection-and-authentication/authentication/custom-authentication). Add `client_secret` to the **Optional Key Value Pairs** section. The value should be the same as what was used to set up App Verify.
+
+![photon-custom-auth-setup](/images/docs/photon-auth-setup.png)
+
+Once you've applied the settings, the flow for authenticating a game client is as follows:
+
+1. The game client uses the Snapser SDK to log in and receive a session token.
+2. The game client then uses the Photon SDK to authenticate the client. The Authenticate method can accept any string query parameters. Pass the session token acquired from the Snapser Login call here. Below is an example of how to do this using the Photon Realtime Javascript SDK.
+
+   ```
+   var client = new Photon.LoadBalancing.LoadBalancingClient(
+   Photon.ConnectionProtocol.Wss,
+   DemoAppId,
+   DemoAppVersion
+   )
+   client.setCustomAuthentication('session_token=ST1', 0)
+   ```
+
+3. The Photon SDK now contacts the Photon Server, which in turn makes an App Verify endpoint call to verify the session token. The Photon Server also attaches the `client_secret` with the request.
+4. The App Verify Endpoint verifies this call and returns a response that the Photon Server enforces, along with a User ID that Photon will use.
+
+To better understand the authentication flow, refer to the swimlane diagrams below:
+
+![Authentication Flow Diagram](/images/docs/photon-anon.png)
+
+![Authentication Flow with Facebook/Google/other auth providers](/images/docs/photon-fb.png)
+
+### Future Enhancements
+
+We are open to expanding support for additional third-party engines based on demand and necessity.

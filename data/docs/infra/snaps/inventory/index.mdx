@@ -1,0 +1,3991 @@
+export const description = 'Inventory'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Inventory
+
+Inventory snap allows you to setup your games or apps catalog items, containers, drop tables and loot boxes.
+In addition, you can manage your app's virtual currency wallet using this snap.
+
+## Summary
+
+Here is a high level summary of the concepts in the Inventory snap.
+
+1. Catalog: This is a catalog of your in-app items. This Snap supports different type of items such as consumables, stackables, purchasable etc.
+2. Containers: These are groups of catalog items, virtual currencies, drop tables and trackables. Containers can be opened by the player to get the items inside. Containers also support locking and unlocking.
+3. Currencies: These are all your in-app currencies. You can define currencies of different types, such as coins, gems, etc.
+4. Drop Tables: Drop tables or loot tables essentially consists of items with various drop probabilities. Drop tables are delivered to the users inventory via a container.
+5. Discounts: You can create discounts with specific eligibility criteria and apply them to the purchase price or unlock cost of items and containers.
+
+### Catalog Items
+
+The catalog is where you define your app or game inventory. Each item in the catalog has a name and various categorization options like class names, tags, and metadata
+for ease of filtering and searching. Catalog items should have a specific consumption type, such as durable and consumable.
+Further, consumable items can be stackable or non-stackable. Stackable items are items that can be stacked together in a single slot in the inventory.
+Each item can either be purchasable or non-purchasable. Purchasable items can be bought by the player using virtual currencies.
+You can also add a TTL (Time to Live) to the item, which will automatically remove the item from the user's inventory after the TTL expires.
+
+#### Sub-inventory items
+You can now create catalog items that are designated as "Sub-Inventories". Think of sub-inventory items as bags or pouches. They have certain rules:
+    - They can not be nested
+    - They can not be updated after that fact - you can not turn an existing item into a sub-inventory or visa versa.
+    - They can't be marked as consumable, stackable, or as a container
+		- Deleting a sub-inventory will "unnest" it's contents into the main inventory
+- The Inventory snap provides the `MoveItemsToSubInventory` API to help you move user items into or out of sub-inventories.
+
+
+### Containers
+Containers are items that can contain other items, drop tables, virtual currencies or even trackables like XP and energy.
+Like inventory items,  containers actually occupy an inventory slot. Containers can be opened by the
+player to get the items inside. Containers can have a cost to unlock, which can be a combination of
+virtual currencies, items, or trackables. Containers can have a TTL (Time to Live) which will automatically remove the container from the user's
+inventory after the TTL expires.
+
+#### Container phases
+Every container has the following phases.
+1. **Grant** - A container is granted to the user and it occupies an inventory slot.
+2. **Unlock** - (optional) A container is unlocked by the user and the items inside the container are exposed but not yet committed to the user's inventory. This allows for the user to re-roll the items inside the container.
+3. **Open** - A container is opened by the user, the grants are added to the users inventory and the container is removed from the user's inventory.
+
+### Currencies
+
+Currencies power your in game or app's economy. Currency can be used to purchase items, or can be awarded to the user.
+A game or app can have more than one currency.
+
+<Note>
+If you have the analytics snap, Snapser automatically tracks your entire economy. So at any point,
+you will see the exact state of your economy in real-time.
+</Note>
+
+### Currency Conversion
+
+You can setup the conversion rates between your currencies. For example, you can define that 100 coins can be converted to 1 gem.
+
+### Drop Tables
+Drop tables are a way to grant mystery items to the player. Drops in a drop table can be one of:
+1. **Items** - Non-container items.
+2. **Currencies** - Virtual currencies.
+3. **XP** - XP points from the Trackables snap.
+4. **Energy** - Energy points from the Trackables snap.
+5. **Drop Tables** - Other drop tables, enabling nested reward structures (version 1.8+). The maximum nesting depth is 10.
+6. **Empty (No Reward)** - A drop that grants nothing (version 1.11+). Use this to give players a weighted chance of receiving no reward when the drop table is evaluated. An empty drop only takes a weight and cannot be combined with other rewards in the same drop, though it can sit alongside reward drops as one of the `OR` entries.
+
+A drop table can be configured to have a combination of many drops, using `AND and ORs`during setup.
+Each drop takes in:
+1. **Item** - The item to be dropped.
+2. **Min** - The minimum number of items to be dropped.
+3. **Max** - The maximum number of items to be dropped.
+4. **Multiple** - The total quantity of items to be dropped at once.
+5. **Weight** - The weight of the item. The drop rate of the item is calculated as the weight of the item divided by the sum of the weights of all items in the drop table.
+
+#### Drop tables and Containers
+It should be noted that you cannot grant a drop table directly to the user.
+Drop tables are consumed by your app's user via a container. Say, you create a container which ,
+has a drop table. When the game client Grants and or Unlocks the container the contents of the drop
+table are evaluated according to the drop rates.
+
+#### Drop Index
+API responses that evaluate or grant a drop table (such as `InventoryEvaluateDropTable` and `InventoryGrantDropTable`) include a `drop_index` field. The drops in a drop table form an array, and `drop_index` is the zero-based index of the drop that was selected during evaluation.
+
+For example, given a drop table defined as:
+
+```json
+{
+  "name": "treasure-chest",
+  "drops": [
+    { "weight": 60, "currencies": { "gold": { "min": 100, "max": 100, "multiple": 1 } } },
+    { "weight": 35, "items": { "health-potion": { "min": 1, "max": 1, "multiple": 1 } } },
+    { "weight": 5, "empty": true }
+  ]
+}
+```
+
+a `drop_index` of `0` means the gold drop was selected, `1` the health potion, and `2` the empty drop.
+
+Since the granted rewards are already part of the response, `drop_index` matters when knowing *which* drop fired is not derivable from the rewards alone — for example, when two different drops grant the same reward (say, 100 gold with different presentation), or when an empty drop was selected and you want to show the right "better luck next time" treatment. To make use of it, your client needs access to the original drop table definition, which you can fetch via `InventoryGetDropTableContents`.
+
+<Note>
+  The top-level `drop_index` in the `InventoryGrantDropTable` response is deprecated. Use `grant_results.drop_index` instead.
+</Note>
+
+## Default User Inventory
+
+You can setup the default Inventory items and currencies for a user by using the **Default Items** tool under the **User Tools** section.
+You can also set Inventory items and currencies to start from zero.
+
+<Note>
+  Note only non-stackable inventory items can have a default quantity of 0. For
+  stackable items the value has to be greater than 0.
+</Note>
+
+## APIs & Emitters
+
+The `Inventory` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name                        | HTTP Method | API Description                                                                                                         |
+| ------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
+| [InventoryGetContainer](#inventorygetcontainer-api)                    | GET         | Gets the contents of a container item from the catalog                                                                  |
+| [InventoryGetTotalCurrency](#inventorygettotalcurrency-api)                | GET         | Get Total Currency in circulation given a currency name (App auth only)                                                 |
+| [InventoryGetCurrencyConversions](#inventorygetcurrencyconversions-api)               | GET         | Get currency conversions                                                                                                     |
+| [InventoryEvaluateDropTable](#inventoryevaluatedroptable-api)               | GET         | Evaluate a drop table for a user and store the escrow ID                                                                |
+| [InventoryGrantDropTable](#inventorygrantdroptable-api)                  | POST        | Grant items from a drop table based on a new evaluation or existing escrow ID                                           |
+| [InventoryGetDropTableContents](#inventorygetdroptablecontents-api)            | GET         | Get a drop table                                                                                                        |
+| [InventoryGetItems](#inventorygetitems-api)                        | GET         | Gets the items from catalog in paginated manner. Default page size is 10                                                |
+| [InventoryGetUserCurrencies](#inventorygetusercurrencies-api)               | GET         | Get user currencies                                                                                                     |
+| [InventoryConvertUserCurrency](#inventoryconvertusercurrency-api)               | POST         | Convert user currency from one to another                                                                                                     |
+| [InventoryUpdateUserVirtualCurrency](#inventoryupdateuservirtualcurrency-api)       | PATCH       | Add virtual currency to user                                                                                            |
+| [InventoryGetUserCurrencyStats](#inventorygetusercurrencystats-api)            | GET         | Get user currency stats                                                                                                 |
+| [InventoryGetUsers](#inventorygetusers-api)                        | GET         | Search all the users who have the item in their inventory (App auth only)                                               |
+| [InventoryBatchGetUserItems](#inventorybatchgetuseritems-api)                 | GET         | Gets the items from catalog for multiple users in paginated manner. Default page size is 1000.                                                              |
+| [InventoryGetAllUserItems](#inventorygetalluseritems-api)                 | GET         | Gets items from inventory in pages. Default page size is 1000.                                                              |
+| [InventoryGrantItemsToUser](#inventorygrantitemstouser-api)                | POST        | Grants the list of items to user, this does not modify currencies                                                       |
+| [InventoryMoveItemsToSubInventory](#inventorymoveitemstosubinventory-api)  | POST        | Move user items into or out of sub-inventories                                                       |
+| [InventoryPurchaseItem](#inventorypurchaseitem-api) | POST        | Purchase an item with given virtual currency                                                                       |
+| [InventoryDeleteUserItem](#inventorydeleteuseritem-api)                  | DELETE      | Deletes item from user inventory given instance id                                                                      |
+| [InventoryGetUserItem](#inventorygetuseritem-api)                     | GET         | Gets item from inventory given instance id                                                                              |
+| [InventoryUpdateUserItemMetadata](#inventoryupdateuseritemmetadata-api)          | PATCH       | Update the metadata of the user inventory item. Not to be confused with catalog item metadata                           |
+| [InventoryConsumeItem](#inventoryconsumeitem-api)                     | POST        | Consumes item from user inventory by a count given an instance id                                                       |
+| [InventoryOpenContainer](#inventoryopencontainer-api)                   | POST        | Open a container item from user inventory given an instance id                                                          |
+| [InventoryUnlockContainer](#inventoryunlockcontainer-api)                 | POST        | Unlocks a container item from user inventory given an instance id and returns items to be granted without granting them |
+| [InventoryGrantAndOpenContainer](#inventorygrantandopencontainer-api)           | POST        | Grants and opens a container item from user inventory given an item name                                                |
+</div>
+
+### Usage
+#### InventoryGetContainer API
+<CodeGroup title="Gets the contents of a container item from the catalog" tag="GET" label="InventoryGetContainer">
+```csharp
+/// <summary>
+/// Get Container Contents Gets the contents of a container item from the catalog
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="name">Name of the container</param>
+/// <param name="token">User session token</param>
+/// <returns>InventoryGetContainerResponse</returns>
+public InventoryGetContainerResponse InventoryGetContainer(string name, string token)
+{
+    Snapser.Client.ApiResponse<InventoryGetContainerResponse> localVarResponse = InventoryGetContainerWithHttpInfo(name, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InventoryGetContainerResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGetContainerResponse" /> class.
+/// </summary>
+/// <param name="currencies">Virtual currencies in the container with their counts (DEPRECATED: use currencies_64).</param>
+/// <param name="currencies64">Virtual int64 currencies in the container with their counts.</param>
+/// <param name="dropTableContents">Drop tables associated with the container.</param>
+/// <param name="dropTables">Drop tables associated with the container.</param>
+/// <param name="items">Items in the container with their counts.</param>
+/// <param name="name">Name of the container.</param>
+public InventoryGetContainerResponse(Dictionary<string, int> currencies = default(Dictionary<string, int>), Dictionary<string, string> currencies64 = default(Dictionary<string, string>), Object dropTableContents = default(Object), Dictionary<string, int> dropTables = default(Dictionary<string, int>), Dictionary<string, int> items = default(Dictionary<string, int>), string name = default(string))
+{
+    this.Currencies = currencies;
+    this.Currencies64 = currencies64;
+    this.DropTableContents = dropTableContents;
+    this.DropTables = dropTables;
+    this.Items = items;
+    this.Name = name;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetContainerRequest : public Request
+{
+public:
+    virtual ~InventoryGetContainerRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Name of the container */
+    FString Name;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetContainerResponse : public Response
+{
+public:
+    virtual ~InventoryGetContainerResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryGetContainerResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryGetContainerResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryGetContainerResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Virtual currencies in the container with their counts (DEPRECATED: use currencies_64) */
+    TOptional<TMap<FString, int32>> Currencies;
+    /* Virtual int64 currencies in the container with their counts */
+    TOptional<TMap<FString, FString>> Currencies64;
+    /* Drop tables associated with the container */
+    TOptional<TSharedPtr<FJsonObject>> DropTableContents;
+    /* Drop tables associated with the container */
+    TOptional<TMap<FString, int32>> DropTables;
+    /* Items in the container with their counts */
+    TOptional<TMap<FString, int32>> Items;
+    /* Name of the container */
+    TOptional<FString> Name;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryGetTotalCurrency API
+<CodeGroup title="Get Total Currency in circulation given a currency name (App auth only)" tag="GET" label="InventoryGetTotalCurrency">
+```csharp
+/// <summary>
+/// Get Total Currency Get Total Currency in circulation given a currency name (App auth only)
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="name"></param>
+/// <param name="token">User session token</param>
+/// <returns>InventoryGetTotalCurrencyResponse</returns>
+public InventoryGetTotalCurrencyResponse InventoryGetTotalCurrency(string name, string token)
+{
+    Snapser.Client.ApiResponse<InventoryGetTotalCurrencyResponse> localVarResponse = InventoryGetTotalCurrencyWithHttpInfo(name, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InventoryGetTotalCurrencyResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGetTotalCurrencyResponse" /> class.
+/// </summary>
+/// <param name="total">total.</param>
+/// <param name="total64">total64.</param>
+public InventoryGetTotalCurrencyResponse(int total = default(int), string total64 = default(string))
+{
+    this.Total = total;
+    this.Total64 = total64;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetTotalCurrencyRequest : public Request
+{
+public:
+    virtual ~InventoryGetTotalCurrencyRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    FString Name;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetTotalCurrencyResponse : public Response
+{
+public:
+    virtual ~InventoryGetTotalCurrencyResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryGetTotalCurrencyResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryGetTotalCurrencyResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryGetTotalCurrencyResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<int32> Total;
+    TOptional<FString> Total64;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryGetCurrencyConversions API
+<CodeGroup title="Get currency conversions" tag="GET" label="InventoryGetCurrencyConversions">
+```csharp
+/// <summary>
+/// Currency Conversions Get currency conversions
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="fromCurrency">Name of the currency to convert from (optional)</param>
+/// <param name="toCurrency">Name of the currency to convert to (optional)</param>
+/// <returns>InventoryGetCurrencyConversionsResponse</returns>
+public InventoryGetCurrencyConversionsResponse InventoryGetCurrencyConversions(string token, string fromCurrency = default(string), string toCurrency = default(string))
+{
+    Snapser.Client.ApiResponse<InventoryGetCurrencyConversionsResponse> localVarResponse = InventoryGetCurrencyConversionsWithHttpInfo(token, fromCurrency, toCurrency);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InventoryGetCurrencyConversionsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGetCurrencyConversionsResponse" /> class.
+/// </summary>
+/// <param name="conversions">Currency conversions.</param>
+public InventoryGetCurrencyConversionsResponse(List<InventoryCurrencyConversion> conversions = default(List<InventoryCurrencyConversion>))
+{
+    this.Conversions = conversions;
+}
+
+/// <summary>
+/// Currency conversions
+/// </summary>
+/// <value>Currency conversions</value>
+[DataMember(Name = "conversions", EmitDefaultValue = false)]
+public List<InventoryCurrencyConversion> Conversions { get; set; }
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetCurrencyConversionsRequest : public Request
+{
+public:
+    virtual ~InventoryGetCurrencyConversionsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    /* Name of the currency to convert from */
+    TOptional<FString> FromCurrency;
+    /* Name of the currency to convert to */
+    TOptional<FString> ToCurrency;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetCurrencyConversionsResponse : public Response
+{
+public:
+    virtual ~InventoryGetCurrencyConversionsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryGetCurrencyConversionsResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryGetCurrencyConversionsResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryGetCurrencyConversionsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Currency conversions */
+    TOptional<TArray<SnapserInventoryCurrencyConversion>> Conversions;
+};
+
+class SNAPSER_API SnapserInventoryCurrencyConversion : public Model
+{
+public:
+    virtual ~SnapserInventoryCurrencyConversion() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Name of currency to convert from */
+    TOptional<FString> FromCurrency;
+    /* Multiplier for from_currency */
+    TOptional<float> Multiplier;
+    /* Name of currency to convert to */
+    TOptional<FString> ToCurrency;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryEvaluateDropTable API
+<CodeGroup title="Evaluate a drop table for a user and store the escrow ID" tag="GET" label="InventoryEvaluateDropTable">
+```csharp
+/// <summary>
+/// Evaluate Drop Table Evaluate a drop table for a user and store the escrow ID
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="dropTableName">Name of the drop table</param>
+/// <param name="userId">Id of affected user</param>
+/// <param name="token">User session token</param>
+/// <returns>InventoryEvaluateDropTableResponse</returns>
+public InventoryEvaluateDropTableResponse InventoryEvaluateDropTable(string dropTableName, string userId, string token)
+{
+    Snapser.Client.ApiResponse<InventoryEvaluateDropTableResponse> localVarResponse = InventoryEvaluateDropTableWithHttpInfo(dropTableName, userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InventoryEvaluateDropTableResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryEvaluateDropTableResponse" /> class.
+/// </summary>
+/// <param name="currencies">Virtual currencies that will be granted to the user (DEPRECATED: use currencies_64).</param>
+/// <param name="currencies64">Virtual currencies that will be granted to the user.</param>
+/// <param name="dropIndex">Index of the drop table that was evaluated.</param>
+/// <param name="escrowId">Escrow id for the result.</param>
+/// <param name="items">Items that will be granted to the user.</param>
+/// <param name="trackablesEnergy">Trackables energies to be granted to the user.</param>
+/// <param name="trackablesXp">Trackables xps to be granted to the user.</param>
+public InventoryEvaluateDropTableResponse(Dictionary<string, int> currencies = default(Dictionary<string, int>), Dictionary<string, string> currencies64 = default(Dictionary<string, string>), int dropIndex = default(int), string escrowId = default(string), Dictionary<string, int> items = default(Dictionary<string, int>), Dictionary<string, int> trackablesEnergy = default(Dictionary<string, int>), Dictionary<string, int> trackablesXp = default(Dictionary<string, int>))
+{
+    this.Currencies = currencies;
+    this.Currencies64 = currencies64;
+    this.DropIndex = dropIndex;
+    this.EscrowId = escrowId;
+    this.Items = items;
+    this.TrackablesEnergy = trackablesEnergy;
+    this.TrackablesXp = trackablesXp;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryEvaluateDropTableRequest : public Request
+{
+public:
+    virtual ~InventoryEvaluateDropTableRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Name of the drop table */
+    FString DropTableName;
+    /* Id of affected user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryEvaluateDropTableResponse : public Response
+{
+public:
+    virtual ~InventoryEvaluateDropTableResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryEvaluateDropTableResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryEvaluateDropTableResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryEvaluateDropTableResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Virtual currencies that will be granted to the user (DEPRECATED: use currencies_64) */
+    TOptional<TMap<FString, int32>> Currencies;
+    /* Virtual currencies that will be granted to the user */
+    TOptional<TMap<FString, FString>> Currencies64;
+    /* Index of the drop table that was evaluated */
+    TOptional<int32> DropIndex;
+    /* Escrow id for the result */
+    TOptional<FString> EscrowId;
+    /* Items that will be granted to the user */
+    TOptional<TMap<FString, int32>> Items;
+    /* Trackables energies to be granted to the user */
+    TOptional<TMap<FString, int32>> TrackablesEnergy;
+    /* Trackables xps to be granted to the user */
+    TOptional<TMap<FString, int32>> TrackablesXp;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryGrantDropTable API
+<CodeGroup title="Grant items from a drop table based on a new evaluation or existing escrow ID" tag="POST" label="InventoryGrantDropTable">
+```csharp
+/// <summary>
+/// Drop Tables Grant items from a drop table based on a new evaluation or existing escrow ID
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="dropTableName">Name of the drop table</param>
+/// <param name="userId">Id of affected user</param>
+/// <param name="token">User session token</param>
+/// <param name="escrowId">Escrow id for the result, if it was evaluated already (optional)</param>
+/// <param name="subInventoryInstanceId">Id of the sub-inventory instance to grant into (optional)</param>
+/// <returns>InventoryGrantDropTableResponse</returns>
+public InventoryGrantDropTableResponse InventoryGrantDropTable(string dropTableName, string userId, string token, string escrowId = default(string), string subInventoryInstanceId = default(string))
+{
+    Snapser.Client.ApiResponse<InventoryGrantDropTableResponse> localVarResponse = InventoryGrantDropTableWithHttpInfo(dropTableName, userId, token, escrowId);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InventoryGrantDropTableResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGrantDropTableResponse" /> class.
+/// </summary>
+/// <param name="dropIndex">Index of the drop table that was granted (DEPRECATED: use grant_results.drop_index).</param>
+/// <param name="grantResults">grantResults.</param>
+/// <param name="grantedItems">Items granted to the user (DEPRECATED: use grant_results.granted_items).</param>
+/// <param name="grantedTrackablesEnergy">Trackables energy granted to the user (DEPRECATED: use grant_results.granted_trackables_energy).</param>
+/// <param name="grantedTrackablesXp">Trackables xp granted to the user (DEPRECATED: use grant_results.granted_trackables_xp).</param>
+/// <param name="grantedVirtualCurrency">Virtual currency granted to the user (DEPRECATED: use grant_results.granted_currencies).</param>
+/// <param name="grantedVirtualCurrency64">Virtual currency granted to the user (DEPRECATED: use grant_results.granted_currencies).</param>
+public InventoryGrantDropTableResponse(int dropIndex = default(int), InventoryGrantResults grantResults = default(InventoryGrantResults), List<InventoryUserInventoryItem> grantedItems = default(List<InventoryUserInventoryItem>), Dictionary<string, int> grantedTrackablesEnergy = default(Dictionary<string, int>), Dictionary<string, int> grantedTrackablesXp = default(Dictionary<string, int>), Dictionary<string, int> grantedVirtualCurrency = default(Dictionary<string, int>), Dictionary<string, string> grantedVirtualCurrency64 = default(Dictionary<string, string>))
+{
+    this.DropIndex = dropIndex;
+    this.GrantResults = grantResults;
+    this.GrantedItems = grantedItems;
+    this.GrantedTrackablesEnergy = grantedTrackablesEnergy;
+    this.GrantedTrackablesXp = grantedTrackablesXp;
+    this.GrantedVirtualCurrency = grantedVirtualCurrency;
+    this.GrantedVirtualCurrency64 = grantedVirtualCurrency64;
+}
+
+/// Snapser.Model for InventoryGrantResults
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGrantResults" /> class.
+/// </summary>
+/// <param name="grantedCurrencies">Virtual currencies granted to the user.</param>
+/// <param name="grantedItems">Items granted to the user.</param>
+/// <param name="grantedTrackablesEnergy">Trackables energy granted to the user.</param>
+/// <param name="grantedTrackablesXp">Trackables xp granted to the user.</param>
+public InventoryGrantResults(List<InventoryGrantedCurrency> grantedCurrencies = default(List<InventoryGrantedCurrency>), List<InventoryGrantedItem> grantedItems = default(List<InventoryGrantedItem>), List<InventoryGrantedTrackablesEnergy> grantedTrackablesEnergy = default(List<InventoryGrantedTrackablesEnergy>), List<InventoryGrantedTrackablesXp> grantedTrackablesXp = default(List<InventoryGrantedTrackablesXp>))
+{
+    this.GrantedCurrencies = grantedCurrencies;
+    this.GrantedItems = grantedItems;
+    this.GrantedTrackablesEnergy = grantedTrackablesEnergy;
+    this.GrantedTrackablesXp = grantedTrackablesXp;
+}
+
+/// Snapser.Model for InventoryUserInventoryItem
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryUserInventoryItem" /> class.
+/// </summary>
+/// <param name="acquiredAt">Timestamp when player acquired the item.</param>
+/// <param name="catalogItemName">name of catalog item.</param>
+/// <param name="expiresAt">Timestamp when the item will be removed from player inventory.</param>
+/// <param name="instanceId">Instance id of the inventory item.</param>
+/// <param name="instanceMetadata">Metadata attached with instance of item in player&#39;s inventory. Not to be confused with metadata in catalog inventory item.</param>
+/// <param name="lastConsumedAt">Timestamp when item was last consumed. In case of stackables, it is the timestamp of last consumed item of the stack.</param>
+/// <param name="remainingUses">Count of times the item can been used.</param>
+public InventoryUserInventoryItem(string acquiredAt = default(string), string catalogItemName = default(string), string expiresAt = default(string), string instanceId = default(string), Object instanceMetadata = default(Object), string lastConsumedAt = default(string), int remainingUses = default(int))
+{
+    this.AcquiredAt = acquiredAt;
+    this.CatalogItemName = catalogItemName;
+    this.ExpiresAt = expiresAt;
+    this.InstanceId = instanceId;
+    this.InstanceMetadata = instanceMetadata;
+    this.LastConsumedAt = lastConsumedAt;
+    this.RemainingUses = remainingUses;
+}
+
+/// Snapser.Model for InventoryGrantedCurrency
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGrantedCurrency" /> class.
+/// </summary>
+/// <param name="afterBalance">Balance of the currency after granting (DEPRECATED: use after_balance_64).</param>
+/// <param name="afterBalance64">Balance of the currency after granting.</param>
+/// <param name="beforeBalance">Balance of the currency before granting (DEPRECATED: use before_balance_64).</param>
+/// <param name="beforeBalance64">Balance of the currency before granting.</param>
+/// <param name="currencyName">Name of the currency granted.</param>
+public InventoryGrantedCurrency(int afterBalance = default(int), string afterBalance64 = default(string), int beforeBalance = default(int), string beforeBalance64 = default(string), string currencyName = default(string))
+{
+    this.AfterBalance = afterBalance;
+    this.AfterBalance64 = afterBalance64;
+    this.BeforeBalance = beforeBalance;
+    this.BeforeBalance64 = beforeBalance64;
+    this.CurrencyName = currencyName;
+}
+
+/// Snapser.Model for InventoryGrantedItem
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGrantedItem" /> class.
+/// </summary>
+/// <param name="afterCount">Count of the item after granting.</param>
+/// <param name="beforeCount">Count of the item before granting.</param>
+/// <param name="catalogItemName">Name of the item granted.</param>
+/// <param name="instanceIds">Instance ids of the item granted.</param>
+public InventoryGrantedItem(int afterCount = default(int), int beforeCount = default(int), string catalogItemName = default(string), List<string> instanceIds = default(List<string>))
+{
+    this.AfterCount = afterCount;
+    this.BeforeCount = beforeCount;
+    this.CatalogItemName = catalogItemName;
+    this.InstanceIds = instanceIds;
+}
+
+/// Snapser.Model for InventoryGrantedTrackablesEnergy
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGrantedTrackablesEnergy" /> class.
+/// </summary>
+/// <param name="afterEnergy">Energy of the user after granting.</param>
+/// <param name="beforeEnergy">Energy of the user before granting.</param>
+/// <param name="trackableEnergyName">Name of the trackable energy granted.</param>
+public InventoryGrantedTrackablesEnergy(int afterEnergy = default(int), int beforeEnergy = default(int), string trackableEnergyName = default(string))
+{
+    this.AfterEnergy = afterEnergy;
+    this.BeforeEnergy = beforeEnergy;
+    this.TrackableEnergyName = trackableEnergyName;
+}
+
+/// Snapser.Model for InventoryGrantedTrackablesXp
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGrantedTrackablesXp" /> class.
+/// </summary>
+/// <param name="afterXp">XP of the user after granting.</param>
+/// <param name="beforeXp">XP of the user before granting.</param>
+/// <param name="numLevelsProgressed">Number of levels progressed.</param>
+/// <param name="trackableXpName">Name of the trackable xp granted.</param>
+public InventoryGrantedTrackablesXp(int afterXp = default(int), int beforeXp = default(int), int numLevelsProgressed = default(int), string trackableXpName = default(string))
+{
+    this.AfterXp = afterXp;
+    this.BeforeXp = beforeXp;
+    this.NumLevelsProgressed = numLevelsProgressed;
+    this.TrackableXpName = trackableXpName;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGrantDropTableRequest : public Request
+{
+public:
+    virtual ~InventoryGrantDropTableRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Name of the drop table */
+    FString DropTableName;
+    /* Id of affected user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    /* Escrow id for the result, if it was evaluated already */
+    TOptional<FString> EscrowId;
+    /* Id of the sub-inventory instance to grant into */
+    TOptional<FString> SubInventoryInstanceId;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGrantDropTableResponse : public Response
+{
+public:
+    virtual ~InventoryGrantDropTableResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryGrantDropTableResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryGrantDropTableResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryGrantDropTableResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Index of the drop table that was granted (DEPRECATED: use grant_results.drop_index) */
+    TOptional<int32> DropIndex;
+    TOptional<SnapserInventoryGrantResults> GrantResults;
+    /* Items granted to the user (DEPRECATED: use grant_results.granted_items) */
+    TOptional<TArray<SnapserInventoryUserInventoryItem>> GrantedItems;
+    /* Trackables energy granted to the user (DEPRECATED: use grant_results.granted_trackables_energy) */
+    TOptional<TMap<FString, int32>> GrantedTrackablesEnergy;
+    /* Trackables xp granted to the user (DEPRECATED: use grant_results.granted_trackables_xp) */
+    TOptional<TMap<FString, int32>> GrantedTrackablesXp;
+    /* Virtual currency granted to the user (DEPRECATED: use grant_results.granted_currencies) */
+    TOptional<TMap<FString, int32>> GrantedVirtualCurrency;
+    /* Virtual currency granted to the user (DEPRECATED: use grant_results.granted_currencies) */
+    TOptional<TMap<FString, FString>> GrantedVirtualCurrency64;
+};
+
+class SNAPSER_API SnapserInventoryGrantResults : public Model
+{
+public:
+    virtual ~SnapserInventoryGrantResults() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Virtual currencies granted to the user */
+    TOptional<TArray<SnapserInventoryGrantedCurrency>> GrantedCurrencies;
+    /* Items granted to the user */
+    TOptional<TArray<SnapserInventoryGrantedItem>> GrantedItems;
+    /* Trackables energy granted to the user */
+    TOptional<TArray<SnapserInventoryGrantedTrackablesEnergy>> GrantedTrackablesEnergy;
+    /* Trackables xp granted to the user */
+    TOptional<TArray<SnapserInventoryGrantedTrackablesXp>> GrantedTrackablesXp;
+};
+
+class SNAPSER_API SnapserInventoryUserInventoryItem : public Model
+{
+public:
+    virtual ~SnapserInventoryUserInventoryItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Timestamp when player acquired the item */
+    TOptional<FString> AcquiredAt;
+    /* name of catalog item */
+    TOptional<FString> CatalogItemName;
+    /* Timestamp when the item will be removed from player inventory */
+    TOptional<FString> ExpiresAt;
+    /* Instance id of the inventory item */
+    TOptional<FString> InstanceId;
+    /* Metadata attached with instance of item in player's inventory. Not to be confused with metadata in catalog inventory item */
+    TOptional<TSharedPtr<FJsonObject>> InstanceMetadata;
+    /* Timestamp when item was last consumed. In case of stackables, it is the timestamp of last consumed item of the stack */
+    TOptional<FString> LastConsumedAt;
+    /* Count of times the item can been used */
+    TOptional<int32> RemainingUses;
+};
+
+class SNAPSER_API SnapserInventoryGrantedCurrency : public Model
+{
+public:
+    virtual ~SnapserInventoryGrantedCurrency() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Balance of the currency after granting (DEPRECATED: use after_balance_64) */
+    TOptional<int32> AfterBalance;
+    /* Balance of the currency after granting */
+    TOptional<FString> AfterBalance64;
+    /* Balance of the currency before granting (DEPRECATED: use before_balance_64) */
+    TOptional<int32> BeforeBalance;
+    /* Balance of the currency before granting */
+    TOptional<FString> BeforeBalance64;
+    /* Name of the currency granted */
+    TOptional<FString> CurrencyName;
+};
+
+class SNAPSER_API SnapserInventoryGrantedItem : public Model
+{
+public:
+    virtual ~SnapserInventoryGrantedItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the item after granting */
+    TOptional<int32> AfterCount;
+    /* Count of the item before granting */
+    TOptional<int32> BeforeCount;
+    /* Name of the item granted */
+    TOptional<FString> CatalogItemName;
+    /* Instance ids of the item granted */
+    TOptional<TArray<FString>> InstanceIds;
+};
+
+class SNAPSER_API SnapserInventoryGrantedTrackablesEnergy : public Model
+{
+public:
+    virtual ~SnapserInventoryGrantedTrackablesEnergy() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Energy of the user after granting */
+    TOptional<int32> AfterEnergy;
+    /* Energy of the user before granting */
+    TOptional<int32> BeforeEnergy;
+    /* Name of the trackable energy granted */
+    TOptional<FString> TrackableEnergyName;
+};
+
+class SNAPSER_API SnapserInventoryGrantedTrackablesXp : public Model
+{
+public:
+    virtual ~SnapserInventoryGrantedTrackablesXp() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* XP of the user after granting */
+    TOptional<int32> AfterXp;
+    /* XP of the user before granting */
+    TOptional<int32> BeforeXp;
+    /* Number of levels progressed */
+    TOptional<int32> NumLevelsProgressed;
+    /* Name of the trackable xp granted */
+    TOptional<FString> TrackableXpName;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryGetDropTableContents API
+<CodeGroup title="Get a drop table" tag="GET" label="InventoryGetDropTableContents">
+```csharp
+/// <summary>
+/// Get Drop Table Get a drop table
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="name">Name of drop table</param>
+/// <param name="token">User session token</param>
+/// <returns>InventoryDropTable</returns>
+public InventoryDropTable InventoryGetDropTableContents(string name, string token)
+{
+    Snapser.Client.ApiResponse<InventoryDropTable> localVarResponse = InventoryGetDropTableContentsWithHttpInfo(name, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InventoryDropTable
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryDropTable" /> class.
+/// </summary>
+/// <param name="drops">Items in the drop table.</param>
+/// <param name="name">Name of drop table.</param>
+public InventoryDropTable(List<InventoryDropTableDrops> drops = default(List<InventoryDropTableDrops>), string name = default(string))
+{
+    this.Drops = drops;
+    this.Name = name;
+}
+
+/// Snapser.Model for InventoryDropTableDrops
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryDropTableDrops" /> class.
+/// </summary>
+/// <param name="currencies">Map of currency name to drop values.</param>
+/// <param name="items">Map of item name to drop values.</param>
+/// <param name="trackablesEnergy">Map of trackable energy name to drop values.</param>
+/// <param name="trackablesXp">Map of trackable xp name to drop values.</param>
+/// <param name="weight">Weight of item in the drop table (required).</param>
+public InventoryDropTableDrops(Dictionary<string, InventoryDropValues> currencies = default(Dictionary<string, InventoryDropValues>), Dictionary<string, InventoryDropValues> items = default(Dictionary<string, InventoryDropValues>), Dictionary<string, InventoryDropValues> trackablesEnergy = default(Dictionary<string, InventoryDropValues>), Dictionary<string, InventoryDropValues> trackablesXp = default(Dictionary<string, InventoryDropValues>), int weight = default(int))
+{
+    this.Weight = weight;
+    this.Currencies = currencies;
+    this.Items = items;
+    this.TrackablesEnergy = trackablesEnergy;
+    this.TrackablesXp = trackablesXp;
+}
+
+/// Snapser.Model for InventoryDropValues
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryDropValues" /> class.
+/// </summary>
+/// <param name="max">Maximum value of drop. Will be equal to min if not specified (DEPRECATED: use max_64).</param>
+/// <param name="max64">Maximum value of drop. Will be equal to min if not specified.</param>
+/// <param name="min">Minimum value of drop (DEPRECATED: use min_64).</param>
+/// <param name="min64">Minimum value of drop.</param>
+/// <param name="multiple">Increment value of the drop. Defaults to 1 (DEPRECATED: use multiple_64).</param>
+/// <param name="multiple64">Increment value of the drop. Defaults to 1.</param>
+public InventoryDropValues(int max = default(int), string max64 = default(string), int min = default(int), string min64 = default(string), int multiple = default(int), string multiple64 = default(string))
+{
+    this.Max = max;
+    this.Max64 = max64;
+    this.Min = min;
+    this.Min64 = min64;
+    this.Multiple = multiple;
+    this.Multiple64 = multiple64;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetDropTableContentsRequest : public Request
+{
+public:
+    virtual ~InventoryGetDropTableContentsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Name of drop table */
+    FString Name;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetDropTableContentsResponse : public Response
+{
+public:
+    virtual ~InventoryGetDropTableContentsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryDropTable Content;
+};
+
+class SNAPSER_API SnapserInventoryDropTable : public Model
+{
+public:
+    virtual ~SnapserInventoryDropTable() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Items in the drop table */
+    TOptional<TArray<SnapserInventoryDropTableDrops>> Drops;
+    /* Name of drop table */
+    TOptional<FString> Name;
+};
+
+class SNAPSER_API SnapserInventoryDropTableDrops : public Model
+{
+public:
+    virtual ~SnapserInventoryDropTableDrops() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Map of currency name to drop values */
+    TOptional<TMap<FString, SnapserInventoryDropValues>> Currencies;
+    /* Map of item name to drop values */
+    TOptional<TMap<FString, SnapserInventoryDropValues>> Items;
+    /* Map of trackable energy name to drop values */
+    TOptional<TMap<FString, SnapserInventoryDropValues>> TrackablesEnergy;
+    /* Map of trackable xp name to drop values */
+    TOptional<TMap<FString, SnapserInventoryDropValues>> TrackablesXp;
+    /* Weight of item in the drop table */
+    int32 Weight = 0;
+};
+
+class SNAPSER_API SnapserInventoryDropValues : public Model
+{
+public:
+    virtual ~SnapserInventoryDropValues() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Maximum value of drop. Will be equal to min if not specified (DEPRECATED: use max_64) */
+    TOptional<int32> Max;
+    /* Maximum value of drop. Will be equal to min if not specified */
+    TOptional<FString> Max64;
+    /* Minimum value of drop (DEPRECATED: use min_64) */
+    TOptional<int32> Min;
+    /* Minimum value of drop */
+    TOptional<FString> Min64;
+    /* Increment value of the drop. Defaults to 1 (DEPRECATED: use multiple_64) */
+    TOptional<int32> Multiple;
+    /* Increment value of the drop. Defaults to 1 */
+    TOptional<FString> Multiple64;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryGetItems API
+<CodeGroup title="Gets the items from catalog in paginated manner. Default page size is 10" tag="GET" label="InventoryGetItems">
+```csharp
+/// <summary>
+/// Items Gets the items from catalog in a paginated manner. Default page size is 1000.
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="limit">limit, max number of items in the response, defaults to 10 (optional)</param>
+/// <param name="offset">offset, defaults to 0 (optional)</param>
+/// <param name="tags">filter items by tags, comma separated strings of tags. Items matching all the tags will be returned (optional)</param>
+/// <param name="className">filter items by class_name (optional)</param>
+/// <param name="name">filter items by name (optional)</param>
+/// <param name="names">filter items by names, comma separated strings of names. Items matching any of the names will be returned (optional)</param>
+/// <param name="type">filter items by type (can be container, non-container) (optional)</param>
+/// <returns>InventoryGetItemsResponse</returns>
+public InventoryGetItemsResponse InventoryGetItems(string token, int? limit = default(int?), int? offset = default(int?), string tags = default(string), string className = default(string), string name = default(string), string names = default(string), string type = default(string))
+{
+    Snapser.Client.ApiResponse<InventoryGetItemsResponse> localVarResponse = InventoryGetItemsWithHttpInfo(token, limit, offset, tags, className, name, names, type);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InventoryGetItemsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGetItemsResponse" /> class.
+/// </summary>
+/// <param name="items">Catalog items.</param>
+/// <param name="matchingCatalogItems">Number of items matched by the query.</param>
+/// <param name="totalCatalogItems">Total number of items in the catalog.</param>
+public InventoryGetItemsResponse(List<InventoryCatalogItem> items = default(List<InventoryCatalogItem>), int matchingCatalogItems = default(int), int totalCatalogItems = default(int))
+{
+    this.Items = items;
+    this.MatchingCatalogItems = matchingCatalogItems;
+    this.TotalCatalogItems = totalCatalogItems;
+}
+
+/// Snapser.Model for InventoryCatalogItem
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryCatalogItem" /> class.
+/// </summary>
+/// <param name="className">An arbitrary string storing classname of the item (required).</param>
+/// <param name="consumable">consumable.</param>
+/// <param name="container">container.</param>
+/// <param name="description">Description of item.</param>
+/// <param name="displayName">Display name of the item (required).</param>
+/// <param name="metadata">Additional metadata to attach to inventory item.</param>
+/// <param name="name">Name of the item, has to be unique in the catalog (required).</param>
+/// <param name="purchasable">purchasable.</param>
+/// <param name="stackable">True if item can be stacked, a stackable item only  (required).</param>
+/// <param name="tags">Tags associated with the item.</param>
+/// <param name="tradable">True if item is tradable (required).</param>
+/// <param name="ttl">Time after which item will be removed from user inventory.</param>
+public InventoryCatalogItem(string className = default(string), InventoryConsumable consumable = default(InventoryConsumable), InventoryContainer container = default(InventoryContainer), string description = default(string), string displayName = default(string), Object metadata = default(Object), string name = default(string), InventoryPurchasable purchasable = default(InventoryPurchasable), bool stackable = default(bool), List<string> tags = default(List<string>), bool tradable = default(bool), long ttl = default(long))
+{
+    // to ensure "className" is required (not null)
+    if (className == null)
+    {
+        throw new ArgumentNullException("className is a required property for InventoryCatalogItem and cannot be null");
+    }
+    this.ClassName = className;
+    // to ensure "displayName" is required (not null)
+    if (displayName == null)
+    {
+        throw new ArgumentNullException("displayName is a required property for InventoryCatalogItem and cannot be null");
+    }
+    this.DisplayName = displayName;
+    // to ensure "name" is required (not null)
+    if (name == null)
+    {
+        throw new ArgumentNullException("name is a required property for InventoryCatalogItem and cannot be null");
+    }
+    this.Name = name;
+    this.Stackable = stackable;
+    this.Tradable = tradable;
+    this.Consumable = consumable;
+    this.Container = container;
+    this.Description = description;
+    this.Metadata = metadata;
+    this.Purchasable = purchasable;
+    this.Tags = tags;
+    this.Ttl = ttl;
+}
+
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryConsumable" /> class.
+/// </summary>
+/// <param name="isConsumable">True if item is consumable (required).</param>
+public InventoryConsumable(bool isConsumable = default(bool))
+{
+    this.IsConsumable = isConsumable;
+}
+
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryContainer" /> class.
+/// </summary>
+/// <param name="dropTables">Drop table names associated with the container.</param>
+/// <param name="items">Items in the container.</param>
+/// <param name="unlockCost">Unlock cost of the container.</param>
+/// <param name="virtualCurrencies">Virtual currencies granted upon opening the container (DEPRECATED: use virtual_currencies_64).</param>
+/// <param name="virtualCurrencies64">Virtual currencies granted upon opening the container.</param>
+public InventoryContainer(Dictionary<string, int> dropTables = default(Dictionary<string, int>), Dictionary<string, int> items = default(Dictionary<string, int>), Object unlockCost = default(Object), Dictionary<string, int> virtualCurrencies = default(Dictionary<string, int>), Dictionary<string, string> virtualCurrencies64 = default(Dictionary<string, string>))
+{
+    this.DropTables = dropTables;
+    this.Items = items;
+    this.UnlockCost = unlockCost;
+    this.VirtualCurrencies = virtualCurrencies;
+    this.VirtualCurrencies64 = virtualCurrencies64;
+}
+
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryPurchasable" /> class.
+/// </summary>
+/// <param name="settings">settings.</param>
+public InventoryPurchasable(List<InventoryPurchasableSetting> settings = default(List<InventoryPurchasableSetting>))
+{
+    this.Settings = settings;
+}
+
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryPurchasableSetting" /> class.
+/// </summary>
+/// <param name="currency">Currency name (required).</param>
+/// <param name="displayPrice">Display price of item (DEPRECATED: use display_price_64).</param>
+/// <param name="displayPrice64">Display price of item.</param>
+/// <param name="price">Price of item (DEPRECATED: use price_64).</param>
+/// <param name="price64">Price of item.</param>
+public InventoryPurchasableSetting(string currency = default(string), int displayPrice = default(int), string displayPrice64 = default(string), int price = default(int), string price64 = default(string))
+{
+    // to ensure "currency" is required (not null)
+    if (currency == null)
+    {
+        throw new ArgumentNullException("currency is a required property for InventoryPurchasableSetting and cannot be null");
+    }
+    this.Currency = currency;
+    this.DisplayPrice = displayPrice;
+    this.DisplayPrice64 = displayPrice64;
+    this.Price = price;
+    this.Price64 = price64;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetItemsRequest : public Request
+{
+public:
+    virtual ~InventoryGetItemsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    /* limit, max number of items in the response, defaults to 10 */
+    TOptional<int32> Limit;
+    /* offset, defaults to 0 */
+    TOptional<int32> Offset;
+    /* filter items by tags, comma separated strings of tags. Items matching all the tags will be returned */
+    TOptional<FString> Tags;
+    /* filter items by class_name */
+    TOptional<FString> ClassName;
+    /* filter items by name */
+    TOptional<FString> Name;
+    /* filter items by names, comma separated strings of names. Items matching any of the names will be returned */
+    TOptional<FString> Names;
+    /* filter items by type (can be container, non-container) */
+    TOptional<FString> Type;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetItemsResponse : public Response
+{
+public:
+    virtual ~InventoryGetItemsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryGetItemsResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryGetItemsResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryGetItemsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Catalog items */
+    TOptional<TArray<SnapserInventoryCatalogItem>> Items;
+    /* Number of items matched by the query */
+    TOptional<int32> MatchingCatalogItems;
+    /* Total number of items in the catalog */
+    TOptional<int32> TotalCatalogItems;
+};
+
+class SNAPSER_API SnapserInventoryCatalogItem : public Model
+{
+public:
+    virtual ~SnapserInventoryCatalogItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* An arbitrary string storing classname of the item */
+    FString ClassName;
+    TOptional<SnapserInventoryConsumable> Consumable;
+    TOptional<SnapserInventoryContainer> Container;
+    /* Description of item */
+    TOptional<FString> Description;
+    /* Display name of the item */
+    FString DisplayName;
+    /* Additional metadata to attach to inventory item */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* Name of the item, has to be unique in the catalog */
+    FString Name;
+    TOptional<SnapserInventoryPurchasable> Purchasable;
+    /* True if item can be stacked, a stackable item only  */
+    bool Stackable = false;
+    /* Tags associated with the item */
+    TOptional<TArray<FString>> Tags;
+    /* True if item is tradable */
+    bool Tradable = false;
+    /* Time after which item will be removed from user inventory */
+    TOptional<int64> Ttl;
+};
+
+class SNAPSER_API SnapserInventoryConsumable : public Model
+{
+public:
+    virtual ~SnapserInventoryConsumable() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* True if item is consumable */
+    bool IsConsumable = false;
+};
+
+class SNAPSER_API SnapserInventoryContainer : public Model
+{
+public:
+    virtual ~SnapserInventoryContainer() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Drop table names associated with the container */
+    TOptional<TMap<FString, int32>> DropTables;
+    /* Items in the container */
+    TOptional<TMap<FString, int32>> Items;
+    /* Unlock cost of the container */
+    TOptional<TSharedPtr<FJsonObject>> UnlockCost;
+    /* Virtual currencies granted upon opening the container (DEPRECATED: use virtual_currencies_64) */
+    TOptional<TMap<FString, int32>> VirtualCurrencies;
+    /* Virtual currencies granted upon opening the container */
+    TOptional<TMap<FString, FString>> VirtualCurrencies64;
+};
+
+class SNAPSER_API SnapserInventoryPurchasable : public Model
+{
+public:
+    virtual ~SnapserInventoryPurchasable() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserInventoryPurchasableSetting>> Settings;
+};
+
+class SNAPSER_API SnapserInventoryPurchasableSetting : public Model
+{
+public:
+    virtual ~SnapserInventoryPurchasableSetting() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Currency name */
+    FString Currency;
+    /* Display price of item (DEPRECATED: use display_price_64) */
+    TOptional<int32> DisplayPrice;
+    /* Display price of item */
+    TOptional<FString> DisplayPrice64;
+    /* Price of item (DEPRECATED: use price_64) */
+    TOptional<int32> Price;
+    /* Price of item */
+    TOptional<FString> Price64;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryGetUserCurrencies API
+<CodeGroup title="Get user currencies" tag="GET" label="InventoryGetUserCurrencies">
+```csharp
+/// <summary>
+/// Get User Currencies Get user currencies
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">User id</param>
+/// <param name="token">User session token</param>
+/// <returns>InventoryGetUserCurrenciesResponse</returns>
+public InventoryGetUserCurrenciesResponse InventoryGetUserCurrencies(string userId, string token)
+{
+    Snapser.Client.ApiResponse<InventoryGetUserCurrenciesResponse> localVarResponse = InventoryGetUserCurrenciesWithHttpInfo(userId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InventoryGetUserCurrenciesResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGetUserCurrenciesResponse" /> class.
+/// </summary>
+/// <param name="currencies">Map of currency name to balance (DEPRECATED: use currencies_64).</param>
+/// <param name="currencies64">Map of currency name to balance.</param>
+public InventoryGetUserCurrenciesResponse(Dictionary<string, int> currencies = default(Dictionary<string, int>), Dictionary<string, string> currencies64 = default(Dictionary<string, string>))
+{
+    this.Currencies = currencies;
+    this.Currencies64 = currencies64;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetUserCurrenciesRequest : public Request
+{
+public:
+    virtual ~InventoryGetUserCurrenciesRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User id */
+    FString UserId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetUserCurrenciesResponse : public Response
+{
+public:
+    virtual ~InventoryGetUserCurrenciesResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryGetUserCurrenciesResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryGetUserCurrenciesResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryGetUserCurrenciesResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Map of currency name to balance (DEPRECATED: use currencies_64) */
+    TOptional<TMap<FString, int32>> Currencies;
+    /* Map of currency name to balance */
+    TOptional<TMap<FString, FString>> Currencies64;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryConvertUserCurrency API
+<CodeGroup title="Convert user currency from one to another" tag="POST" label="InventoryConvertUserCurrency">
+```csharp
+/// <summary>
+/// User Currency Convert user currency from one to another
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">Id of affected user</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>InventoryConvertUserCurrencyResponse</returns>
+public InventoryConvertUserCurrencyResponse InventoryConvertUserCurrency(string userId, string token, ConvertUserCurrencyRequest body)
+{
+    Snapser.Client.ApiResponse<InventoryConvertUserCurrencyResponse> localVarResponse = InventoryConvertUserCurrencyWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ConvertUserCurrencyRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="ConvertUserCurrencyRequest" /> class.
+/// </summary>
+/// <param name="amount">Amount to convert (required).</param>
+/// <param name="fromCurrency">Name of the currency to convert from (required).</param>
+/// <param name="toCurrency">Name of the currency to convert to (required).</param>
+public ConvertUserCurrencyRequest(int amount = default(int), string fromCurrency = default(string), string toCurrency = default(string))
+{
+    this.Amount = amount;
+    // to ensure "fromCurrency" is required (not null)
+    if (fromCurrency == null)
+    {
+        throw new ArgumentNullException("fromCurrency is a required property for ConvertUserCurrencyRequest and cannot be null");
+    }
+    this.FromCurrency = fromCurrency;
+    // to ensure "toCurrency" is required (not null)
+    if (toCurrency == null)
+    {
+        throw new ArgumentNullException("toCurrency is a required property for ConvertUserCurrencyRequest and cannot be null");
+    }
+    this.ToCurrency = toCurrency;
+}
+
+/// Snapser.Model for InventoryConvertUserCurrencyResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryConvertUserCurrencyResponse" /> class.
+/// </summary>
+/// <param name="fromCurrency">fromCurrency.</param>
+/// <param name="toCurrency">toCurrency.</param>
+public InventoryConvertUserCurrencyResponse(InventoryUserCurrencyUpdate fromCurrency = default(InventoryUserCurrencyUpdate), InventoryUserCurrencyUpdate toCurrency = default(InventoryUserCurrencyUpdate))
+{
+    this.FromCurrency = fromCurrency;
+    this.ToCurrency = toCurrency;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryConvertUserCurrencyRequest : public Request
+{
+public:
+    virtual ~InventoryConvertUserCurrencyRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Id of affected user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserConvertUserCurrencyRequest Body;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryConvertUserCurrencyResponse : public Response
+{
+public:
+    virtual ~InventoryConvertUserCurrencyResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryConvertUserCurrencyResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryConvertUserCurrencyResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryConvertUserCurrencyResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserInventoryUserCurrencyUpdate> FromCurrency;
+    TOptional<SnapserInventoryUserCurrencyUpdate> ToCurrency;
+};
+
+class SNAPSER_API SnapserInventoryUserCurrencyUpdate : public Model
+{
+public:
+    virtual ~SnapserInventoryUserCurrencyUpdate() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Name of the currency */
+    TOptional<FString> CurrencyName;
+    /* Balance of the currency after update */
+    TOptional<int32> CurrentBalance;
+    /* Balance of the currency before update */
+    TOptional<int32> PreviousBalance;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryUpdateUserVirtualCurrency API
+<CodeGroup title="Add virtual currency to user" tag="PATCH" label="InventoryUpdateUserVirtualCurrency">
+```csharp
+/// <summary>
+/// Increment Virtual Currency Add virtual currency to user (DEPRECATED: Use IncrementUserCurrency)
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">Id of affected user</param>
+/// <param name="currencyName">Name of currency to be granted</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>InventoryUpdateUserVirtualCurrencyResponse</returns>
+public InventoryUpdateUserVirtualCurrencyResponse InventoryUpdateUserVirtualCurrency(string userId, string currencyName, string token, UpdateUserVirtualCurrencyRequest body)
+{
+    Snapser.Client.ApiResponse<InventoryUpdateUserVirtualCurrencyResponse> localVarResponse = InventoryUpdateUserVirtualCurrencyWithHttpInfo(userId, currencyName, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for UpdateUserVirtualCurrencyRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="UpdateUserVirtualCurrencyRequest" /> class.
+/// </summary>
+/// <param name="amount">Amount to grant (DEPRECATED: use amount_64).</param>
+/// <param name="amount64">Amount to grant.</param>
+public UpdateUserVirtualCurrencyRequest(int amount = default(int), string amount64 = default(string))
+{
+    this.Amount = amount;
+    this.Amount64 = amount64;
+}
+
+/// Snapser.Model for InventoryUpdateUserVirtualCurrencyResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryUpdateUserVirtualCurrencyResponse" /> class.
+/// </summary>
+/// <param name="currentBalance">Current Balance of given currency with user after adding  (DEPRECATED: use current_balance_64).</param>
+/// <param name="currentBalance64">Current Balance of given currency with user after adding.</param>
+/// <param name="previousBalance">Balance of given currency with user before adding (DEPRECATED: use previous_balance_64).</param>
+/// <param name="previousBalance64">Balance of given currency with user before adding.</param>
+public InventoryUpdateUserVirtualCurrencyResponse(int currentBalance = default(int), long currentBalance64 = default(long), int previousBalance = default(int), string previousBalance64 = default(string))
+{
+    this.CurrentBalance = currentBalance;
+    this.CurrentBalance64 = currentBalance64;
+    this.PreviousBalance = previousBalance;
+    this.PreviousBalance64 = previousBalance64;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryUpdateUserVirtualCurrencyRequest : public Request
+{
+public:
+    virtual ~InventoryUpdateUserVirtualCurrencyRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Id of affected user */
+    FString UserId;
+    /* Name of currency to be granted */
+    FString CurrencyName;
+    /* User session token */
+    FString Token;
+    SnapserUpdateUserVirtualCurrencyRequest Body;
+};
+
+class SNAPSER_API SnapserUpdateUserVirtualCurrencyRequest : public Model
+{
+public:
+    virtual ~SnapserUpdateUserVirtualCurrencyRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Amount to grant (DEPRECATED: use amount_64) */
+    TOptional<int32> Amount;
+    /* Amount to grant */
+    TOptional<FString> Amount64;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryUpdateUserVirtualCurrencyResponse : public Response
+{
+public:
+    virtual ~InventoryUpdateUserVirtualCurrencyResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryUpdateUserVirtualCurrencyResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryUpdateUserVirtualCurrencyResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryUpdateUserVirtualCurrencyResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Current Balance of given currency with user after adding  (DEPRECATED: use current_balance_64) */
+    TOptional<int32> CurrentBalance;
+    /* Current Balance of given currency with user after adding */
+    TOptional<int64> CurrentBalance64;
+    /* Balance of given currency with user before adding (DEPRECATED: use previous_balance_64) */
+    TOptional<int32> PreviousBalance;
+    /* Balance of given currency with user before adding */
+    TOptional<FString> PreviousBalance64;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+
+</CodeGroup>
+#### InventoryIncrementUserCurrency API
+<CodeGroup title="Add currency to user" tag="PATCH" label="InventoryIncrementUserCurrency">
+```csharp
+/// <summary>
+/// User Currency Increment or decrement virtual currency of a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">Id of affected user</param>
+/// <param name="currencyName">Name of currency to be granted/consumed</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>InventoryIncrementUserCurrencyResponse</returns>
+public InventoryIncrementUserCurrencyResponse InventoryIncrementUserCurrency(string userId, string currencyName, string token, IncrementUserCurrencyRequest body)
+{
+    Snapser.Client.ApiResponse<InventoryIncrementUserCurrencyResponse> localVarResponse = InventoryIncrementUserCurrencyWithHttpInfo(userId, currencyName, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for IncrementUserCurrencyRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="IncrementUserCurrencyRequest" /> class.
+/// </summary>
+/// <param name="delta">Amount to grant/consume (DEPRECATED: use delta_64).</param>
+/// <param name="delta64">Amount to grant/consume.</param>
+public IncrementUserCurrencyRequest(int delta = default(int), string delta64 = default(string))
+{
+    this.Delta = delta;
+    this.Delta64 = delta64;
+}
+
+/// Snapser.Model for InventoryIncrementUserCurrencyResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryIncrementUserCurrencyResponse" /> class.
+/// </summary>
+/// <param name="currentBalance">Current Balance of given currency with user after adding (DEPRECATED: use current_balance_64).</param>
+/// <param name="currentBalance64">Current Balance of given currency with user after adding.</param>
+/// <param name="previousBalance">Balance of given currency with user before adding (DEPRECATED: use previous_balance_64).</param>
+/// <param name="previousBalance64">Balance of given currency with user before adding.</param>
+public InventoryIncrementUserCurrencyResponse(int currentBalance = default(int), string currentBalance64 = default(string), int previousBalance = default(int), string previousBalance64 = default(string))
+{
+    this.CurrentBalance = currentBalance;
+    this.CurrentBalance64 = currentBalance64;
+    this.PreviousBalance = previousBalance;
+    this.PreviousBalance64 = previousBalance64;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryIncrementUserCurrencyRequest : public Request
+{
+public:
+    virtual ~InventoryIncrementUserCurrencyRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Id of affected user */
+    FString UserId;
+    /* Name of currency to be granted/consumed */
+    FString CurrencyName;
+    /* User session token */
+    FString Token;
+    SnapserIncrementUserCurrencyRequest Body;
+};
+
+class SNAPSER_API SnapserIncrementUserCurrencyRequest : public Model
+{
+public:
+    virtual ~SnapserIncrementUserCurrencyRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Amount to grant/consume (DEPRECATED: use delta_64) */
+    TOptional<int32> Delta;
+    /* Amount to grant/consume */
+    TOptional<FString> Delta64;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryIncrementUserCurrencyResponse : public Response
+{
+public:
+    virtual ~InventoryIncrementUserCurrencyResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryIncrementUserCurrencyResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryIncrementUserCurrencyResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryIncrementUserCurrencyResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Current Balance of given currency with user after adding (DEPRECATED: use current_balance_64) */
+    TOptional<int32> CurrentBalance;
+    /* Current Balance of given currency with user after adding */
+    TOptional<FString> CurrentBalance64;
+    /* Balance of given currency with user before adding (DEPRECATED: use previous_balance_64) */
+    TOptional<int32> PreviousBalance;
+    /* Balance of given currency with user before adding */
+    TOptional<FString> PreviousBalance64;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+
+</CodeGroup>
+#### InventoryGetUserCurrencyStats API
+<CodeGroup title="Get user currency stats" tag="GET" label="InventoryGetUserCurrencyStats">
+```csharp
+/// <summary>
+/// Get User Currency Stats Get user currency stats
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">Id of affected user</param>
+/// <param name="currencyName">Name of currency to get stats for</param>
+/// <param name="token">User session token</param>
+/// <returns>InventoryGetUserCurrencyStatsResponse</returns>
+public InventoryGetUserCurrencyStatsResponse InventoryGetUserCurrencyStats(string userId, string currencyName, string token)
+{
+    Snapser.Client.ApiResponse<InventoryGetUserCurrencyStatsResponse> localVarResponse = InventoryGetUserCurrencyStatsWithHttpInfo(userId, currencyName, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InventoryGetUserCurrencyStatsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGetUserCurrencyStatsResponse" /> class.
+/// </summary>
+/// <param name="totalEarned">Total earned currency (DEPRECATED: use total_earned_64).</param>
+/// <param name="totalEarned64">Total earned currency.</param>
+/// <param name="totalSpent">Total spent currency (DEPRECATED: use total_spent_64).</param>
+/// <param name="totalSpent64">Total spent currency.</param>
+public InventoryGetUserCurrencyStatsResponse(int totalEarned = default(int), string totalEarned64 = default(string), int totalSpent = default(int), string totalSpent64 = default(string))
+{
+    this.TotalEarned = totalEarned;
+    this.TotalEarned64 = totalEarned64;
+    this.TotalSpent = totalSpent;
+    this.TotalSpent64 = totalSpent64;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetUserCurrencyStatsRequest : public Request
+{
+public:
+    virtual ~InventoryGetUserCurrencyStatsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Id of affected user */
+    FString UserId;
+    /* Name of currency to get stats for */
+    FString CurrencyName;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetUserCurrencyStatsResponse : public Response
+{
+public:
+    virtual ~InventoryGetUserCurrencyStatsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryGetUserCurrencyStatsResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryGetUserCurrencyStatsResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryGetUserCurrencyStatsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Total earned currency (DEPRECATED: use total_earned_64) */
+    TOptional<int32> TotalEarned;
+    /* Total earned currency */
+    TOptional<FString> TotalEarned64;
+    /* Total spent currency (DEPRECATED: use total_spent_64) */
+    TOptional<int32> TotalSpent;
+    /* Total spent currency */
+    TOptional<FString> TotalSpent64;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryGetUsers API
+<CodeGroup title="Search all the users who have the item in their inventory (App auth only)" tag="GET" label="InventoryGetUsers">
+```csharp
+/// <summary>
+/// Get Users by Item filters Search all the users who have the item in their inventory (App auth only)
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="itemName">Name of the item to search for</param>
+/// <param name="token">User session token</param>
+/// <param name="limit">limit, max number of items in the response, defaults to 10 (optional)</param>
+/// <param name="offset">offset, defaults to 0 (optional)</param>
+/// <returns>InventoryGetUsersResponse</returns>
+public InventoryGetUsersResponse InventoryGetUsers(string itemName, string token, int? limit = default(int?), int? offset = default(int?))
+{
+    Snapser.Client.ApiResponse<InventoryGetUsersResponse> localVarResponse = InventoryGetUsersWithHttpInfo(itemName, token, limit, offset);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InventoryGetUsersResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGetUsersResponse" /> class.
+/// </summary>
+/// <param name="totalCount">Total number of users that have the item.</param>
+/// <param name="userIds">User ids that have the item.</param>
+public InventoryGetUsersResponse(int totalCount = default(int), List<string> userIds = default(List<string>))
+{
+    this.TotalCount = totalCount;
+    this.UserIds = userIds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetUsersRequest : public Request
+{
+public:
+    virtual ~InventoryGetUsersRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Name of the item to search for */
+    FString ItemName;
+    /* User session token */
+    FString Token;
+    /* limit, max number of items in the response, defaults to 10 */
+    TOptional<int32> Limit;
+    /* offset, defaults to 0 */
+    TOptional<int32> Offset;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetUsersResponse : public Response
+{
+public:
+    virtual ~InventoryGetUsersResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryGetUsersResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryGetUsersResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryGetUsersResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Total number of users that have the item */
+    TOptional<int32> TotalCount;
+    /* User ids that have the item */
+    TOptional<TArray<FString>> UserIds;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryBatchGetUserItems API
+<CodeGroup title="Gets the items from catalog for multiple users in paginated manner. Default page size is 1000." tag="GET" label="InventoryBatchGetUserItems">
+```csharp
+/// <summary>
+/// User Items  (App Auth) Gets the items from catalog for multiple users in paginated manner. Default page size is 1000
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">userid of the users to fetch the items for</param>
+/// <param name="userId2">User ID of the user</param>
+/// <param name="limit">limit, max number of items in the response per user, defaults to x (optional)</param>
+/// <param name="offset">offset, defaults to zero (optional)</param>
+/// <param name="tags">filter items by tags, comma separated strings of tags. Items matching all the tags will be returned (optional)</param>
+/// <param name="className">filter items by class_name (optional)</param>
+/// <param name="names">filter items by names, comma separated strings of names. Items matching any of the names will be returned (optional)</param>
+/// <param name="type">filter items by type (can be container, non-container) (optional)</param>
+/// <returns>InventoryBatchGetUserItemsResponse</returns>
+public InventoryBatchGetUserItemsResponse InventoryBatchGetUserItems(string userId, string userId2, int? limit = default(int?), int? offset = default(int?), string tags = default(string), string className = default(string), string names = default(string), string type = default(string))
+{
+    Snapser.Client.ApiResponse<InventoryBatchGetUserItemsResponse> localVarResponse = InventoryBatchGetUserItemsWithHttpInfo(userId, userId2, limit, offset, tags, className, names, type);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InventoryBatchGetUserItemsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryBatchGetUserItemsResponse" /> class.
+/// </summary>
+/// <param name="responses">responses.</param>
+public InventoryBatchGetUserItemsResponse(List<InventoryBatchGetUserItemsSingleResponse> responses = default(List<InventoryBatchGetUserItemsSingleResponse>))
+{
+    this.Responses = responses;
+}
+
+/// Snapser.Model for InventoryBatchGetUserItemsSingleResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryBatchGetUserItemsSingleResponse" /> class.
+/// </summary>
+/// <param name="items">Items in user inventory.</param>
+/// <param name="message">Message for the request.</param>
+/// <param name="success">Success status of the request.</param>
+/// <param name="userId">User id.</param>
+public InventoryBatchGetUserItemsSingleResponse(Object items = default(Object), string message = default(string), bool success = default(bool), string userId = default(string))
+{
+    this.Items = items;
+    this.Message = message;
+    this.Success = success;
+    this.UserId = userId;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryBatchGetUserItemsRequest : public Request
+{
+public:
+    virtual ~InventoryBatchGetUserItemsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* userid of the users to fetch the items for */
+    FString UserId;
+    /* User ID of the user */
+    FString UserId2;
+    /* limit, max number of items in the response per user, defaults to x */
+    TOptional<int32> Limit;
+    /* offset, defaults to zero */
+    TOptional<int32> Offset;
+    /* filter items by tags, comma separated strings of tags. Items matching all the tags will be returned */
+    TOptional<FString> Tags;
+    /* filter items by class_name */
+    TOptional<FString> ClassName;
+    /* filter items by names, comma separated strings of names. Items matching any of the names will be returned */
+    TOptional<FString> Names;
+    /* filter items by type (can be container, non-container) */
+    TOptional<FString> Type;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryBatchGetUserItemsResponse : public Response
+{
+public:
+    virtual ~InventoryBatchGetUserItemsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryBatchGetUserItemsResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryBatchGetUserItemsResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryBatchGetUserItemsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TArray<SnapserInventoryBatchGetUserItemsSingleResponse>> Responses;
+};
+
+class SNAPSER_API SnapserInventoryBatchGetUserItemsSingleResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryBatchGetUserItemsSingleResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Items in user inventory */
+    TOptional<TSharedPtr<FJsonObject>> Items;
+    /* Message for the request */
+    TOptional<FString> Message;
+    /* Success status of the request */
+    TOptional<bool> Success;
+    /* User id */
+    TOptional<FString> UserId;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### InventoryGetAllUserItems API
+<CodeGroup title="Gets items from inventory in pages. Default page size is 1000." tag="GET" label="InventoryGetAllUserItems">
+```csharp
+/// <summary>
+/// Get User Items Gets items from inventory in pages. Default page size is x
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">userid to assign the items</param>
+/// <param name="token">User session token</param>
+/// <param name="limit">limit, max number of items in the response, defaults to x (optional)</param>
+/// <param name="offset">offset, defaults to zero (optional)</param>
+/// <param name="catalogItemName">filter items by catalog_item_name (optional)</param>
+/// <returns>InventoryGetUserItemsResponse</returns>
+public InventoryGetUserItemsResponse InventoryGetAllUserItems(string userId, string token, int? limit = default(int?), int? offset = default(int?), string catalogItemName = default(string))
+{
+    Snapser.Client.ApiResponse<InventoryGetUserItemsResponse> localVarResponse = InventoryGetAllUserItemsWithHttpInfo(userId, token, limit, offset, catalogItemName);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InventoryGetUserItemsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGetUserItemsResponse" /> class.
+/// </summary>
+/// <param name="items">Items in user inventory.</param>
+public InventoryGetUserItemsResponse(List<InventoryUserInventoryItem> items = default(List<InventoryUserInventoryItem>))
+{
+    this.Items = items;
+}
+
+/// Snapser.Model for InventoryUserInventoryItem
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryUserInventoryItem" /> class.
+/// </summary>
+/// <param name="acquiredAt">Timestamp when player acquired the item.</param>
+/// <param name="catalogItemName">name of catalog item.</param>
+/// <param name="expiresAt">Timestamp when the item will be removed from player inventory.</param>
+/// <param name="instanceId">Instance id of the inventory item.</param>
+/// <param name="instanceMetadata">Metadata attached with instance of item in player&#39;s inventory. Not to be confused with metadata in catalog inventory item.</param>
+/// <param name="lastConsumedAt">Timestamp when item was last consumed. In case of stackables, it is the timestamp of last consumed item of the stack.</param>
+/// <param name="remainingUses">Count of times the item can been used.</param>
+public InventoryUserInventoryItem(string acquiredAt = default(string), string catalogItemName = default(string), string expiresAt = default(string), string instanceId = default(string), Object instanceMetadata = default(Object), string lastConsumedAt = default(string), int remainingUses = default(int))
+{
+    this.AcquiredAt = acquiredAt;
+    this.CatalogItemName = catalogItemName;
+    this.ExpiresAt = expiresAt;
+    this.InstanceId = instanceId;
+    this.InstanceMetadata = instanceMetadata;
+    this.LastConsumedAt = lastConsumedAt;
+    this.RemainingUses = remainingUses;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetAllUserItemsRequest : public Request
+{
+public:
+    virtual ~InventoryGetAllUserItemsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* userid to assign the items */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    /* limit, max number of items in the response, defaults to x */
+    TOptional<int32> Limit;
+    /* offset, defaults to zero */
+    TOptional<int32> Offset;
+    /* filter items by catalog_item_name */
+    TOptional<FString> CatalogItemName;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetAllUserItemsResponse : public Response
+{
+public:
+    virtual ~InventoryGetAllUserItemsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryGetUserItemsResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryGetUserItemsResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryGetUserItemsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Items in user inventory */
+    TOptional<TArray<SnapserInventoryUserInventoryItem>> Items;
+};
+
+class SNAPSER_API SnapserInventoryUserInventoryItem : public Model
+{
+public:
+    virtual ~SnapserInventoryUserInventoryItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Timestamp when player acquired the item */
+    TOptional<FString> AcquiredAt;
+    /* name of catalog item */
+    TOptional<FString> CatalogItemName;
+    /* Timestamp when the item will be removed from player inventory */
+    TOptional<FString> ExpiresAt;
+    /* Instance id of the inventory item */
+    TOptional<FString> InstanceId;
+    /* Metadata attached with instance of item in player's inventory. Not to be confused with metadata in catalog inventory item */
+    TOptional<TSharedPtr<FJsonObject>> InstanceMetadata;
+    /* Timestamp when item was last consumed. In case of stackables, it is the timestamp of last consumed item of the stack */
+    TOptional<FString> LastConsumedAt;
+    /* Count of times the item can been used */
+    TOptional<int32> RemainingUses;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### InventoryMoveItemsToSubInventory API
+<CodeGroup title="Moves user items into or out of sub-inventories" tag="POST" label="InventoryMoveItemsToSubInventory">
+```csharp
+/// <summary>
+/// Move item into sub-inventory Move item into sub-inventory
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">Id of affected user</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>InventoryMoveItemsToSubInventoryResponse</returns>
+public InventoryMoveItemsToSubInventoryResponse InventoryMoveItemsToSubInventory(string userId, string token, MoveItemsToSubInventoryRequest body)
+{
+    Snapser.Client.ApiResponse<InventoryMoveItemsToSubInventoryResponse> localVarResponse = InventoryMoveItemsToSubInventoryWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for MoveItemsToSubInventoryRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="MoveItemsToSubInventoryRequest" /> class.
+/// </summary>
+/// <param name="itemInstanceIds">Ids of the items to move into the sub-inventory (required).</param>
+/// <param name="subInventoryInstanceId">Id of the sub-inventory instance to move the item into (required).</param>
+public MoveItemsToSubInventoryRequest(List<string> itemInstanceIds = default(List<string>), string subInventoryInstanceId = default(string))
+{
+    // to ensure "itemInstanceIds" is required (not null)
+    if (itemInstanceIds == null)
+    {
+        throw new ArgumentNullException("itemInstanceIds is a required property for MoveItemsToSubInventoryRequest and cannot be null");
+    }
+    this.ItemInstanceIds = itemInstanceIds;
+    // to ensure "subInventoryInstanceId" is required (not null)
+    if (subInventoryInstanceId == null)
+    {
+        throw new ArgumentNullException("subInventoryInstanceId is a required property for MoveItemsToSubInventoryRequest and cannot be null");
+    }
+    this.SubInventoryInstanceId = subInventoryInstanceId;
+}
+
+/// Snapser.Model for InventoryMoveItemsToSubInventoryResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryMoveItemsToSubInventoryResponse" /> class.
+/// </summary>
+/// <param name="success">True if the move was successful.</param>
+public InventoryMoveItemsToSubInventoryResponse(bool success = default(bool))
+{
+    this.Success = success;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryMoveItemsToSubInventoryRequest : public Request
+{
+public:
+    virtual ~InventoryMoveItemsToSubInventoryRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Id of affected user */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserMoveItemsToSubInventoryRequest Body;
+};
+
+class SNAPSER_API SnapserMoveItemsToSubInventoryRequest : public Model
+{
+public:
+    virtual ~SnapserMoveItemsToSubInventoryRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Ids of the items to move into the sub-inventory */
+    TArray<FString> ItemInstanceIds;
+    /* Id of the sub-inventory instance to move the item into */
+    FString SubInventoryInstanceId;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryMoveItemsToSubInventoryResponse : public Response
+{
+public:
+    virtual ~InventoryMoveItemsToSubInventoryResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryMoveItemsToSubInventoryResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryMoveItemsToSubInventoryResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryMoveItemsToSubInventoryResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* True if the move was successful */
+    TOptional<bool> Success;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### InventoryGrantItemsToUser API
+<CodeGroup title="Grants the list of items to user, this does not modify currencies" tag="POST" label="InventoryGrantItemsToUser">
+```csharp
+/// <summary>
+/// Grant Item Grants the list of items to user, this does not modify currencies
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">Id of user receiving the assets</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>InventoryUserInventory</returns>
+public InventoryUserInventory InventoryGrantItemsToUser(string userId, string token, GrantItemsToUserRequest body)
+{
+    Snapser.Client.ApiResponse<InventoryUserInventory> localVarResponse = InventoryGrantItemsToUserWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for GrantItemsToUserRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="GrantItemsToUserRequest" /> class.
+/// </summary>
+/// <param name="items">Unique name and count of items to grant to user (required).</param>
+/// <param name="metadata">Custom metadata to be attached to user inventory items, not to be confused with catalog item metadata.</param>
+/// <param name="subInventoryInstanceId">Sub inventory instance the granted items should be added to.</param>
+public GrantItemsToUserRequest(Dictionary<string, int> items = default(Dictionary<string, int>), Object metadata = default(Object), string subInventoryInstanceId = default(string))
+{
+    // to ensure "items" is required (not null)
+    if (items == null)
+    {
+        throw new ArgumentNullException("items is a required property for GrantItemsToUserRequest and cannot be null");
+    }
+    this.Items = items;
+    this.Metadata = metadata;
+    this.SubInventoryInstanceId = subInventoryInstanceId;
+}
+
+/// Snapser.Model for InventoryUserInventory
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryUserInventory" /> class.
+/// </summary>
+/// <param name="items">items.</param>
+public InventoryUserInventory(List<InventoryUserInventoryItem> items = default(List<InventoryUserInventoryItem>))
+{
+    this.Items = items;
+}
+
+/// Snapser.Model for InventoryUserInventoryItem
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryUserInventoryItem" /> class.
+/// </summary>
+/// <param name="acquiredAt">Timestamp when player acquired the item.</param>
+/// <param name="catalogItemName">name of catalog item.</param>
+/// <param name="expiresAt">Timestamp when the item will be removed from player inventory.</param>
+/// <param name="instanceId">Instance id of the inventory item.</param>
+/// <param name="instanceMetadata">Metadata attached with instance of item in player&#39;s inventory. Not to be confused with metadata in catalog inventory item.</param>
+/// <param name="lastConsumedAt">Timestamp when item was last consumed. In case of stackables, it is the timestamp of last consumed item of the stack.</param>
+/// <param name="remainingUses">Count of times the item can been used.</param>
+public InventoryUserInventoryItem(string acquiredAt = default(string), string catalogItemName = default(string), string expiresAt = default(string), string instanceId = default(string), Object instanceMetadata = default(Object), string lastConsumedAt = default(string), int remainingUses = default(int))
+{
+    this.AcquiredAt = acquiredAt;
+    this.CatalogItemName = catalogItemName;
+    this.ExpiresAt = expiresAt;
+    this.InstanceId = instanceId;
+    this.InstanceMetadata = instanceMetadata;
+    this.LastConsumedAt = lastConsumedAt;
+    this.RemainingUses = remainingUses;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGrantItemsToUserRequest : public Request
+{
+public:
+    virtual ~InventoryGrantItemsToUserRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Id of user receiving the assets */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserGrantItemsToUserRequest Body;
+};
+
+class SNAPSER_API SnapserGrantItemsToUserRequest : public Model
+{
+public:
+    virtual ~SnapserGrantItemsToUserRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Unique name and count of items to grant to user */
+    TMap<FString, int32> Items;
+    /* Custom metadata to be attached to user inventory items, not to be confused with catalog item metadata */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+    /* Sub inventory instance the granted items should be added to */
+    TOptional<FString> SubInventoryInstanceId;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGrantItemsToUserResponse : public Response
+{
+public:
+    virtual ~InventoryGrantItemsToUserResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryUserInventory Content;
+};
+
+class SNAPSER_API SnapserInventoryUserInventoryItem : public Model
+{
+public:
+    virtual ~SnapserInventoryUserInventoryItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Timestamp when player acquired the item */
+    TOptional<FString> AcquiredAt;
+    /* name of catalog item */
+    TOptional<FString> CatalogItemName;
+    /* Timestamp when the item will be removed from player inventory */
+    TOptional<FString> ExpiresAt;
+    /* Instance id of the inventory item */
+    TOptional<FString> InstanceId;
+    /* Metadata attached with instance of item in player's inventory. Not to be confused with metadata in catalog inventory item */
+    TOptional<TSharedPtr<FJsonObject>> InstanceMetadata;
+    /* Timestamp when item was last consumed. In case of stackables, it is the timestamp of last consumed item of the stack */
+    TOptional<FString> LastConsumedAt;
+    /* Count of times the item can been used */
+    TOptional<int32> RemainingUses;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryPurchaseItem API
+<CodeGroup title="Purchase an item with given virtual currency" tag="POST" label="InventoryPurchaseItem">
+```csharp
+/// <summary>
+/// User Items Purchase an item with given virtual currency, returning both the purchased item and updated currency balances
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">Id of user receiving the assets</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>InventoryPurchaseItemResponse</returns>
+public InventoryPurchaseItemResponse InventoryPurchaseItem(string userId, string token, PurchaseItemWithVirtualCurrencyRequest body)
+{
+    Snapser.Client.ApiResponse<InventoryPurchaseItemResponse> localVarResponse = InventoryPurchaseItemWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for PurchaseItemWithVirtualCurrencyRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="PurchaseItemWithVirtualCurrencyRequest" /> class.
+/// </summary>
+/// <param name="catalogItemName">Name of catalog item to purchase.</param>
+/// <param name="currencyName">Name of virtual currency to purchase item with.</param>
+/// <param name="subInventoryInstanceId">Sub inventory instance the purchased items should be added to.</param>
+public PurchaseItemWithVirtualCurrencyRequest(string catalogItemName = default(string), string currencyName = default(string), string subInventoryInstanceId = default(string))
+{
+    this.CatalogItemName = catalogItemName;
+    this.CurrencyName = currencyName;
+    this.SubInventoryInstanceId = subInventoryInstanceId;
+}
+
+/// Snapser.Model for InventoryPurchaseItemResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryPurchaseItemResponse" /> class.
+/// </summary>
+/// <param name="currentBalance">Current balance of the currency used to purchase the item.</param>
+/// <param name="previousBalance">Previous balance of the currency used to purchase the item.</param>
+/// <param name="purchasedItem">purchasedItem.</param>
+public InventoryPurchaseItemResponse(string currentBalance = default(string), string previousBalance = default(string), InventoryUserInventoryItem purchasedItem = default(InventoryUserInventoryItem))
+{
+    this.CurrentBalance = currentBalance;
+    this.PreviousBalance = previousBalance;
+    this.PurchasedItem = purchasedItem;
+}
+
+/// Snapser.Model for InventoryUserInventoryItem
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryUserInventoryItem" /> class.
+/// </summary>
+/// <param name="acquiredAt">Timestamp when player acquired the item.</param>
+/// <param name="catalogItemName">name of catalog item.</param>
+/// <param name="expiresAt">Timestamp when the item will be removed from player inventory.</param>
+/// <param name="instanceId">Instance id of the inventory item.</param>
+/// <param name="instanceMetadata">Metadata attached with instance of item in player&#39;s inventory. Not to be confused with metadata in catalog inventory item.</param>
+/// <param name="isSubInventory">True if this item is a sub-inventory.</param>
+/// <param name="lastConsumedAt">Timestamp when item was last consumed. In case of stackables, it is the timestamp of last consumed item of the stack.</param>
+/// <param name="remainingUses">Count of times the item can been used.</param>
+/// <param name="subInventoryInstanceId">Id of the sub-inventory where this item lives (if any).</param>
+/// <param name="subInventoryItems">Items in the sub-inventory.</param>
+public InventoryUserInventoryItem(string acquiredAt = default(string), string catalogItemName = default(string), string expiresAt = default(string), string instanceId = default(string), Object instanceMetadata = default(Object), bool isSubInventory = default(bool), string lastConsumedAt = default(string), int remainingUses = default(int), string subInventoryInstanceId = default(string), List<InventoryUserInventoryItem> subInventoryItems = default(List<InventoryUserInventoryItem>))
+{
+    this.AcquiredAt = acquiredAt;
+    this.CatalogItemName = catalogItemName;
+    this.ExpiresAt = expiresAt;
+    this.InstanceId = instanceId;
+    this.InstanceMetadata = instanceMetadata;
+    this.IsSubInventory = isSubInventory;
+    this.LastConsumedAt = lastConsumedAt;
+    this.RemainingUses = remainingUses;
+    this.SubInventoryInstanceId = subInventoryInstanceId;
+    this.SubInventoryItems = subInventoryItems;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryPurchaseItemRequest : public Request
+{
+public:
+    virtual ~InventoryPurchaseItemRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Id of user receiving the assets */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserPurchaseItemWithVirtualCurrencyRequest Body;
+};
+
+class SNAPSER_API SnapserPurchaseItemWithVirtualCurrencyRequest : public Model
+{
+public:
+    virtual ~SnapserPurchaseItemWithVirtualCurrencyRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Name of catalog item to purchase */
+    TOptional<FString> CatalogItemName;
+    /* Name of virtual currency to purchase item with */
+    TOptional<FString> CurrencyName;
+    /* Sub inventory instance the purchased items should be added to */
+    TOptional<FString> SubInventoryInstanceId;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryPurchaseItemResponse : public Response
+{
+public:
+    virtual ~InventoryPurchaseItemResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryPurchaseItemResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryPurchaseItemResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryPurchaseItemResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Current balance of the currency used to purchase the item */
+    TOptional<FString> CurrentBalance;
+    /* Previous balance of the currency used to purchase the item */
+    TOptional<FString> PreviousBalance;
+    TOptional<SnapserInventoryUserInventoryItem> PurchasedItem;
+};
+
+class SNAPSER_API SnapserInventoryUserInventoryItem : public Model
+{
+public:
+    virtual ~SnapserInventoryUserInventoryItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Timestamp when player acquired the item */
+    TOptional<FString> AcquiredAt;
+    /* name of catalog item */
+    TOptional<FString> CatalogItemName;
+    /* Timestamp when the item will be removed from player inventory */
+    TOptional<FString> ExpiresAt;
+    /* Instance id of the inventory item */
+    TOptional<FString> InstanceId;
+    /* Metadata attached with instance of item in player's inventory. Not to be confused with metadata in catalog inventory item */
+    TOptional<TSharedPtr<FJsonObject>> InstanceMetadata;
+    /* True if this item is a sub-inventory */
+    TOptional<bool> IsSubInventory;
+    /* Timestamp when item was last consumed. In case of stackables, it is the timestamp of last consumed item of the stack */
+    TOptional<FString> LastConsumedAt;
+    /* Count of times the item can been used */
+    TOptional<int32> RemainingUses;
+    /* Id of the sub-inventory where this item lives (if any) */
+    TOptional<FString> SubInventoryInstanceId;
+    /* Items in the sub-inventory */
+    TOptional<TArray<SnapserInventoryUserInventoryItem>> SubInventoryItems;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryDeleteUserItem API
+<CodeGroup title="Deletes item from user inventory given instance id" tag="DELETE" label="InventoryDeleteUserItem">
+```csharp
+/// <summary>
+/// User Inventory Item Deletes item from user inventory given instance id
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">Id of user from which item would be removed</param>
+/// <param name="instanceId">Id of the item present in user inventory</param>
+/// <param name="token">User session token</param>
+/// <returns>Object</returns>
+public Object InventoryDeleteUserItem(string userId, string instanceId, string token)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = InventoryDeleteUserItemWithHttpInfo(userId, instanceId, token);
+    return localVarResponse.Data;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryDeleteUserItemRequest : public Request
+{
+public:
+    virtual ~InventoryDeleteUserItemRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Id of user from which item would be removed */
+    FString UserId;
+    /* Id of the item present in user inventory */
+    FString InstanceId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryDeleteUserItemResponse : public Response
+{
+public:
+    virtual ~InventoryDeleteUserItemResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryGetUserItem API
+<CodeGroup title="Gets item from inventory given instance id" tag="GET" label="InventoryGetUserItem">
+```csharp
+/// <summary>
+/// User Items Gets item from inventory given instance id
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">Id of affected user</param>
+/// <param name="itemInstanceId">Id of the item present in user inventory</param>
+/// <param name="token">User session token</param>
+/// <returns>InventoryUserInventoryItem</returns>
+public InventoryUserInventoryItem InventoryGetUserItem(string userId, string itemInstanceId, string token)
+{
+    Snapser.Client.ApiResponse<InventoryUserInventoryItem> localVarResponse = InventoryGetUserItemWithHttpInfo(userId, itemInstanceId, token);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for InventoryUserInventoryItem
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryUserInventoryItem" /> class.
+/// </summary>
+/// <param name="acquiredAt">Timestamp when player acquired the item.</param>
+/// <param name="catalogItemName">name of catalog item.</param>
+/// <param name="expiresAt">Timestamp when the item will be removed from player inventory.</param>
+/// <param name="instanceId">Instance id of the inventory item.</param>
+/// <param name="instanceMetadata">Metadata attached with instance of item in player&#39;s inventory. Not to be confused with metadata in catalog inventory item.</param>
+/// <param name="isSubInventory">True if this item is a sub-inventory.</param>
+/// <param name="lastConsumedAt">Timestamp when item was last consumed. In case of stackables, it is the timestamp of last consumed item of the stack.</param>
+/// <param name="remainingUses">Count of times the item can been used.</param>
+/// <param name="subInventoryInstanceId">Id of the sub-inventory where this item lives (if any).</param>
+/// <param name="subInventoryItems">Items in the sub-inventory.</param>
+public InventoryUserInventoryItem(string acquiredAt = default(string), string catalogItemName = default(string), string expiresAt = default(string), string instanceId = default(string), Object instanceMetadata = default(Object), bool isSubInventory = default(bool), string lastConsumedAt = default(string), int remainingUses = default(int), string subInventoryInstanceId = default(string), List<InventoryUserInventoryItem> subInventoryItems = default(List<InventoryUserInventoryItem>))
+{
+    this.AcquiredAt = acquiredAt;
+    this.CatalogItemName = catalogItemName;
+    this.ExpiresAt = expiresAt;
+    this.InstanceId = instanceId;
+    this.InstanceMetadata = instanceMetadata;
+    this.IsSubInventory = isSubInventory;
+    this.LastConsumedAt = lastConsumedAt;
+    this.RemainingUses = remainingUses;
+    this.SubInventoryInstanceId = subInventoryInstanceId;
+    this.SubInventoryItems = subInventoryItems;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetUserItemRequest : public Request
+{
+public:
+    virtual ~InventoryGetUserItemRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Id of affected user */
+    FString UserId;
+    /* Id of the item present in user inventory */
+    FString ItemInstanceId;
+    /* User session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGetUserItemResponse : public Response
+{
+public:
+    virtual ~InventoryGetUserItemResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryUserInventoryItem Content;
+};
+
+class SNAPSER_API SnapserInventoryUserInventoryItem : public Model
+{
+public:
+    virtual ~SnapserInventoryUserInventoryItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Timestamp when player acquired the item */
+    TOptional<FString> AcquiredAt;
+    /* name of catalog item */
+    TOptional<FString> CatalogItemName;
+    /* Timestamp when the item will be removed from player inventory */
+    TOptional<FString> ExpiresAt;
+    /* Instance id of the inventory item */
+    TOptional<FString> InstanceId;
+    /* Metadata attached with instance of item in player's inventory. Not to be confused with metadata in catalog inventory item */
+    TOptional<TSharedPtr<FJsonObject>> InstanceMetadata;
+    /* True if this item is a sub-inventory */
+    TOptional<bool> IsSubInventory;
+    /* Timestamp when item was last consumed. In case of stackables, it is the timestamp of last consumed item of the stack */
+    TOptional<FString> LastConsumedAt;
+    /* Count of times the item can been used */
+    TOptional<int32> RemainingUses;
+    /* Id of the sub-inventory where this item lives (if any) */
+    TOptional<FString> SubInventoryInstanceId;
+    /* Items in the sub-inventory */
+    TOptional<TArray<SnapserInventoryUserInventoryItem>> SubInventoryItems;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryUpdateUserItemMetadata API
+<CodeGroup title="Update the metadata of the user inventory item. Not to be confused with catalog item metadata" tag="PATCH" label="InventoryUpdateUserItemMetadata">
+```csharp
+/// <summary>
+/// User Inventory Item Update the metadata of the user inventory item. Not to be confused with catalog item metadata
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">Id of affected user</param>
+/// <param name="instanceId">Id of the item present in user inventory</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>InventoryUserInventoryItem</returns>
+public InventoryUserInventoryItem InventoryUpdateUserItemMetadata(string userId, string instanceId, string token, UpdateUserItemMetadataRequest body)
+{
+    Snapser.Client.ApiResponse<InventoryUserInventoryItem> localVarResponse = InventoryUpdateUserItemMetadataWithHttpInfo(userId, instanceId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for UpdateUserItemMetadataRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="UpdateUserItemMetadataRequest" /> class.
+/// </summary>
+/// <param name="metadata">Metadata to be attached to user inventory item. Not be confused with metadata with catalog item.</param>
+public UpdateUserItemMetadataRequest(Object metadata = default(Object))
+{
+    this.Metadata = metadata;
+}
+
+/// Snapser.Model for InventoryUserInventoryItem
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryUserInventoryItem" /> class.
+/// </summary>
+/// <param name="acquiredAt">Timestamp when player acquired the item.</param>
+/// <param name="catalogItemName">name of catalog item.</param>
+/// <param name="expiresAt">Timestamp when the item will be removed from player inventory.</param>
+/// <param name="instanceId">Instance id of the inventory item.</param>
+/// <param name="instanceMetadata">Metadata attached with instance of item in player&#39;s inventory. Not to be confused with metadata in catalog inventory item.</param>
+/// <param name="lastConsumedAt">Timestamp when item was last consumed. In case of stackables, it is the timestamp of last consumed item of the stack.</param>
+/// <param name="remainingUses">Count of times the item can been used.</param>
+public InventoryUserInventoryItem(string acquiredAt = default(string), string catalogItemName = default(string), string expiresAt = default(string), string instanceId = default(string), Object instanceMetadata = default(Object), string lastConsumedAt = default(string), int remainingUses = default(int))
+{
+    this.AcquiredAt = acquiredAt;
+    this.CatalogItemName = catalogItemName;
+    this.ExpiresAt = expiresAt;
+    this.InstanceId = instanceId;
+    this.InstanceMetadata = instanceMetadata;
+    this.LastConsumedAt = lastConsumedAt;
+    this.RemainingUses = remainingUses;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryUpdateUserItemMetadataRequest : public Request
+{
+public:
+    virtual ~InventoryUpdateUserItemMetadataRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Id of affected user */
+    FString UserId;
+    /* Id of the item present in user inventory */
+    FString InstanceId;
+    /* User session token */
+    FString Token;
+    SnapserUpdateUserItemMetadataRequest Body;
+};
+
+class SNAPSER_API SnapserUpdateUserItemMetadataRequest : public Model
+{
+public:
+    virtual ~SnapserUpdateUserItemMetadataRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Metadata to be attached to user inventory item. Not be confused with metadata with catalog item */
+    TOptional<TSharedPtr<FJsonObject>> Metadata;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryUpdateUserItemMetadataResponse : public Response
+{
+public:
+    virtual ~InventoryUpdateUserItemMetadataResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryUserInventoryItem Content;
+};
+
+class SNAPSER_API SnapserInventoryUserInventoryItem : public Model
+{
+public:
+    virtual ~SnapserInventoryUserInventoryItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Timestamp when player acquired the item */
+    TOptional<FString> AcquiredAt;
+    /* name of catalog item */
+    TOptional<FString> CatalogItemName;
+    /* Timestamp when the item will be removed from player inventory */
+    TOptional<FString> ExpiresAt;
+    /* Instance id of the inventory item */
+    TOptional<FString> InstanceId;
+    /* Metadata attached with instance of item in player's inventory. Not to be confused with metadata in catalog inventory item */
+    TOptional<TSharedPtr<FJsonObject>> InstanceMetadata;
+    /* Timestamp when item was last consumed. In case of stackables, it is the timestamp of last consumed item of the stack */
+    TOptional<FString> LastConsumedAt;
+    /* Count of times the item can been used */
+    TOptional<int32> RemainingUses;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryConsumeItem API
+<CodeGroup title="Consumes item from user inventory by a count given an instance id" tag="POST" label="InventoryConsumeItem">
+```csharp
+/// <summary>
+/// Consume item from inventory Consumes item from user inventory by a count given an instance id
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">Id of affected user</param>
+/// <param name="instanceId">Id of the item present in user inventory</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>InventoryConsumeItemResponse</returns>
+public InventoryConsumeItemResponse InventoryConsumeItem(string userId, string instanceId, string token, ConsumeItemRequest body)
+{
+    Snapser.Client.ApiResponse<InventoryConsumeItemResponse> localVarResponse = InventoryConsumeItemWithHttpInfo(userId, instanceId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ConsumeItemRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="ConsumeItemRequest" /> class.
+/// </summary>
+/// <param name="consumeCount">Number of units to consume (required).</param>
+public ConsumeItemRequest(int consumeCount = default(int))
+{
+    this.ConsumeCount = consumeCount;
+}
+
+/// Snapser.Model for InventoryConsumeItemResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryConsumeItemResponse" /> class.
+/// </summary>
+/// <param name="instanceId">Id of the item present in user inventory.</param>
+/// <param name="lastConsumedAt">Timestamp of the last time the item was consumed.</param>
+/// <param name="remainingUses">Number of remaining uses for the user inventory item.</param>
+public InventoryConsumeItemResponse(string instanceId = default(string), string lastConsumedAt = default(string), int remainingUses = default(int))
+{
+    this.InstanceId = instanceId;
+    this.LastConsumedAt = lastConsumedAt;
+    this.RemainingUses = remainingUses;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryConsumeItemRequest : public Request
+{
+public:
+    virtual ~InventoryConsumeItemRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Id of affected user */
+    FString UserId;
+    /* Id of the item present in user inventory */
+    FString InstanceId;
+    /* User session token */
+    FString Token;
+    SnapserConsumeItemRequest Body;
+};
+
+class SNAPSER_API SnapserConsumeItemRequest : public Model
+{
+public:
+    virtual ~SnapserConsumeItemRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Number of units to consume */
+    int32 ConsumeCount = 0;
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryConsumeItemResponse : public Response
+{
+public:
+    virtual ~InventoryConsumeItemResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryConsumeItemResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryConsumeItemResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryConsumeItemResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Id of the item present in user inventory */
+    TOptional<FString> InstanceId;
+    /* Timestamp of the last time the item was consumed */
+    TOptional<FString> LastConsumedAt;
+    /* Number of remaining uses for the user inventory item */
+    TOptional<int32> RemainingUses;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryOpenContainer API
+<CodeGroup title="Open a container item from user inventory given an instance id" tag="POST" label="InventoryOpenContainer">
+```csharp
+/// <summary>
+/// User Items Open a container item from user inventory given an instance id
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">Id of affected user</param>
+/// <param name="containerInstanceId">Id of the container present in user inventory</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>InventoryOpenContainerResponse</returns>
+public InventoryOpenContainerResponse InventoryOpenContainer(string userId, string containerInstanceId, string token, OpenContainerRequest body)
+{
+    Snapser.Client.ApiResponse<InventoryOpenContainerResponse> localVarResponse = InventoryOpenContainerWithHttpInfo(userId, containerInstanceId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for OpenContainerRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="OpenContainerRequest" /> class.
+/// </summary>
+/// <param name="escrowId">Escrow id for the result, if it was evaluated already.</param>
+/// <param name="subInventoryInstanceId">Id of the sub-inventory instance to grant into.</param>
+/// <param name="unlockCost">unlockCost.</param>
+public OpenContainerRequest(string escrowId = default(string), string subInventoryInstanceId = default(string), InventoryUnlockCost unlockCost = default(InventoryUnlockCost))
+{
+    this.EscrowId = escrowId;
+    this.SubInventoryInstanceId = subInventoryInstanceId;
+    this.UnlockCost = unlockCost;
+}
+
+/// Snapser.Model for InventoryUnlockCost
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryUnlockCost" /> class.
+/// </summary>
+/// <param name="count">Count of the item/currency/trackable_energy (DEPRECATED: use count_64).</param>
+/// <param name="count64">Count of the item/currency/trackable_energy.</param>
+/// <param name="name">Name of the item/currency/trackable_energy (required).</param>
+/// <param name="type">type (required).</param>
+public InventoryUnlockCost(int count = default(int), long count64 = default(long), string name = default(string), InventoryUnlockCostType type = default(InventoryUnlockCostType))
+{
+    // to ensure "name" is required (not null)
+    if (name == null)
+    {
+        throw new ArgumentNullException("name is a required property for InventoryUnlockCost and cannot be null");
+    }
+    this.Name = name;
+    this.Type = type;
+    this.Count = count;
+    this.Count64 = count64;
+}
+
+/// <summary>
+/// Defines inventoryUnlockCostType
+/// </summary>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum InventoryUnlockCostType
+{
+    /// <summary>
+    /// Enum UNSPECIFIEDTYPE for value: UNSPECIFIED_TYPE
+    /// </summary>
+    [EnumMember(Value = "UNSPECIFIED_TYPE")] UNSPECIFIEDTYPE = 1,
+
+    /// <summary>
+    /// Enum ITEM for value: ITEM
+    /// </summary>
+    [EnumMember(Value = "ITEM")] ITEM = 2,
+
+    /// <summary>
+    /// Enum CURRENCY for value: CURRENCY
+    /// </summary>
+    [EnumMember(Value = "CURRENCY")] CURRENCY = 3,
+
+    /// <summary>
+    /// Enum ENERGY for value: ENERGY
+    /// </summary>
+    [EnumMember(Value = "ENERGY")] ENERGY = 4
+}
+
+/// Snapser.Model for InventoryOpenContainerResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryOpenContainerResponse" /> class.
+/// </summary>
+/// <param name="grantResults">grantResults.</param>
+/// <param name="grantedItems">Items granted to the user (DEPRECATED: use grant_results.granted_items).</param>
+/// <param name="grantedTrackablesEnergy">Trackables energy granted to the user (DEPRECATED: use grant_results.granted_trackables_energy).</param>
+/// <param name="grantedTrackablesXp">Trackables xp granted to the user (DEPRECATED: use grant_results.granted_trackables_xp).</param>
+/// <param name="grantedVirtualCurrency">Virtual currency granted to the user (DEPRECATED: use grant_results.granted_currencies).</param>
+/// <param name="grantedVirtualCurrency64">Virtual currency granted to the user (DEPRECATED: use grant_results.granted_currencies).</param>
+/// <param name="remainingUses">Number of remaining uses for the user inventory item (DEPRECATED: use grant_results.granted_items).</param>
+public InventoryOpenContainerResponse(InventoryGrantResults grantResults = default(InventoryGrantResults), List<InventoryUserInventoryItem> grantedItems = default(List<InventoryUserInventoryItem>), Dictionary<string, int> grantedTrackablesEnergy = default(Dictionary<string, int>), Dictionary<string, int> grantedTrackablesXp = default(Dictionary<string, int>), Dictionary<string, int> grantedVirtualCurrency = default(Dictionary<string, int>), Dictionary<string, string> grantedVirtualCurrency64 = default(Dictionary<string, string>), int remainingUses = default(int))
+{
+    this.GrantResults = grantResults;
+    this.GrantedItems = grantedItems;
+    this.GrantedTrackablesEnergy = grantedTrackablesEnergy;
+    this.GrantedTrackablesXp = grantedTrackablesXp;
+    this.GrantedVirtualCurrency = grantedVirtualCurrency;
+    this.GrantedVirtualCurrency64 = grantedVirtualCurrency64;
+    this.RemainingUses = remainingUses;
+}
+
+/// Snapser.Model for InventoryGrantResults
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGrantResults" /> class.
+/// </summary>
+/// <param name="grantedCurrencies">Virtual currencies granted to the user.</param>
+/// <param name="grantedItems">Items granted to the user.</param>
+/// <param name="grantedTrackablesEnergy">Trackables energy granted to the user.</param>
+/// <param name="grantedTrackablesXp">Trackables xp granted to the user.</param>
+public InventoryGrantResults(List<InventoryGrantedCurrency> grantedCurrencies = default(List<InventoryGrantedCurrency>), List<InventoryGrantedItem> grantedItems = default(List<InventoryGrantedItem>), List<InventoryGrantedTrackablesEnergy> grantedTrackablesEnergy = default(List<InventoryGrantedTrackablesEnergy>), List<InventoryGrantedTrackablesXp> grantedTrackablesXp = default(List<InventoryGrantedTrackablesXp>))
+{
+    this.GrantedCurrencies = grantedCurrencies;
+    this.GrantedItems = grantedItems;
+    this.GrantedTrackablesEnergy = grantedTrackablesEnergy;
+    this.GrantedTrackablesXp = grantedTrackablesXp;
+}
+
+/// Snapser.Model for InventoryUserInventoryItem
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryUserInventoryItem" /> class.
+/// </summary>
+/// <param name="acquiredAt">Timestamp when player acquired the item.</param>
+/// <param name="catalogItemName">name of catalog item.</param>
+/// <param name="expiresAt">Timestamp when the item will be removed from player inventory.</param>
+/// <param name="instanceId">Instance id of the inventory item.</param>
+/// <param name="instanceMetadata">Metadata attached with instance of item in player&#39;s inventory. Not to be confused with metadata in catalog inventory item.</param>
+/// <param name="lastConsumedAt">Timestamp when item was last consumed. In case of stackables, it is the timestamp of last consumed item of the stack.</param>
+/// <param name="remainingUses">Count of times the item can been used.</param>
+public InventoryUserInventoryItem(string acquiredAt = default(string), string catalogItemName = default(string), string expiresAt = default(string), string instanceId = default(string), Object instanceMetadata = default(Object), string lastConsumedAt = default(string), int remainingUses = default(int))
+{
+    this.AcquiredAt = acquiredAt;
+    this.CatalogItemName = catalogItemName;
+    this.ExpiresAt = expiresAt;
+    this.InstanceId = instanceId;
+    this.InstanceMetadata = instanceMetadata;
+    this.LastConsumedAt = lastConsumedAt;
+    this.RemainingUses = remainingUses;
+}
+
+/// Snapser.Model for InventoryGrantedCurrency
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGrantedCurrency" /> class.
+/// </summary>
+/// <param name="afterBalance">Balance of the currency after granting (DEPRECATED: use after_balance_64).</param>
+/// <param name="afterBalance64">Balance of the currency after granting.</param>
+/// <param name="beforeBalance">Balance of the currency before granting (DEPRECATED: use before_balance_64).</param>
+/// <param name="beforeBalance64">Balance of the currency before granting.</param>
+/// <param name="currencyName">Name of the currency granted.</param>
+public InventoryGrantedCurrency(int afterBalance = default(int), string afterBalance64 = default(string), int beforeBalance = default(int), string beforeBalance64 = default(string), string currencyName = default(string))
+{
+    this.AfterBalance = afterBalance;
+    this.AfterBalance64 = afterBalance64;
+    this.BeforeBalance = beforeBalance;
+    this.BeforeBalance64 = beforeBalance64;
+    this.CurrencyName = currencyName;
+}
+
+/// Snapser.Model for InventoryGrantedItem
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGrantedItem" /> class.
+/// </summary>
+/// <param name="afterCount">Count of the item after granting.</param>
+/// <param name="beforeCount">Count of the item before granting.</param>
+/// <param name="catalogItemName">Name of the item granted.</param>
+/// <param name="instanceIds">Instance ids of the item granted.</param>
+public InventoryGrantedItem(int afterCount = default(int), int beforeCount = default(int), string catalogItemName = default(string), List<string> instanceIds = default(List<string>))
+{
+    this.AfterCount = afterCount;
+    this.BeforeCount = beforeCount;
+    this.CatalogItemName = catalogItemName;
+    this.InstanceIds = instanceIds;
+}
+
+/// Snapser.Model for InventoryGrantedTrackablesEnergy
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGrantedTrackablesEnergy" /> class.
+/// </summary>
+/// <param name="afterEnergy">Energy of the user after granting.</param>
+/// <param name="beforeEnergy">Energy of the user before granting.</param>
+/// <param name="trackableEnergyName">Name of the trackable energy granted.</param>
+public InventoryGrantedTrackablesEnergy(int afterEnergy = default(int), int beforeEnergy = default(int), string trackableEnergyName = default(string))
+{
+    this.AfterEnergy = afterEnergy;
+    this.BeforeEnergy = beforeEnergy;
+    this.TrackableEnergyName = trackableEnergyName;
+}
+
+/// Snapser.Model for InventoryGrantedTrackablesXp
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGrantedTrackablesXp" /> class.
+/// </summary>
+/// <param name="afterXp">XP of the user after granting.</param>
+/// <param name="beforeXp">XP of the user before granting.</param>
+/// <param name="numLevelsProgressed">Number of levels progressed.</param>
+/// <param name="trackableXpName">Name of the trackable xp granted.</param>
+public InventoryGrantedTrackablesXp(int afterXp = default(int), int beforeXp = default(int), int numLevelsProgressed = default(int), string trackableXpName = default(string))
+{
+    this.AfterXp = afterXp;
+    this.BeforeXp = beforeXp;
+    this.NumLevelsProgressed = numLevelsProgressed;
+    this.TrackableXpName = trackableXpName;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryOpenContainerRequest : public Request
+{
+public:
+    virtual ~InventoryOpenContainerRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Id of affected user */
+    FString UserId;
+    /* Id of the container present in user inventory */
+    FString InstanceId;
+    /* User session token */
+    FString Token;
+    SnapserOpenContainerRequest Body;
+};
+
+class SNAPSER_API SnapserOpenContainerRequest : public Model
+{
+public:
+    virtual ~SnapserOpenContainerRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Escrow id for the result, if it was evaluated already */
+    TOptional<FString> EscrowId;
+    /* Id of the sub-inventory instance to grant into */
+    TOptional<FString> SubInventoryInstanceId;
+    TOptional<SnapserInventoryUnlockCost> UnlockCost;
+};
+
+class SNAPSER_API SnapserInventoryUnlockCost : public Model
+{
+public:
+    virtual ~SnapserInventoryUnlockCost() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the item/currency/trackable_energy (DEPRECATED: use count_64) */
+    TOptional<int32> Count;
+    /* Count of the item/currency/trackable_energy */
+    TOptional<int64> Count64;
+    /* Name of the item/currency/trackable_energy */
+    FString Name;
+    SnapserInventoryUnlockCostType Type;
+};
+
+class SNAPSER_API SnapserInventoryUnlockCostType : public Model
+{
+public:
+    virtual ~SnapserInventoryUnlockCostType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedType,
+        Item,
+        Currency,
+        Energy,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryOpenContainerResponse : public Response
+{
+public:
+    virtual ~InventoryOpenContainerResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryOpenContainerResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryOpenContainerResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryOpenContainerResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserInventoryGrantResults> GrantResults;
+    /* Items granted to the user (DEPRECATED: use grant_results.granted_items) */
+    TOptional<TArray<SnapserInventoryUserInventoryItem>> GrantedItems;
+    /* Trackables energy granted to the user (DEPRECATED: use grant_results.granted_trackables_energy) */
+    TOptional<TMap<FString, int32>> GrantedTrackablesEnergy;
+    /* Trackables xp granted to the user (DEPRECATED: use grant_results.granted_trackables_xp) */
+    TOptional<TMap<FString, int32>> GrantedTrackablesXp;
+    /* Virtual currency granted to the user (DEPRECATED: use grant_results.granted_currencies) */
+    TOptional<TMap<FString, int32>> GrantedVirtualCurrency;
+    /* Virtual currency granted to the user (DEPRECATED: use grant_results.granted_currencies) */
+    TOptional<TMap<FString, FString>> GrantedVirtualCurrency64;
+    /* Number of remaining uses for the user inventory item (DEPRECATED: use grant_results.granted_items) */
+    TOptional<int32> RemainingUses;
+};
+
+class SNAPSER_API SnapserInventoryGrantResults : public Model
+{
+public:
+    virtual ~SnapserInventoryGrantResults() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Virtual currencies granted to the user */
+    TOptional<TArray<SnapserInventoryGrantedCurrency>> GrantedCurrencies;
+    /* Items granted to the user */
+    TOptional<TArray<SnapserInventoryGrantedItem>> GrantedItems;
+    /* Trackables energy granted to the user */
+    TOptional<TArray<SnapserInventoryGrantedTrackablesEnergy>> GrantedTrackablesEnergy;
+    /* Trackables xp granted to the user */
+    TOptional<TArray<SnapserInventoryGrantedTrackablesXp>> GrantedTrackablesXp;
+};
+
+class SNAPSER_API SnapserInventoryUserInventoryItem : public Model
+{
+public:
+    virtual ~SnapserInventoryUserInventoryItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Timestamp when player acquired the item */
+    TOptional<FString> AcquiredAt;
+    /* name of catalog item */
+    TOptional<FString> CatalogItemName;
+    /* Timestamp when the item will be removed from player inventory */
+    TOptional<FString> ExpiresAt;
+    /* Instance id of the inventory item */
+    TOptional<FString> InstanceId;
+    /* Metadata attached with instance of item in player's inventory. Not to be confused with metadata in catalog inventory item */
+    TOptional<TSharedPtr<FJsonObject>> InstanceMetadata;
+    /* Timestamp when item was last consumed. In case of stackables, it is the timestamp of last consumed item of the stack */
+    TOptional<FString> LastConsumedAt;
+    /* Count of times the item can been used */
+    TOptional<int32> RemainingUses;
+};
+
+class SNAPSER_API SnapserInventoryGrantedCurrency : public Model
+{
+public:
+    virtual ~SnapserInventoryGrantedCurrency() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Balance of the currency after granting (DEPRECATED: use after_balance_64) */
+    TOptional<int32> AfterBalance;
+    /* Balance of the currency after granting */
+    TOptional<FString> AfterBalance64;
+    /* Balance of the currency before granting (DEPRECATED: use before_balance_64) */
+    TOptional<int32> BeforeBalance;
+    /* Balance of the currency before granting */
+    TOptional<FString> BeforeBalance64;
+    /* Name of the currency granted */
+    TOptional<FString> CurrencyName;
+};
+
+class SNAPSER_API SnapserInventoryGrantedItem : public Model
+{
+public:
+    virtual ~SnapserInventoryGrantedItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the item after granting */
+    TOptional<int32> AfterCount;
+    /* Count of the item before granting */
+    TOptional<int32> BeforeCount;
+    /* Name of the item granted */
+    TOptional<FString> CatalogItemName;
+    /* Instance ids of the item granted */
+    TOptional<TArray<FString>> InstanceIds;
+};
+
+class SNAPSER_API SnapserInventoryGrantedTrackablesEnergy : public Model
+{
+public:
+    virtual ~SnapserInventoryGrantedTrackablesEnergy() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Energy of the user after granting */
+    TOptional<int32> AfterEnergy;
+    /* Energy of the user before granting */
+    TOptional<int32> BeforeEnergy;
+    /* Name of the trackable energy granted */
+    TOptional<FString> TrackableEnergyName;
+};
+
+class SNAPSER_API SnapserInventoryGrantedTrackablesXp : public Model
+{
+public:
+    virtual ~SnapserInventoryGrantedTrackablesXp() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* XP of the user after granting */
+    TOptional<int32> AfterXp;
+    /* XP of the user before granting */
+    TOptional<int32> BeforeXp;
+    /* Number of levels progressed */
+    TOptional<int32> NumLevelsProgressed;
+    /* Name of the trackable xp granted */
+    TOptional<FString> TrackableXpName;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryUnlockContainer API
+<CodeGroup title="Unlocks a container item from user inventory given an instance id and returns items to be granted without granting them" tag="POST" label="InventoryUnlockContainer">
+```csharp
+/// <summary>
+/// Unlock Container Unlocks a container item from user inventory given an instance id and returns items to be granted without granting them
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">Id of affected user</param>
+/// <param name="instanceId">Id of the container present in user inventory</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>InventoryUnlockContainerResponse</returns>
+public InventoryUnlockContainerResponse InventoryUnlockContainer(string userId, string instanceId, string token, UnlockContainerRequest body)
+{
+    Snapser.Client.ApiResponse<InventoryUnlockContainerResponse> localVarResponse = InventoryUnlockContainerWithHttpInfo(userId, instanceId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for UnlockContainerRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="UnlockContainerRequest" /> class.
+/// </summary>
+/// <param name="unlockCost">unlockCost.</param>
+public UnlockContainerRequest(InventoryUnlockCost unlockCost = default(InventoryUnlockCost))
+{
+    this.UnlockCost = unlockCost;
+}
+
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryUnlockCost" /> class.
+/// </summary>
+/// <param name="count">Count of the item/currency/trackable_energy (DEPRECATED: use count_64).</param>
+/// <param name="count64">Count of the item/currency/trackable_energy.</param>
+/// <param name="name">Name of the item/currency/trackable_energy (required).</param>
+/// <param name="type">type (required).</param>
+public InventoryUnlockCost(int count = default(int), long count64 = default(long), string name = default(string), InventoryUnlockCostType type = default(InventoryUnlockCostType))
+{
+    // to ensure "name" is required (not null)
+    if (name == null)
+    {
+        throw new ArgumentNullException("name is a required property for InventoryUnlockCost and cannot be null");
+    }
+    this.Name = name;
+    this.Type = type;
+    this.Count = count;
+    this.Count64 = count64;
+}
+
+/// <summary>
+/// Defines inventoryUnlockCostType
+/// </summary>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum InventoryUnlockCostType
+{
+    /// <summary>
+    /// Enum UNSPECIFIEDTYPE for value: UNSPECIFIED_TYPE
+    /// </summary>
+    [EnumMember(Value = "UNSPECIFIED_TYPE")] UNSPECIFIEDTYPE = 1,
+
+    /// <summary>
+    /// Enum ITEM for value: ITEM
+    /// </summary>
+    [EnumMember(Value = "ITEM")] ITEM = 2,
+
+    /// <summary>
+    /// Enum CURRENCY for value: CURRENCY
+    /// </summary>
+    [EnumMember(Value = "CURRENCY")] CURRENCY = 3,
+
+    /// <summary>
+    /// Enum ENERGY for value: ENERGY
+    /// </summary>
+    [EnumMember(Value = "ENERGY")] ENERGY = 4
+}
+
+/// Snapser.Model for InventoryUnlockContainerResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryUnlockContainerResponse" /> class.
+/// </summary>
+/// <param name="currencies">Virtual currencies that will be granted to the user (DEPRECATED: use currencies_64).</param>
+/// <param name="currencies64">Virtual currencies that will be granted to the user.</param>
+/// <param name="escrowId">Escrow id for the result.</param>
+/// <param name="items">Items that will be granted to the user.</param>
+/// <param name="trackablesEnergy">Trackables energies to be granted to the user.</param>
+/// <param name="trackablesXp">Trackables xps to be granted to the user.</param>
+public InventoryUnlockContainerResponse(Dictionary<string, int> currencies = default(Dictionary<string, int>), Dictionary<string, string> currencies64 = default(Dictionary<string, string>), string escrowId = default(string), Dictionary<string, int> items = default(Dictionary<string, int>), Dictionary<string, int> trackablesEnergy = default(Dictionary<string, int>), Dictionary<string, int> trackablesXp = default(Dictionary<string, int>))
+{
+    this.Currencies = currencies;
+    this.Currencies64 = currencies64;
+    this.EscrowId = escrowId;
+    this.Items = items;
+    this.TrackablesEnergy = trackablesEnergy;
+    this.TrackablesXp = trackablesXp;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryUnlockContainerRequest : public Request
+{
+public:
+    virtual ~InventoryUnlockContainerRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Id of affected user */
+    FString UserId;
+    /* Id of the container present in user inventory */
+    FString InstanceId;
+    /* User session token */
+    FString Token;
+    SnapserUnlockContainerRequest Body;
+};
+
+class SNAPSER_API SnapserUnlockContainerRequest : public Model
+{
+public:
+    virtual ~SnapserUnlockContainerRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserInventoryUnlockCost> UnlockCost;
+};
+
+class SNAPSER_API SnapserInventoryUnlockCost : public Model
+{
+public:
+    virtual ~SnapserInventoryUnlockCost() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the item/currency/trackable_energy (DEPRECATED: use count_64) */
+    TOptional<int32> Count;
+    /* Count of the item/currency/trackable_energy */
+    TOptional<int64> Count64;
+    /* Name of the item/currency/trackable_energy */
+    FString Name;
+    SnapserInventoryUnlockCostType Type;
+};
+
+class SNAPSER_API SnapserInventoryUnlockCostType : public Model
+{
+public:
+    virtual ~SnapserInventoryUnlockCostType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedType,
+        Item,
+        Currency,
+        Energy,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryUnlockContainerResponse : public Response
+{
+public:
+    virtual ~InventoryUnlockContainerResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryUnlockContainerResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryUnlockContainerResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryUnlockContainerResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Virtual currencies that will be granted to the user (DEPRECATED: use currencies_64) */
+    TOptional<TMap<FString, int32>> Currencies;
+    /* Virtual currencies that will be granted to the user */
+    TOptional<TMap<FString, FString>> Currencies64;
+    /* Escrow id for the result */
+    TOptional<FString> EscrowId;
+    /* Items that will be granted to the user */
+    TOptional<TMap<FString, int32>> Items;
+    /* Trackables energies to be granted to the user */
+    TOptional<TMap<FString, int32>> TrackablesEnergy;
+    /* Trackables xps to be granted to the user */
+    TOptional<TMap<FString, int32>> TrackablesXp;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### InventoryGrantAndOpenContainer API
+<CodeGroup title="Grants and opens a container item from user inventory given an item name" tag="POST" label="InventoryGrantAndOpenContainer">
+```csharp
+/// <summary>
+/// User Items Grants and opens a container item from user inventory given an item name
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">Id of user receiving the assets</param>
+/// <param name="containerName">Name of the container to grant and open</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>InventoryGrantAndOpenContainerResponse</returns>
+public InventoryGrantAndOpenContainerResponse InventoryGrantAndOpenContainer(string userId, string containerName, string token, GrantAndOpenContainerRequest body)
+{
+    Snapser.Client.ApiResponse<InventoryGrantAndOpenContainerResponse> localVarResponse = InventoryGrantAndOpenContainerWithHttpInfo(userId, containerName, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for GrantAndOpenContainerRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="GrantAndOpenContainerRequest" /> class.
+/// </summary>
+/// <param name="requireBalance">If true, the user must have the required balance to be granted the container.</param>
+/// <param name="subInventoryInstanceId">Id of the sub-inventory instance to grant into.</param>
+/// <param name="unlockCost">unlockCost.</param>
+public GrantAndOpenContainerRequest(bool requireBalance = default(bool), string subInventoryInstanceId = default(string), InventoryUnlockCost unlockCost = default(InventoryUnlockCost))
+{
+    this.RequireBalance = requireBalance;
+    this.SubInventoryInstanceId = subInventoryInstanceId;
+    this.UnlockCost = unlockCost;
+}
+
+/// Snapser.Model for InventoryUnlockCost
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryUnlockCost" /> class.
+/// </summary>
+/// <param name="count">Count of the item/currency/trackable_energy (DEPRECATED: use count_64).</param>
+/// <param name="count64">Count of the item/currency/trackable_energy.</param>
+/// <param name="name">Name of the item/currency/trackable_energy (required).</param>
+/// <param name="type">type (required).</param>
+public InventoryUnlockCost(int count = default(int), long count64 = default(long), string name = default(string), InventoryUnlockCostType type = default(InventoryUnlockCostType))
+{
+    // to ensure "name" is required (not null)
+    if (name == null)
+    {
+        throw new ArgumentNullException("name is a required property for InventoryUnlockCost and cannot be null");
+    }
+    this.Name = name;
+    this.Type = type;
+    this.Count = count;
+    this.Count64 = count64;
+}
+
+/// <summary>
+/// Defines inventoryUnlockCostType
+/// </summary>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum InventoryUnlockCostType
+{
+    /// <summary>
+    /// Enum UNSPECIFIEDTYPE for value: UNSPECIFIED_TYPE
+    /// </summary>
+    [EnumMember(Value = "UNSPECIFIED_TYPE")] UNSPECIFIEDTYPE = 1,
+
+    /// <summary>
+    /// Enum ITEM for value: ITEM
+    /// </summary>
+    [EnumMember(Value = "ITEM")] ITEM = 2,
+
+    /// <summary>
+    /// Enum CURRENCY for value: CURRENCY
+    /// </summary>
+    [EnumMember(Value = "CURRENCY")] CURRENCY = 3,
+
+    /// <summary>
+    /// Enum ENERGY for value: ENERGY
+    /// </summary>
+    [EnumMember(Value = "ENERGY")] ENERGY = 4
+}
+
+/// Snapser.Model for InventoryGrantAndOpenContainerResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGrantAndOpenContainerResponse" /> class.
+/// </summary>
+/// <param name="grantResults">grantResults.</param>
+/// <param name="grantedItems">Items granted to the user (DEPRECATED: use grant_results.granted_items).</param>
+/// <param name="grantedTrackablesEnergy">Trackables energy granted to the user (DEPRECATED: use grant_results.granted_trackables_energy).</param>
+/// <param name="grantedTrackablesXp">Trackables xp granted to the user (DEPRECATED: use grant_results.granted_trackables_xp).</param>
+/// <param name="grantedVirtualCurrency">Virtual currency granted to the user (DEPRECATED: use grant_results.granted_currencies).</param>
+/// <param name="grantedVirtualCurrency64">Virtual currency granted to the user (DEPRECATED: use grant_results.granted_currencies).</param>
+public InventoryGrantAndOpenContainerResponse(InventoryGrantResults grantResults = default(InventoryGrantResults), List<InventoryUserInventoryItem> grantedItems = default(List<InventoryUserInventoryItem>), Dictionary<string, int> grantedTrackablesEnergy = default(Dictionary<string, int>), Dictionary<string, int> grantedTrackablesXp = default(Dictionary<string, int>), Dictionary<string, int> grantedVirtualCurrency = default(Dictionary<string, int>), Dictionary<string, string> grantedVirtualCurrency64 = default(Dictionary<string, string>))
+{
+    this.GrantResults = grantResults;
+    this.GrantedItems = grantedItems;
+    this.GrantedTrackablesEnergy = grantedTrackablesEnergy;
+    this.GrantedTrackablesXp = grantedTrackablesXp;
+    this.GrantedVirtualCurrency = grantedVirtualCurrency;
+    this.GrantedVirtualCurrency64 = grantedVirtualCurrency64;
+}
+
+/// Snapser.Model for InventoryGrantResults
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGrantResults" /> class.
+/// </summary>
+/// <param name="grantedCurrencies">Virtual currencies granted to the user.</param>
+/// <param name="grantedItems">Items granted to the user.</param>
+/// <param name="grantedTrackablesEnergy">Trackables energy granted to the user.</param>
+/// <param name="grantedTrackablesXp">Trackables xp granted to the user.</param>
+public InventoryGrantResults(List<InventoryGrantedCurrency> grantedCurrencies = default(List<InventoryGrantedCurrency>), List<InventoryGrantedItem> grantedItems = default(List<InventoryGrantedItem>), List<InventoryGrantedTrackablesEnergy> grantedTrackablesEnergy = default(List<InventoryGrantedTrackablesEnergy>), List<InventoryGrantedTrackablesXp> grantedTrackablesXp = default(List<InventoryGrantedTrackablesXp>))
+{
+    this.GrantedCurrencies = grantedCurrencies;
+    this.GrantedItems = grantedItems;
+    this.GrantedTrackablesEnergy = grantedTrackablesEnergy;
+    this.GrantedTrackablesXp = grantedTrackablesXp;
+}
+
+/// Snapser.Model for InventoryUserInventoryItem
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryUserInventoryItem" /> class.
+/// </summary>
+/// <param name="acquiredAt">Timestamp when player acquired the item.</param>
+/// <param name="catalogItemName">name of catalog item.</param>
+/// <param name="expiresAt">Timestamp when the item will be removed from player inventory.</param>
+/// <param name="instanceId">Instance id of the inventory item.</param>
+/// <param name="instanceMetadata">Metadata attached with instance of item in player&#39;s inventory. Not to be confused with metadata in catalog inventory item.</param>
+/// <param name="lastConsumedAt">Timestamp when item was last consumed. In case of stackables, it is the timestamp of last consumed item of the stack.</param>
+/// <param name="remainingUses">Count of times the item can been used.</param>
+public InventoryUserInventoryItem(string acquiredAt = default(string), string catalogItemName = default(string), string expiresAt = default(string), string instanceId = default(string), Object instanceMetadata = default(Object), string lastConsumedAt = default(string), int remainingUses = default(int))
+{
+    this.AcquiredAt = acquiredAt;
+    this.CatalogItemName = catalogItemName;
+    this.ExpiresAt = expiresAt;
+    this.InstanceId = instanceId;
+    this.InstanceMetadata = instanceMetadata;
+    this.LastConsumedAt = lastConsumedAt;
+    this.RemainingUses = remainingUses;
+}
+
+/// Snapser.Model for InventoryGrantedCurrency
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGrantedCurrency" /> class.
+/// </summary>
+/// <param name="afterBalance">Balance of the currency after granting (DEPRECATED: use after_balance_64).</param>
+/// <param name="afterBalance64">Balance of the currency after granting.</param>
+/// <param name="beforeBalance">Balance of the currency before granting (DEPRECATED: use before_balance_64).</param>
+/// <param name="beforeBalance64">Balance of the currency before granting.</param>
+/// <param name="currencyName">Name of the currency granted.</param>
+public InventoryGrantedCurrency(int afterBalance = default(int), string afterBalance64 = default(string), int beforeBalance = default(int), string beforeBalance64 = default(string), string currencyName = default(string))
+{
+    this.AfterBalance = afterBalance;
+    this.AfterBalance64 = afterBalance64;
+    this.BeforeBalance = beforeBalance;
+    this.BeforeBalance64 = beforeBalance64;
+    this.CurrencyName = currencyName;
+}
+
+/// Snapser.Model for InventoryGrantedItem
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGrantedItem" /> class.
+/// </summary>
+/// <param name="afterCount">Count of the item after granting.</param>
+/// <param name="beforeCount">Count of the item before granting.</param>
+/// <param name="catalogItemName">Name of the item granted.</param>
+/// <param name="instanceIds">Instance ids of the item granted.</param>
+public InventoryGrantedItem(int afterCount = default(int), int beforeCount = default(int), string catalogItemName = default(string), List<string> instanceIds = default(List<string>))
+{
+    this.AfterCount = afterCount;
+    this.BeforeCount = beforeCount;
+    this.CatalogItemName = catalogItemName;
+    this.InstanceIds = instanceIds;
+}
+
+/// Snapser.Model for InventoryGrantedTrackablesEnergy
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGrantedTrackablesEnergy" /> class.
+/// </summary>
+/// <param name="afterEnergy">Energy of the user after granting.</param>
+/// <param name="beforeEnergy">Energy of the user before granting.</param>
+/// <param name="trackableEnergyName">Name of the trackable energy granted.</param>
+public InventoryGrantedTrackablesEnergy(int afterEnergy = default(int), int beforeEnergy = default(int), string trackableEnergyName = default(string))
+{
+    this.AfterEnergy = afterEnergy;
+    this.BeforeEnergy = beforeEnergy;
+    this.TrackableEnergyName = trackableEnergyName;
+}
+
+/// Snapser.Model for InventoryGrantedTrackablesXp
+/// <summary>
+/// Initializes a new instance of the <see cref="InventoryGrantedTrackablesXp" /> class.
+/// </summary>
+/// <param name="afterXp">XP of the user after granting.</param>
+/// <param name="beforeXp">XP of the user before granting.</param>
+/// <param name="numLevelsProgressed">Number of levels progressed.</param>
+/// <param name="trackableXpName">Name of the trackable xp granted.</param>
+public InventoryGrantedTrackablesXp(int afterXp = default(int), int beforeXp = default(int), int numLevelsProgressed = default(int), string trackableXpName = default(string))
+{
+    this.AfterXp = afterXp;
+    this.BeforeXp = beforeXp;
+    this.NumLevelsProgressed = numLevelsProgressed;
+    this.TrackableXpName = trackableXpName;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGrantAndOpenContainerRequest : public Request
+{
+public:
+    virtual ~InventoryGrantAndOpenContainerRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Id of user receiving the assets */
+    FString UserId;
+    /* Name of the container to grant and open */
+    FString ItemName;
+    /* User session token */
+    FString Token;
+    SnapserGrantAndOpenContainerRequest Body;
+};
+
+class SNAPSER_API SnapserGrantAndOpenContainerRequest : public Model
+{
+public:
+    virtual ~SnapserGrantAndOpenContainerRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* If true, the user must have the required balance to be granted the container */
+    TOptional<bool> RequireBalance;
+    /* Id of the sub-inventory instance to grant into */
+    TOptional<FString> SubInventoryInstanceId;
+    TOptional<SnapserInventoryUnlockCost> UnlockCost;
+};
+
+class SNAPSER_API SnapserInventoryUnlockCost : public Model
+{
+public:
+    virtual ~SnapserInventoryUnlockCost() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the item/currency/trackable_energy (DEPRECATED: use count_64) */
+    TOptional<int32> Count;
+    /* Count of the item/currency/trackable_energy */
+    TOptional<int64> Count64;
+    /* Name of the item/currency/trackable_energy */
+    FString Name;
+    SnapserInventoryUnlockCostType Type;
+};
+
+class SNAPSER_API SnapserInventoryUnlockCostType : public Model
+{
+public:
+    virtual ~SnapserInventoryUnlockCostType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedType,
+        Item,
+        Currency,
+        Energy,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+// Response
+class SNAPSER_API SnapserInventoryServiceApi::InventoryGrantAndOpenContainerResponse : public Response
+{
+public:
+    virtual ~InventoryGrantAndOpenContainerResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserInventoryGrantAndOpenContainerResponse Content;
+};
+
+class SNAPSER_API SnapserInventoryGrantAndOpenContainerResponse : public Model
+{
+public:
+    virtual ~SnapserInventoryGrantAndOpenContainerResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserInventoryGrantResults> GrantResults;
+    /* Items granted to the user (DEPRECATED: use grant_results.granted_items) */
+    TOptional<TArray<SnapserInventoryUserInventoryItem>> GrantedItems;
+    /* Trackables energy granted to the user (DEPRECATED: use grant_results.granted_trackables_energy) */
+    TOptional<TMap<FString, int32>> GrantedTrackablesEnergy;
+    /* Trackables xp granted to the user (DEPRECATED: use grant_results.granted_trackables_xp) */
+    TOptional<TMap<FString, int32>> GrantedTrackablesXp;
+    /* Virtual currency granted to the user (DEPRECATED: use grant_results.granted_currencies) */
+    TOptional<TMap<FString, int32>> GrantedVirtualCurrency;
+    /* Virtual currency granted to the user (DEPRECATED: use grant_results.granted_currencies) */
+    TOptional<TMap<FString, FString>> GrantedVirtualCurrency64;
+};
+
+class SNAPSER_API SnapserInventoryGrantResults : public Model
+{
+public:
+    virtual ~SnapserInventoryGrantResults() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Virtual currencies granted to the user */
+    TOptional<TArray<SnapserInventoryGrantedCurrency>> GrantedCurrencies;
+    /* Items granted to the user */
+    TOptional<TArray<SnapserInventoryGrantedItem>> GrantedItems;
+    /* Trackables energy granted to the user */
+    TOptional<TArray<SnapserInventoryGrantedTrackablesEnergy>> GrantedTrackablesEnergy;
+    /* Trackables xp granted to the user */
+    TOptional<TArray<SnapserInventoryGrantedTrackablesXp>> GrantedTrackablesXp;
+};
+
+class SNAPSER_API SnapserInventoryUserInventoryItem : public Model
+{
+public:
+    virtual ~SnapserInventoryUserInventoryItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Timestamp when player acquired the item */
+    TOptional<FString> AcquiredAt;
+    /* name of catalog item */
+    TOptional<FString> CatalogItemName;
+    /* Timestamp when the item will be removed from player inventory */
+    TOptional<FString> ExpiresAt;
+    /* Instance id of the inventory item */
+    TOptional<FString> InstanceId;
+    /* Metadata attached with instance of item in player's inventory. Not to be confused with metadata in catalog inventory item */
+    TOptional<TSharedPtr<FJsonObject>> InstanceMetadata;
+    /* Timestamp when item was last consumed. In case of stackables, it is the timestamp of last consumed item of the stack */
+    TOptional<FString> LastConsumedAt;
+    /* Count of times the item can been used */
+    TOptional<int32> RemainingUses;
+};
+
+class SNAPSER_API SnapserInventoryGrantedCurrency : public Model
+{
+public:
+    virtual ~SnapserInventoryGrantedCurrency() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Balance of the currency after granting (DEPRECATED: use after_balance_64) */
+    TOptional<int32> AfterBalance;
+    /* Balance of the currency after granting */
+    TOptional<FString> AfterBalance64;
+    /* Balance of the currency before granting (DEPRECATED: use before_balance_64) */
+    TOptional<int32> BeforeBalance;
+    /* Balance of the currency before granting */
+    TOptional<FString> BeforeBalance64;
+    /* Name of the currency granted */
+    TOptional<FString> CurrencyName;
+};
+
+class SNAPSER_API SnapserInventoryGrantedItem : public Model
+{
+public:
+    virtual ~SnapserInventoryGrantedItem() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Count of the item after granting */
+    TOptional<int32> AfterCount;
+    /* Count of the item before granting */
+    TOptional<int32> BeforeCount;
+    /* Name of the item granted */
+    TOptional<FString> CatalogItemName;
+    /* Instance ids of the item granted */
+    TOptional<TArray<FString>> InstanceIds;
+};
+
+class SNAPSER_API SnapserInventoryGrantedTrackablesEnergy : public Model
+{
+public:
+    virtual ~SnapserInventoryGrantedTrackablesEnergy() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Energy of the user after granting */
+    TOptional<int32> AfterEnergy;
+    /* Energy of the user before granting */
+    TOptional<int32> BeforeEnergy;
+    /* Name of the trackable energy granted */
+    TOptional<FString> TrackableEnergyName;
+};
+
+class SNAPSER_API SnapserInventoryGrantedTrackablesXp : public Model
+{
+public:
+    virtual ~SnapserInventoryGrantedTrackablesXp() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* XP of the user after granting */
+    TOptional<int32> AfterXp;
+    /* XP of the user before granting */
+    TOptional<int32> BeforeXp;
+    /* Number of levels progressed */
+    TOptional<int32> NumLevelsProgressed;
+    /* Name of the trackable xp granted */
+    TOptional<FString> TrackableXpName;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/inventory-api.png)
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code | Variable                      | Message                         | HTTP | gRPC             |
+| ---- | ----------------------------- | ------------------------------- | ---- | ---------------- |
+| 8000 | ErrCatalogItemAlreadyExists   | catalog item already exists     | 400  | AlreadyExists    |
+| 8001 | ErrCatalogItemNotFound        | catalog item not found          | 404  | NotFound         |
+| 8002 | ErrUserItemNotFound           | user item not found             | 404  | NotFound         |
+| 8003 | ErrCurrencyAlreadyExists      | currency already exists         | 400  | AlreadyExists    |
+| 8004 | ErrCurrencyNotFound           | currency not found              | 400  | NotFound         |
+| 8005 | ErrDropTableNotFound          | drop table not found            | 400  | NotFound         |
+| 8006 | ErrInvalidPurchaseCurrency    | invalid purchase currency       | 400  | InvalidArgument  |
+| 8007 | ErrInsufficientBalance        | insufficient balance            | 400  | InvalidArgument  |
+| 8008 | ErrNoRemainingUses            | no remaining uses               | 400  | InvalidArgument  |
+| 8009 | ErrCatalogItemNotContainer    | catalog item is not a container | 400  | InvalidArgument  |
+| 8010 | ErrEscrowNotFound             | escrow not found                | 404  | NotFound         |
+| 8011 | ErrEscrowMismatch             | escrow mismatch                 | 403  | PermissionDenied |
+| 8012 | ErrCurrencyConversionNotFound | currency conversion not found   | 404  | NotFound         |
+| 8013 | ErrInvalidConversion          | invalid conversion              | 400  | InvalidArgument  |
+| 8014 | ErrUnlockCostRequired         | unlock cost is required         | 400  | InvalidArgument  |
+| 8015 | ErrItemGrantFailed            | item grant failed               | 400  | InvalidArgument  |
+</div>
+
+### Websocket Emitters
+
+When [Web sockets](/docs/infra/snaps/hermes) are enabled on your snapends gateway, and you
+have added the [Event Bus](/docs/infra/snaps/eventbus) snap, this snap can broadcast specific events related to inventory
+changes directly to the app clients. These events are targeted to the appropriate user.
+Each event is uniquely identified by an enum, and the event payload is a well-structured
+protobuf message. These protobuf messages can be downloaded from the Downloads page.
+
+You can choose to enable/disable events from the [Event Bus](/docs/infra/snaps/eventbus) configuration tool.
+
+<div className="apisTable">
+| Event Id | Event Name                         | Description                                            | Payload Proto Message                |
+| -------- | ---------------------------------- | ------------------------------------------------------ | ------------------------------------ |
+| 1        | INVENTORY_ITEM_ADDED               | Published when an item is added to user inventory      | EventInventoryItemAdded              |
+| 2        | INVENTORY_ITEM_CONSUMED            | Published when an item is consumed                     | EventInventoryItemConsumed           |
+| 3        | INVENTORY_ITEM_PURCHASED           | Published when user purchases an item                  | EventInventoryItemPurchased          |
+| 4        | INVENTORY_CURRENCY_BALANCE_UPDATED | Published when user's virtual currency balance changes | EventInventoryCurrencyBalanceUpdated |
+</div>
+
+## Additional Details
+
+### Data Stores
+
+Postgres, Couchbase
+
+### Service Dependencies
+
+The Inventory service does not depend on any other service.
+
+### Recommended Services
+
+The Inventory service is recommended to be used with the Xp.
+
+### Upcoming enhancements
+
+We will very soon release a newer version of inventory that will have
+mechanisms to grant items on events such as level up, etc.

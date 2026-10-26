@@ -1,0 +1,41 @@
+# 1.3.0
+##### November 24, 2025
+
+## Spotlight
+1. With this release, we did a complete overhaul of the entire Snapser Inventory snap. This snap is very complex and as a result has undergone weeks of testing. However, if you spot any issues please let us know as soon as possible.
+
+## Snaps
+### Auth
+1. We have now exposed the `GetUser` API for internal and api-key auth.
+
+### Inventory
+1. You can now lookup an inventory item by metadata.
+2. We added a new API, where purchasing an item via virtual currency now returns the new balance of the currency. We could not update the existing API due to backward compatibility concerns.
+
+### Matchmaking
+1. Extended the existing team formation settings to add customization around how players are assigned to teams.
+
+### Statistics
+1. Statistics snap now supports `floating` point counters.
+2. You can now add default values to all the Statistics you create in the configuration tool.
+
+### Trackables
+1. You can now store metadata with each Trackable you create, as well as with each level. This metadata can be any JSON object and can be used to store additional information about the Trackable.
+2. Trackables XP now supports both completion rewards and level up rewards. You can now configure rewards for both actions separately.
+3. You can tell the Trackables snap to ignore a particular reward grant.
+
+## Web App
+1. Added better UX for Permission Denied scenarios. Users will now be redirected to a dedicated 403 page when they attempt to access resources they do not have permissions for instead of being logged out.
+2. Access tool now has better UI/UX. You can now sort by emails and filter by role type. Additionally, a search bar has been added to quickly find users.
+3. The Web App Palette helper now updates its UI dynamically as you change your view context as well as when you update games or clusters.
+4. Audit tool now has search and sorting capabilities. You can now search audit logs based on keywords and sort them in ascending or descending order.
+5. Added a new Limits page under the organization settings. This page shows you the current usage and limits for various resources in your organization such as projects, snapends, snaps, seats, and BI seats.
+6. Inventory admin tool now does not reset the filters when you navigate back to the inventory list from an item detail page.
+
+## AI Tools (Alpha)
+1. Snapser MCP's documentation endpoint response has been updated to be more LLM friendly.
+2. Snapser is now releasing Snapser Documentation GPT. With this, you can lookup Snapser documentation while being in the ChatGPT interface.
+
+## Documentation
+1. Search has been enabled for public documentation view. Users can now search through public docs without needing to log in.
+2. New blog post on the Eventbus snap is being released.

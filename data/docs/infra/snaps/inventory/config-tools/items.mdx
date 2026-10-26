@@ -1,0 +1,44 @@
+# Inventory Items
+This tool allows you to create, update, and delete catalog items. You can also view all the items in the catalog.
+
+To get started:
+1. Click on Inventory > Items from the side Nav.
+2. Click on the Add Item button.
+
+## Inventory Item Details
+- **Name**: The name of the item. This should be an alphanumeric string.
+- **Display Name**: The display name of the item. This will be the user facing name of the item.
+- **Description**: An optional description of the item.
+
+## Inventory Categorization
+- **Class Name**: The class name of the item. This is used to categorize the item.
+- **Tags**: Tags to categorize the item. This is a comma separated list of strings.
+- **Metadata**: Additional metadata for the item. This is a JSON object.
+
+## Item Type
+- Chose one of Regular or Sub-Inventory item type. Regular items are the normal items that you can use in your game or app. Sub-inventory items are like bags that can hold other items. Sub-inventory items follow the rules mentioned below:
+		1. They cannot be marked as consumable, stackable, or as a container.
+		1. They cannot be nested. Meaning, one sub-inventory item cannot have another sub-inventory item inside it.
+		1. They cannot be updated after that fact - you can not turn an existing item into a sub-inventory or visa versa.
+
+## Instance Limits
+### Item Instances
+This is the maximum number of instances of this item that a user can have in their inventory. For example, if you want an item to be unique, you can set the instance limit to 1. If you want a user to be able to have multiple instances of the same item, you can set the instance limit to a higher number. If you want to allow unlimited instances of the item, you can set the instance limit to 0.
+
+### Sub-Inventory Item Instances
+This is the maximum number of instances of this item that a user can have within a single sub-inventory. Unlike the global instance limit, this limit only counts items within the specific sub-inventory being granted to. For example, if a user has 3 sub-inventories and the per-sub-inventory limit is 5, the user could hold up to 5 of the item in each sub-inventory. Use 0 for unlimited.
+
+## Inventory Consumption
+- **Behavior**: This can be stackable or durable. Consumable items are used up after a single use.
+  Durable items can be used multiple times. Consumable items can also be stackable. Stackable items
+  occupy a single slot in the inventory. Items can also be marked as tradable.
+
+## Inventory Pricing
+- **Pricing behavior**: Items can be purchasable or non-purchasable. Purchasable items can be bought by the player using virtual currencies. If you mark an item as purchasable, you need to set the price of the currency in which the item can be bought.
+Optionally, discounts can be applied to each purchase price of the container, with a strategy to select either the best or worst discount. You can also set a floor price, ensuring the discounted price does not fall below this value.
+
+## Inventory Expiration
+- **Time to Live**: This is the time in seconds after which the item will be removed from the user's inventory.
+
+![Admin Catalog](/images/docs/inventory-catalog-item.png)
+![Admin Container](/images/docs/inventory-container-1.png)

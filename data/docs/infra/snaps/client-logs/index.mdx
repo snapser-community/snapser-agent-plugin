@@ -1,0 +1,174 @@
+export const description = 'Client Logs'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Client Logs
+
+The Snapser Client Logs service is designed to help client developers
+with debugging. There are some issues, that only show up on a device and not
+in your engine editor. This service can be used to log such issues.
+
+## Viewing Logs
+
+After you fire off your payload to the Client logs snap you will see your data
+in the Logs tool under the **Infrastructure**{' '}
+Nav on your cluster page.
+
+<Note>
+It is highly recommended to use this Snap only for debugging purposes. If you want to track your errors
+consider using the pre-built Analytics error event to track your errors.
+</Note>
+
+## APIs
+
+The `Client Logs` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name    | HTTP Method | API Description                     |
+| ----------- | ----------- | ----------------------------------- |
+| [ClientLogsCreateEntry](#clientlogscreateentry-api) | POST        | Creates a log entry for client logs |
+</div>
+
+### Usage
+#### ClientLogsCreateEntry API
+<CodeGroup title="Creates a log entry for client logs" tag="POST" label="ClientLogsCreateEntry">
+```csharp
+/// <summary>
+/// Create Log Entry Creates a log entry for client logs
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object ClientLogsCreateEntry(string token, ClientLogsCreateEntryRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = ClientLogsCreateEntryWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Model for ClientLogsCreateEntryRequest
+public enum LogLevelEnum
+{
+    /// <summary>
+    /// Enum Debug for value: debug
+    /// </summary>
+    [EnumMember(Value = "debug")] Debug = 1,
+
+    /// <summary>
+    /// Enum Info for value: info
+    /// </summary>
+    [EnumMember(Value = "info")] Info = 2,
+
+    /// <summary>
+    /// Enum Warn for value: warn
+    /// </summary>
+    [EnumMember(Value = "warn")] Warn = 3,
+
+    /// <summary>
+    /// Enum Error for value: error
+    /// </summary>
+    [EnumMember(Value = "error")] Error = 4
+}
+/// <summary>
+/// Initializes a new instance of the <see cref="ClientLogsCreateEntryRequest" /> class.
+/// </summary>
+/// <param name="logLevel">Log level of the message. Supported levels are debug, info, warn, error (required).</param>
+/// <param name="msg">Message to be logged (required).</param>
+public ClientLogsCreateEntryRequest(LogLevelEnum logLevel = default(LogLevelEnum), string msg = default(string))
+{
+    this.LogLevel = logLevel;
+    // to ensure "msg" is required (not null)
+    if (msg == null)
+    {
+        throw new ArgumentNullException("msg is a required property for ClientLogsCreateEntryRequest and cannot be null");
+    }
+    this.Msg = msg;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserClientLogsServiceApi::ClientLogsCreateEntryRequest : public Request
+{
+public:
+    virtual ~ClientLogsCreateEntryRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserClientLogsCreateEntryRequest Body;
+};
+
+class SNAPSER_API SnapserClientLogsCreateEntryRequest : public Model
+{
+public:
+    virtual ~SnapserClientLogsCreateEntryRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class LogLevelEnum
+    {
+        Debug,
+        Info,
+        Warn,
+        Error,
+    };
+
+    static FString EnumToString(const LogLevelEnum& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, LogLevelEnum& EnumValue);
+    /* Log level of the message. Supported levels are debug, info, warn, error */
+    LogLevelEnum LogLevel;
+    /* Message to be logged */
+    FString Msg;
+};
+
+// Response
+class SNAPSER_API SnapserClientLogsServiceApi::ClientLogsCreateEntryResponse : public Response
+{
+public:
+    virtual ~ClientLogsCreateEntryResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/client-logs-api.png)
+
+### Error Codes returned by the service
+
+This service only returns [generic errors](../generic-errors).
+
+
+## Additional Details
+
+### Data Stores
+
+None
+
+### Service Dependencies
+
+None
+
+### Recommended Services
+
+None
+
+### Upcoming enhancements
+
+None planned so far.

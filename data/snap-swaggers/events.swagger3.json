@@ -1,0 +1,140 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Schedule events for a game",
+    "title" : "Events",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "EventsService"
+  } ],
+  "paths" : {
+    "/v1/events/events" : {
+      "get" : {
+        "description" : "Gets status for events",
+        "operationId" : "GetEventStatus",
+        "parameters" : [ {
+          "description" : "Whether to only include active events",
+          "explode" : true,
+          "in" : "query",
+          "name" : "only_active",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Comma separated list of event names to filter by",
+          "explode" : true,
+          "in" : "query",
+          "name" : "names",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/eventsGetEventStatusResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Events",
+        "tags" : [ "EventsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "eventsEventStatus" : {
+        "properties" : {
+          "end_time" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "is_active" : {
+            "type" : "boolean"
+          },
+          "metadata" : {
+            "type" : "object"
+          },
+          "milestones" : {
+            "items" : {
+              "$ref" : "#/components/schemas/eventsMilestoneStatus"
+            },
+            "type" : "array"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "start_time" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "time_left" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "eventsGetEventStatusResponse" : {
+        "properties" : {
+          "events" : {
+            "description" : "Events array",
+            "items" : {
+              "$ref" : "#/components/schemas/eventsEventStatus"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "eventsMilestoneStatus" : {
+        "properties" : {
+          "end_time" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "is_active" : {
+            "type" : "boolean"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "start_time" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "time_left" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "protobufNullValue" : {
+        "default" : "NULL_VALUE",
+        "description" : "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value.",
+        "enum" : [ "NULL_VALUE" ],
+        "type" : "string"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

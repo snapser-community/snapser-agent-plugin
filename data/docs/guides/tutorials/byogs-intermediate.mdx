@@ -1,0 +1,378 @@
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Bring your own Game Server - Intermediate
+
+BYOGS or Bring your own Game Server is a Snapser feature that allows you to bring your own custom game server code to Snapser and deploy it to the Snapser global network. BYOGS uses Agones to run your game server code. BYOGS can be written in any language and can be customized to your game's needs.
+
+<Warning>
+The Eventbus Snap is a Premium Snap. You will not be able to go through this tutorial unless you are a Premium Tier customer.
+</Warning>
+
+
+## Introduction
+In this tutorial, we are going to understand how to we can use the Lobby, Eventbus and the Game Server fleet snap to allocate a custom game server in Snapser's Global fleet. You can also use other Snaps like Matchmaking, Parties to allocate game servers, but we are going to focus on the Lobby snap for this tutorial. Other snaps, would be used in a similar way.
+
+## Step 0: Pre-requisites
+Before you begin, ensure you have access to the Snapser CLI tool and you have gone through the BYOGs Basic tutorial. This will help you understand the basic concepts.
+
+
+<div className="parent">
+  <div className="tutorialBox">
+    # Setup Snapser CLI
+
+    You can go through the Setup Snapser CLI tutorial to install and configure Snapctl.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/setup-snapctl'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div>
+  <div className="servicesBox">
+    # BYOGame Server Basic
+    Please make sure you have a basic understanding of Agones and Snapser BYOGs by having gone through the BYOGs Basic tutorial.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/byogs-basic'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div>
+</div>
+
+<Checkpoint step={0}>
+  You are now ready to begin the tutorial.
+</Checkpoint>
+
+## Step 1: Check out the example code
+Check out the snapser-community BYOGS Intermediate [byogs-go repo](https://github.com/snapser-community/snapser-byogs/tree/main/inter).
+
+```bash
+# For HTTPS based cloning
+git clone https://github.com/snapser-community/snapser-byogs.git
+# For SSH based cloning
+git@github.com:snapser-community/snapser-byogs.git
+```
+
+- In the repo, you will find three example repos for different languages. Go ahead and pick the language you are the most comfortable with.
+  ```bash
+  ├── inter/
+  │   ├── byogs-cpp/
+  │   ├── byogs-go/
+  │   ├── byogs-unity/
+  ```
+
+<Warning>
+  **IMPORTANT**:
+  - If you pick Unity, there is some setup required. Please follow the instructions in the Unity Setup section below.
+  - If you pick C++, the build time is a bit long as the code compiles grpc and then agones from scratch.
+</Warning>
+
+<CollapsibleDoc title="Unity Setup" >
+### A. Install Unity
+This example is working on
+```
+Unity Editor: Unity 2022.3.2f1 or later
+OS: Windows 10 Pro or MacOS
+```
+
+### B. Install Unity modules
+1. Make sure your Unity version has `Linux Build Support (Mono)` installed.
+1. Make sure your Unity version has `Linux Dedicated Server Build Support` installed.
+  <Note>
+    You can install both using the Unity Hub.
+    - Open Unity Hub
+    - Go to the Installs tab
+    - Click the three dots ⋯ next to your Unity version
+    - Click Add Modules
+  </Note>
+
+### C. Build Server Settings
+1. Make sure you have picked `Dedicated Server` as the platform and the target as `Linux`.
+
+
+### D. Build the server
+- Open the byogs-unity folder with UnityEditor.
+- Click on the `Build Tool/Build Server` menu item in the menu bar.
+    - The Builds are created in a `Builds/Server` Folder. This is what the snapctl publish command will use to publish the server.
+
+</CollapsibleDoc>
+
+<Checkpoint step={1}>
+  We are now ready to deploy our game server code to Snapser.
+</Checkpoint>
+
+
+## Step 2: Deploy the BYOGS code
+
+We are going to use the code that comes with the repo as is and deploy it to Snapser. To deploy, your game server to Snapser you need the following:
+- **Tag**: Pick any short string to tag your code. Most developers chose semantic versioning like $version=`v1.0.0` for their tags.
+- **Code Path**: Copy the full path to the root of your code directory. Eg: `/Users/aj/snapser-byogs/inter/byogs-cpp`.
+
+Replace the variables below with your custom values and run the command to deploy your BYOSnap.
+
+<CodeGroup title="Deploy BYOSnap" tag="bash" >
+```bash
+# $tag = Tag your Game Server code. Recommended to use semantic versioning. Eg: v1.0.0
+# $path = Path to the directory where your supertuxkart code resides.
+snapctl byogs publish --tag $tag --path $codePath
+```
+</CodeGroup>
+<Note>
+  The publish command is making your BYOGS available to other devs in your organization.
+  Every subsequent publish you will have to update the tag and hence the recommendation to use semantic versioning.
+</Note>
+
+
+You will see the output from the Snapctl tool as it deploys your BYOGS to Snapser. Once the deployment is
+complete, you will see a success message.
+```bash
+Success BYOGS upload successful
+Success BYOGS publish successful
+```
+
+<Checkpoint step={2}>
+  We now have a BYOGS deployed to Snapser that Snapser fleets can use to create game servers. Next, step is to create a Snapend with the Game Server Fleets snap.
+</Checkpoint>
+
+## Step 3: Create a Snapend
+For this tutorial, we are going to create a Snapend with Auth, Eventbus, Game Server Fleet and Lobbies snaps.
+
+For this tutorial, we have two options. You can either create the Snapend manually or use a helper script to create the Snapend. If this is your first time, we highly recommend going through the manual process.
+
+### A. Manual Cluster Creation
+
+#### a. Set up your game
+
+Note: Proceed to the next step, if you already have a game set up.
+
+1. **Log in to your Snapser account** at https://snapser.com/login.
+2. Navigate to the **Games dashboard** and click on the **New Game** button located in the upper right corner.
+3. **Enter the name of your game** (1) in the designated field. It's advisable to use a name similar to your game's title to avoid confusion among your team members. Click **Add** (2) when done naming your game.
+    ![Add new game name](/images/docs/tutorials/create-snapend-add-game.png)
+4. You will now see an entry for your game in the **Games dashboard**. Click on the game name to view its details.
+    ![Add new game](/images/docs/tutorials/create-snapend-game.png)
+
+#### b. Snapend Creation
+
+1. In the Development environment, click on the **+ Snapend** button.
+    ![Add new snapend](/images/docs/tutorials/create-snapend-game-home.png)
+1. **Enter the name of your snapend** (1) in the **Name your Snapend** field and click **Continue** (2).
+    ![Name your snapend](/images/docs/quick-start/name-your-snapend.png)
+1. For this tutorial, select the **Authentication** (1), **Game Server Fleet** (2) and **Lobbies** (3) snaps by clicking **Add** for each snap and then click **Continue**.
+  ![BYOGS Snaps](/images/docs/tutorials/byogs-inter-snapend-create.png)
+1. In the Customization section, select **Gateway** from the navigation, scroll down and toggle *Web Sockets** to on and click **Save**.
+    <Warning>
+    Do not forget to click Save. Otherwise your Websocket will not be activated.
+    </Warning>
+    ![Snapend Creation](/images/docs/tutorials/byogs-inter-hermes.png)
+1. Now, click **Customize** and then **Review** until you reach the final step, then click the **Snap it** button. A pop-up window will appear showing you the state of creating your cluster, which takes a moment or two to complete.
+  ![Spinning up cluster](/images/docs/quick-start/spinning-up-cluster.png)
+1. As Snapser finishes setting up the Snapend in Kubernetes (which includes infrastructure, configuration of snaps, network and security, and generating your snapend), click the **App** button to wait for your snapend to be operational.
+
+#### c. Game Server Fleet Configuration
+
+After your snapend is ready, you will see its widget under the game Snapends section. Clicking on this widget will take you to your Snapend home page.
+
+For this demo, we want to first go to the Game Server Fleet Snaps configuration tool. To do this, follow these steps:
+1. On your Snapend homepage look for Quick links and click the **Fleets** button.
+![Snapend Dashboard](/images/docs/tutorials/byogs-inter-snapend-home.png)
+1. You will be taken to the **Fleets** configuration page. This is where you can add and update your global game server fleets.
+
+#### d. Create a Fleet
+1. Click on the **+ Fleet** button to start creating your first fleet.
+    ![Snapend Dashboard](/images/docs/tutorials/byogs-inter-fleet-home.png)
+
+2. You will now see a form to create a fleet. Fill in the following details:
+    - **Name**: Give your fleet any name.
+    - **Description**: Give your fleet any description.
+    - **Image Selector**: Pick the tag that we just uploaded in the previous step.
+        <Note>
+          This is the same tag that you used to publish your BYOGS using snapctl.
+        </Note>
+    ![FleetForm1](/images/docs/tutorials/byogs-inter-fleet-form.png)
+    -  **Configuration**: This section allows you to configure setups for dev, stage and prod environments at once. But we will just select the environment tab that represents the current Snapend (Shown with a Checkmark)
+        - **Regions**: Snapser supports multiple regions. Pick one or more regions from this list. For this tutorial pick a **standard** region — a region id ending in `-ga` is a [protected region](/docs/infra/snaps/game-server-fleets#protected-fleet-regions) and will lock the Server Ports below to `7777` and `7778`.
+        - **Allocation Settings**: Here you can pick your min, max and buffer server counts. For this tutorial, lets stick to 1 for all three.
+        - **Hardware Settings**: This is where you can pick the memory and CPU requirements for your server. For this tutorial, keep the defaults.
+        - **Optional Settings**: This is where you can add custom commands, arguments and environment variables. Leave this as blank for the tutorial.
+    - **Server Ports**: This is the last section in the form, below the Configuration tabs. Add **7654** as the Ingress port and leave Debug port as 0.
+    ![FleetForm2](/images/docs/tutorials/byogs-inter-fleet-form-2.png)
+3. Scroll back up and hit save. This will tell Snapser's global compute to spin up a fleet and keep game servers ready to be allocated.
+![Snapend Dashboard](/images/docs/tutorials/byogs-inter-fleet-creation.png)
+
+### e. Update Lobby Configuration
+1. Go back to the Snapend Configuration home page and select **Lobbies** from the left Navigation.
+1. This should take you to the Lobbies **Settings** tool.
+1. Scroll down to the **Allocation Settings** section and select **Fleet** as the target.
+    <Note>
+      **IMPORTANT**: This tells the Lobby snap to use the Game Server Fleet snap to allocate game servers.
+    </Note>
+1. For this tutorial, also toggle the **Check if lobby ready** option to false. Purely, so that we can allocate a game server without having to wait for the lobby to be ready.
+1. Scroll back up and hit save.
+![LobbyConfiguration](/images/docs/tutorials/byogs-inter-lobby-config.png)
+
+### f. Enable Eventbus event
+1. Go back to the Snapend Configuration home page and select **Eventbus** from the left Navigation.
+1. This should take you to the Eventbus **Websocket** tool.
+1. Look for the `Lobbies - A match has started event` and toggle it to **ON**.
+    <Note>
+      **IMPORTANT**: This tells the Eventbus snap to emit an event when a match has started. This is how the users in the lobby will know the details of the game server they need to connect to.
+    </Note>
+    ![EventbusConfiguration](/images/docs/tutorials/byogs-inter-eventbus-match-started-event.png)
+
+### B. Automated Cluster Creation
+<Note>
+  If you have already completed the manual **Create a Cluster** steps, you can ignore this.
+</Note>
+
+We have also provided a helper script to create a cluster with the exact end state if you had followed the manual instructions. The script uses Snapctl under the hood.
+To run this command you will need the $companyId, $gameId, and the $tag of the BYOGS you deployed.
+1. Go to the [Game Management](https://snapser.com/games) page on Snapser. Click the Copy Icon you see next to **ID** to copy the $companyId.
+1. Click on the game you want to create your Snapend under. This will take you to the Game home page. Click the Copy Icon you see next to **ID** to copy the $gameId.
+1. The $tag is what you tagged your BYOGS deploy with.
+
+```bash
+python snapend_create.py $companyId $gameId $tag
+```
+
+You will see the output from the Snapctl tool as it creates your Snapend. Once the creation is complete, you will see a success message.
+
+```bash
+Success Updated your snapend. Your snapend is Live.
+Success Snapend clone successful. Do not forget to download the latest manifest.
+Your Snapend is created successfully with Snaps: auth, game-server-fleets and lobbies.
+```
+
+<Checkpoint step={3}>
+  You now have a configured Snapend with Auth and Game Server Fleets with your game server code deployed to a global location. You are now ready to allocate a game server and play the game.
+</Checkpoint>
+
+## Step 4: Use Lobby to allocate a server
+With our fleet ready, we want to simulate a real world scenario where two players are playing a game that requires a global server for their upcoming battle. What we will do is:
+1. First create two anonymous users using the Snapend API Explorer.
+2. Then one of the users will use the lobby snap to create a lobby.
+3. The other user will join the lobby created by the first user.
+3. Finally, we will use the lobby snap to allocate a game server for the users to play on.
+Let's do this step by step.
+
+### A. Create Users
+1. Navigate to the Snapend home dashboard and click on the **API Explorer** button under **Quick Links** to access the tool where you can test your API endpoints.
+![API Explorer](/images/docs/tutorials/byogs-inter-ql-api.png)
+1. Click on the **Auth** Snap.
+    ![API Explorer Home](/images/docs/tutorials/byosnap-inter-api-home.png)
+1. Select the **Anonymous Login > AnonLogin PUT** API.
+1. In the payload section, update the **user_name** to any name you prefer and click on the **PUT** button.
+    ![API Call](/images/docs/tutorials/byosnap-inter-anon-login.png)
+1. You will receive a successful response with a **user_id** and **session_token**. This is your User A's User ID and the JWT token for the session.
+    ![Anon User](/images/docs/tutorials/byogs-inter-anon-user.png)
+1. Repeat the above steps to create a second Anonymous user. This will be User B. You should use a different `user_name`.
+<Note>
+  Please save the $userId and $sessionToken for both users, as you will need them for subsequent steps.
+  You can also click the **API Recorder** button at the top of the API Explorer to view and copy the user ID and session token for future use.
+</Note>
+![API Recorder](/images/docs/tutorials/api-history-tool.png)
+![API Call](/images/docs/tutorials/byosnap-rt-api-recorder.png)
+
+### B. Create a Lobby
+1. Go back to the main API Explorer home page and click on the **Lobbies** Snap.
+1. Select the **Create Lobby > CreateLobby POST** API.
+1. Now add the user token for `User A` to the **Token** header of the **CreateLobby** API section, paste the payload you see below and click **POST**.
+```json
+{
+  "allow_party_join": true,
+  "description": "We will use this lobby to test game servers",
+  "max_members": 2,
+  "name": "BYOGs intermediate tutorial",
+  "owner_metadata": {},
+  "owner_placement": 0,
+  "private": false,
+  "search_metadata": {},
+  "start_after_seconds": 0
+}
+```
+You should see a successful response with the lobby ID and other details. **IMPORTANT**: Save the **Lobby ID** as you will need it for the next step.
+![Create Lobby](/images/docs/tutorials/byogs-inter-create-lobby-api.png)
+
+#### C. User B joins the Lobby
+1. Now, in the API explorer, add the **Lobby Id** of the Lobby that User A created, in the URL parameter `lobby_id`.
+1. Add the **session_token** for User B to the **Token** header of the **JoinLobby** API section.
+1. Enter the User B's user Id in the payload. Here is an example of the payload `{"metadata": {},"placement": 0,"user_id": "4dbe4e20-d2e5-4a70-aefe-5d7db1a2be50"}`
+1. Finally, click **POST**.
+    ![Join Lobby](/images/docs/tutorials/byogs-inter-join-lobby.png)
+
+#### D. Allocate a Game Server for the Lobby
+#### Open Stream Tool
+1. Now, before we start the match, we need to start the Steam tool. This will allow us to see the events that are being emitted by the Eventbus snap for the users.
+    <Note>
+    **NOTE**: When we use the **StartMatch** API, the Lobby snap will co-ordinate with the Game Server Fleet snap to allocate a game server for the users. The Game Server Fleet snap will then use the BYOGS code that we deployed to start the game server. And send the server and port details to the users over Websockets.
+    </Note>
+1. Click on the **Start Match** API first to render the view.
+1. Click on the **Steam** tool icon to see the steam tool. Copy the users **session_token** for User A and click Connect.
+    ![Steam Tool Helper](/images/docs/tutorials/api-stream-tool.png)
+    ![Steam Tool](/images/docs/tutorials/byogs-inter-stream-tool.png)
+    <Note>
+      You should see a message like **Websocket connection opened**. If not, you may have forgotten to enable Websockets during Snapend creation or you may have put an incorrect session token.
+    </Note>
+
+#### Start Match
+1. Now, go back to the **Start Match** API and add the **lobby_id** you created in the previous step, and add the **session_token** for User A to the **Token** header of the **StartMatch** API section.
+1. Next, paste the payload you see below and click **POST**. Replace the **$yourFleetName** with the name of the fleet you created in the previous step, owner with the **user_id** of User A and **$yourFleetRegion** with the region you selected for your fleet.
+1. Click **POST** to start the match.
+![Start Match](/images/docs/tutorials/byogs-inter-start-match-api.png)
+
+```json
+{
+  "fleetName": "$yourFleetName",
+  "owner": "$userAsUserId",
+  "region": "$yourFleetRegion",
+}
+```
+
+<Note>
+  `region` is the exact region id you picked in the fleet form, suffix included. If you selected a
+  [protected region](/docs/infra/snaps/game-server-fleets#protected-fleet-regions), pass
+  `frankfurt-ga`, not `frankfurt` — the base id will not match your fleet's deployment.
+</Note>
+
+#### Get Server Details
+1. As soon, as you click **POST**, you should see a message in the **Stream** tool that says **A match has started**. This means that the Eventbus snap has emitted an event that a match has started.
+![Stream Event](/images/docs/tutorials/byogs-inter-start-match-event.png)
+
+#### Check the Game Server Fleet
+1. Now, go back to the **Fleets** configuration page and hover on the **Fleet** you created in the previous step.
+1. You will see a button that says **Control Panel**. Click on it to see the Agones control panel for your fleet.
+1. You will see the game server that the Lobby snap has allocated for you.
+1. You will see your game servers URL and port as well as meta data about the game server, which tells you that it was allocated by the Lobby snap for a particular lobby.
+![Game Server Fleet](/images/docs/tutorials/byogs-inter-gsf-allocated.png)
+
+<Note>
+  **NOTE**: Similar to the Lobbies Snap, you can use the Matchmaking and Parties Snaps to allocate game servers. Check out the Matchmaking and Parties snaps documentation for more details.
+</Note>
+
+<Checkpoint step={4}>
+  Congratulations! You have successfully created a game server using the Lobby snap and allocated it for two users. You can now use the game server URL and port to connect to the game server and play the game.
+</Checkpoint>
+
+## Next Steps
+Check out the BYOSnap tutorials if you have not already.
+<div className="parent">
+  <div className="servicesBox">
+    # BYOSnap Basic
+
+    Learn how to build and deploy your custom code to your Snapend using the Snapser CLI tool.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/byosnap-basic'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div>
+  <div className="servicesBox">
+    # BYOSnap Intermediate
+
+    Check out the intermediate tutorial for your BYOSnap where you can learn how to integrate your
+    BYOSnap with other Snaps in your Snapend.
+
+    <div>
+      <DocsButton href={'/docs/guides/tutorials/byosnap-intermediate'} variant="contained" color="info" size="small" sx={{ml: 2, mb: 1}}>Tutorial</DocsButton>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,525 @@
+export const description = 'Auth'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Epic Login
+
+Click here to view all Auth Snap [connectors](/docs/infra/snaps/auth/connectors).
+
+## Overview
+
+Epic Login is a connector that allows users to log into your application using their Epic Games account.
+This connector leverages the Epic Online Services SDK to ensure a smooth and secure login experience.
+
+## Setup Requirements
+### Step 1: Set Up Epic Games Store Account
+- Create Developer Account: Create a developer account on the Epic Games Developer portal.
+- Onboarding Process: Follow the onboarding steps provided by Epic Games to set up your account and access publishing tools.
+
+## How it works
+
+To implement Epic Login, developers must configure the connector via the Auth Configuration, Connector tool.
+Details on setting this up are available below in the "Configuration Tool" section.
+
+After configuration, the studio should integrate the Epic Online Services SDK for the appropriate platform into the app client.
+The SDK, upon successful authentication, returns a token which should then be sent to the backend server.
+The Auth Snap receives this token, verifies its authenticity with Unreal's servers, and if valid, issues a
+user ID and session token back to the app client. This enables user authentication within the game or app.
+
+Let's dive into both these steps in detail below.
+
+## Configuration Tool
+The Epic Connector configuration tool needs the following details:
+
+### Credentials
+Please open up your Epic Developer portal to get your app client Id and secret
+1. <u>Client Id</u> - Your unique app client identifier
+2. <u>Client Secret</u> - Your game or app's secret
+
+## Integrating the Epic Online Services SDK
+Epic Login is part of Epic Online Services. You will need to integrate EOS into your game to use Epic Login.
+
+### Download the EOS SDK
+- Visit the [Epic Games Developer Portal](https://dev.epicgames.com/portal/.): Go to [dev.epicgames.com](https://dev.epicgames.com) and log in with your Epic Games account.
+- Access the SDK Page: Once logged in, navigate to the SDK section. You can find the latest SDKs for different platforms, including PC (C or C#), Android, iOS, PlayStation, Xbox, and Nintendo Switch.
+- Download the SDK: Choose the appropriate SDK for your platform and follow the instructions to download it.
+- Implement Login Flow: Implement the login flow using the EOS SDK. This typically involves initializing the EOS client, handling user authentication, and managing sessions
+
+#### Unity and Unreal Engine Integration
+There are plugins available that simplify the integration process:
+1. Unity Plugin: The PlayEveryWare [EOS Plugin](https://github.com/PlayEveryWare/eos_plugin_for_unity) for Unity is available on GitHub and can be installed via the Unity Package Manager (UPM)8.
+2. Unreal Engine OSS: The EOS Online Subsystem (OSS) plugin is integrated directly into Unreal Engine, starting from version 4.27
+		- a. Enable the OSS EOS Plugin in Unreal Engine
+			-	Open Unreal Engine Editor: Launch your Unreal Engine project.
+			- Enable the Plugin: Navigate to Edit > Plugins and enable the Online Subsystem EOS plugin. This will also enable related plugins like EOS Plus and EOS Shared by default9.
+			- Restart the Editor: After enabling the plugins, restart the Unreal Engine editor to apply the changes.
+		- b. Configure the OSS EOS Plugin
+			- Edit DefaultEngine.ini: Open the DefaultEngine.ini file located in your project's Config directory.
+			- Set Default Services: Add or modify the following lines to set EOS as the default platform service:
+			```text
+			[OnlineServices]
+			DefaultServices=Epic
+			```
+			- Configure Network Drivers: Add the necessary network driver configurations to support EOS. Refer to Unreal Engine documentation for specific settings
+
+## Usage
+
+Developers have the option to start user sessions with an Anonymous login and later upgrade to a secure
+Epic login, or they can begin directly with an Epic login. If opting for the latter, simply store and
+utilize the user ID and session token returned by the Auth Snap to interact with other APIs on your Snapend.
+For upgrading from an Anonymous to an Epic login, follow the example below.
+
+### Example
+
+1. Assume a game client initiates an AnonLogin request using the device's unique identifier as the username.
+2. The Auth Snap generates a new user profile with `user_id=395d9b91-72fd-40f2-a3cd-cf5a1e7a604f` and `session_token=9a052312-48f6-4710-a072-230ddd046a2d`.
+3. The game client prompts the user to secure their account via Epic Game Services Login, displaying the UI recommended by Epic Games.
+4. The client integrates with the Epic Online Services SDK to authenticate the user and receives a **token**.
+5. Next, the client submits an **EpicLogin** request with the **token** and sets **create_user=true**.
+6. The client receives a new **user_id** and **session_token** linked to the Epic Online Services account.
+7. To merge these accounts, the client utilizes the **AssociateLogins** API, specifying which account to retain and which to discard.
+8. The Auth Snap finalizes the association, discarding the unwanted user ID and token, preserving the necessary ones.
+
+This procedure ensures the account remains secure, as access cannot be gained merely through knowing the username used in the AnonLogin API.
+
+## APIs
+
+Here are the relevant APIs
+
+<div className="apisTable">
+| API Name                | HTTP Method | API Description                                                                         |
+| ----------------------- | ----------- | --------------------------------------------------------------------------------------- |
+| [AssociateLogins](#associatelogins-api)         | PUT         | Associates two logins based on their session tokens                                     |
+| [AnonLogin](#anonlogin-api)               | PUT         | Logs in the user with an arbitrary identifier specified and returns a session           |
+| [EpicLogin](#epiclogin-api)               | PUT         | Logs in the user based on the epic credentials specified and returns a session          |
+</div>
+
+#### AssociateLogins API
+<CodeGroup title="Associates two logins based on their session tokens" tag="PUT" label="AssociateLogins">
+```csharp
+/// <summary>
+/// Associate Multiple Logins Associates two logins based on their session tokens
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object AssociateLogins(AuthAssociateLoginsRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = AssociateLoginsWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthAssociateLoginsRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAssociateLoginsRequest" /> class.
+/// </summary>
+/// <param name="discardUserToken">Token of the user to discard (required).</param>
+/// <param name="keepUserToken">Token of the user to keep (required).</param>
+public AuthAssociateLoginsRequest(string discardUserToken = default(string), string keepUserToken = default(string))
+{
+    // to ensure "discardUserToken" is required (not null)
+    if (discardUserToken == null)
+    {
+        throw new ArgumentNullException("discardUserToken is a required property for AuthAssociateLoginsRequest and cannot be null");
+    }
+    this.DiscardUserToken = discardUserToken;
+    // to ensure "keepUserToken" is required (not null)
+    if (keepUserToken == null)
+    {
+        throw new ArgumentNullException("keepUserToken is a required property for AuthAssociateLoginsRequest and cannot be null");
+    }
+    this.KeepUserToken = keepUserToken;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AssociateLoginsRequest : public Request
+{
+public:
+    virtual ~AssociateLoginsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthAssociateLoginsRequest Body;
+};
+
+class SNAPSER_API SnapserAuthAssociateLoginsRequest : public Model
+{
+public:
+    virtual ~SnapserAuthAssociateLoginsRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Token of the user to discard */
+    FString DiscardUserToken;
+    /* Token of the user to keep */
+    FString KeepUserToken;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AssociateLoginsResponse : public Response
+{
+public:
+    virtual ~AssociateLoginsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AnonLogin API
+<CodeGroup title="Logs in the user with an arbitrary identifier specified and returns a session" tag="PUT" label="AnonLogin">
+```csharp
+/// <summary>
+/// Anonymous Login Logs in the user with an arbitrary identifier specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthAnonLoginResponse</returns>
+public AuthAnonLoginResponse AnonLogin(AuthAnonLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthAnonLoginResponse> localVarResponse = AnonLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthAnonLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAnonLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="username">User&#39;s login ID (required).</param>
+public AuthAnonLoginRequest(bool createUser = default(bool), string username = default(string))
+{
+    // to ensure "username" is required (not null)
+    if (username == null)
+    {
+        throw new ArgumentNullException("username is a required property for AuthAnonLoginRequest and cannot be null");
+    }
+    this.Username = username;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthAnonLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAnonLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthAnonLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AnonLoginRequest : public Request
+{
+public:
+    virtual ~AnonLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthAnonLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthAnonLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthAnonLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* User's login ID */
+    FString Username;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AnonLoginResponse : public Response
+{
+public:
+    virtual ~AnonLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthAnonLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthAnonLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthAnonLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### EpicLogin API
+<CodeGroup title="Logs in the user based on the epic credentials specified and returns a session" tag="PUT" label="EpicLogin">
+```csharp
+/// <summary>
+/// Epic Login Logs in the user based on the epic credentials specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthEpicLoginResponse</returns>
+public AuthEpicLoginResponse EpicLogin(AuthEpicLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthEpicLoginResponse> localVarResponse = EpicLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthEpicLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthEpicLoginRequest" /> class.
+/// </summary>
+/// <param name="code">code generated on the client.</param>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="exchangeCode">exchange_code generated on the client.</param>
+/// <param name="grantType">token generated on the client (required).</param>
+/// <param name="password">exchange_code generated on the client.</param>
+/// <param name="username">exchange_code generated on the client.</param>
+public AuthEpicLoginRequest(string code = default(string), bool createUser = default(bool), string exchangeCode = default(string), string grantType = default(string), string password = default(string), string username = default(string))
+{
+    // to ensure "grantType" is required (not null)
+    if (grantType == null)
+    {
+        throw new ArgumentNullException("grantType is a required property for AuthEpicLoginRequest and cannot be null");
+    }
+    this.GrantType = grantType;
+    this.Code = code;
+    this.CreateUser = createUser;
+    this.ExchangeCode = exchangeCode;
+    this.Password = password;
+    this.Username = username;
+}
+
+/// Snapser.Model for AuthEpicLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthEpicLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthEpicLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::EpicLoginRequest : public Request
+{
+public:
+    virtual ~EpicLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthEpicLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthEpicLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthEpicLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* code generated on the client */
+    TOptional<FString> Code;
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* exchange_code generated on the client */
+    TOptional<FString> ExchangeCode;
+    /* token generated on the client */
+    FString GrantType;
+    /* exchange_code generated on the client */
+    TOptional<FString> Password;
+    /* exchange_code generated on the client */
+    TOptional<FString> Username;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::EpicLoginResponse : public Response
+{
+public:
+    virtual ~EpicLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthEpicLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthEpicLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthEpicLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+

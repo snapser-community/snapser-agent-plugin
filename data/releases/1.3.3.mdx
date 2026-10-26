@@ -1,0 +1,15 @@
+# 1.3.3
+##### December 4, 2025
+
+## Snaps
+### Decorators
+1. Decorators now support `GetGuild` and `GetParty` RPCs. These APIs can now be decorated with users statistics and profile information.
+2. Enabled Decorator payload helper in the API explorer. Making it easy to send and decode decorator payloads.
+
+### Sequencer
+1. Fixed an issue with Sequencer configuration tool where editing a sequence was causing a crash.
+2. Sequencer API HTTP Action UI has been updated to show the example payload making it easy to modify the payload.
+3. Minor bug fix with Sequencer showing the wrong chain count if you discarded changes.
+
+### Auth
+1. You can now create users with api-key or internal auth, even if you have disabled "User Creation" via the admin console. This allows studios to lock the public User creation APIs while still being able to create users via secure methods.

@@ -1,0 +1,579 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "kws_services.proto",
+    "version" : "version not set"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "KwsService"
+  } ],
+  "paths" : {
+    "/v1/kws/users/{user_id}/consent-email" : {
+      "post" : {
+        "description" : "Send consent email",
+        "operationId" : "SendConsentEmail",
+        "parameters" : [ {
+          "description" : "User id",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SendConsentEmail_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/apiHttpBody"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User",
+        "tags" : [ "KwsService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/kws/users/{user_id}/kws-settings/values" : {
+      "get" : {
+        "description" : "Get kws setting values for the user",
+        "operationId" : "GetUserSettingValues",
+        "parameters" : [ {
+          "description" : "User id",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "DOB of the user in YYYY-MM-DD",
+          "explode" : true,
+          "in" : "query",
+          "name" : "dob",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Location of the user, example US-CA",
+          "explode" : true,
+          "in" : "query",
+          "name" : "location",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Whether parental controls should be enforced, might trigger an email to parent to review limits",
+          "explode" : true,
+          "in" : "query",
+          "name" : "enforce_parental_control",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "The relative time zone of the user based off IANA Time Zone database",
+          "explode" : true,
+          "in" : "query",
+          "name" : "time_zone",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Namespace of the setting",
+          "explode" : true,
+          "in" : "query",
+          "name" : "namespace",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "Name of the setting",
+          "explode" : true,
+          "in" : "query",
+          "name" : "setting_name",
+          "required" : false,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        }, {
+          "description" : "full to include settings definitions in the response. (Default: short)",
+          "explode" : true,
+          "in" : "query",
+          "name" : "format",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/kwsGetUserSettingValuesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User",
+        "tags" : [ "KwsService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/kws/webhooks/handle" : {
+      "post" : {
+        "description" : "Handle Kws Webhook",
+        "operationId" : "HandleKwsWebhook",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/kwsHandleKwsWebhookRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/kwsHandleKwsWebhookResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Webhook",
+        "tags" : [ "KwsService" ],
+        "x-codegen-request-body-name" : "body"
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "AnyValue" : {
+        "description" : "Can be of any type",
+        "nullable" : true,
+        "oneOf" : [ {
+          "type" : "string"
+        }, {
+          "type" : "number"
+        }, {
+          "type" : "boolean"
+        }, {
+          "type" : "integer"
+        }, {
+          "type" : "object"
+        }, {
+          "items" : {
+            "type" : "object"
+          },
+          "type" : "array"
+        } ]
+      },
+      "SendConsentEmail_request" : {
+        "properties" : {
+          "age" : {
+            "description" : "Age",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "dob" : {
+            "description" : "DOB of the user in YYYY-MM-DD",
+            "type" : "string"
+          },
+          "enforce_parental_control" : {
+            "description" : "Whether parental controls should be enforced (might trigger an email to the parent to review limits)",
+            "type" : "boolean"
+          },
+          "language" : {
+            "description" : "Language of the email",
+            "type" : "string"
+          },
+          "location" : {
+            "description" : "Location of the user, example US-CA",
+            "type" : "string"
+          },
+          "parent_email" : {
+            "description" : "Parent email",
+            "type" : "string"
+          },
+          "settings" : {
+            "description" : "List of settings",
+            "items" : {
+              "$ref" : "#/components/schemas/kwsConsentSettings"
+            },
+            "type" : "array"
+          },
+          "timezone" : {
+            "description" : "The relative time zone of the user based off IANA Time Zone database",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "apiHttpBody" : {
+        "description" : "Message that represents an arbitrary HTTP body. It should only be used for\npayload formats that can't be represented as JSON, such as raw binary or\nan HTML page.\n\n\nThis message can be used both in streaming and non-streaming API methods in\nthe request as well as the response.\n\nIt can be used as a top-level request field, which is convenient if one\nwants to extract parameters from either the URL or HTTP template into the\nrequest fields and also want access to the raw HTTP body.\n\nExample:\n\n    message GetResourceRequest {\n      // A unique request id.\n      string request_id = 1;\n\n      // The raw HTTP body is bound to this field.\n      google.api.HttpBody http_body = 2;\n\n    }\n\n    service ResourceService {\n      rpc GetResource(GetResourceRequest)\n        returns (google.api.HttpBody);\n      rpc UpdateResource(google.api.HttpBody)\n        returns (google.protobuf.Empty);\n\n    }\n\nExample with streaming methods:\n\n    service CaldavService {\n      rpc GetCalendar(stream google.api.HttpBody)\n        returns (stream google.api.HttpBody);\n      rpc UpdateCalendar(stream google.api.HttpBody)\n        returns (stream google.api.HttpBody);\n\n    }\n\nUse of this type only changes how the request and response bodies are\nhandled, all other features will continue to work unchanged.",
+        "properties" : {
+          "content_type" : {
+            "description" : "The HTTP Content-Type header value specifying the content type of the body.",
+            "type" : "string"
+          },
+          "data" : {
+            "description" : "The HTTP request/response body as raw binary.",
+            "format" : "byte",
+            "pattern" : "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+            "type" : "string"
+          },
+          "extensions" : {
+            "description" : "Application specific response metadata. Must be set in the first response\nfor streaming APIs.",
+            "items" : {
+              "$ref" : "#/components/schemas/protobufAny"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "kwsConsentSettings" : {
+        "properties" : {
+          "namespace" : {
+            "description" : "Namespace of the setting",
+            "type" : "string"
+          },
+          "setting_name" : {
+            "description" : "Name of the setting",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "kwsGetUserSettingValuesResponse" : {
+        "properties" : {
+          "meta" : {
+            "$ref" : "#/components/schemas/kwsKwsUserSettingMeta"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/kwsKwsUserSettingValueList"
+          }
+        },
+        "type" : "object"
+      },
+      "kwsHandleKwsWebhookRequest" : {
+        "properties" : {
+          "environment_id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "org_id" : {
+            "type" : "string"
+          },
+          "payload" : {
+            "$ref" : "#/components/schemas/AnyValue"
+          },
+          "product_id" : {
+            "type" : "string"
+          },
+          "times" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "kwsHandleKwsWebhookResponse" : {
+        "type" : "object"
+      },
+      "kwsKwsSettingDefinition" : {
+        "properties" : {
+          "age_bracket" : {
+            "$ref" : "#/components/schemas/kwsKwsSettingRegionalAgeBracket"
+          },
+          "allow_product_overrides" : {
+            "description" : "Determines whether or not settings can be overridden and specifies if overrides are limited to values, translations, regions or age brackets",
+            "type" : "string"
+          },
+          "data_storage" : {
+            "description" : "Whether the setting data should be stored",
+            "type" : "string"
+          },
+          "increment_or_decrement_by" : {
+            "description" : "The value to apply for each increment or decrement. i.e. a value of 2 would result in 6 incrementing to 8 or decrementing to 4",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "inherit_from_org" : {
+            "description" : "Whether the setting was inherited from the organisation level",
+            "type" : "boolean"
+          },
+          "max" : {
+            "description" : "The maximum value for a numeric setting",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "maximum_schedule_windows_per_day" : {
+            "description" : "The maximum number of schedule windows allowed for the particular setting",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "min" : {
+            "description" : "The minimum value for a numeric setting",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "namespace" : {
+            "description" : "The namespace of the setting",
+            "type" : "string"
+          },
+          "number_of_decimals" : {
+            "description" : "The number of decimals for a numeric setting",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "numeric_value_format" : {
+            "description" : "The numeric value type (decimal, integer, etc)",
+            "type" : "string"
+          },
+          "options" : {
+            "items" : {
+              "$ref" : "#/components/schemas/kwsKwsSettingOption"
+            },
+            "type" : "array"
+          },
+          "org_id" : {
+            "description" : "The organisation ID of the setting",
+            "type" : "string"
+          },
+          "previous_age_bracket" : {
+            "$ref" : "#/components/schemas/kwsKwsSettingRegionalAgeBracket"
+          },
+          "product_id" : {
+            "description" : "The product ID of a product-level setting",
+            "type" : "string"
+          },
+          "required" : {
+            "description" : "Whether the setting is required",
+            "type" : "boolean"
+          },
+          "restrictive_order" : {
+            "description" : "The type of restrictiveOrder that corresponds with the value type of the setting. The restrictiveOrder can be oneOf 'firstRestrictive', 'firstPermissive' for valueType 'option' 'lowRestrictive', 'lowPermissive' for valueType 'numeric' 'falseRestrictive', 'falsePermissive' for valueType 'boolean' 'earlierRestrictive', 'earlierPermissive' for valueType 'date'",
+            "type" : "string"
+          },
+          "schedule_period" : {
+            "description" : "The configured schedule periods, can be 5m, 10m, 15m, 30m 1h, 1d",
+            "type" : "string"
+          },
+          "setting_name" : {
+            "description" : "The name used to identify the setting",
+            "type" : "string"
+          },
+          "translations" : {
+            "description" : "Translations",
+            "type" : "object"
+          },
+          "user_hidden" : {
+            "description" : "Whether the setting is visible to a child user or not",
+            "type" : "boolean"
+          },
+          "value_type" : {
+            "description" : "The type of setting value (boolean, numeric, option, etc)",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "kwsKwsSettingOption" : {
+        "properties" : {
+          "translations" : {
+            "description" : "Translations",
+            "type" : "object"
+          },
+          "value" : {
+            "description" : "The value for the setting option",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "kwsKwsSettingRegionalAgeBracket" : {
+        "properties" : {
+          "apply_consent_to_enforced_users_only" : {
+            "description" : "The consent required from the parent for the age bracket",
+            "type" : "boolean"
+          },
+          "consent_type" : {
+            "description" : "The type of consent required for the age bracket",
+            "type" : "string"
+          },
+          "default_parent_limit" : {
+            "$ref" : "#/components/schemas/AnyValue"
+          },
+          "default_preference" : {
+            "$ref" : "#/components/schemas/AnyValue"
+          },
+          "enforced_limit" : {
+            "$ref" : "#/components/schemas/AnyValue"
+          },
+          "enforced_limit_schedule" : {
+            "description" : "Enforeced limit schedule",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "kwsKwsUserSettingMeta" : {
+        "properties" : {
+          "request_id" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "kwsKwsUserSettingValue" : {
+        "properties" : {
+          "definition" : {
+            "$ref" : "#/components/schemas/kwsKwsSettingDefinition"
+          },
+          "effective_source" : {
+            "description" : "How the effective value was determined (one of default, preference, parentLimit, enforcedLimit).",
+            "type" : "string"
+          },
+          "effective_value" : {
+            "$ref" : "#/components/schemas/AnyValue"
+          },
+          "is_org_level" : {
+            "description" : "True if the full setting is from an org-level setting and false if it is from a product-level setting (only relevant when using setting inheritance)",
+            "type" : "boolean"
+          },
+          "last_graduated_at" : {
+            "description" : "The unix timestamp in milliseconds for the date/time that the user last graduated to a different age-bracket.",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "namespace" : {
+            "description" : "The namespace of setting",
+            "type" : "string"
+          },
+          "parent_limit" : {
+            "$ref" : "#/components/schemas/AnyValue"
+          },
+          "parent_limit_from_org_level" : {
+            "description" : "True if the parent limit value is from an org-level setting and false if it is from a product-level setting (only relevant when using setting inheritance)",
+            "type" : "boolean"
+          },
+          "parent_limit_schedule" : {
+            "description" : "A hashmap containing the parent limit schedule, with keys as time window and value as the parent limit",
+            "type" : "object"
+          },
+          "parent_limit_schedule_enabled" : {
+            "description" : "True if the parent limit schedule is enabled, indicating that a schedule may have been used in calculation of users effective value.",
+            "type" : "boolean"
+          },
+          "parent_limit_updated_at" : {
+            "description" : "The unix timestamp in milliseconds for the date/time that the parent limit was last updated. If null, it indicates that the user is using the default",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "preferred_value" : {
+            "$ref" : "#/components/schemas/AnyValue"
+          },
+          "preferred_value_from_org_level" : {
+            "description" : "True if the preferred value is from an org-level setting and false if it is from a product-level setting (only relevant when using setting inheritance)",
+            "type" : "boolean"
+          },
+          "preferred_value_updated_at" : {
+            "description" : "The unix timestamp in milliseconds for the date/time that the preferred value was last updated. If null, it indicates that the user is using the default",
+            "format" : "int64",
+            "type" : "string"
+          },
+          "schedule_calculated_from_time_zone" : {
+            "description" : "Time Zone used in the calculation of a users effective value when a parentLimitSchedule is enabled",
+            "type" : "string"
+          },
+          "setting_name" : {
+            "description" : "The setting name",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "kwsKwsUserSettingValueList" : {
+        "properties" : {
+          "settings" : {
+            "items" : {
+              "$ref" : "#/components/schemas/kwsKwsUserSettingValue"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "protobufAny" : {
+        "additionalProperties" : {
+          "type" : "object"
+        },
+        "description" : "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(&foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n    // or ...\n    if (any.isSameTypeAs(Foo.getDefaultInstance())) {\n      foo = any.unpack(Foo.getDefaultInstance());\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := &pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := &pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": <string>,\n      \"lastName\": <string>\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }",
+        "properties" : {
+          "@type" : {
+            "description" : "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com. As of May 2023, there are no widely used type server\nimplementations and no plans to implement one.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics.",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "protobufNullValue" : {
+        "default" : "NULL_VALUE",
+        "description" : "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value.",
+        "enum" : [ "NULL_VALUE" ],
+        "type" : "string"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

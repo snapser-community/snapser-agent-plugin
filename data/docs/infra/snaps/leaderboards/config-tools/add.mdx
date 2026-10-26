@@ -1,0 +1,57 @@
+# Add a Leaderboard
+
+This tool allows you to add a new leaderboard to your game or app. The tool allows you to setup at a future date and time when the leaderboard
+will start. This is useful if you want to setup a leaderboard for a future event.
+
+To get started:
+
+1. Click on `Leaderboards` from the side Nav.
+2. Click on the `Add a Leaderboard` button.
+
+## Leaderboard Details
+
+1. **Name**: The name of the leaderboard. This should be an alphanumeric string with dashes and under scores.
+2. **Description**: A optional short description of the leaderboard.
+
+## Leaderboard Properties
+
+1. **Behavior**: The behavior of the leaderboard. The service supports the following behaviors:
+   - **Counter** - Leaderboard where the value is an incrementing or decrementing counter.
+   - **Maximum** - Leaderboard where the value is only updated if it's above the current maximum value for a user score.
+   - **Minimum** - Leaderboard where the value is only updated if it's below the minimum value for a user score.
+   - **Most Recent Score** - Leaderboard where the value is always the most current value that has been updated.
+2. **Sort**: The sort order of the leaderboard. The service supports the following sort orders:
+   - **Ascending** - The leaderboard is sorted in ascending order.
+   - **Descending** - The leaderboard is sorted in descending order.
+3. **Scope**: The scope of the leaderboard which can be external or internal.
+   - **External** - Leaderboard where the value is updated by the client.
+   - **Internal** - Leaderboard where the value is updated by the server using App auth.
+
+## Leaderboard Period
+
+1. **Start Date**: The date and time when the leaderboard will start.
+2. **Period**: The leaderboard can be recurring or non-recurring.
+   - **Recurring** - Leaderboard that resets over a schedule.
+   - **Non-Recurring** - Leaderboard that never resets.
+
+## Leaderboard Type
+
+1. **Type**: The type of the leaderboard which can be global or tiered.
+   - **Global** - Single leaderboard for your entire user base.
+   - **Tiered** - Leaderboards with tiers and each tier having a fixed bucket size.
+
+## Leaderboard Tier Details
+
+1. **Name**: The name of the tier.
+2. **Description**: A optional short description of the tier.
+3. **Bucket Size**: The number of users in a single bucket of the tier. Snapser automatically creates more buckets of the given size as more users fill the tier.
+4. **Single Bucket**: Checking this box tells Snapser that instead of automatically creating n buckets of size **Bucket size** you want, only 
+have one single bucket for the tier. Essentially giving you a global leaderboard for the tier.
+
+<Note>
+  The tier entries should be in ascending order. Say you have a league with
+  bronze, silver and gold tiers. The bronze tier should be the first entry,
+  silver the second and gold the third.
+</Note>
+
+![Admin Pic](/images/docs/leaderboards-admin.png)

@@ -1,0 +1,133 @@
+export const description = 'Quick Start Guide for Api proxy with Hermes.'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Realtime Backend
+
+## Web Socket
+Snapser provides a highly scalable Web socket server for your app to unlock realtime full-duplex communication between your app clients and your backend, giving your users a real-time experience. Instead of making HTTPS calls to your Snapend via the Snapser SDK, you can opt to establish a Web Socket connection to your Snapend and invoke APIs exposed by Snaps in your Snapend.
+
+## Setup
+When creating or updating your Snapend, under the Customize step, you will see a Nav bar with **Gateway**. Click on it
+and you should see a toggle that allows you to enable/disable Web Socket for your Snapend.
+
+![Hermes](/images/docs/tutorials/byosnap-rt-hermes.png)
+
+## Architecture
+When you enable Web Sockets for your Snapend, Snapser will create a Web Socket server called Hermes for your Snapend.
+This server will scale horizontally as your app scales. Hermes will be responsible for handling all Web Socket connections,
+forwarding messages to the appropriate Snap, and sending responses back to the client.
+
+![hermes-web-socket](/images/docs/hermes-web-socket.png)
+
+<Warning>
+Your client **must** implement auto-reconnect. Hermes scales horizontally and its pods are recycled
+during scaling events and Snapend version upgrades, so an established connection will occasionally be
+asked to migrate. See [Connection Lifecycle](#connection-lifecycle) below for how Hermes signals a
+drain and how your client must respond. Without auto-reconnect, routine maintenance will appear to
+your users as a dropped connection.
+</Warning>
+
+## Connection Lifecycle
+Hermes connections are long-lived but not permanent. When a Snapend is upgraded or restarted, the
+affected Hermes instance drains gracefully over a window of up to **15 minutes**, giving every
+connected client time to move to a healthy instance before its connection is closed.
+
+During a drain, Hermes does **not** immediately close your connection. Instead it sends a **Going
+Away** application message (message type `GoingAway`) that asks the client to reconnect. The
+connection stays open and fully usable, so your client can finish in-flight work and migrate on its
+own schedule:
+
+1. Within about **one minute** of the drain starting, every connected client receives an initial
+   Going Away message.
+2. Hermes re-sends the Going Away message as the deadline approaches - by default when there are
+   **10, 5, and 1** minutes of grace remaining - each time carrying an updated countdown.
+3. When the grace window reaches **0**, Hermes force-closes any connection that has not already
+   reconnected, with WebSocket close code **1001 (going away)**. If a proxy in front of Hermes drops
+   the close frame, the client may instead observe **1006 (abnormal closure)**.
+
+### The Going Away message
+The Going Away message is delivered like any other server message and carries the drain countdown:
+
+1. **Message Type**: The message type enum, corresponding to `GoingAway` (`MESSAGE_TYPE_GOING_AWAY`).
+2. **Message**: The message body, under the `going_away` field, which contains:
+   - `seconds_until_force_close`: Seconds remaining before Hermes force-closes the connection.
+     Refreshed on every re-send. `0` means no fixed deadline is set (the drain is waiting
+     indefinitely) - reconnect anyway.
+   - `reason`: A human-readable description of why the connection is going away.
+
+### How clients must respond
+Clients **must** treat drains as routine and migrate without surfacing an error to the user:
+
+1. **On a `GoingAway` message**: open a new connection to your Snapend (which routes you to a healthy
+   Hermes instance), move your traffic onto it, then close the old connection. Doing this as soon as
+   the first message arrives - rather than waiting for the countdown to expire - avoids any forced
+   disconnect. Add a small random delay before reconnecting so a busy instance does not push every
+   client to reconnect at the same instant. Hermes re-sends the message as the deadline nears, so
+   guard against starting more than one migration.
+2. **On close codes 1001 or 1006**: reconnect immediately if you have not already migrated. No
+   backoff is needed on the first attempt, because a replacement Hermes instance is already serving
+   traffic.
+3. **On any other close code or network error**: reconnect with exponential backoff plus jitter.
+4. **After reconnecting**: re-establish session-scoped state. Hermes registers presence for the new
+   connection automatically, but your client should re-request presence information and re-arm any
+   event expectations it tracks locally.
+
+<Note>
+  The Going Away message and close codes 1001 and 1006 are expected during Snapend version upgrades.
+  They are not errors and should not be surfaced to your users as failures.
+</Note>
+
+## Making Requests
+
+<Note>You can only invoke public apis using this feature</Note>
+
+To start making requests, you need to download the client protos for the Snap you want to interact with from your Snapend downloads page.
+Once you have the client protos and a Web Socket connection established with Hermes, you can send a message to Hermes with the following
+information to invoke an API on the Snapend:
+
+1. **Message Id**: A unique identifier for the message. Hermes will use the same message id to respond back with the API response.
+2. **Message Type**: A message type enum, corresponding to `SnapApiRequest`. Refer to the SDK for more details.
+3. **Message**: The message body, which should contain the following keys:
+   - `method`: This string instructs Hermes which API to invoke. You can find the string for any API you wish to invoke in the client protos. A typical string might look like `/statistics.StatisticsService/GetUserStatistics`, `/statistics.StatisticsService/SetUserStatistic`.
+   - `payload`: The payload that the API expects, serialized as protobuf.
+
+<Note>
+Currently, only protobuf payloads are supported. Support for JSON payloads will be added soon.
+</Note>
+
+After sending this message, the relevant API in the Snapend will be invoked and the response will be returned to you via Web Socket. The response message from Hermes will contain the following fields:
+
+1. **Message Id**: The same message id you passed to Hermes for making a request to the Snap.
+2. **Message Type**: The message type enum, corresponding to `SnapApiResponse`. Refer to the SDK for more details.
+3. **Message**: The message body, which will contain the following keys:
+   - `payload`: The response of the API, in bytes, serialized as protobuf.
+   - `errored`: A boolean value that indicates if the invoked API returned any error.
+   - `error`: The error object, in case `errored` is true. This object contains the following keys:
+     - `code`: The gRPC error code.
+     - `message`: The error message.
+     - `details`: Any extra details pertaining to the error.
+
+## Listening to Events
+
+This integration also enables snaps in your Snapend to broadcast specific events to appropriate target user, such as when a user's virtual currency balance is updated or user statistics are modified.
+
+### Receive Events
+
+Snaps that support this feature include an `Events` admin tool. Through this tool, you can enable specific events.
+
+Once you've enabled the desired events, download the client protos for the Snap you want to interact with from our downloads page. With the client protos and a Web Socket connection established with Hermes, the game client can start receiving events.
+
+Each event is proto marshalled with specific fields that help identify the snap sending the event.
+The message from Hermes will contain the following fields:
+
+1. **Message Id**: A unique message id.
+2. **Message Type**: The message type enum, corresponding to `SNAP_EVENT`. Refer to the SDK for more details.
+3. **Message**: The message body, which will contain the following keys:
+   - `payload`: The response of the API, serialized as protobuf in bytes. The type of payload depends on the snap sending the event. Refer to the snap documentation for more details.
+   - `event_id`: The id of the event being sent. This is an enum, and each snap has its own set of events. Refer to the snap documentation for more details.
+   - `service_name`: The name of the snap emitting the event, such as `inventory`, `quests`, or `statistics`.
+

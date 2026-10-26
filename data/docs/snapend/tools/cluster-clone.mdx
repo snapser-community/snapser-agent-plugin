@@ -1,0 +1,37 @@
+export const description = 'Snapend clone'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Cluster Clone
+
+## Concept
+The Snapser Cluster Clone tool allows you to copy the architecture of an existing snapend and the snaps configuration to create a new snapend. This includes all the Bring your own servers, data plane setup as well. This way you can manually create a cluster once and then just use this tool, to clone more clusters when you need them.
+
+<Warning>
+  Cloning a cluster is a Premium feature and is only available on paid plans. If you are on a free plan, you will not see this option. However, importing a manifest is available on all plans.
+</Warning>
+
+## Tutorials
+The best way to understand cloning is to go through the following tutorial:
+1. [Snapend Settings & Clone](/docs/guides/tutorials/snapend-settings-clone): This tutorial will expose you to the Snapend Clone tool, Snap configurations and the nuances with certain tools.
+
+### How does it work?
+Every cluster in Snapser is powered by an underlying [manifest](/docs/snapend/infra-as-code). This manifest is what is getting copied over. Essentially you are building a new cluster with the same architecture and configuration as the source cluster.
+
+## Tool Location
+
+The Cluster clone is available when you click on the "Create Cluster" button and reach Step 2. Here instead of selecting the Snaps you will see a button called "Clone". You can then select the cluster you want to clone from and then toggle the snaps configuration you want to copy over.
+
+![SnapendClone](/images/docs/snapend-clone.png)
+
+If you have downloaded the manifest for the source cluster, you can also upload the manifest here. This will allow you to create a new cluster with the same architecture and configuration as the source cluster.
+
+![SnapendCloneManifest](/images/docs/snapend-clone-manifest.png)
+
+## FAQs
+### Do I have the option to update the Snapend post clone or import?
+
+Yes, even if you use the Clone tool and pick a cluster to clone from, the UI
+will allow you to edit the setup before you create the cluster.

@@ -1,0 +1,28 @@
+# Segments
+This tool allows you to add, edit and delete user segments.
+
+To get started:
+1. Click on `Segments` from the side Nav.
+2. Click on the `Add a Segment` button.
+3. You will then see a form where you can add or update your segment.
+
+## Segment Details
+1. **Name** - Unique name for the segment. This should be alphanumeric without spaces.
+
+## Segment Predicates
+You can now design a combination of predicates for your segment.
+Predicates are rules that are evaluated against the user statistics.
+Segments can have multiple predicates and can be inclusive or exclusive.
+1. **Add an OR Predicate** - This button allows you to add a predicate to your segment.
+2. **Add an AND Predicate** - This button allows you to add a predicate to your segment.
+
+### Segment Predicate Operators
+1. Counter type stats can use the following operators: `is equal to`, `is not equal to`, `is greater than`, `is less than`, `is greater than or equal to`, `is less than or equal to` operators.
+2. String type stats can use the following operators: `is equal to`, `is not equal to` operators.
+3. Timestamp type stats can use the following operators: `is equal to`, `is not equal to`, `is greater than`, `is less than`, `is greater than or equal to`, `is less than or equal to` operators.
+    Additionally timestamp stats allow you to use `now()` function to compare with the current time.
+    <Note>
+    You can use: now(), now() +- X days, now() +- X hours, now() +- X minutes, now() +- X seconds, now() +- X years,now() +- X quarters, now() +- X months, now() +- X weeks,
+    </Note>
+
+![Admin Segments Pic](/images/docs/segments-admin.png)

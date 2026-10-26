@@ -1,0 +1,22 @@
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Generic Errors Returned by all the snaps
+
+All the snaps, apart from their snap specific error codes, can return a couple of generic error codes.
+
+<div className="errorsTable">
+| Code | Variable                       | Message                  | HTTP | gRPC                |
+| ---- | ------------------------------ | ------------------------ | ---- | ------------------- |
+| 1    | ErrGenericUnknown              | Unknown error occurred   | 500  | Unknown             |
+| 2    | ErrGenericInternal             | Internal error occurred  | 500  | Internal            |
+| 3    | ErrGenericBadRequest           | Invalid request          | 400  | InvalidArgument     |
+| 4    | ErrGenericNotImplemented       | Not implemented          | 501  | Unimplemented       |
+| 5    | ErrGenericNotFound             | Not found                | 404  | NotFound            |
+| 6    | ErrGenericUnauthorized         | Unauthorized user        | 403  | PermissionDenied    |
+| 7    | ErrGenericUnauthenticated      | Unauthenticated user     | 401  | Unauthenticated     |
+| 8    | ErrGenericConflict             | Conflict                 | 409  | AlreadyExists       |
+| 9    | ErrGenericResourceExhausted    | Resource exhausted       | 429  | ResourceExhausted   |
+| 10   | ErrGenericPreconditionFailed   | Precondition failed      | 412  | FailedPrecondition  |
+</div>

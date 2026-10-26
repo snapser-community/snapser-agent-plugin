@@ -1,0 +1,785 @@
+export const description = 'Matchmaking Examples'
+
+export const meta = {
+  author: 'Snapser',
+}
+
+# Matchmaking Profile Examples
+
+This page provides a collection of ready-to-use Match Profile examples covering common game matchmaking scenarios. Each example includes a full JSON configuration along with an explanation of why each setting is configured the way it is.
+
+You can use these as starting templates and adapt them to your game's needs. For detailed documentation on each field, see the [Matchmaking Snap](/docs/infra/snaps/matchmaking) reference.
+
+## Simple 1v1 Duel
+
+A minimal matchmaking profile for a 1v1 game mode where two players are matched based on their Elo rating. The Elo filter uses auto expansion to gradually widen the search range, ensuring players find a match even during low-population periods.
+
+```json
+{
+  "name": "duel-1v1",
+  "description": "Simple 1v1 duel with Elo-based matching",
+  "is_active": true,
+  "min_players": 2,
+  "max_players": 2,
+  "match_acceptance_settings": {
+    "enabled": false,
+    "timeout_seconds": "0"
+  },
+  "backfill_settings": null,
+  "delay_partial_match_seconds": 0,
+  "assignment_settings": null,
+  "host_selection_settings": {
+    "enabled": false,
+    "key": "",
+    "operator": "min"
+  },
+  "queue_settings": {
+    "enabled": false,
+    "max_party_size": 0,
+    "min_party_size": 0
+  },
+  "team_formation_settings": {
+    "enabled": true,
+    "num_teams": 2,
+    "min_players_per_team": 1,
+    "allow_party_separation": false,
+    "strategy": "TEAM_FORMATION_ALTERNATE",
+    "strategy_arg": "elo"
+  },
+  "pools": [
+    {
+      "name": "elo-pool",
+      "applies_after_seconds": "0",
+      "applies_for_seconds": "99999999",
+      "double_range_filters": [
+        {
+          "double_arg": "elo",
+          "start": 0,
+          "end": 0,
+          "is_absolute": false,
+          "auto_expansion": {
+            "initial_start": 0,
+            "initial_end": 0,
+            "interval_seconds": 5,
+            "spread_amount": 100,
+            "max_spread": 99999999,
+            "spread_strategy": "AUTO_EXPANSION_BALANCED"
+          },
+          "expansion_steps": [],
+          "expansion_formation_strategy": "UNSPECIFIED"
+        }
+      ],
+      "string_equals_filters": [],
+      "tag_present_filters": [],
+      "statistics_filters": [],
+      "leaderboard_filters": [],
+      "latency_filter": null,
+      "bot_filter": null
+    }
+  ],
+  "metadata": {}
+}
+```
+
+**Key points:**
+
+- **Team formation** uses `TEAM_FORMATION_ALTERNATE` with `elo` as the strategy argument. This means the two players are placed on opposing teams sorted by Elo so that matches are competitively balanced.
+- **Auto expansion** starts with a tight range (0 spread) and expands by 100 Elo every 5 seconds. This ensures players are matched closely at first, but the range widens quickly so no one waits forever.
+- **No allocation** is set (`assignment_settings: null`). Add a fleet or lobby allocation if your game needs a dedicated server.
+
+---
+
+## Casual 5v5 Team Match
+
+A casual team game mode where 10 players are split into 2 teams of 5. Players select a game mode via a custom string argument (e.g., `"casual"`), and there are no strict skill-based filters. The `delay_partial_match_seconds` setting gives the matchmaker extra time to fill the lobby before starting with fewer players.
+
+```json
+{
+  "name": "casual-5v5",
+  "description": "Casual 5v5 team match with flexible player count",
+  "is_active": true,
+  "min_players": 8,
+  "max_players": 10,
+  "match_acceptance_settings": {
+    "enabled": false,
+    "timeout_seconds": "0"
+  },
+  "backfill_settings": {
+    "enabled": true,
+    "timeout_seconds": "60"
+  },
+  "delay_partial_match_seconds": 30,
+  "assignment_settings": null,
+  "host_selection_settings": {
+    "enabled": false,
+    "key": "",
+    "operator": "min"
+  },
+  "queue_settings": {
+    "enabled": false,
+    "max_party_size": 0,
+    "min_party_size": 0
+  },
+  "team_formation_settings": {
+    "enabled": true,
+    "num_teams": 2,
+    "min_players_per_team": 4,
+    "allow_party_separation": false,
+    "strategy": "TEAM_FORMATION_UNSPECIFIED",
+    "strategy_arg": ""
+  },
+  "pools": [
+    {
+      "name": "casual",
+      "applies_after_seconds": "0",
+      "applies_for_seconds": "600",
+      "double_range_filters": [],
+      "string_equals_filters": [
+        {
+          "string_arg": "game_mode",
+          "value": "casual"
+        }
+      ],
+      "tag_present_filters": [],
+      "statistics_filters": [],
+      "leaderboard_filters": [],
+      "latency_filter": null,
+      "bot_filter": null
+    }
+  ],
+  "metadata": {}
+}
+```
+
+**Key points:**
+
+- **Flexible player count**: `min_players: 8` and `max_players: 10` means the match can start with as few as 8 players (4 per team) but ideally fills to 10.
+- **Delay partial match**: Set to 30 seconds. If only 8-9 players are found, the matchmaker waits 30 seconds before forming the match, giving time for a 10th player to join.
+- **Backfilling**: Enabled with a 60-second window. After the match starts, additional players can join to fill empty slots within a minute.
+- **String equals filter**: Only tickets with `game_mode = "casual"` in their `string_args` will be matched together. The game client passes this when creating a ticket.
+- **Team formation**: Uses the default strategy (least populated), which randomly assigns players to teams while keeping party members together.
+
+---
+
+## Ranked Competitive with MMR and Fleet Allocation
+
+A competitive ranked mode with skill-based matching using an MMR statistic, match acceptance to prevent AFKs, latency-aware filtering, and fleet allocation to dedicated game servers across multiple regions. This is a full-featured profile suitable for competitive games.
+
+```json
+{
+  "name": "ranked-competitive",
+  "description": "Ranked 4v4 competitive with MMR matching and fleet allocation",
+  "is_active": true,
+  "min_players": 8,
+  "max_players": 8,
+  "match_acceptance_settings": {
+    "enabled": true,
+    "timeout_seconds": "15"
+  },
+  "backfill_settings": null,
+  "delay_partial_match_seconds": 0,
+  "assignment_settings": {
+    "fleet_name": "ranked-servers",
+    "geo": [
+      "oregon",
+      "frankfurt",
+      "nvirginia"
+    ],
+    "id": "",
+    "lobby_start_after_seconds": 0,
+    "metadata": {
+      "match_type": "ranked_4v4"
+    },
+    "type": "fleet"
+  },
+  "host_selection_settings": {
+    "enabled": false,
+    "key": "ranked_mmr",
+    "operator": "min"
+  },
+  "queue_settings": {
+    "enabled": false,
+    "max_party_size": 0,
+    "min_party_size": 0
+  },
+  "team_formation_settings": {
+    "enabled": true,
+    "num_teams": 2,
+    "min_players_per_team": 4,
+    "allow_party_separation": false,
+    "strategy": "TEAM_FORMATION_ALTERNATE",
+    "strategy_arg": "ranked_mmr"
+  },
+  "pools": [
+    {
+      "name": "ranked",
+      "applies_after_seconds": "0",
+      "applies_for_seconds": "300",
+      "double_range_filters": [],
+      "string_equals_filters": [
+        {
+          "string_arg": "queue",
+          "value": "4v4_ranked"
+        }
+      ],
+      "tag_present_filters": [],
+      "statistics_filters": [
+        {
+          "stat_name": "ranked_mmr",
+          "stat_type": "counter",
+          "start": 0,
+          "end": 0,
+          "is_absolute": false,
+          "value": "",
+          "auto_expansion": {
+            "initial_start": 0,
+            "initial_end": 0,
+            "interval_seconds": 30,
+            "spread_amount": 100,
+            "max_spread": 500,
+            "spread_strategy": "AUTO_EXPANSION_BALANCED"
+          },
+          "expansion_steps": [],
+          "expansion_formation_strategy": "UNSPECIFIED"
+        }
+      ],
+      "leaderboard_filters": [],
+      "latency_filter": {
+        "start": 0,
+        "end": 0,
+        "formation_strategy": "",
+        "expansion_formation_strategy": "UNSPECIFIED",
+        "expansion_steps": [
+          {
+            "applies_after_seconds": 0,
+            "applies_for_seconds": 60,
+            "start": 0,
+            "end": 80
+          },
+          {
+            "applies_after_seconds": 60,
+            "applies_for_seconds": 60,
+            "start": 0,
+            "end": 150
+          },
+          {
+            "applies_after_seconds": 120,
+            "applies_for_seconds": 180,
+            "start": 0,
+            "end": 250
+          }
+        ],
+        "steps": [
+          {
+            "applies_after_seconds": 0,
+            "applies_for_seconds": 60,
+            "start": 0,
+            "end": 80
+          },
+          {
+            "applies_after_seconds": 60,
+            "applies_for_seconds": 60,
+            "start": 0,
+            "end": 150
+          },
+          {
+            "applies_after_seconds": 120,
+            "applies_for_seconds": 180,
+            "start": 0,
+            "end": 250
+          }
+        ]
+      },
+      "bot_filter": null
+    }
+  ],
+  "metadata": {}
+}
+```
+
+**Key points:**
+
+- **Match acceptance**: Enabled with a 15-second timeout. All 8 players must accept or the match is cancelled and remaining players are re-queued.
+- **Fleet allocation**: The match is allocated to the `ranked-servers` fleet across Oregon, Frankfurt, and N. Virginia. The `metadata` passes `match_type: "ranked_4v4"` to the game server via Agones annotations.
+- **Statistics filter (MMR)**: Uses `ranked_mmr` as a relative counter-type stat with auto expansion. Starts tight (0 spread), expands by 100 MMR every 30 seconds, capped at 500 total spread. The matchmaker automatically fetches each player's `ranked_mmr` from the Statistics snap.
+- **Latency filter**: Uses manual expansion steps. For the first 60 seconds, only matches players with sub-80ms latency. Then widens to 150ms, and finally 250ms after 2 minutes. This ensures low-latency matches when possible but doesn't leave players stranded.
+- **Team formation**: `TEAM_FORMATION_ALTERNATE` with `ranked_mmr` ensures teams are balanced by distributing high and low MMR players across both teams.
+
+---
+
+## Skill-Tiered Matchmaking with Multiple Pools
+
+A profile that uses multiple pools with tag filters to separate players into skill tiers. Lower-skilled players are matched together in one pool, while higher-skilled players are matched in another. Each pool can have its own expansion rules. This pattern is useful for games that want to protect new or lower-skilled players from being matched against veterans.
+
+```json
+{
+  "name": "tiered-matchmaking",
+  "description": "Skill-tiered 1v1 with separate pools for beginners and experienced players",
+  "is_active": true,
+  "min_players": 2,
+  "max_players": 2,
+  "match_acceptance_settings": {
+    "enabled": false,
+    "timeout_seconds": "0"
+  },
+  "backfill_settings": null,
+  "delay_partial_match_seconds": 0,
+  "assignment_settings": null,
+  "host_selection_settings": {
+    "enabled": false,
+    "key": "",
+    "operator": "min"
+  },
+  "queue_settings": {
+    "enabled": false,
+    "max_party_size": 0,
+    "min_party_size": 0
+  },
+  "team_formation_settings": {
+    "enabled": true,
+    "num_teams": 2,
+    "min_players_per_team": 1,
+    "allow_party_separation": false,
+    "strategy": "TEAM_FORMATION_UNSPECIFIED",
+    "strategy_arg": ""
+  },
+  "pools": [
+    {
+      "name": "beginners",
+      "applies_after_seconds": "0",
+      "applies_for_seconds": "1800",
+      "double_range_filters": [
+        {
+          "double_arg": "skill_rating",
+          "start": 0,
+          "end": 0,
+          "is_absolute": false,
+          "auto_expansion": null,
+          "expansion_steps": [
+            {
+              "applies_after_seconds": 0,
+              "applies_for_seconds": 1800,
+              "start": 0,
+              "end": 0
+            }
+          ],
+          "expansion_formation_strategy": "UNSPECIFIED"
+        }
+      ],
+      "string_equals_filters": [
+        {
+          "string_arg": "queue_mode",
+          "value": "ranked"
+        }
+      ],
+      "tag_present_filters": [
+        {
+          "tag": "beginner"
+        }
+      ],
+      "statistics_filters": [],
+      "leaderboard_filters": [],
+      "latency_filter": null,
+      "bot_filter": null
+    },
+    {
+      "name": "experienced",
+      "applies_after_seconds": "0",
+      "applies_for_seconds": "1800",
+      "double_range_filters": [
+        {
+          "double_arg": "skill_rating",
+          "start": 0,
+          "end": 0,
+          "is_absolute": false,
+          "auto_expansion": null,
+          "expansion_steps": [
+            {
+              "applies_after_seconds": 0,
+              "applies_for_seconds": 30,
+              "start": 0,
+              "end": 0
+            },
+            {
+              "applies_after_seconds": 30,
+              "applies_for_seconds": 30,
+              "start": 0,
+              "end": 1
+            },
+            {
+              "applies_after_seconds": 60,
+              "applies_for_seconds": 30,
+              "start": 0,
+              "end": 2
+            }
+          ],
+          "expansion_formation_strategy": "UNSPECIFIED"
+        }
+      ],
+      "string_equals_filters": [
+        {
+          "string_arg": "queue_mode",
+          "value": "ranked"
+        }
+      ],
+      "tag_present_filters": [
+        {
+          "tag": "experienced"
+        }
+      ],
+      "statistics_filters": [],
+      "leaderboard_filters": [],
+      "latency_filter": null,
+      "bot_filter": null
+    }
+  ],
+  "metadata": {}
+}
+```
+
+**Key points:**
+
+- **Two pools**: The `beginners` pool matches players tagged with `beginner`, while the `experienced` pool matches players tagged with `experienced`. The game client sets the appropriate tag when creating a ticket based on the player's account level, games played, or other criteria.
+- **Different expansion behavior**: The beginner pool keeps a tight range throughout (protecting new players from large skill gaps). The experienced pool uses manual expansion steps that progressively widen every 30 seconds, since experienced players are generally more tolerant of skill differences and faster queue times matter more.
+- **String equals filter**: Both pools also require `queue_mode = "ranked"`, ensuring only ranked-queue tickets are evaluated.
+- **Tags are set by the client**: When creating a ticket, the game client includes the tag (e.g., `"tags": ["beginner"]`) in the `search_fields`. The matchmaker uses this to route the ticket to the appropriate pool.
+
+---
+
+## Party-Based Team Queue with Size Restrictions
+
+A team-based mode designed for pre-made groups. Queue settings enforce that only full parties of 4 can queue, making this suitable for a "team queue" or "premade" playlist. The match uses MMR-based matching with fleet allocation.
+
+```json
+{
+  "name": "team-queue-4v4",
+  "description": "4v4 premade team queue with party size enforcement",
+  "is_active": true,
+  "min_players": 8,
+  "max_players": 8,
+  "match_acceptance_settings": {
+    "enabled": false,
+    "timeout_seconds": "0"
+  },
+  "backfill_settings": null,
+  "delay_partial_match_seconds": 0,
+  "assignment_settings": {
+    "fleet_name": "game-servers",
+    "geo": [
+      "oregon",
+      "frankfurt",
+      "nvirginia"
+    ],
+    "id": "game-servers",
+    "lobby_start_after_seconds": 0,
+    "metadata": {
+      "gamemode": "team_ranked"
+    },
+    "type": "fleet"
+  },
+  "host_selection_settings": {
+    "enabled": false,
+    "key": "team_mmr",
+    "operator": "min"
+  },
+  "queue_settings": {
+    "enabled": true,
+    "min_party_size": 4,
+    "max_party_size": 4
+  },
+  "team_formation_settings": {
+    "enabled": true,
+    "num_teams": 2,
+    "min_players_per_team": 4,
+    "allow_party_separation": false,
+    "strategy": "TEAM_FORMATION_UNSPECIFIED",
+    "strategy_arg": ""
+  },
+  "pools": [
+    {
+      "name": "team-ranked",
+      "applies_after_seconds": "0",
+      "applies_for_seconds": "900",
+      "double_range_filters": [],
+      "string_equals_filters": [],
+      "tag_present_filters": [],
+      "statistics_filters": [
+        {
+          "stat_name": "team_mmr",
+          "stat_type": "float",
+          "start": 0,
+          "end": 0,
+          "is_absolute": false,
+          "value": "",
+          "auto_expansion": {
+            "initial_start": 0,
+            "initial_end": 0,
+            "interval_seconds": 30,
+            "spread_amount": 100,
+            "max_spread": 1000,
+            "spread_strategy": "AUTO_EXPANSION_BALANCED"
+          },
+          "expansion_steps": [],
+          "expansion_formation_strategy": "UNSPECIFIED"
+        }
+      ],
+      "leaderboard_filters": [],
+      "latency_filter": null,
+      "bot_filter": null
+    }
+  ],
+  "metadata": {}
+}
+```
+
+**Key points:**
+
+- **Queue settings**: `min_party_size: 4` and `max_party_size: 4` means only full 4-player parties can queue. Solo players or parties of 2-3 will be rejected by the matchmaker. This is ideal for a dedicated "premade" playlist.
+- **Team formation**: With `allow_party_separation: false`, each 4-player party stays together on one team. Since the match is 4v4, each team is exactly one party.
+- **Statistics filter**: Uses `team_mmr` (a float stat) with auto expansion. The matchmaker fetches each player's `team_mmr` from the Statistics snap and matches parties with similar average MMR.
+- **Fleet allocation**: Matches are allocated to the `game-servers` fleet across three regions, with `gamemode: "team_ranked"` passed as metadata to the server.
+
+---
+
+## Lobby-Based Match with Countdown
+
+A profile that allocates matches to Snapser lobbies instead of directly to a fleet. After the match is formed, a lobby is created with a configurable delay before it starts, giving players time to select loadouts, view the match roster, or ready up. This is common for games with a pre-match lobby phase.
+
+```json
+{
+  "name": "lobby-match",
+  "description": "Standard match with lobby allocation and pre-match countdown",
+  "is_active": true,
+  "min_players": 8,
+  "max_players": 10,
+  "match_acceptance_settings": {
+    "enabled": true,
+    "timeout_seconds": "12"
+  },
+  "backfill_settings": null,
+  "delay_partial_match_seconds": 15,
+  "assignment_settings": {
+    "fleet_name": "lobby-fleet",
+    "geo": [
+      "oregon",
+      "singapore"
+    ],
+    "id": "",
+    "lobby_start_after_seconds": 30,
+    "metadata": {
+      "map": "arena_01",
+      "match_type": "standard"
+    },
+    "type": "lobby"
+  },
+  "host_selection_settings": {
+    "enabled": false,
+    "key": "",
+    "operator": "min"
+  },
+  "queue_settings": {
+    "enabled": false,
+    "max_party_size": 0,
+    "min_party_size": 0
+  },
+  "team_formation_settings": {
+    "enabled": true,
+    "num_teams": 2,
+    "min_players_per_team": 4,
+    "allow_party_separation": false,
+    "strategy": "TEAM_FORMATION_UNSPECIFIED",
+    "strategy_arg": ""
+  },
+  "pools": [
+    {
+      "name": "standard",
+      "applies_after_seconds": "0",
+      "applies_for_seconds": "600",
+      "double_range_filters": [],
+      "string_equals_filters": [
+        {
+          "string_arg": "queue",
+          "value": "standard"
+        }
+      ],
+      "tag_present_filters": [],
+      "statistics_filters": [],
+      "leaderboard_filters": [],
+      "latency_filter": null,
+      "bot_filter": null
+    }
+  ],
+  "metadata": {}
+}
+```
+
+**Key points:**
+
+- **Lobby allocation**: `type: "lobby"` creates a Snapser lobby instead of directly allocating a fleet server. The `fleet_name` and `geo` tell the lobby which fleet and regions to use when it eventually starts.
+- **Lobby start delay**: `lobby_start_after_seconds: 30` gives players 30 seconds in the lobby before the game server is allocated and the match begins. This is passed as `start_after_seconds` in the match data.
+- **Allocation metadata**: `map` and `match_type` are passed into the lobby's `allocation_metadata`, which the game server can read to configure the match.
+- **Match acceptance + delay**: Match acceptance (12s timeout) ensures all players are present, and `delay_partial_match_seconds: 15` gives extra time to find a full 10-player lobby before settling for 8.
+
+---
+
+## Free-For-All with Bot Backfill
+
+A free-for-all mode where up to 8 players compete individually (no teams). If the matchmaker cannot find enough real players, bots are used to fill the remaining slots. This keeps queue times short in low-population scenarios.
+
+```json
+{
+  "name": "ffa-with-bots",
+  "description": "Free-for-all with bot backfill for low population",
+  "is_active": true,
+  "min_players": 8,
+  "max_players": 8,
+  "match_acceptance_settings": {
+    "enabled": false,
+    "timeout_seconds": "0"
+  },
+  "backfill_settings": null,
+  "delay_partial_match_seconds": 0,
+  "assignment_settings": null,
+  "host_selection_settings": {
+    "enabled": false,
+    "key": "",
+    "operator": "min"
+  },
+  "queue_settings": {
+    "enabled": false,
+    "max_party_size": 0,
+    "min_party_size": 0
+  },
+  "team_formation_settings": {
+    "enabled": false,
+    "num_teams": 0,
+    "min_players_per_team": 0,
+    "allow_party_separation": false,
+    "strategy": "TEAM_FORMATION_UNSPECIFIED",
+    "strategy_arg": ""
+  },
+  "pools": [
+    {
+      "name": "ffa",
+      "applies_after_seconds": "0",
+      "applies_for_seconds": "300",
+      "double_range_filters": [],
+      "string_equals_filters": [
+        {
+          "string_arg": "game_mode",
+          "value": "ffa"
+        }
+      ],
+      "tag_present_filters": [],
+      "statistics_filters": [],
+      "leaderboard_filters": [],
+      "latency_filter": null,
+      "bot_filter": {
+        "chance": 100
+      }
+    }
+  ],
+  "metadata": {}
+}
+```
+
+**Key points:**
+
+- **No team formation**: `enabled: false` with `num_teams: 0` means players are not split into teams. This is a true free-for-all.
+- **Bot filter**: `chance: 100` means if there aren't enough real players, the matchmaker will always fill remaining slots with bot tickets (tagged with `bot`). Your game server can check for this tag to spawn AI-controlled players. Set `chance` to a lower value (e.g., 50) to only sometimes fill with bots.
+- **String filter**: Only tickets with `game_mode = "ffa"` are considered, separating this queue from other game modes.
+
+---
+
+## Solo/Duo Ranked Queue
+
+A ranked mode that allows solo players and duos to queue together in the same pool. Queue settings restrict parties to a maximum size of 2, preventing larger groups from dominating the solo/duo experience. Uses MMR-based matching with fleet allocation.
+
+```json
+{
+  "name": "solo-duo-ranked",
+  "description": "Solo/Duo ranked queue with MMR matching",
+  "is_active": true,
+  "min_players": 10,
+  "max_players": 16,
+  "match_acceptance_settings": {
+    "enabled": false,
+    "timeout_seconds": "0"
+  },
+  "backfill_settings": null,
+  "delay_partial_match_seconds": 0,
+  "assignment_settings": {
+    "fleet_name": "ranked-servers",
+    "geo": [
+      "oregon",
+      "nvirginia"
+    ],
+    "id": "ranked-servers",
+    "lobby_start_after_seconds": 0,
+    "metadata": {
+      "gamemode": "ranked_solo_duo",
+      "leaderboard": "solo-duo-leaderboard"
+    },
+    "type": "fleet"
+  },
+  "host_selection_settings": {
+    "enabled": false,
+    "key": "mmr_solo",
+    "operator": "min"
+  },
+  "queue_settings": {
+    "enabled": true,
+    "min_party_size": 1,
+    "max_party_size": 2
+  },
+  "team_formation_settings": {
+    "enabled": true,
+    "num_teams": 2,
+    "min_players_per_team": 4,
+    "allow_party_separation": false,
+    "strategy": "TEAM_FORMATION_UNSPECIFIED",
+    "strategy_arg": ""
+  },
+  "pools": [
+    {
+      "name": "solo-duo",
+      "applies_after_seconds": "0",
+      "applies_for_seconds": "900",
+      "double_range_filters": [],
+      "string_equals_filters": [],
+      "tag_present_filters": [],
+      "statistics_filters": [
+        {
+          "stat_name": "mmr_solo",
+          "stat_type": "float",
+          "start": 0,
+          "end": 0,
+          "is_absolute": false,
+          "value": "",
+          "auto_expansion": {
+            "initial_start": 0,
+            "initial_end": 0,
+            "interval_seconds": 30,
+            "spread_amount": 100,
+            "max_spread": 1000,
+            "spread_strategy": "AUTO_EXPANSION_BALANCED"
+          },
+          "expansion_steps": [],
+          "expansion_formation_strategy": "UNSPECIFIED"
+        }
+      ],
+      "leaderboard_filters": [],
+      "latency_filter": null,
+      "bot_filter": null
+    }
+  ],
+  "metadata": {}
+}
+```
+
+**Key points:**
+
+- **Queue settings**: `min_party_size: 1` and `max_party_size: 2` means only solo players and duos can queue. Parties of 3 or more are rejected, ensuring a fair experience for solo players.
+- **Flexible match size**: `min_players: 10` and `max_players: 16` allows matches to start with 10 but ideally fill to 16, reducing queue times while maintaining match quality.
+- **MMR filter**: `mmr_solo` stat with auto expansion (100 spread every 30s, max 1000) ensures skill-based matching with gradually relaxing criteria.
+- **Allocation metadata**: The `leaderboard` key is passed to the game server, which can use it to report match results to the correct leaderboard.

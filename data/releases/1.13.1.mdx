@@ -1,0 +1,19 @@
+# 1.13.1
+##### August 14, 2026
+
+## Bug Fixes
+
+### Web App
+
+#### Logs
+1. **Custom time ranges** — an absolute date time range sent the wrong end time. The start time was correct. The end time was replaced with the timestamp of the last log on screen. Results stopped short of the range you picked. Relative presets like **Last 15 minutes** were not affected. Fixed.
+   <Note>
+     The same end time also applied when you ran a query, switched between newest and oldest first, or added, removed, or hid a query. Each of these now uses the range you select. **Load more Logs** is unchanged. It still continues from the last batch.
+   </Note>
+2. **Show Context** — the context viewer filtered the surrounding logs to the level of the line you clicked. Opening a warning showed only other warnings. Context now returns every level from the same snap, fleet, server, region, and log group. Fixed.
+
+#### User Manager
+1. **Logs tab** — the Logs tab shares the Logs tool's time range handling and its context viewer. Both bugs above applied here. Fixed.
+
+#### Monitoring and Matchmaking Inspector
+1. **Custom time ranges** — Game Server Fleet Monitoring and the Matchmaking Inspector run their own log queries. Both sent the same wrong end time. Fixed.

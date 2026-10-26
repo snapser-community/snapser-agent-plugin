@@ -1,0 +1,41 @@
+# beta-0.52.0
+##### July 7, 2025
+
+## Snaps
+### Live Ops Events
+Events snap now allows you to store metadata about an event that is accessible to the game client via a new API.
+
+### In-App Purchases
+A new dashboard has been added to Olympus that tracks your in-app purchases. This dashboard shows you the total revenue, number of purchases, and other relevant statistics. You can also filter the data by date range.
+
+### Auth
+- Auth snap now emits a new event when a user is banned or suspended. This event can be used to trigger actions in your game, such as disabling access to certain features or showing a warning message.
+- The Auth snap now allows dissociating the last 3P login and allows the user to downgrade to their anon account. This allows the user to continue playing the game without losing their progress, even if they no longer want to use the 3P login.
+
+## Lobbies
+Added allocation metadata info to the Lobby once the Lobby has started and a gameserver has been allocated.
+
+---
+
+## Bug Fixes
+### Remote Config Config tool
+Editing a config override was not showing the overridden path in the text box. This has now been fixed.
+
+### Live Ops
+You were able to create events in the past. This has now been fixed, and you can only create events in the future.
+
+
+---
+
+## Web App
+### User Details Widget
+The User manager tool has now been equipped with a new widget. Clicking on it, it goes and pulls all relevant information about the user, including auth and profile attributes, making it easier to know the user you are dealing with.
+
+## Olympus
+All default dashboards have been updated to include the filtering capability. This allows game studios to view their data in a more granular way, making it easier to analyze and understand.
+
+## Protos
+We have added a namespace to the C# protos to avoid conflicts with other libraries. This change will help prevent issues when using the C# SDK in conjunction with other libraries that may have similar class names.
+
+### UI UX Improvements
+Some improvements were made to the UI/UX of the web app.

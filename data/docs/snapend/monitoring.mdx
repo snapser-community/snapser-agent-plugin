@@ -1,0 +1,159 @@
+export const description = 'Monitoring'
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Monitoring
+
+Snapser provides monitoring out of the box.
+
+<Warning>
+  Infrastructure monitoring is available for Standard Tier customers and above.
+</Warning>
+
+<Note>
+  Looking for the alerts firing on this Snapend right now? See [Alerts](/docs/snapend/alerts). To configure where alerts get delivered (Slack, PagerDuty, email), see the [Alert Manager](/docs/resources/tools/alert-manager).
+</Note>
+
+## Snaps Monitoring
+
+Every Snapend comes with a monitor, which includes infrastructure metrics for your Snapend. There is no need to do any setup, and the graphs will automatically start showing you real-time data as soon as your Snapend is up and running.
+
+Presently Snapser exposes the following graphs:
+1. CPU
+1. Memory
+1. Top used snaps
+1. Top requests
+1. Requests per second
+1. Restarts per pod
+1. Latency P99
+1. Latency P95
+1. Latency P75
+1. Latency P50
+1. 2XX calls
+1. 3XX calls
+1. 4XX calls
+1. 5XX calls
+1. Error count
+
+![Snapend Infra](/images/docs/tutorials/snapend-tools-snapend-infra-monitor.png)
+
+The filters on the top right allow you to filter the graphs based on the time range. You can also select the specific Snap you want to see the metrics for.
+
+## Game Server Fleet Monitoring
+
+If you have added the `Game Server Fleet` snap to your Snapend, you will see  infrastructure graphs for your game servers.
+
+Presently Snapser exposes the following graphs for your game servers:
+1. CPU
+1. Memory
+
+The filters on the top right allow you to filter the graphs based on the time range, fleet name, region and individual game servers.
+
+![Snapend Fleet Infra](/images/docs/snapend-fleet-monitoring.png)
+
+## Heatmap
+
+Snapser provides a heatmap that gives you a live, at-a-glance view of every POD running in your Snapend. Each hexagonal cell represents a single POD, and its color reflects the current state of that POD.
+
+**Snap Pods**
+
+| Color       | State(s)                                                    | Meaning                                      |
+|-------------|-------------------------------------------------------------|----------------------------------------------|
+| 🟢 Mint green | `AVAILABLE`, `SUCCEEDED`                                  | POD is healthy and serving traffic           |
+| 🔵 Baby blue  | `PENDING`                                                 | POD is being scheduled or initialised        |
+| 🔴 Salmon red | `CRASH_LOOP_BACKOFF`, `ERROR`, `OOM_KILLED`, `IMAGE_PULL_BACKOFF` | POD is in a critical failure state |
+| 🟡 Peach      | `TERMINATING`                                             | POD is shutting down                         |
+| ⬜ Light grey | `UNKNOWN`, `RUNNING`                                      | POD state is transitional or not yet known   |
+
+![Snapend Infra](/images/docs/tutorials/snapend-tools-snapend-infra-heatmap.png)
+
+<Note>
+  When you create or update a Snapend and it does not come up as expected, the heatmap is a great place to start debugging.
+</Note>
+
+### Pod Detail Panel
+
+Clicking any hex in the heatmap opens a detail panel at the bottom of the screen with a full breakdown of that POD.
+
+The panel is split into two cards:
+
+**Service**
+- Service ID
+- Author
+- Version
+
+**Pod Status**
+- Pod name
+- Container image
+- Created timestamp
+
+If a POD has restarted one or more times, a prominent alert banner is shown at the top of the panel displaying the total restart count. The severity of the banner reflects the current pod state (warning, error, etc.), making it easy to spot crash-looping or error pods at a glance.
+
+#### Quick Actions
+
+Two shortcut buttons are available in the top-right corner of the panel, allowing you to navigate directly from a POD to its relevant tooling without leaving the heatmap:
+
+| Button | Action |
+|--------|--------|
+| **View Logs** | Opens the Logs tool scoped to this POD |
+| **Infra Monitor** | Opens the infrastructure monitor scoped to this POD |
+
+### Fleet Pod Detail Panel
+
+If you are viewing the Game Server Fleet heatmap, clicking a hex opens a fleet-specific detail panel. Colors in the fleet heatmap follow a separate mapping:
+
+**Fleet Pods**
+
+| Color       | State(s)                          | Meaning                                       |
+|-------------|-----------------------------------|-----------------------------------------------|
+| 🟢 Mint green | `SCHEDULED`, `READY`, `ALLOCATED` | Game server is healthy and available          |
+| 🔵 Baby blue  | `PENDING`                         | Game server is being scheduled                |
+| 🔴 Salmon red | `TERMINATING`                     | Game server is being terminated               |
+| 🟡 Peach      | `UNKNOWN_STATE`, `FAILED`         | Game server state is unknown or has failed    |
+
+The panel surfaces the following information:
+
+**Game Server**
+- Server ID
+- Fleet name
+- Region
+- Image tag
+
+**Network**
+- Address
+- Port
+- Debug port
+
+If the game server has any metadata attached, a third **Metadata** card is shown below the two main cards, displaying all key-value pairs. The same **View Logs** and **Infra Monitor** quick-action buttons are available here as well.
+
+
+
+{/* ## Product Monitoring
+
+In addition to the Snapend-specific graphs, Snapser also provides high-level
+product metrics at the app level. If you have snapped the analytics service
+in your Snapend, you can get metrics like DAU, MAU, etc., for free right out
+of the box. You can find these metrics inside the **Dashboard** tool in your
+game view.
+
+![Product Monitoring](/images/docs/product-monitoring.png) */}
+
+## FAQs
+### Can I see my infrastructure graphs if I bring my own snap (BYOSnap)?
+
+Yes, you should be able to see all the infrastructure graphs even if you bring
+your own snap.
+
+### I do not see metrics I want
+
+We are adding more graphs to give you complete visibility of your app and
+Snapend. If you want to see a specific graph that you do not see yet, please
+reach out to our support. We will get that into one of our future sprints.
+
+### I want to use my own monitoring
+
+Hang tight! We have some exciting updates that we will be sharing soon on this
+subject.

@@ -1,0 +1,18 @@
+# KWS Permissions
+This tool allows you to add API or APIs to be locked down with certain rules. You will need to input the following details:
+
+## Permissions Details
+1. **Permission Namespace**: The namespace of the permission that you want to create. This will be the same permission you have created in the KWS console.
+2. **Permission Name**: The name of the permission that you want to create. This will be the same permission you have created in the KWS console.
+
+## Permissions Settings
+1. **Value Type**: The type of value that you want to check for the permission. This can be a string, number, or boolean.
+2. **Comparison Type**: The type of comparison that you want to do. This value is updated based on the `Value Type` that you select. Here you will see options like `be equal`, `not equal`, `greater than`, `less than`, `greater than or equal to`, `less than or equal to`.
+3. **Expected Value**: The value that you want to compare with the value that you get from the KWS service.
+
+## Permission APIs
+1. **Attach API**: The API that you want to lock down with the permission that you have created. Click the `Attach API` button. This will show you a dialog of all the Snaps in your snapend. After you pick the Snap, it will then show you all APIs in that Snap. You can then pick the API that you want to lock down.
+<Note>
+  No lock down just means that the API authorization will fall back to Snapser defaults.
+  **IMPORTANT**: Additionally, only one API can be attached to a permission.
+</Note>

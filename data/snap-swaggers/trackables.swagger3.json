@@ -1,0 +1,2302 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "contact" : {
+      "name" : "Snapser Inc.",
+      "url" : "https://discord.com/channels/958377106776162304/958377261235585064"
+    },
+    "description" : "Trackables service in snapser cluster",
+    "title" : "Trackables",
+    "version" : "0.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "tags" : [ {
+    "name" : "TrackablesService"
+  } ],
+  "paths" : {
+    "/v1/trackables/batch/energy" : {
+      "get" : {
+        "description" : "Gets the energy of the users",
+        "operationId" : "BatchGetUserEnergy",
+        "parameters" : [ {
+          "description" : "Name of energy",
+          "explode" : true,
+          "in" : "query",
+          "name" : "energy_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "User IDs to get energy for",
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesBatchGetUserEnergyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Energy",
+        "tags" : [ "TrackablesService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/trackables/batch/energy/consume" : {
+      "patch" : {
+        "description" : "Consumes the energy of the users",
+        "operationId" : "BatchConsumeUserEnergy",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/trackablesBatchConsumeUserEnergyRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesBatchConsumeUserEnergyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Energy",
+        "tags" : [ "TrackablesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/trackables/batch/streaks" : {
+      "patch" : {
+        "description" : "Increments the streak of multiple users",
+        "operationId" : "BatchIncrementUserStreak",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/trackablesBatchIncrementUserStreakRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesBatchIncrementUserStreakResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Streak",
+        "tags" : [ "TrackablesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Sets the streak counter for multiple users",
+        "operationId" : "BatchSetUserStreak",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/trackablesBatchSetUserStreakRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesBatchSetUserStreakResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Streak",
+        "tags" : [ "TrackablesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/trackables/batch/streaks/{streak_name}" : {
+      "get" : {
+        "description" : "Gets the streak for multiple users on a single streak setting",
+        "operationId" : "BatchGetUserStreak",
+        "parameters" : [ {
+          "explode" : false,
+          "in" : "path",
+          "name" : "streak_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_id",
+          "required" : false,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesBatchGetUserStreakResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Streak",
+        "tags" : [ "TrackablesService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/trackables/batch/trackables" : {
+      "get" : {
+        "description" : "Gets the trackables (xp and energy) for any number of users",
+        "operationId" : "BatchGetUserTrackables",
+        "parameters" : [ {
+          "description" : "User IDs to get trackables for",
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesBatchGetUserTrackablesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Trackables",
+        "tags" : [ "TrackablesService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/trackables/batch/xp" : {
+      "get" : {
+        "description" : "Gets the XP of given users",
+        "operationId" : "BatchGetUserXp",
+        "parameters" : [ {
+          "description" : "Name of xp",
+          "explode" : true,
+          "in" : "query",
+          "name" : "xp_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        }, {
+          "description" : "User IDs to get xp for",
+          "explode" : true,
+          "in" : "query",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesBatchGetUserXpResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User XP",
+        "tags" : [ "TrackablesService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      },
+      "patch" : {
+        "description" : "Increments the XP of given users",
+        "operationId" : "BatchIncrementUserXp",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/trackablesBatchIncrementUserXpRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesBatchIncrementUserXpResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User XP",
+        "tags" : [ "TrackablesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Sets the XP of given users",
+        "operationId" : "BatchSetUserXp",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/trackablesBatchSetUserXpRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesBatchSetUserXpResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User XP",
+        "tags" : [ "TrackablesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/trackables/energy" : {
+      "get" : {
+        "description" : "Gets the settings of multiple Energy Trackables",
+        "operationId" : "GetEnergy",
+        "parameters" : [ {
+          "description" : "Names of Energy trackables to get",
+          "explode" : true,
+          "in" : "query",
+          "name" : "name",
+          "required" : true,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesGetEnergyResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Energy Settings",
+        "tags" : [ "TrackablesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/trackables/users/{user_id}/energy/{energy_name}" : {
+      "get" : {
+        "description" : "Gets the energy of the user",
+        "operationId" : "GetUserEnergy",
+        "parameters" : [ {
+          "description" : "UserID of user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of energy",
+          "explode" : false,
+          "in" : "path",
+          "name" : "energy_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesUserEnergy"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Energy",
+        "tags" : [ "TrackablesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/trackables/users/{user_id}/energy/{energy_name}/consume" : {
+      "patch" : {
+        "description" : "Consumes the energy of the user",
+        "operationId" : "ConsumeUserEnergy",
+        "parameters" : [ {
+          "description" : "UserID of the affected user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of energy to consume",
+          "explode" : false,
+          "in" : "path",
+          "name" : "energy_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ConsumeUserEnergy_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesUpdateUserEnergyInfo"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Energy",
+        "tags" : [ "TrackablesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/trackables/users/{user_id}/energy/{energy_name}/increment" : {
+      "patch" : {
+        "description" : "Increments the energy of the user",
+        "operationId" : "IncrementUserEnergy",
+        "parameters" : [ {
+          "description" : "UserID of the affected user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of energy to increment",
+          "explode" : false,
+          "in" : "path",
+          "name" : "energy_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ConsumeUserEnergy_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesUpdateUserEnergyInfo"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Energy",
+        "tags" : [ "TrackablesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/trackables/users/{user_id}/streaks/{streak_name}" : {
+      "get" : {
+        "description" : "Gets the streak counter, current rung, and next-period timing",
+        "operationId" : "GetUserStreak",
+        "parameters" : [ {
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "explode" : false,
+          "in" : "path",
+          "name" : "streak_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesGetUserStreakResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Streak",
+        "tags" : [ "TrackablesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Sets the streak counter for a given user",
+        "operationId" : "SetUserStreak",
+        "parameters" : [ {
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "explode" : false,
+          "in" : "path",
+          "name" : "streak_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetUserStreak_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesUpdateUserStreakInfo"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Streak",
+        "tags" : [ "TrackablesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/trackables/users/{user_id}/streaks/{streak_name}/increment" : {
+      "patch" : {
+        "description" : "Increments the user's streak. Idempotent within a bucket: same-period calls are no-ops.",
+        "operationId" : "IncrementUserStreak",
+        "parameters" : [ {
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "explode" : false,
+          "in" : "path",
+          "name" : "streak_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesUpdateUserStreakInfo"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Streak",
+        "tags" : [ "TrackablesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/trackables/users/{user_id}/streaks/{streak_name}/reset" : {
+      "post" : {
+        "description" : "Resets the user's streak counter to zero and clears any claimed rung rewards",
+        "operationId" : "ResetUserStreak",
+        "parameters" : [ {
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "explode" : false,
+          "in" : "path",
+          "name" : "streak_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesResetUserStreakResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Streak",
+        "tags" : [ "TrackablesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/trackables/users/{user_id}/trackables" : {
+      "get" : {
+        "deprecated" : true,
+        "description" : "Gets the trackables (XP and Energy) for a specified user - (Deprecated: Use BatchGetUserTrackables instead)",
+        "operationId" : "GetUserTrackables",
+        "parameters" : [ {
+          "description" : "UserID of the user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesGetUserTrackablesResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User Trackables (DEPRECATED)",
+        "tags" : [ "TrackablesService" ],
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
+    "/v1/trackables/users/{user_id}/xp/{xp_name}" : {
+      "get" : {
+        "description" : "Gets the XP of given user, returns error if not set",
+        "operationId" : "GetUserXp",
+        "parameters" : [ {
+          "description" : "UserID of user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of xp",
+          "explode" : false,
+          "in" : "path",
+          "name" : "xp_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesGetUserXpResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User XP",
+        "tags" : [ "TrackablesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "patch" : {
+        "description" : "Increments the XP of given user, starts from zero if a user XP is not set",
+        "operationId" : "IncrementUserXp",
+        "parameters" : [ {
+          "description" : "UserID of the affected user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of xp to increment",
+          "explode" : false,
+          "in" : "path",
+          "name" : "xp_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/IncrementUserXp_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesUpdateUserXpInfo"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User XP",
+        "tags" : [ "TrackablesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      },
+      "put" : {
+        "description" : "Sets the XP for a given user",
+        "operationId" : "SetUserXp",
+        "parameters" : [ {
+          "description" : "UserID of the affected user",
+          "explode" : false,
+          "in" : "path",
+          "name" : "user_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "Name of xp to set",
+          "explode" : false,
+          "in" : "path",
+          "name" : "xp_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetUserXp_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesUpdateUserXpInfo"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "User XP",
+        "tags" : [ "TrackablesService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/trackables/xp" : {
+      "get" : {
+        "description" : "Gets the settings of multiple XPs",
+        "operationId" : "GetXps",
+        "parameters" : [ {
+          "description" : "Names of XPs to get",
+          "explode" : true,
+          "in" : "query",
+          "name" : "names",
+          "required" : true,
+          "schema" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesGetXpsResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "XP Settings",
+        "tags" : [ "TrackablesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/trackables/xp/{xp_name}" : {
+      "get" : {
+        "description" : "Gets the setting of an XP",
+        "operationId" : "GetXp",
+        "parameters" : [ {
+          "description" : "Name of XP to get",
+          "explode" : false,
+          "in" : "path",
+          "name" : "xp_name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/trackablesGetXpResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "XP Setting",
+        "tags" : [ "TrackablesService" ],
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "ConsumeUserEnergy_request" : {
+        "properties" : {
+          "delta" : {
+            "description" : "Value to decrement the energy by",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "delta" ],
+        "type" : "object"
+      },
+      "IncrementUserXp_request" : {
+        "properties" : {
+          "delta" : {
+            "description" : "Value to increment the statistic xp by. Should be non negative integer",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "delta" ],
+        "type" : "object"
+      },
+      "SetUserStreak_request" : {
+        "properties" : {
+          "last_increment_ts" : {
+            "format" : "int64",
+            "title" : "optional override; 0 means \"use now()\"",
+            "type" : "string"
+          },
+          "skip_rewards_grant" : {
+            "type" : "boolean"
+          },
+          "value" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "SetUserXp_request" : {
+        "properties" : {
+          "enforce_prerequisites" : {
+            "description" : "If set to true, prerequisites defined in the xp settings will be enforced",
+            "type" : "boolean"
+          },
+          "skip_rewards_grant" : {
+            "description" : "If set to true, rewards will not be granted upon level up",
+            "type" : "boolean"
+          },
+          "value" : {
+            "description" : "Value to be set as the user xp statistic",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "value" ],
+        "type" : "object"
+      },
+      "UpdateUserStreakInfoOutcome" : {
+        "default" : "UNKNOWN_OUTCOME",
+        "enum" : [ "UNKNOWN_OUTCOME", "FIRST_INCREMENT", "SAME_PERIOD", "CONTINUED", "CONTINUED_LOOP", "MISSED_RESET", "MAX_REACHED", "TOO_SOON" ],
+        "type" : "string"
+      },
+      "protobufNullValue" : {
+        "default" : "NULL_VALUE",
+        "description" : "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value.",
+        "enum" : [ "NULL_VALUE" ],
+        "type" : "string"
+      },
+      "trackablesBatchConsumeSingleUserEnergyResponse" : {
+        "properties" : {
+          "message" : {
+            "description" : "Error message if the request was not successful",
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/trackablesConsumeUserEnergyRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/trackablesUpdateUserEnergyInfo"
+          },
+          "success" : {
+            "description" : "Indicates if the request was successful",
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchConsumeUserEnergyRequest" : {
+        "properties" : {
+          "requests" : {
+            "description" : "List of consume energy requests",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesConsumeUserEnergyRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchConsumeUserEnergyResponse" : {
+        "properties" : {
+          "responses" : {
+            "description" : "List of consume energy responses",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesBatchConsumeSingleUserEnergyResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchGetUserEnergyResponse" : {
+        "properties" : {
+          "responses" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesGetUserEnergySummaryResponse"
+            },
+            "type" : "array"
+          },
+          "results" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesBatchGetUserSingleEnergyResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchGetUserSingleEnergyResponse" : {
+        "properties" : {
+          "message" : {
+            "description" : "Error message if the request was not successful",
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/trackablesGetUserEnergyRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/trackablesGetUserEnergySummaryResponse"
+          },
+          "success" : {
+            "description" : "Indicates if the request was successful",
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchGetUserSingleTrackablesResponse" : {
+        "properties" : {
+          "message" : {
+            "description" : "Error message if the request was not successful",
+            "type" : "string"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/trackablesGetUserTrackablesResponse"
+          },
+          "success" : {
+            "description" : "Indicates if the request was successful",
+            "type" : "boolean"
+          },
+          "userId" : {
+            "description" : "UserID of the user",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchGetUserStreakResponse" : {
+        "properties" : {
+          "responses" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesBatchGetUserStreakSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchGetUserStreakSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/trackablesGetUserStreakRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/trackablesGetUserStreakSummaryResponse"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchGetUserTrackablesResponse" : {
+        "properties" : {
+          "responses" : {
+            "description" : "List of user trackables responses",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesBatchGetUserSingleTrackablesResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchGetUserXpResponse" : {
+        "properties" : {
+          "responses" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesGetUserXpSummaryResponse"
+            },
+            "type" : "array"
+          },
+          "results" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesBatchGetUserXpSingleResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchGetUserXpSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/trackablesGetUserXpRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/trackablesGetUserXpSummaryResponse"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchGetXpSingleResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/trackablesGetXpRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/trackablesXpSetting"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchIncrementSingleUserStreakResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/trackablesIncrementUserStreakRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/trackablesUpdateUserStreakInfo"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchIncrementSingleUserXpResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/trackablesIncrementUserXpRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/trackablesUpdateUserXpInfo"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchIncrementUserStreakRequest" : {
+        "properties" : {
+          "requests" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesIncrementUserStreakRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchIncrementUserStreakResponse" : {
+        "properties" : {
+          "responses" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesBatchIncrementSingleUserStreakResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchIncrementUserXpRequest" : {
+        "properties" : {
+          "requests" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesIncrementUserXpRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchIncrementUserXpResponse" : {
+        "properties" : {
+          "responses" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesBatchIncrementSingleUserXpResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchSetSingleUserStreakResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/trackablesSetUserStreakRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/trackablesUpdateUserStreakInfo"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchSetSingleUserXpResponse" : {
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "request" : {
+            "$ref" : "#/components/schemas/trackablesSetUserXpRequest"
+          },
+          "response" : {
+            "$ref" : "#/components/schemas/trackablesUpdateUserXpInfo"
+          },
+          "success" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchSetUserStreakRequest" : {
+        "properties" : {
+          "requests" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesSetUserStreakRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchSetUserStreakResponse" : {
+        "properties" : {
+          "responses" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesBatchSetSingleUserStreakResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchSetUserXpRequest" : {
+        "properties" : {
+          "requests" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesSetUserXpRequest"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesBatchSetUserXpResponse" : {
+        "properties" : {
+          "responses" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesBatchSetSingleUserXpResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesConsumeUserEnergyRequest" : {
+        "properties" : {
+          "delta" : {
+            "description" : "Value to decrement the energy by",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "energy_name" : {
+            "description" : "Name of energy to consume",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "UserID of the affected user",
+            "type" : "string"
+          }
+        },
+        "required" : [ "delta", "energy_name", "user_id" ],
+        "type" : "object"
+      },
+      "trackablesDropTableGrantResult" : {
+        "properties" : {
+          "currencies_granted" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "description" : "Currencies granted from this drop table evaluation",
+            "type" : "object"
+          },
+          "drop_index" : {
+            "description" : "Index of the drop that was selected",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "drop_table_name" : {
+            "description" : "Name of the drop table that was evaluated",
+            "type" : "string"
+          },
+          "energy_granted" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Energy granted from this drop table evaluation",
+            "type" : "object"
+          },
+          "items_granted" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Items granted from this drop table evaluation",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesEnergySetting" : {
+        "properties" : {
+          "default_energy" : {
+            "description" : "Default energy for new users",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "max_energy" : {
+            "description" : "Maximum energy for the setting",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "metadata" : {
+            "description" : "Metadata associated with the energy setting",
+            "type" : "object"
+          },
+          "name" : {
+            "description" : "Name of the energy setting",
+            "type" : "string"
+          },
+          "overflow" : {
+            "description" : "Whether energy can overflow beyond max energy",
+            "type" : "boolean"
+          },
+          "scope" : {
+            "description" : "Scope of the energy setting",
+            "type" : "string"
+          },
+          "seconds_to_recover" : {
+            "description" : "Seconds to recover one energy",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesGetEnergyResponse" : {
+        "properties" : {
+          "settings" : {
+            "description" : "settings of energy",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesEnergySetting"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesGetUserEnergyRequest" : {
+        "properties" : {
+          "energy_name" : {
+            "description" : "Name of energy",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "UserID of user",
+            "type" : "string"
+          }
+        },
+        "required" : [ "energy_name", "user_id" ],
+        "type" : "object"
+      },
+      "trackablesGetUserEnergySummaryResponse" : {
+        "properties" : {
+          "energy" : {
+            "description" : "Energy of the user",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "energy_name" : {
+            "description" : "Name of energy",
+            "type" : "string"
+          },
+          "metadata" : {
+            "description" : "Metadata associated with the energy setting",
+            "type" : "object"
+          },
+          "next_energy_at" : {
+            "description" : "Next energy at Timestamp",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "seconds_to_next_energy" : {
+            "description" : "Seconds to next energy",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "user_id" : {
+            "description" : "UserID of the user",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesGetUserStreakRequest" : {
+        "properties" : {
+          "streak_name" : {
+            "type" : "string"
+          },
+          "user_id" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesGetUserStreakResponse" : {
+        "properties" : {
+          "current_level" : {
+            "$ref" : "#/components/schemas/trackablesLevel"
+          },
+          "last_increment_ts" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "metadata" : {
+            "type" : "object"
+          },
+          "next_levels" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesLevel"
+            },
+            "type" : "array"
+          },
+          "next_period_ends_at" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "next_period_starts_at" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "streak" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesGetUserStreakSummaryResponse" : {
+        "properties" : {
+          "current_level" : {
+            "$ref" : "#/components/schemas/trackablesLevel"
+          },
+          "last_increment_ts" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "metadata" : {
+            "type" : "object"
+          },
+          "next_levels" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesLevel"
+            },
+            "type" : "array"
+          },
+          "next_period_ends_at" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "next_period_starts_at" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "streak" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "streak_name" : {
+            "type" : "string"
+          },
+          "user_id" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesGetUserTrackablesResponse" : {
+        "properties" : {
+          "energy" : {
+            "description" : "List of user energy summaries",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesGetUserEnergySummaryResponse"
+            },
+            "type" : "array"
+          },
+          "streaks" : {
+            "description" : "List of user streak summaries",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesGetUserStreakSummaryResponse"
+            },
+            "type" : "array"
+          },
+          "xp" : {
+            "description" : "List of user xp summaries",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesGetUserXpSummaryResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesGetUserXpRequest" : {
+        "properties" : {
+          "user_id" : {
+            "description" : "UserID of user",
+            "type" : "string"
+          },
+          "xp_name" : {
+            "description" : "Name of xp",
+            "type" : "string"
+          }
+        },
+        "required" : [ "user_id", "xp_name" ],
+        "title" : "Service Requests & Responses",
+        "type" : "object"
+      },
+      "trackablesGetUserXpResponse" : {
+        "properties" : {
+          "current_level" : {
+            "$ref" : "#/components/schemas/trackablesLevel"
+          },
+          "metadata" : {
+            "description" : "Metadata associated with the xp setting",
+            "type" : "object"
+          },
+          "next_levels" : {
+            "description" : "Up to next 3 levels in progression",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesLevel"
+            },
+            "type" : "array"
+          },
+          "xp" : {
+            "description" : "Xp of the user",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesGetUserXpSummaryResponse" : {
+        "properties" : {
+          "current_level" : {
+            "$ref" : "#/components/schemas/trackablesLevel"
+          },
+          "metadata" : {
+            "description" : "Metadata associated with the xp setting",
+            "type" : "object"
+          },
+          "next_levels" : {
+            "description" : "Up to next 3 levels in progression",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesLevel"
+            },
+            "type" : "array"
+          },
+          "user_id" : {
+            "description" : "UserID of the user",
+            "type" : "string"
+          },
+          "xp" : {
+            "description" : "Xp of the user",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "xp_name" : {
+            "description" : "Name of xp",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesGetXpRequest" : {
+        "properties" : {
+          "xp_name" : {
+            "description" : "Name of XP to get",
+            "type" : "string"
+          }
+        },
+        "required" : [ "xp_name" ],
+        "type" : "object"
+      },
+      "trackablesGetXpResponse" : {
+        "properties" : {
+          "settings" : {
+            "$ref" : "#/components/schemas/trackablesXpSetting"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesGetXpsResponse" : {
+        "properties" : {
+          "responses" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesBatchGetXpSingleResponse"
+            },
+            "type" : "array"
+          },
+          "settings" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesXpSetting"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesIncrementUserStreakRequest" : {
+        "properties" : {
+          "streak_name" : {
+            "type" : "string"
+          },
+          "user_id" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesIncrementUserXpRequest" : {
+        "properties" : {
+          "delta" : {
+            "description" : "Value to increment the statistic xp by. Should be non negative integer",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "user_id" : {
+            "description" : "UserID of the affected user",
+            "type" : "string"
+          },
+          "xp_name" : {
+            "description" : "Name of xp to increment",
+            "type" : "string"
+          }
+        },
+        "required" : [ "delta", "user_id", "xp_name" ],
+        "type" : "object"
+      },
+      "trackablesLevel" : {
+        "properties" : {
+          "end" : {
+            "description" : "Ending xp for the level",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "index" : {
+            "description" : "Index of the level in the xp setting",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "level_completion_rewards" : {
+            "$ref" : "#/components/schemas/trackablesRewards"
+          },
+          "level_up_rewards" : {
+            "$ref" : "#/components/schemas/trackablesRewards"
+          },
+          "metadata" : {
+            "description" : "Metadata associated with the level",
+            "type" : "object"
+          },
+          "name" : {
+            "description" : "Name of the level",
+            "type" : "string"
+          },
+          "reward_currencies" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Currencies rewarded upon leveling up to this level (DEPRECATED: Use level_up_rewards and level_completion_rewards instead)",
+            "type" : "object"
+          },
+          "reward_currencies_64" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "description" : "64-bit Currencies rewarded upon leveling up to this level (DEPRECATED: Use level_up_rewards and level_completion_rewards instead)",
+            "type" : "object"
+          },
+          "reward_energies" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Energies rewarded upon leveling up to this level (DEPRECATED: Use level_up_rewards and level_completion_rewards instead)",
+            "type" : "object"
+          },
+          "reward_inventory_items" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/trackablesRewardInventoryItems"
+            },
+            "description" : "Inventory items rewarded upon leveling up to this level (DEPRECATED: Use level_up_rewards and level_completion_rewards instead)",
+            "type" : "object"
+          },
+          "reward_items" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Items rewarded upon leveling up to this level (DEPRECATED: Use level_up_rewards and level_completion_rewards instead)",
+            "title" : "DEPRECATED: Use level_up_rewards and level_completion_rewards instead",
+            "type" : "object"
+          },
+          "rung_index" : {
+            "description" : "1-based rung index of the reward within a streak ladder. Used by sparse streak rewards.",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "start" : {
+            "description" : "Starting xp for the level",
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesPredicate" : {
+        "properties" : {
+          "category" : {
+            "description" : "Category of the predicate",
+            "type" : "string"
+          },
+          "name" : {
+            "description" : "Name of the predicate",
+            "type" : "string"
+          },
+          "operator" : {
+            "description" : "Operator of the predicate",
+            "type" : "string"
+          },
+          "value" : {
+            "description" : "Value of the predicate",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesPredicateGroup" : {
+        "properties" : {
+          "predicates" : {
+            "description" : "List of predicates in the group",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesPredicate"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesResetUserStreakResponse" : {
+        "properties" : {
+          "streak_name" : {
+            "type" : "string"
+          },
+          "success" : {
+            "type" : "boolean"
+          },
+          "user_id" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesRewardDropTable" : {
+        "properties" : {
+          "count" : {
+            "description" : "Number of times to evaluate the drop table (default 1)",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "name" : {
+            "description" : "Name of the drop table",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesRewardGrantStatus" : {
+        "properties" : {
+          "drop_table_results" : {
+            "description" : "Results from drop table evaluations",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesDropTableGrantResult"
+            },
+            "type" : "array"
+          },
+          "failed_drop_tables" : {
+            "description" : "Drop tables that failed to grant",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "level_name" : {
+            "description" : "Name of the level for which the reward was granted",
+            "type" : "string"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/trackablesRewardGrantStatusStatus"
+          },
+          "success" : {
+            "description" : "Indicates if the reward was granted successfully. Deprecated: Use status field",
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesRewardGrantStatusStatus" : {
+        "default" : "UNKNOWN_STATUS",
+        "enum" : [ "UNKNOWN_STATUS", "GRANTED", "FAILED", "NOT_CONFIGURED", "SKIPPED" ],
+        "type" : "string"
+      },
+      "trackablesRewardInventoryItems" : {
+        "properties" : {
+          "count" : {
+            "description" : "Count of the inventory item to be rewarded",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "sub_inventory_item_name" : {
+            "description" : "Sub-inventory item name, if applicable",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesRewards" : {
+        "properties" : {
+          "currencies" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "description" : "Currencies to be rewarded",
+            "type" : "object"
+          },
+          "drop_tables" : {
+            "description" : "Drop tables to grant",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesRewardDropTable"
+            },
+            "type" : "array"
+          },
+          "energies" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "Energies to be rewarded",
+            "type" : "object"
+          },
+          "items" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/trackablesRewardInventoryItems"
+            },
+            "description" : "Items to be rewarded",
+            "type" : "object"
+          },
+          "xps" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "string"
+            },
+            "description" : "Xp to be rewarded. Key = xp setting name, value = delta to grant.",
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesSetUserStreakRequest" : {
+        "properties" : {
+          "last_increment_ts" : {
+            "format" : "int64",
+            "title" : "optional override; 0 means \"use now()\"",
+            "type" : "string"
+          },
+          "skip_rewards_grant" : {
+            "type" : "boolean"
+          },
+          "streak_name" : {
+            "type" : "string"
+          },
+          "user_id" : {
+            "type" : "string"
+          },
+          "value" : {
+            "format" : "int64",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesSetUserXpRequest" : {
+        "properties" : {
+          "enforce_prerequisites" : {
+            "description" : "If set to true, prerequisites defined in the xp settings will be enforced",
+            "type" : "boolean"
+          },
+          "skip_rewards_grant" : {
+            "description" : "If set to true, rewards will not be granted upon level up",
+            "type" : "boolean"
+          },
+          "user_id" : {
+            "description" : "UserID of the affected user",
+            "type" : "string"
+          },
+          "value" : {
+            "description" : "Value to be set as the user xp statistic",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "xp_name" : {
+            "description" : "Name of xp to set",
+            "type" : "string"
+          }
+        },
+        "required" : [ "user_id", "value", "xp_name" ],
+        "type" : "object"
+      },
+      "trackablesUpdateUserEnergyInfo" : {
+        "properties" : {
+          "after_energy" : {
+            "description" : "Energy of user after the update",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "before_energy" : {
+            "description" : "Energy of user before the update",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "energy" : {
+            "description" : "Energy of the user. (DEPRECATED: Use after_energy)",
+            "format" : "int32",
+            "title" : "This field is only added for backwards compatibility",
+            "type" : "integer"
+          },
+          "metadata" : {
+            "description" : "Metadata associated with the energy setting",
+            "type" : "object"
+          },
+          "next_energy_at" : {
+            "description" : "Next energy at Timestamp",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "seconds_to_next_energy" : {
+            "description" : "Seconds to next energy",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "success" : {
+            "description" : "Status of energy update, true if energy updated successfully",
+            "type" : "boolean"
+          },
+          "user_id" : {
+            "description" : "UserID of the user",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesUpdateUserStreakInfo" : {
+        "properties" : {
+          "after_streak" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "before_streak" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "current_level" : {
+            "$ref" : "#/components/schemas/trackablesLevel"
+          },
+          "level_completion_rewards" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesRewardGrantStatus"
+            },
+            "type" : "array"
+          },
+          "max_reached" : {
+            "type" : "boolean"
+          },
+          "metadata" : {
+            "type" : "object"
+          },
+          "next_levels" : {
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesLevel"
+            },
+            "type" : "array"
+          },
+          "next_period_ends_at" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "next_period_starts_at" : {
+            "format" : "int64",
+            "type" : "string"
+          },
+          "outcome" : {
+            "$ref" : "#/components/schemas/UpdateUserStreakInfoOutcome"
+          },
+          "success" : {
+            "type" : "boolean"
+          },
+          "user_id" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesUpdateUserXpInfo" : {
+        "properties" : {
+          "after_xp" : {
+            "description" : "Xp of user before the update",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "before_xp" : {
+            "description" : "Xp of user before the update",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "current_level" : {
+            "$ref" : "#/components/schemas/trackablesLevel"
+          },
+          "level_completion_rewards" : {
+            "description" : "Array of reward grant statuses for level completion rewards for each level progressed",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesRewardGrantStatus"
+            },
+            "type" : "array"
+          },
+          "level_up" : {
+            "description" : "Boolean indicating if the user have levelled up because of update",
+            "type" : "boolean"
+          },
+          "level_up_rewards" : {
+            "description" : "Array of reward grant statuses for level up rewards for each level progressed",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesRewardGrantStatus"
+            },
+            "type" : "array"
+          },
+          "levels_progressed" : {
+            "description" : "Array of levels progressed by the user in the event of level up",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesLevel"
+            },
+            "type" : "array"
+          },
+          "metadata" : {
+            "description" : "Metadata associated with the xp setting",
+            "type" : "object"
+          },
+          "next_levels" : {
+            "description" : "Up to next 3 levels in progression",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesLevel"
+            },
+            "type" : "array"
+          },
+          "overflow_xp" : {
+            "description" : "Remaining Xp after final level reached",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "reward_grant_statuses" : {
+            "description" : "Array of reward grant statuses for each level progressed (DEPRECATED: Use level_completion_rewards, or level_up_rewards)",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesRewardGrantStatus"
+            },
+            "type" : "array"
+          },
+          "rewards_grant_status_per_level" : {
+            "additionalProperties" : {
+              "type" : "boolean"
+            },
+            "description" : "Boolean indicator of rewards granted per level progressed (Deprecated: Use level_completion_rewards, or level_up_rewards)",
+            "type" : "object"
+          },
+          "rewards_granted" : {
+            "description" : "Boolean indicating if the user have been granted rewards successfully for all the levels progressed",
+            "type" : "boolean"
+          },
+          "success" : {
+            "description" : "Status of xp update, true if xp updated successfully",
+            "type" : "boolean"
+          },
+          "user_id" : {
+            "description" : "UserID of the user",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesUserEnergy" : {
+        "properties" : {
+          "energy" : {
+            "description" : "Energy of the user",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "metadata" : {
+            "description" : "Metadata associated with the energy setting",
+            "type" : "object"
+          },
+          "next_energy_at" : {
+            "description" : "Next energy at Timestamp",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "seconds_to_next_energy" : {
+            "description" : "Seconds to next energy",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "trackablesXpSetting" : {
+        "properties" : {
+          "auto_reset_on_complete" : {
+            "description" : "Whether to auto reset xp on completion of final level",
+            "type" : "boolean"
+          },
+          "default_xp" : {
+            "description" : "Default xp for new users",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "levels" : {
+            "description" : "List of levels in the xp setting",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesLevel"
+            },
+            "type" : "array"
+          },
+          "metadata" : {
+            "description" : "Metadata associated with the xp setting",
+            "type" : "object"
+          },
+          "name" : {
+            "description" : "Name of the xp setting",
+            "type" : "string"
+          },
+          "prerequisites" : {
+            "description" : "Prerequisites for the xp setting",
+            "items" : {
+              "$ref" : "#/components/schemas/trackablesPredicateGroup"
+            },
+            "type" : "array"
+          },
+          "scope" : {
+            "description" : "Scope of the xp setting",
+            "type" : "string"
+          }
+        },
+        "required" : [ "levels", "name", "scope" ],
+        "type" : "object"
+      }
+    }
+  },
+  "x-original-swagger-version" : "2.0"
+}

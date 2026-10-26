@@ -1,0 +1,19 @@
+# beta-0.31.1
+##### May 16, 2024
+
+## Enhancements
+1. [Configuration Sync V2]: Major upgrade to the system. All snaps now expose internal validate config endpoints, allowing the Web app to first check the settings that can be synced and only then applied to the new snapend. The diff tool also now shows the correct delta between the source and destination.
+2. [Analytics Graphs]: Every new snapend created with the analytics snap will now have a new default dashboard called "Sessions". The dashboard contains graphs for ActiveSessions, Average Playtime per Session, Average playtime per user, and Total Playtime.
+3. [Notifications]: Notifications snap now supports scheduling recurring campaigns.
+4. [Gateway Web Socket]: Gateway websocket has been added as a filter to view your websocket logs in the Snapend logs tool.
+
+
+## Bug Fixes
+1. [Snapend state]: Removed the unnecessary scrollbar.
+2. [Snapend URL]: Fixed an issue while displaying the Snapend Global Acceleration URL.
+3. [Snapend Creation]: Fixed an issue where game admins and service admins were getting logged out on certain pages.
+4. [Fleet]: Updating the fleet was disabling web sockets in the Snapend.
+
+
+## Documentation
+1. Major documentation UI/UX cleanup.

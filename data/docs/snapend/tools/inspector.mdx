@@ -1,0 +1,62 @@
+# Matchmaking Inspector
+
+The Matchmaking Inspector allows you to follow a user through the matchmaking flow by tracking detailed logs for their tickets. This is useful for debugging matchmaking issues, verifying rule configurations, and understanding why a user's ticket was or wasn't matched.
+
+## How It Works
+
+When a user is added as a debug user, the matchmaking service emits detailed `[INSPECTOR]` log lines for every action involving that user's tickets -- including ticket creation, rule evaluation, provider syncs, match formation, and ticket expiration. These logs are then queryable directly from the Inspector tool in the admin portal.
+
+## Configuring Debug Users
+
+To start inspecting a user, you first need to add them as a debug user:
+
+1. Click the **Debug User** button in the top right of the Inspector page.
+2. Enter the user ID(s) you want to track.
+3. Click **+ Add user** to add additional users.
+4. Click **Save** to apply your changes.
+
+![Matchmaking Inspector Config](/images/docs/matchmaking-inspector-config.png)
+
+You can add multiple debug users at a time. To stop tracking a user, click the delete icon next to their entry and save.
+
+<Note>
+  Adding a debug user only affects future matchmaking activity. It does not retroactively generate logs for past tickets.
+</Note>
+
+## Querying Logs
+
+Once a debug user has been configured and has gone through the matchmaking flow, you can query their logs from the Inspector page.
+
+1. **Debug Users (Optional)**: Select one or more debug users from the dropdown to filter logs to specific users. If left empty, logs for all debug users are returned.
+2. **Time Range**: Set the time window for your query using the date/time picker.
+3. Click **Run Query** to fetch the logs.
+
+![Matchmaking Inspector Filters](/images/docs/matchmaking-inspector-filters.png)
+
+### Additional Filters
+
+Expand the **Additional Filters** section to narrow down your results further:
+
+- **Category**: Choose a filter type such as "Line contains" to search for specific text within the log lines.
+- Click **+ Filter** to add more filter conditions.
+
+## Reading Results
+
+After running a query, the Inspector displays a histogram of log volume over time and a paginated list of log entries.
+
+![Matchmaking Inspector Results](/images/docs/matchmaking-inspector-results.png)
+
+Each log entry includes a timestamp and a JSON payload with fields such as:
+
+- **event**: The matchmaking event (e.g., `ticket_synced`, `ticket_expired`).
+- **user_id**: The debug user's ID.
+- **ticket_id**: The ticket being tracked.
+- **profile_name**: The match profile the ticket was evaluated against.
+- **message**: A human-readable description prefixed with `[INSPECTOR]`.
+
+### Display Options
+
+- **Wrap lines**: Toggle line wrapping for long log entries.
+- **Prettify JSON**: Toggle JSON formatting for easier reading.
+- **Display results**: Sort by newest first or oldest first.
+- **Rows**: Control how many log entries are shown per page.

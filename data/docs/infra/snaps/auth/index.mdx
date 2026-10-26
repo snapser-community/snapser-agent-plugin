@@ -1,0 +1,4503 @@
+
+export const meta = {
+  author: 'AJ Apte',
+  editor: 'Alex Vlahopoulos',
+}
+
+# Auth
+
+Snapser's Auth Service allows you to drop authentication into your app in a
+Snap. The service currently supports anonymous authentication, email
+authentication, and third-party authentication like Apple, Epic, Facebook, Google, Steam, and Xbox.
+After a successful authentication, the service returns the user Id and a token that your game or app client
+can use to talk to your Snapser services.
+
+It's not a bad idea to start the user in Anonymous auth to get them interacting with your game or app while navigating with your FTUE (First Time User Experience). 
+Later on, you can prompt using a pop-up asking the user to secure their account
+via email or the other third-party connectors, we support.
+
+{/* <Note>
+Understanding auth can be daunting at times. You can always reach out to our support channel, where we will gladly help
+with this subject.
+</Note> */}
+
+<Note>
+  If you do not add the Authentication Snap to your cluster, Snapser will not
+  handle authentication for your app. You will be completely responsible for
+  handling authentication for your app.
+</Note>
+
+## Authentication Connectors
+
+Snapser supports the following authentication connectors:
+1. [Anonymous](/docs/infra/snaps/auth/connectors/anon)
+1. [Apple](/docs/infra/snaps/auth/connectors/apple)
+1. [Discord](/docs/infra/snaps/auth/connectors/discord)
+1. [Email OTP](/docs/infra/snaps/auth/connectors/email)
+1. [Email Password](/docs/infra/snaps/auth/connectors/email-password)
+1. [Epic](/docs/infra/snaps/auth/connectors/epic)
+1. [Facebook](/docs/infra/snaps/auth/connectors/facebook)
+1. [Google](/docs/infra/snaps/auth/connectors/google)
+1. [Steam](/docs/infra/snaps/auth/connectors/steam)
+1. [Username Password](/docs/infra/snaps/auth/connectors/username-password)
+1. [X](/docs/infra/snaps/auth/connectors/x)
+1. [Xbox](/docs/infra/snaps/auth/connectors/xbox)
+
+**NOTE**: Please click [here](/docs/infra/snaps/auth/connectors) to check out the detailed documentation on all the connectors.
+
+<Note>
+If there is a connector you want to see in this list, please reach out to the Snapser support team.
+</Note>
+
+### Removing your connectors
+You can remove any active connector from the Snaps Configuration tool.
+It should be noted that the changes take effect immediately and so this should
+be done with utmost caution. All active calls made to login, sign up or associate for
+the connector will stop working, once the connector is removed.
+
+## Associating Accounts
+
+Snapser also allows games to associate the same user with multiple types of
+auth. For example, an app can start a user under Anonymous auth, reducing the
+friction for your users to start the app. But later in the app, you can have
+an option for the user to connect to Facebook, Apple, etc. Snapser provides an
+associate endpoint, allowing your game to link the anonymous and FB auth for
+the user. Once you do this, the user can use either auth method to talk to
+your Snapser services.
+
+<Note>
+  You can associate only one third-party login once. E.g., If you associated FB
+  auth with an anonymous auth account. You cannot now associate the same FB
+  account with another anonymous account.
+</Note>
+
+**IMPORTANT**: Snapser Authentication can be thought of as a keychain. The user can have multiple
+keys to open the same lock. The lock here is your Snapser services.
+
+## Authentication Tokens
+Users are validated using a session token. This token is generated when the user logs in
+and is used to authenticate the user for all subsequent calls to your Snapser services.
+The token is valid for a certain period, after which the user will have to re-login.
+
+### Auth Token Extension
+
+Every authenticated user gets a token that is valid for a certain period.
+It is important that your app client refreshes the token before it expires to ensure uninterrupted user experience.
+If a token expires, the app client will have to re-login the user.
+
+To give users a seamless experience, we recommend that the app client refreshes the token before it
+expires. When the user logs in, the Auth snap sends back the following:
+```
+"session_token": "<user_token>"
+"refreshed_at":"1726612234"
+"token_validity_seconds":"2592000"
+```
+The app client should store or cache the `session_token` and `token_validity_seconds` in the app client.
+The app client should then refresh the token before the `token_validity_seconds` elapse.
+
+When you call the **Refresh Token** API, the Auth snap will return a new token with a new expiry time.
+```
+"session_token": "<new_user_token>"
+"refreshed_at":"1726612310"
+"token_validity_seconds":"2592000"
+```
+The app client should then follow the same process and refresh the token before the new `token_validity_seconds` elapse.
+
+### App Token Expiry Testing
+To test the token expiry, you can set the token validity to a very low value like 60 seconds in the dev or
+staging environment. This will allow you to test the token expiry flows in your app client.
+
+<Note>
+The Session Management configuration tool allows you to control the session duration and invalidation settings.
+</Note>
+
+## APIs
+
+The `Auth` snap exposes the following APIs
+
+<div className="apisTable">
+| API Name                | HTTP Method | API Description                                                                         |
+| ----------------------- | ----------- | --------------------------------------------------------------------------------------- |
+| [AuthAppVerify](#authappverify-api)               | GET         | Verifies the session token and returns appropriate response based on the type           |
+| [AuthAssociateLogins](#authassociatelogins-api)         | PUT         | Associates two logins based on their session tokens                                     |
+| [AuthAnonLogin](#authanonlogin-api)               | PUT         | Logs in the user with an arbitrary identifier specified and returns a session           |
+| [AuthAppleLogin](#authapplelogin-api)              | PUT         | Logs in the user based on the apple credential token specified and returns a session    |
+| [AuthEmailLogin](#authemaillogin-api)              | PUT         | Logs in the user based on the email and OTP specified and returns a session             |
+| [AuthEpicLogin](#authepiclogin-api)               | PUT         | Logs in the user based on the epic credentials specified and returns a session          |
+| [AuthFacebookLogin](#authfacebooklogin-api)           | PUT         | Logs in the user based on the facebook credential token specified and returns a session |
+| [AuthGoogleLogin](#authgooglelogin-api)             | PUT         | Logs in the user based on the google credential token specified and returns a session   |
+| [AuthSteamLogin](#authsteamlogin-api)              | PUT         | Logs in the user based on the steam token specified and returns a session               |
+| [AuthXboxLogin](#authxboxlogin-api)               | PUT         | Logs in the user based on the xbox token specified and returns a session                |
+| [AuthDiscordLogin](#authdiscordlogin-api)         | PUT         | Logs in the user based on the discord token specified and returns a session                |
+| [AuthUsernamePasswordLogin](#authusernamepasswordlogin-api)     | PUT         | Logs in the user based on the username and password specified and returns a session  |
+| [AuthGetUsernameAvailability](#authgetusernameavailability-api) | GET         | Checks if the username is available  |
+| [AuthUpdateUsernamePassword](#authupdateusernamepassword-api)   | PUT         | Updates the username and password of the user  |
+| [AuthEmailPasswordLogin](#authemailpasswordlogin-api)     | PUT         | Logs in the user based on the email and password specified and returns a session  |
+| [AuthRecoverEmailAccount](#authrecoveremailaccount-api)     | POST         | Sends an email to the user for account recovery |
+| [AuthUpdateEmailPassword](#authupdateemailpassword-api)     | PUT         | Updates the email and password of the user  |
+| [AuthVerifyEmail](#authverifyemail-api)     | POST         | Verifies the email and returns a session  |
+| [AuthLogout](#authlogout-api)                  | DELETE      | Ends the current session of the user                                                    |
+| [AuthOtp](#authotp-api)                     | POST        | Generates an OTP and sends it to the email for logging in                               |
+| [AuthRefresh](#authrefresh-api)                 | PATCH       | Refreshes the session and returns a new session token with refreshed validity           |
+| [AuthSteamOpenIdLogin](#authsteamopenidlogin-api)        | PUT         | Logs in the user based on the steam open ID token specified and returns a session       |
+| [AuthSteamSessionTicketLogin](#authsteamsessionticketlogin-api) | PUT         | Logs in the user based on the steam session ticket specified and returns a session      |
+| [AuthGetUserIdsByLoginIds](#authgetuseridsbyloginids-api)    | GET         | Get UserIDs by login IDs and login types (App auth only)                                |
+| [AuthValidate](#authvalidate-api)                | POST        | Validates the session of the user and returns the user info                             |
+| [AuthValidateAppKey](#authvalidateappkey-api)          | POST        | Validates an app key                                                                    |
+</div>
+
+### Usage
+#### AuthAppVerify API
+<CodeGroup title="Verifies the session token and returns appropriate response based on the type" tag="GET" label="AuthAppVerify">
+```csharp
+/// <summary>
+/// App Verify Verifies the session token and returns appropriate response based on the type
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="type">Type of app trying to verify the session token. Only acceptable value is &#39;photon&#39;</param>
+/// <param name="sessionToken">Session token of the user (optional)</param>
+/// <param name="clientSecret">Shared secret used to verify the request (optional)</param>
+/// <returns>ApiHttpBody</returns>
+public ApiHttpBody AuthAppVerify(string type, string sessionToken = default(string), string clientSecret = default(string))
+{
+    Snapser.Client.ApiResponse<ApiHttpBody> localVarResponse = AuthAppVerifyWithHttpInfo(type, sessionToken, clientSecret);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for ApiHttpBody
+/// <summary>
+/// Initializes a new instance of the <see cref="ApiHttpBody" /> class.
+/// </summary>
+/// <param name="contentType">The HTTP Content-Type header value specifying the content type of the body..</param>
+/// <param name="data">The HTTP request/response body as raw binary..</param>
+/// <param name="extensions">Application specific response metadata. Must be set in the first response for streaming APIs..</param>
+public ApiHttpBody(string contentType = default(string), byte[] data = default(byte[]), List<ProtobufAny> extensions = default(List<ProtobufAny>))
+{
+    this.ContentType = contentType;
+    this.Data = data;
+    this.Extensions = extensions;
+}
+```
+```cpp
+// Request
+/* App Verify
+ *
+ * Verifies the session token and returns appropriate response based on the type
+ */
+class SNAPSER_API SnapserAuthServiceApi::AuthAppVerifyRequest : public Request
+{
+public:
+    virtual ~AuthAppVerifyRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Type of app trying to verify the session token. Only acceptable value is 'photon' */
+    FString Type;
+    /* Session token of the user */
+    TOptional<FString> SessionToken;
+    /* Shared secret used to verify the request */
+    TOptional<FString> ClientSecret;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthAppVerifyResponse : public Response
+{
+public:
+    virtual ~AuthAppVerifyResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserApiHttpBody Content;
+};
+
+class SNAPSER_API SnapserApiHttpBody : public Model
+{
+public:
+    virtual ~SnapserApiHttpBody() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* The HTTP Content-Type header value specifying the content type of the body. */
+    TOptional<FString> ContentType;
+    /* The HTTP request/response body as raw binary. */
+    TOptional<TArray<uint8>> Data;
+    /* Application specific response metadata. Must be set in the first response for streaming APIs. */
+    TOptional<TArray<SnapserProtobufAny>> Extensions;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AuthAssociateLogins API
+<CodeGroup title="Associates two logins based on their session tokens" tag="PUT" label="AuthAssociateLogins">
+```csharp
+/// <summary>
+/// Associate Multiple Logins Associates two logins based on their session tokens
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object AuthAssociateLogins(AuthAssociateLoginsRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = AuthAssociateLoginsWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthAssociateLoginsRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAssociateLoginsRequest" /> class.
+/// </summary>
+/// <param name="discardUserToken">Token of the user to discard (required).</param>
+/// <param name="keepUserToken">Token of the user to keep (required).</param>
+public AuthAssociateLoginsRequest(string discardUserToken = default(string), string keepUserToken = default(string))
+{
+    // to ensure "discardUserToken" is required (not null)
+    if (discardUserToken == null)
+    {
+        throw new ArgumentNullException("discardUserToken is a required property for AuthAssociateLoginsRequest and cannot be null");
+    }
+    this.DiscardUserToken = discardUserToken;
+    // to ensure "keepUserToken" is required (not null)
+    if (keepUserToken == null)
+    {
+        throw new ArgumentNullException("keepUserToken is a required property for AuthAssociateLoginsRequest and cannot be null");
+    }
+    this.KeepUserToken = keepUserToken;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthAssociateLoginsRequest : public Request
+{
+public:
+    virtual ~AuthAssociateLoginsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthAssociateLoginsRequest Body;
+};
+
+class SNAPSER_API SnapserAuthAssociateLoginsRequest : public Model
+{
+public:
+    virtual ~SnapserAuthAssociateLoginsRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Token of the user to discard */
+    FString DiscardUserToken;
+    /* Token of the user to keep */
+    FString KeepUserToken;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthAssociateLoginsResponse : public Response
+{
+public:
+    virtual ~AuthAssociateLoginsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### AuthDisassociateLogin API
+<CodeGroup title="Disassociates the specified login from a user" tag="PUT" label="AuthDisassociateLogin">
+```csharp
+/// <summary>
+/// Disassociates the specified login from a user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="userId">UserID of the user to be unbanned</param>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object AuthDisassociateLogin(string userId, string token, DisassociateLoginRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = AuthDisassociateLoginWithHttpInfo(userId, token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for DisassociateLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="DisassociateLoginRequest" /> class.
+/// </summary>
+/// <param name="loginType">Login type (required).</param>
+public DisassociateLoginRequest(string loginType = default(string))
+{
+    // to ensure "loginType" is required (not null)
+    if (loginType == null)
+    {
+        throw new ArgumentNullException("loginType is a required property for DisassociateLoginRequest and cannot be null");
+    }
+    this.LoginType = loginType;
+}
+```
+
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthDisassociateLoginRequest : public Request
+{
+public:
+    virtual ~AuthDisassociateLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* UserID of the user to be unbanned */
+    FString UserId;
+    /* User session token */
+    FString Token;
+    SnapserDisassociateLoginRequest Body;
+};
+
+class SNAPSER_API SnapserDisassociateLoginRequest : public Model
+{
+public:
+    virtual ~SnapserDisassociateLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Login type */
+    FString LoginType;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthDisassociateLoginResponse : public Response
+{
+public:
+    virtual ~AuthDisassociateLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### AuthAnonLogin API
+<CodeGroup title="Logs in the user with an arbitrary identifier specified and returns a session" tag="PUT" label="AuthAnonLogin">
+```csharp
+/// <summary>
+/// Anonymous Login Logs in the user with an arbitrary identifier specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthAnonLoginResponse</returns>
+public AuthAnonLoginResponse AuthAnonLogin(AuthAnonLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthAnonLoginResponse> localVarResponse = AuthAnonLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthAnonLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAnonLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="username">User&#39;s login ID (required).</param>
+public AuthAnonLoginRequest(bool createUser = default(bool), string username = default(string))
+{
+    // to ensure "username" is required (not null)
+    if (username == null)
+    {
+        throw new ArgumentNullException("username is a required property for AuthAnonLoginRequest and cannot be null");
+    }
+    this.Username = username;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthAnonLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAnonLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthAnonLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthAnonLoginRequest : public Request
+{
+public:
+    virtual ~AuthAnonLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthAnonLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthAnonLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthAnonLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* User's login ID */
+    FString Username;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthAnonLoginResponse : public Response
+{
+public:
+    virtual ~AuthAnonLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthAnonLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthAnonLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthAnonLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* List of login IDs associated with the user */
+    TOptional<TArray<SnapserAuthLoginId>> Logins;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+
+class SNAPSER_API SnapserAuthLoginTypeType : public Model
+{
+public:
+    virtual ~SnapserAuthLoginTypeType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedLoginType,
+        Email,
+        Password,
+        Anon,
+        Facebook,
+        Google,
+        Apple,
+        Steam,
+        Xbox,
+        Epic,
+        App,
+        Discord,
+        EmailPassword,
+        UsernamePassword,
+        X,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserAuthLoginId : public Model
+{
+public:
+    virtual ~SnapserAuthLoginId() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Id;
+    TOptional<SnapserAuthLoginTypeType> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AuthAppleLogin API
+<CodeGroup title="Logs in the user based on the apple credential token specified and returns a session" tag="PUT" label="AuthAppleLogin">
+```csharp
+/// <summary>
+/// Apple Login Logs in the user based on the apple credential token specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthAppleLoginResponse</returns>
+public AuthAppleLoginResponse AuthAppleLogin(AuthAppleLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthAppleLoginResponse> localVarResponse = AuthAppleLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthAppleLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAppleLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="token">Apple token generated on the client (required).</param>
+public AuthAppleLoginRequest(bool createUser = default(bool), string token = default(string))
+{
+    // to ensure "token" is required (not null)
+    if (token == null)
+    {
+        throw new ArgumentNullException("token is a required property for AuthAppleLoginRequest and cannot be null");
+    }
+    this.Token = token;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthAppleLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthAppleLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthAppleLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthAppleLoginRequest : public Request
+{
+public:
+    virtual ~AuthAppleLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthAppleLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthAppleLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthAppleLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* Apple token generated on the client */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthAppleLoginResponse : public Response
+{
+public:
+    virtual ~AuthAppleLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthAppleLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthAppleLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthAppleLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* List of login IDs associated with the user */
+    TOptional<TArray<SnapserAuthLoginId>> Logins;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+
+class SNAPSER_API SnapserAuthLoginTypeType : public Model
+{
+public:
+    virtual ~SnapserAuthLoginTypeType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedLoginType,
+        Email,
+        Password,
+        Anon,
+        Facebook,
+        Google,
+        Apple,
+        Steam,
+        Xbox,
+        Epic,
+        App,
+        Discord,
+        EmailPassword,
+        UsernamePassword,
+        X,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserAuthLoginId : public Model
+{
+public:
+    virtual ~SnapserAuthLoginId() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Id;
+    TOptional<SnapserAuthLoginTypeType> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AuthEmailLogin API
+<CodeGroup title="Logs in the user based on the email and OTP specified and returns a session" tag="PUT" label="AuthEmailLogin">
+```csharp
+/// <summary>
+/// Email Login Logs in the user based on the email and OTP specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthEmailLoginResponse</returns>
+public AuthEmailLoginResponse AuthEmailLogin(AuthEmailLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthEmailLoginResponse> localVarResponse = AuthEmailLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthEmailLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthEmailLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="email">Email address used as login (required).</param>
+/// <param name="otp">OTP code received by the user (required).</param>
+public AuthEmailLoginRequest(bool createUser = default(bool), string email = default(string), string otp = default(string))
+{
+    // to ensure "email" is required (not null)
+    if (email == null)
+    {
+        throw new ArgumentNullException("email is a required property for AuthEmailLoginRequest and cannot be null");
+    }
+    this.Email = email;
+    // to ensure "otp" is required (not null)
+    if (otp == null)
+    {
+        throw new ArgumentNullException("otp is a required property for AuthEmailLoginRequest and cannot be null");
+    }
+    this.Otp = otp;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthEmailLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthEmailLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthEmailLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthEmailLoginRequest : public Request
+{
+public:
+    virtual ~AuthEmailLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthEmailLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthEmailLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthEmailLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* Email address used as login */
+    FString Email;
+    /* OTP code received by the user */
+    FString Otp;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthEmailLoginResponse : public Response
+{
+public:
+    virtual ~AuthEmailLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthEmailLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthEmailLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthEmailLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* List of login IDs associated with the user */
+    TOptional<TArray<SnapserAuthLoginId>> Logins;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+
+class SNAPSER_API SnapserAuthLoginTypeType : public Model
+{
+public:
+    virtual ~SnapserAuthLoginTypeType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedLoginType,
+        Email,
+        Password,
+        Anon,
+        Facebook,
+        Google,
+        Apple,
+        Steam,
+        Xbox,
+        Epic,
+        App,
+        Discord,
+        EmailPassword,
+        UsernamePassword,
+        X,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserAuthLoginId : public Model
+{
+public:
+    virtual ~SnapserAuthLoginId() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Id;
+    TOptional<SnapserAuthLoginTypeType> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AuthEpicLogin API
+<CodeGroup title="Logs in the user based on the epic credentials specified and returns a session" tag="PUT" label="AuthEpicLogin">
+```csharp
+/// <summary>
+/// Epic Login Logs in the user based on the epic credentials specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthEpicLoginResponse</returns>
+public AuthEpicLoginResponse AuthEpicLogin(AuthEpicLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthEpicLoginResponse> localVarResponse = AuthEpicLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthEpicLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthEpicLoginRequest" /> class.
+/// </summary>
+/// <param name="code">code generated on the client.</param>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="exchangeCode">exchange_code generated on the client.</param>
+/// <param name="grantType">token generated on the client (required).</param>
+/// <param name="password">exchange_code generated on the client.</param>
+/// <param name="username">exchange_code generated on the client.</param>
+public AuthEpicLoginRequest(string code = default(string), bool createUser = default(bool), string exchangeCode = default(string), string grantType = default(string), string password = default(string), string username = default(string))
+{
+    // to ensure "grantType" is required (not null)
+    if (grantType == null)
+    {
+        throw new ArgumentNullException("grantType is a required property for AuthEpicLoginRequest and cannot be null");
+    }
+    this.GrantType = grantType;
+    this.Code = code;
+    this.CreateUser = createUser;
+    this.ExchangeCode = exchangeCode;
+    this.Password = password;
+    this.Username = username;
+}
+
+/// Snapser.Model for AuthEpicLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthEpicLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthEpicLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthEpicLoginRequest : public Request
+{
+public:
+    virtual ~AuthEpicLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthEpicLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthEpicLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthEpicLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* code generated on the client */
+    TOptional<FString> Code;
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* exchange_code generated on the client */
+    TOptional<FString> ExchangeCode;
+    /* token generated on the client */
+    FString GrantType;
+    /* exchange_code generated on the client */
+    TOptional<FString> Password;
+    /* exchange_code generated on the client */
+    TOptional<FString> Username;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthEpicLoginResponse : public Response
+{
+public:
+    virtual ~AuthEpicLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthEpicLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthEpicLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthEpicLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* List of login IDs associated with the user */
+    TOptional<TArray<SnapserAuthLoginId>> Logins;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+
+class SNAPSER_API SnapserAuthLoginTypeType : public Model
+{
+public:
+    virtual ~SnapserAuthLoginTypeType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedLoginType,
+        Email,
+        Password,
+        Anon,
+        Facebook,
+        Google,
+        Apple,
+        Steam,
+        Xbox,
+        Epic,
+        App,
+        Discord,
+        EmailPassword,
+        UsernamePassword,
+        X,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserAuthLoginId : public Model
+{
+public:
+    virtual ~SnapserAuthLoginId() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Id;
+    TOptional<SnapserAuthLoginTypeType> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AuthFacebookLogin API
+<CodeGroup title="Logs in the user based on the facebook credential token specified and returns a session" tag="PUT" label="AuthFacebookLogin">
+```csharp
+/// <summary>
+/// Facebook Login Logs in the user based on the facebook credential token specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthFacebookLoginResponse</returns>
+public AuthFacebookLoginResponse AuthFacebookLogin(AuthFacebookLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthFacebookLoginResponse> localVarResponse = AuthFacebookLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthFacebookLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthFacebookLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="token">Facebook token generated on the client (required).</param>
+public AuthFacebookLoginRequest(bool createUser = default(bool), string token = default(string))
+{
+    // to ensure "token" is required (not null)
+    if (token == null)
+    {
+        throw new ArgumentNullException("token is a required property for AuthFacebookLoginRequest and cannot be null");
+    }
+    this.Token = token;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthFacebookLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthFacebookLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthFacebookLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthFacebookLoginRequest : public Request
+{
+public:
+    virtual ~AuthFacebookLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthFacebookLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthFacebookLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthFacebookLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* Facebook token generated on the client */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthFacebookLoginResponse : public Response
+{
+public:
+    virtual ~AuthFacebookLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthFacebookLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthFacebookLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthFacebookLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* List of login IDs associated with the user */
+    TOptional<TArray<SnapserAuthLoginId>> Logins;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+
+class SNAPSER_API SnapserAuthLoginTypeType : public Model
+{
+public:
+    virtual ~SnapserAuthLoginTypeType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedLoginType,
+        Email,
+        Password,
+        Anon,
+        Facebook,
+        Google,
+        Apple,
+        Steam,
+        Xbox,
+        Epic,
+        App,
+        Discord,
+        EmailPassword,
+        UsernamePassword,
+        X,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserAuthLoginId : public Model
+{
+public:
+    virtual ~SnapserAuthLoginId() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Id;
+    TOptional<SnapserAuthLoginTypeType> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AuthGoogleLogin API
+<CodeGroup title="Logs in the user based on the google credential token specified and returns a session" tag="PUT" label="AuthGoogleLogin">
+```csharp
+/// <summary>
+/// Google Login Logs in the user based on the google credential token specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthGoogleLoginResponse</returns>
+public AuthGoogleLoginResponse AuthGoogleLogin(AuthGoogleLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthGoogleLoginResponse> localVarResponse = AuthGoogleLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthGoogleLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthGoogleLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="token">Google IDtoken generated on the client (required).</param>
+public AuthGoogleLoginRequest(bool createUser = default(bool), string token = default(string))
+{
+    // to ensure "token" is required (not null)
+    if (token == null)
+    {
+        throw new ArgumentNullException("token is a required property for AuthGoogleLoginRequest and cannot be null");
+    }
+    this.Token = token;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthGoogleLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthGoogleLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthGoogleLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthGoogleLoginRequest : public Request
+{
+public:
+    virtual ~AuthGoogleLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthGoogleLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthGoogleLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthGoogleLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* Google IDtoken generated on the client */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthGoogleLoginResponse : public Response
+{
+public:
+    virtual ~AuthGoogleLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthGoogleLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthGoogleLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthGoogleLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* List of login IDs associated with the user */
+    TOptional<TArray<SnapserAuthLoginId>> Logins;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+
+class SNAPSER_API SnapserAuthLoginTypeType : public Model
+{
+public:
+    virtual ~SnapserAuthLoginTypeType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedLoginType,
+        Email,
+        Password,
+        Anon,
+        Facebook,
+        Google,
+        Apple,
+        Steam,
+        Xbox,
+        Epic,
+        App,
+        Discord,
+        EmailPassword,
+        UsernamePassword,
+        X,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserAuthLoginId : public Model
+{
+public:
+    virtual ~SnapserAuthLoginId() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Id;
+    TOptional<SnapserAuthLoginTypeType> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AuthSteamLogin API
+<CodeGroup title="Logs in the user based on the steam token specified and returns a session" tag="PUT" label="AuthSteamLogin">
+```csharp
+/// <summary>
+/// Steam Login Logs in the user based on the steam token specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthSteamLoginResponse</returns>
+public AuthSteamLoginResponse AuthSteamLogin(AuthSteamLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthSteamLoginResponse> localVarResponse = AuthSteamLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthSteamLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthSteamLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="openidParameters">Key value pairs of the openid parameters (required).</param>
+public AuthSteamLoginRequest(bool createUser = default(bool), Dictionary<string, string> openidParameters = default(Dictionary<string, string>))
+{
+    // to ensure "openidParameters" is required (not null)
+    if (openidParameters == null)
+    {
+        throw new ArgumentNullException("openidParameters is a required property for AuthSteamLoginRequest and cannot be null");
+    }
+    this.OpenidParameters = openidParameters;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthSteamLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthSteamLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthSteamLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthSteamLoginRequest : public Request
+{
+public:
+    virtual ~AuthSteamLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthSteamLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthSteamLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthSteamLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    TOptional<SnapserAuthLoginMetadata> LoginMetadata;
+    /* Key value pairs of the openid parameters */
+    TMap<FString, FString> OpenidParameters;
+};
+
+class SNAPSER_API SnapserAuthLoginMetadata : public Model
+{
+public:
+    virtual ~SnapserAuthLoginMetadata() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Agent;
+    TOptional<FString> Device;
+    TOptional<FString> Location;
+    TOptional<FString> Platform;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthSteamLoginResponse : public Response
+{
+public:
+    virtual ~AuthSteamLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthSteamLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthSteamLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthSteamLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* List of login IDs associated with the user */
+    TOptional<TArray<SnapserAuthLoginId>> Logins;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+
+class SNAPSER_API SnapserAuthLoginTypeType : public Model
+{
+public:
+    virtual ~SnapserAuthLoginTypeType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedLoginType,
+        Email,
+        Password,
+        Anon,
+        Facebook,
+        Google,
+        Apple,
+        Steam,
+        Xbox,
+        Epic,
+        App,
+        Discord,
+        EmailPassword,
+        UsernamePassword,
+        X,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserAuthLoginId : public Model
+{
+public:
+    virtual ~SnapserAuthLoginId() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Id;
+    TOptional<SnapserAuthLoginTypeType> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AuthXboxLogin API
+<CodeGroup title="Logs in the user based on the xbox token specified and returns a session" tag="PUT" label="AuthXboxLogin">
+```csharp
+/// <summary>
+/// Xbox Login Logs in the user based on the xbox token specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthXboxLoginResponse</returns>
+public AuthXboxLoginResponse AuthXboxLogin(AuthXboxLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthXboxLoginResponse> localVarResponse = AuthXboxLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthXboxLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthXboxLoginRequest" /> class.
+/// </summary>
+/// <param name="code">code generated on the client (required).</param>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="redirectUrl">redirect url for client (required).</param>
+public AuthXboxLoginRequest(string code = default(string), bool createUser = default(bool), string redirectUrl = default(string))
+{
+    // to ensure "code" is required (not null)
+    if (code == null)
+    {
+        throw new ArgumentNullException("code is a required property for AuthXboxLoginRequest and cannot be null");
+    }
+    this.Code = code;
+    // to ensure "redirectUrl" is required (not null)
+    if (redirectUrl == null)
+    {
+        throw new ArgumentNullException("redirectUrl is a required property for AuthXboxLoginRequest and cannot be null");
+    }
+    this.RedirectUrl = redirectUrl;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthXboxLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthXboxLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthXboxLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthXboxLoginRequest : public Request
+{
+public:
+    virtual ~AuthXboxLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthXboxLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthXboxLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthXboxLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* code generated on the client */
+    FString Code;
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    TOptional<SnapserAuthLoginMetadata> LoginMetadata;
+    /* redirect url for client */
+    FString RedirectUrl;
+};
+
+class SNAPSER_API SnapserAuthLoginMetadata : public Model
+{
+public:
+    virtual ~SnapserAuthLoginMetadata() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Agent;
+    TOptional<FString> Device;
+    TOptional<FString> Location;
+    TOptional<FString> Platform;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthXboxLoginResponse : public Response
+{
+public:
+    virtual ~AuthXboxLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthXboxLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthXboxLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthXboxLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* List of login IDs associated with the user */
+    TOptional<TArray<SnapserAuthLoginId>> Logins;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+
+class SNAPSER_API SnapserAuthLoginTypeType : public Model
+{
+public:
+    virtual ~SnapserAuthLoginTypeType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedLoginType,
+        Email,
+        Password,
+        Anon,
+        Facebook,
+        Google,
+        Apple,
+        Steam,
+        Xbox,
+        Epic,
+        App,
+        Discord,
+        EmailPassword,
+        UsernamePassword,
+        X,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserAuthLoginId : public Model
+{
+public:
+    virtual ~SnapserAuthLoginId() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Id;
+    TOptional<SnapserAuthLoginTypeType> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### AuthDiscordLogin API
+<CodeGroup title="Discord Login Logs in the user based on the discord token specified and returns a session" tag="PUT" label="AuthDiscordLogin">
+```csharp
+/// <summary>
+/// Discord Login Logs in the user based on the discord token specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthDiscordLoginResponse</returns>
+public AuthDiscordLoginResponse AuthDiscordLogin(AuthDiscordLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthDiscordLoginResponse> localVarResponse = AuthDiscordLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthDiscordLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthDiscordLoginRequest" /> class.
+/// </summary>
+/// <param name="accessToken">Discord access token generated on the client.</param>
+/// <param name="code">Discord code generated on the client.</param>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+public AuthDiscordLoginRequest(string accessToken = default(string), string code = default(string), bool createUser = default(bool))
+{
+    this.AccessToken = accessToken;
+    this.Code = code;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthDiscordLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthDiscordLoginResponse" /> class.
+/// </summary>
+/// <param name="accessToken">accessToken.</param>
+/// <param name="user">user.</param>
+public AuthDiscordLoginResponse(string accessToken = default(string), AuthUser user = default(AuthUser))
+{
+    this.AccessToken = accessToken;
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthDiscordLoginRequest : public Request
+{
+public:
+    virtual ~AuthDiscordLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthDiscordLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthDiscordLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthDiscordLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Discord access token generated on the client */
+    TOptional<FString> AccessToken;
+    /* Discord code generated on the client */
+    TOptional<FString> Code;
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthDiscordLoginResponse : public Response
+{
+public:
+    virtual ~AuthDiscordLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthDiscordLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthDiscordLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthDiscordLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> AccessToken;
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* List of login IDs associated with the user */
+    TOptional<TArray<SnapserAuthLoginId>> Logins;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+
+class SNAPSER_API SnapserAuthLoginTypeType : public Model
+{
+public:
+    virtual ~SnapserAuthLoginTypeType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedLoginType,
+        Email,
+        Password,
+        Anon,
+        Facebook,
+        Google,
+        Apple,
+        Steam,
+        Xbox,
+        Epic,
+        App,
+        Discord,
+        EmailPassword,
+        UsernamePassword,
+        X,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserAuthLoginId : public Model
+{
+public:
+    virtual ~SnapserAuthLoginId() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Id;
+    TOptional<SnapserAuthLoginTypeType> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### AuthEmailPasswordLogin API
+<CodeGroup title="Email Password Login Logs in the user based on the email and password specified and returns a session" tag="PUT" label="AuthEmailPasswordLogin">
+```csharp
+/// <summary>
+/// Email Password Login Logs in the user based on the email and password specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthEmailPasswordLoginResponse</returns>
+public AuthEmailPasswordLoginResponse AuthEmailPasswordLogin(AuthEmailPasswordLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthEmailPasswordLoginResponse> localVarResponse = AuthEmailPasswordLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthEmailPasswordLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthEmailPasswordLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="email">Email address used as login (required).</param>
+/// <param name="password">Password used for login (required).</param>
+public AuthEmailPasswordLoginRequest(bool createUser = default(bool), string email = default(string), string password = default(string))
+{
+    // to ensure "email" is required (not null)
+    if (email == null)
+    {
+        throw new ArgumentNullException("email is a required property for AuthEmailPasswordLoginRequest and cannot be null");
+    }
+    this.Email = email;
+    // to ensure "password" is required (not null)
+    if (password == null)
+    {
+        throw new ArgumentNullException("password is a required property for AuthEmailPasswordLoginRequest and cannot be null");
+    }
+    this.Password = password;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthEmailPasswordLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthEmailPasswordLoginResponse" /> class.
+/// </summary>
+/// <param name="emailVerificationRequired">emailVerificationRequired.</param>
+/// <param name="user">user.</param>
+public AuthEmailPasswordLoginResponse(bool emailVerificationRequired = default(bool), AuthUser user = default(AuthUser))
+{
+    this.EmailVerificationRequired = emailVerificationRequired;
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+````cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthEmailPasswordLoginRequest : public Request
+{
+public:
+    virtual ~AuthEmailPasswordLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthEmailPasswordLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthEmailPasswordLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthEmailPasswordLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* Email address used as login */
+    FString Email;
+    /* Password used for login */
+    FString Password;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthEmailPasswordLoginResponse : public Response
+{
+public:
+    virtual ~AuthEmailPasswordLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthEmailPasswordLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthEmailPasswordLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthEmailPasswordLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<bool> EmailVerificationRequired;
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* List of login IDs associated with the user */
+    TOptional<TArray<SnapserAuthLoginId>> Logins;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+
+class SNAPSER_API SnapserAuthLoginTypeType : public Model
+{
+public:
+    virtual ~SnapserAuthLoginTypeType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedLoginType,
+        Email,
+        Password,
+        Anon,
+        Facebook,
+        Google,
+        Apple,
+        Steam,
+        Xbox,
+        Epic,
+        App,
+        Discord,
+        EmailPassword,
+        UsernamePassword,
+        X,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserAuthLoginId : public Model
+{
+public:
+    virtual ~SnapserAuthLoginId() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Id;
+    TOptional<SnapserAuthLoginTypeType> Type;
+};
+````
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### AuthUpdateEmailPassword API
+<CodeGroup title="Updates the email and password of the user" tag="PUT" label="AuthUpdateEmailPassword">
+```csharp
+/// <summary>
+/// Email Password Login Updates the email and password of the user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="email">Email address to update</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object AuthUpdateEmailPassword(string email, UpdateEmailPasswordRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = AuthUpdateEmailPasswordWithHttpInfo(email, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for UpdateEmailPasswordRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="UpdateEmailPasswordRequest" /> class.
+/// </summary>
+/// <param name="newPassword">New password to be set (required).</param>
+/// <param name="oldPassword">Old password to be verified.</param>
+/// <param name="recoveryCode">Recovery code received by the user.</param>
+public UpdateEmailPasswordRequest(string newPassword = default(string), string oldPassword = default(string), string recoveryCode = default(string))
+{
+    // to ensure "newPassword" is required (not null)
+    if (newPassword == null)
+    {
+        throw new ArgumentNullException("newPassword is a required property for UpdateEmailPasswordRequest and cannot be null");
+    }
+    this.NewPassword = newPassword;
+    this.OldPassword = oldPassword;
+    this.RecoveryCode = recoveryCode;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthUpdateEmailPasswordRequest : public Request
+{
+public:
+    virtual ~AuthUpdateEmailPasswordRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Email address to update */
+    FString Email;
+    SnapserUpdateEmailPasswordRequest Body;
+};
+
+class SNAPSER_API SnapserUpdateEmailPasswordRequest : public Model
+{
+public:
+    virtual ~SnapserUpdateEmailPasswordRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* New password to be set */
+    FString NewPassword;
+    /* Old password to be verified */
+    TOptional<FString> OldPassword;
+    /* Recovery code received by the user */
+    TOptional<FString> RecoveryCode;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthUpdateEmailPasswordResponse : public Response
+{
+public:
+    virtual ~AuthUpdateEmailPasswordResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### AuthRecoverEmailAccount API
+<CodeGroup title="Sends an email to the user for account recovery" tag="POST" label="AuthRecoverEmailAccount">
+```csharp
+/// <summary>
+/// Email Password Login Sends an email to the user for account recovery
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object AuthRecoverEmailAccount(AuthRecoverEmailAccountRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = AuthRecoverEmailAccountWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthRecoverEmailAccountRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthRecoverEmailAccountRequest" /> class.
+/// </summary>
+/// <param name="email">Email address to recover (required).</param>
+public AuthRecoverEmailAccountRequest(string email = default(string))
+{
+    // to ensure "email" is required (not null)
+    if (email == null)
+    {
+        throw new ArgumentNullException("email is a required property for AuthRecoverEmailAccountRequest and cannot be null");
+    }
+    this.Email = email;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthRecoverEmailAccountRequest : public Request
+{
+public:
+    virtual ~AuthRecoverEmailAccountRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthRecoverEmailAccountRequest Body;
+};
+
+class SNAPSER_API SnapserAuthRecoverEmailAccountRequest : public Model
+{
+public:
+    virtual ~SnapserAuthRecoverEmailAccountRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Email address to recover */
+    FString Email;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthRecoverEmailAccountResponse : public Response
+{
+public:
+    virtual ~AuthRecoverEmailAccountResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### AuthVerifyEmail API
+<CodeGroup title="Verifies the email and returns a session" tag="POST" label="AuthVerifyEmail">
+```csharp
+/// <summary>
+/// Email Password Login Verifies the email and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthVerifyEmailResponse</returns>
+public AuthVerifyEmailResponse AuthVerifyEmail(AuthVerifyEmailRequest body)
+{
+    Snapser.Client.ApiResponse<AuthVerifyEmailResponse> localVarResponse = AuthVerifyEmailWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthVerifyEmailRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthVerifyEmailRequest" /> class.
+/// </summary>
+/// <param name="email">Email address to verify (required).</param>
+/// <param name="verificationCode">Verification code received by the user (required).</param>
+public AuthVerifyEmailRequest(string email = default(string), string verificationCode = default(string))
+{
+    // to ensure "email" is required (not null)
+    if (email == null)
+    {
+        throw new ArgumentNullException("email is a required property for AuthVerifyEmailRequest and cannot be null");
+    }
+    this.Email = email;
+    // to ensure "verificationCode" is required (not null)
+    if (verificationCode == null)
+    {
+        throw new ArgumentNullException("verificationCode is a required property for AuthVerifyEmailRequest and cannot be null");
+    }
+    this.VerificationCode = verificationCode;
+}
+
+/// Snapser.Model for AuthVerifyEmailResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthVerifyEmailResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthVerifyEmailResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthVerifyEmailRequest : public Request
+{
+public:
+    virtual ~AuthVerifyEmailRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthVerifyEmailRequest Body;
+};
+
+class SNAPSER_API SnapserAuthVerifyEmailRequest : public Model
+{
+public:
+    virtual ~SnapserAuthVerifyEmailRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Email address to verify */
+    FString Email;
+    /* Verification code received by the user */
+    FString VerificationCode;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthVerifyEmailResponse : public Response
+{
+public:
+    virtual ~AuthVerifyEmailResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthVerifyEmailResponse Content;
+};
+
+class SNAPSER_API SnapserAuthVerifyEmailResponse : public Model
+{
+public:
+    virtual ~SnapserAuthVerifyEmailResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* List of login IDs associated with the user */
+    TOptional<TArray<SnapserAuthLoginId>> Logins;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+
+class SNAPSER_API SnapserAuthLoginTypeType : public Model
+{
+public:
+    virtual ~SnapserAuthLoginTypeType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedLoginType,
+        Email,
+        Password,
+        Anon,
+        Facebook,
+        Google,
+        Apple,
+        Steam,
+        Xbox,
+        Epic,
+        App,
+        Discord,
+        EmailPassword,
+        UsernamePassword,
+        X,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserAuthLoginId : public Model
+{
+public:
+    virtual ~SnapserAuthLoginId() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Id;
+    TOptional<SnapserAuthLoginTypeType> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### AuthUsernamePasswordLogin API
+<CodeGroup title="Username Password Login Logs in the user based on the username and password specified and returns a session" tag="PUT" label="AuthUsernamePasswordLogin">
+```csharp
+/// <summary>
+/// Username Password Login Logs in the user based on the username and password specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>AuthUsernamePasswordLoginResponse</returns>
+public AuthUsernamePasswordLoginResponse AuthUsernamePasswordLogin(string token, AuthUsernamePasswordLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthUsernamePasswordLoginResponse> localVarResponse = AuthUsernamePasswordLoginWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthUsernamePasswordLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUsernamePasswordLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="password">Password used for login (required).</param>
+/// <param name="username">User&#39;s login ID (required).</param>
+public AuthUsernamePasswordLoginRequest(bool createUser = default(bool), string password = default(string), string username = default(string))
+{
+    // to ensure "password" is required (not null)
+    if (password == null)
+    {
+        throw new ArgumentNullException("password is a required property for AuthUsernamePasswordLoginRequest and cannot be null");
+    }
+    this.Password = password;
+    // to ensure "username" is required (not null)
+    if (username == null)
+    {
+        throw new ArgumentNullException("username is a required property for AuthUsernamePasswordLoginRequest and cannot be null");
+    }
+    this.Username = username;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthUsernamePasswordLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUsernamePasswordLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthUsernamePasswordLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthUsernamePasswordLoginRequest : public Request
+{
+public:
+    virtual ~AuthUsernamePasswordLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserAuthUsernamePasswordLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthUsernamePasswordLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthUsernamePasswordLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* Password used for login */
+    FString Password;
+    /* User's login ID */
+    FString Username;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthUsernamePasswordLoginResponse : public Response
+{
+public:
+    virtual ~AuthUsernamePasswordLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthUsernamePasswordLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthUsernamePasswordLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthUsernamePasswordLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* List of login IDs associated with the user */
+    TOptional<TArray<SnapserAuthLoginId>> Logins;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+
+class SNAPSER_API SnapserAuthLoginTypeType : public Model
+{
+public:
+    virtual ~SnapserAuthLoginTypeType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedLoginType,
+        Email,
+        Password,
+        Anon,
+        Facebook,
+        Google,
+        Apple,
+        Steam,
+        Xbox,
+        Epic,
+        App,
+        Discord,
+        EmailPassword,
+        UsernamePassword,
+        X,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserAuthLoginId : public Model
+{
+public:
+    virtual ~SnapserAuthLoginId() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Id;
+    TOptional<SnapserAuthLoginTypeType> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### AuthGetUsernameAvailability API
+<CodeGroup title="Checks if the username is available" tag="GET" label="AuthGetUsernameAvailability">
+```csharp
+/// <summary>
+/// Username Password Login Checks if the username is available
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="username">Username to check</param>
+/// <returns>AuthGetUsernameAvailabilityResponse</returns>
+public AuthGetUsernameAvailabilityResponse AuthGetUsernameAvailability(string username)
+{
+    Snapser.Client.ApiResponse<AuthGetUsernameAvailabilityResponse> localVarResponse = AuthGetUsernameAvailabilityWithHttpInfo(username);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthGetUsernameAvailabilityResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthGetUsernameAvailabilityResponse" /> class.
+/// </summary>
+/// <param name="available">Whether the username is available or not.</param>
+public AuthGetUsernameAvailabilityResponse(bool available = default(bool))
+{
+    this.Available = available;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthGetUsernameAvailabilityRequest : public Request
+{
+public:
+    virtual ~AuthGetUsernameAvailabilityRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Username to check */
+    FString Username;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthGetUsernameAvailabilityResponse : public Response
+{
+public:
+    virtual ~AuthGetUsernameAvailabilityResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthGetUsernameAvailabilityResponse Content;
+};
+
+class SNAPSER_API SnapserAuthGetUsernameAvailabilityResponse : public Model
+{
+public:
+    virtual ~SnapserAuthGetUsernameAvailabilityResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether the username is available or not */
+    TOptional<bool> Available;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### AuthUpdateUsernamePassword API
+<CodeGroup title="Updates the username and password of the user" tag="PUT" label="AuthUpdateUsernamePassword">
+```csharp
+/// <summary>
+/// Username Password Login Updates the username and password of the user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">User session token</param>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object AuthUpdateUsernamePassword(string token, AuthUpdateUsernamePasswordRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = AuthUpdateUsernamePasswordWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthUpdateUsernamePasswordRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUpdateUsernamePasswordRequest" /> class.
+/// </summary>
+/// <param name="newPassword">New password to be set (required).</param>
+/// <param name="oldPassword">Old password to be verified (required).</param>
+/// <param name="username">User&#39;s login ID (required).</param>
+public AuthUpdateUsernamePasswordRequest(string newPassword = default(string), string oldPassword = default(string), string username = default(string))
+{
+    // to ensure "newPassword" is required (not null)
+    if (newPassword == null)
+    {
+        throw new ArgumentNullException("newPassword is a required property for AuthUpdateUsernamePasswordRequest and cannot be null");
+    }
+    this.NewPassword = newPassword;
+    // to ensure "oldPassword" is required (not null)
+    if (oldPassword == null)
+    {
+        throw new ArgumentNullException("oldPassword is a required property for AuthUpdateUsernamePasswordRequest and cannot be null");
+    }
+    this.OldPassword = oldPassword;
+    // to ensure "username" is required (not null)
+    if (username == null)
+    {
+        throw new ArgumentNullException("username is a required property for AuthUpdateUsernamePasswordRequest and cannot be null");
+    }
+    this.Username = username;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthUpdateUsernamePasswordRequest : public Request
+{
+public:
+    virtual ~AuthUpdateUsernamePasswordRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserAuthUpdateUsernamePasswordRequest Body;
+};
+
+class SNAPSER_API SnapserAuthUpdateUsernamePasswordRequest : public Model
+{
+public:
+    virtual ~SnapserAuthUpdateUsernamePasswordRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* New password to be set */
+    FString NewPassword;
+    /* Old password to be verified */
+    FString OldPassword;
+    /* User's login ID */
+    FString Username;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthUpdateUsernamePasswordResponse : public Response
+{
+public:
+    virtual ~AuthUpdateUsernamePasswordResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+#### AuthLogout API
+<CodeGroup title="Ends the current session of the user" tag="DELETE" label="AuthLogout">
+```csharp
+/// <summary>
+/// Logout User Ends the current session of the user
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">Session token to logout</param>
+/// <param name="token2">Logged in user&#39;s session token</param>
+/// <returns>Object</returns>
+public Object AuthLogout(string token, string token2)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = AuthLogoutWithHttpInfo(token, token2);
+    return localVarResponse.Data;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthLogoutRequest : public Request
+{
+public:
+    virtual ~AuthLogoutRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Session token to logout */
+    FString Token;
+    /* User session token */
+    FString Token2;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthLogoutResponse : public Response
+{
+public:
+    virtual ~AuthLogoutResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AuthOtp API
+<CodeGroup title="Generates an OTP and sends it to the email for logging in" tag="POST" label="AuthOtp">
+```csharp
+/// <summary>
+/// Generate One Time Password Generates an OTP and sends it to the email for logging in
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object AuthOtp(AuthOtpRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = AuthOtpWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthOtpRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthOtpRequest" /> class.
+/// </summary>
+/// <param name="email">Email address to send OTP to (required).</param>
+/// <param name="validateUserExists">Whether to validate if the user exists or not.</param>
+public AuthOtpRequest(string email = default(string), bool validateUserExists = default(bool))
+{
+    // to ensure "email" is required (not null)
+    if (email == null)
+    {
+        throw new ArgumentNullException("email is a required property for AuthOtpRequest and cannot be null");
+    }
+    this.Email = email;
+    this.ValidateUserExists = validateUserExists;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthOtpRequest : public Request
+{
+public:
+    virtual ~AuthOtpRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthOtpRequest Body;
+};
+
+class SNAPSER_API SnapserAuthOtpRequest : public Model
+{
+public:
+    virtual ~SnapserAuthOtpRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Email address to send OTP to */
+    FString Email;
+    /* Whether to validate if the user exists or not */
+    TOptional<bool> ValidateUserExists;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthOtpResponse : public Response
+{
+public:
+    virtual ~AuthOtpResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AuthRefresh API
+<CodeGroup title="Refreshes the session and returns a new session token with refreshed validity" tag="PATCH" label="Refresh">
+```csharp
+/// <summary>
+/// Refresh Session Token Refreshes the session and returns a new session token with refreshed validity
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="token">Logged in user&#39;s session token</param>
+/// <param name="body"></param>
+/// <returns>AuthRefreshResponse</returns>
+public AuthRefreshResponse AuthRefresh(string token, AuthRefreshRequest body)
+{
+    Snapser.Client.ApiResponse<AuthRefreshResponse> localVarResponse = AuthRefreshWithHttpInfo(token, body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthRefreshRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthRefreshRequest" /> class.
+/// </summary>
+/// <param name="sessionToken">Session token to refresh (required).</param>
+public AuthRefreshRequest(string sessionToken = default(string))
+{
+    // to ensure "sessionToken" is required (not null)
+    if (sessionToken == null)
+    {
+        throw new ArgumentNullException("sessionToken is a required property for AuthRefreshRequest and cannot be null");
+    }
+    this.SessionToken = sessionToken;
+}
+
+/// Snapser.Model for AuthRefreshResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthRefreshResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthRefreshResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthRefreshRequest : public Request
+{
+public:
+    virtual ~AuthRefreshRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* User session token */
+    FString Token;
+    SnapserAuthRefreshRequest Body;
+};
+
+class SNAPSER_API SnapserAuthRefreshRequest : public Model
+{
+public:
+    virtual ~SnapserAuthRefreshRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthLoginMetadata> LoginMetadata;
+    /* Session token to refresh */
+    FString SessionToken;
+};
+
+class SNAPSER_API SnapserAuthLoginMetadata : public Model
+{
+public:
+    virtual ~SnapserAuthLoginMetadata() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Agent;
+    TOptional<FString> Device;
+    TOptional<FString> Location;
+    TOptional<FString> Platform;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthRefreshResponse : public Response
+{
+public:
+    virtual ~AuthRefreshResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthRefreshResponse Content;
+};
+
+class SNAPSER_API SnapserAuthRefreshResponse : public Model
+{
+public:
+    virtual ~SnapserAuthRefreshResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* List of login IDs associated with the user */
+    TOptional<TArray<SnapserAuthLoginId>> Logins;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+
+class SNAPSER_API SnapserAuthLoginTypeType : public Model
+{
+public:
+    virtual ~SnapserAuthLoginTypeType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedLoginType,
+        Email,
+        Password,
+        Anon,
+        Facebook,
+        Google,
+        Apple,
+        Steam,
+        Xbox,
+        Epic,
+        App,
+        Discord,
+        EmailPassword,
+        UsernamePassword,
+        X,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserAuthLoginId : public Model
+{
+public:
+    virtual ~SnapserAuthLoginId() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Id;
+    TOptional<SnapserAuthLoginTypeType> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AuthSteamOpenIdLogin API
+<CodeGroup title="Logs in the user based on the steam open ID token specified and returns a session" tag="PUT" label="AuthSteamOpenIdLogin">
+```csharp
+/// <summary>
+/// Steam Open ID Login Logs in the user based on the steam open ID token specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthSteamLoginResponse</returns>
+public AuthSteamLoginResponse AuthSteamOpenIdLogin(AuthSteamOpenIdLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthSteamLoginResponse> localVarResponse = AuthSteamOpenIdLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthSteamOpenIdLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthSteamOpenIdLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="openidParameters">Key value pairs of the openid parameters (required).</param>
+public AuthSteamOpenIdLoginRequest(bool createUser = default(bool), Dictionary<string, string> openidParameters = default(Dictionary<string, string>))
+{
+    // to ensure "openidParameters" is required (not null)
+    if (openidParameters == null)
+    {
+        throw new ArgumentNullException("openidParameters is a required property for AuthSteamOpenIdLoginRequest and cannot be null");
+    }
+    this.OpenidParameters = openidParameters;
+    this.CreateUser = createUser;
+}
+
+/// Snapser.Model for AuthSteamLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthSteamLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthSteamLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthSteamLoginRequest : public Request
+{
+public:
+    virtual ~AuthSteamLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthSteamLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthSteamLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthSteamLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* Key value pairs of the openid parameters */
+    TMap<FString, FString> OpenidParameters;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthSteamLoginResponse : public Response
+{
+public:
+    virtual ~AuthSteamLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthSteamLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthSteamLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthSteamLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* List of login IDs associated with the user */
+    TOptional<TArray<SnapserAuthLoginId>> Logins;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+
+class SNAPSER_API SnapserAuthLoginTypeType : public Model
+{
+public:
+    virtual ~SnapserAuthLoginTypeType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedLoginType,
+        Email,
+        Password,
+        Anon,
+        Facebook,
+        Google,
+        Apple,
+        Steam,
+        Xbox,
+        Epic,
+        App,
+        Discord,
+        EmailPassword,
+        UsernamePassword,
+        X,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserAuthLoginId : public Model
+{
+public:
+    virtual ~SnapserAuthLoginId() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Id;
+    TOptional<SnapserAuthLoginTypeType> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AuthSteamSessionTicketLogin API
+<CodeGroup title="Logs in the user based on the steam session ticket specified and returns a session" tag="PUT" label="SteamSessionTicketLogin">
+```csharp
+/// <summary>
+/// Steam Session Ticket Login Logs in the user based on the steam session ticket specified and returns a session
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthSteamLoginResponse</returns>
+public AuthSteamLoginResponse AuthSteamSessionTicketLogin(AuthSteamSessionTicketLoginRequest body)
+{
+    Snapser.Client.ApiResponse<AuthSteamLoginResponse> localVarResponse = AuthSteamSessionTicketLoginWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthSteamSessionTicketLoginRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthSteamSessionTicketLoginRequest" /> class.
+/// </summary>
+/// <param name="createUser">Whether to create a user, if it does not exist.</param>
+/// <param name="identity">Identity string used to generate session ticket (if applicable).</param>
+/// <param name="sessionTicket">Session ticket generated on the client (required).</param>
+public AuthSteamSessionTicketLoginRequest(bool createUser = default(bool), string identity = default(string), string sessionTicket = default(string))
+{
+    // to ensure "sessionTicket" is required (not null)
+    if (sessionTicket == null)
+    {
+        throw new ArgumentNullException("sessionTicket is a required property for AuthSteamSessionTicketLoginRequest and cannot be null");
+    }
+    this.SessionTicket = sessionTicket;
+    this.CreateUser = createUser;
+    this.Identity = identity;
+}
+
+/// Snapser.Model for AuthSteamLoginResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthSteamLoginResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthSteamLoginResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthSteamSessionTicketLoginRequest : public Request
+{
+public:
+    virtual ~AuthSteamSessionTicketLoginRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthSteamSessionTicketLoginRequest Body;
+};
+
+class SNAPSER_API SnapserAuthSteamSessionTicketLoginRequest : public Model
+{
+public:
+    virtual ~SnapserAuthSteamSessionTicketLoginRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether to create a user, if it does not exist */
+    TOptional<bool> CreateUser;
+    /* Identity string used to generate session ticket (if applicable) */
+    TOptional<FString> Identity;
+    /* Session ticket generated on the client */
+    FString SessionTicket;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthSteamSessionTicketLoginResponse : public Response
+{
+public:
+    virtual ~AuthSteamSessionTicketLoginResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthSteamLoginResponse Content;
+};
+
+class SNAPSER_API SnapserAuthSteamLoginResponse : public Model
+{
+public:
+    virtual ~SnapserAuthSteamLoginResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* List of login IDs associated with the user */
+    TOptional<TArray<SnapserAuthLoginId>> Logins;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+
+class SNAPSER_API SnapserAuthLoginTypeType : public Model
+{
+public:
+    virtual ~SnapserAuthLoginTypeType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedLoginType,
+        Email,
+        Password,
+        Anon,
+        Facebook,
+        Google,
+        Apple,
+        Steam,
+        Xbox,
+        Epic,
+        App,
+        Discord,
+        EmailPassword,
+        UsernamePassword,
+        X,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserAuthLoginId : public Model
+{
+public:
+    virtual ~SnapserAuthLoginId() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Id;
+    TOptional<SnapserAuthLoginTypeType> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AuthGetUserIdsByLoginIds API
+<CodeGroup title="Get UserIDs by login IDs and login types (App auth only)" tag="GET" label="AuthGetUserIdsByLoginIds">
+```csharp
+/// <summary>
+/// Get UserIDs Get UserIDs by login IDs and login types (App auth only)
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="loginIds">Comma separated login IDs of the user to be retrieved</param>
+/// <param name="loginType">Login type to search by. Values must be one of &#39;email&#39;, &#39;anon&#39;, &#39;apple&#39;, &#39;facebook&#39;, &#39;google&#39;, &#39;steam&#39;, &#39;xbox&#39;, &#39;epic&#39;</param>
+/// <param name="token">Logged in user&#39;s session token</param>
+/// <returns>AuthGetUserIdsByLoginIdsResponse</returns>
+public AuthGetUserIdsByLoginIdsResponse AuthGetUserIdsByLoginIds(string loginIds, string loginType, string token)
+{
+    Snapser.Client.ApiResponse<AuthGetUserIdsByLoginIdsResponse> localVarResponse = AuthGetUserIdsByLoginIdsWithHttpInfo(loginIds, loginType, token);
+    return localVarResponse.Data;
+}
+
+/// Model for AuthGetUserIdsByLoginIdsResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthGetUserIdsByLoginIdsResponse" /> class.
+/// </summary>
+/// <param name="userIds">userIds.</param>
+public AuthGetUserIdsByLoginIdsResponse(Dictionary<string, string> userIds = default(Dictionary<string, string>))
+{
+    this.UserIds = userIds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthGetUserIdsByLoginIdsRequest : public Request
+{
+public:
+    virtual ~AuthGetUserIdsByLoginIdsRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    /* Comma separated login IDs of the user to be retrieved */
+    FString LoginIds;
+    /* Login type to search by. Values must be one of 'email', 'anon', 'apple', 'facebook', 'google', 'steam', 'xbox', 'epic' */
+    FString LoginType;
+    /* Logged in user's session token */
+    FString Token;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthGetUserIdsByLoginIdsResponse : public Response
+{
+public:
+    virtual ~AuthGetUserIdsByLoginIdsResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthGetUserIdsByLoginIdsResponse Content;
+};
+
+class SNAPSER_API SnapserAuthGetUserIdsByLoginIdsResponse : public Model
+{
+public:
+    virtual ~SnapserAuthGetUserIdsByLoginIdsResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<TMap<FString, FString>> UserIds;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AuthValidate API
+<CodeGroup title="Validates the session of the user and returns the user info" tag="POST" label="AuthValidate">
+```csharp
+/// <summary>
+/// Validate Session Token Validates the session of the user and returns the user info
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>AuthValidateResponse</returns>
+public AuthValidateResponse AuthValidate(AuthValidateRequest body)
+{
+    Snapser.Client.ApiResponse<AuthValidateResponse> localVarResponse = AuthValidateWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthValidateRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthValidateRequest" /> class.
+/// </summary>
+/// <param name="sessionToken">Session token to validate (required).</param>
+public AuthValidateRequest(string sessionToken = default(string))
+{
+    // to ensure "sessionToken" is required (not null)
+    if (sessionToken == null)
+    {
+        throw new ArgumentNullException("sessionToken is a required property for AuthValidateRequest and cannot be null");
+    }
+    this.SessionToken = sessionToken;
+}
+
+/// Snapser.Model for AuthValidateResponse
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthValidateResponse" /> class.
+/// </summary>
+/// <param name="user">user.</param>
+public AuthValidateResponse(AuthUser user = default(AuthUser))
+{
+    this.User = user;
+}
+
+/// Snapser.Model for AuthUser
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthUser" /> class.
+/// </summary>
+/// <param name="created">Whether user was created or not.</param>
+/// <param name="createdAt">Unix timestamp of when the user was created.</param>
+/// <param name="firstLogin">Unix timestamp of when the user was first logged in.</param>
+/// <param name="id">User ID for the user.</param>
+/// <param name="isBanned">Whether user is banned or not.</param>
+/// <param name="isSuspended">Whether user is suspended or not.</param>
+/// <param name="isVerified">Whether user is verified or not.</param>
+/// <param name="loginTypes">Login types.</param>
+/// <param name="refreshedAt">Unix timestamp of when the session was last refreshed (If applicable).</param>
+/// <param name="sessionToken">Session token of the user (If applicable).</param>
+/// <param name="suspendedUntil">Unix timestamp of when the user is suspended until.</param>
+/// <param name="tags">Different tags attached to the user like flagged.</param>
+/// <param name="tokenValiditySeconds">Validity of the token in seconds (If applicable).</param>
+public AuthUser(bool created = default(bool), long createdAt = default(long), long firstLogin = default(long), string id = default(string), bool isBanned = default(bool), bool isSuspended = default(bool), bool isVerified = default(bool), List<AuthLoginTypeType> loginTypes = default(List<AuthLoginTypeType>), long refreshedAt = default(long), string sessionToken = default(string), long suspendedUntil = default(long), List<string> tags = default(List<string>), long tokenValiditySeconds = default(long))
+{
+    this.Created = created;
+    this.CreatedAt = createdAt;
+    this.FirstLogin = firstLogin;
+    this.Id = id;
+    this.IsBanned = isBanned;
+    this.IsSuspended = isSuspended;
+    this.IsVerified = isVerified;
+    this.LoginTypes = loginTypes;
+    this.RefreshedAt = refreshedAt;
+    this.SessionToken = sessionToken;
+    this.SuspendedUntil = suspendedUntil;
+    this.Tags = tags;
+    this.TokenValiditySeconds = tokenValiditySeconds;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthValidateRequest : public Request
+{
+public:
+    virtual ~AuthValidateRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthValidateRequest Body;
+};
+
+class SNAPSER_API SnapserAuthValidateRequest : public Model
+{
+public:
+    virtual ~SnapserAuthValidateRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Session token to validate */
+    FString SessionToken;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthValidateResponse : public Response
+{
+public:
+    virtual ~AuthValidateResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    SnapserAuthValidateResponse Content;
+};
+
+class SNAPSER_API SnapserAuthValidateResponse : public Model
+{
+public:
+    virtual ~SnapserAuthValidateResponse() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<SnapserAuthUser> User;
+};
+
+class SNAPSER_API SnapserAuthUser : public Model
+{
+public:
+    virtual ~SnapserAuthUser() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    /* Whether user was created or not */
+    TOptional<bool> Created;
+    /* Unix timestamp of when the user was created */
+    TOptional<int64> CreatedAt;
+    /* Unix timestamp of when the user was first logged in */
+    TOptional<int64> FirstLogin;
+    /* User ID for the user */
+    TOptional<FString> Id;
+    /* Whether user is banned or not */
+    TOptional<bool> IsBanned;
+    /* Whether user is suspended or not */
+    TOptional<bool> IsSuspended;
+    /* Whether user is verified or not */
+    TOptional<bool> IsVerified;
+    /* Login types */
+    TOptional<TArray<SnapserAuthLoginTypeType>> LoginTypes;
+    /* List of login IDs associated with the user */
+    TOptional<TArray<SnapserAuthLoginId>> Logins;
+    /* Unix timestamp of when the session was last refreshed (If applicable) */
+    TOptional<int64> RefreshedAt;
+    /* Session token of the user (If applicable) */
+    TOptional<FString> SessionToken;
+    /* Unix timestamp of when the user is suspended until */
+    TOptional<int64> SuspendedUntil;
+    /* Different tags attached to the user like flagged */
+    TOptional<TArray<FString>> Tags;
+    /* Validity of the token in seconds (If applicable) */
+    TOptional<int64> TokenValiditySeconds;
+};
+
+class SNAPSER_API SnapserAuthLoginTypeType : public Model
+{
+public:
+    virtual ~SnapserAuthLoginTypeType() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    enum class Values
+    {
+        UnspecifiedLoginType,
+        Email,
+        Password,
+        Anon,
+        Facebook,
+        Google,
+        Apple,
+        Steam,
+        Xbox,
+        Epic,
+        App,
+        Discord,
+        EmailPassword,
+        UsernamePassword,
+        X,
+    };
+
+    Values Value;
+
+    static FString EnumToString(const Values& EnumValue);
+    static bool EnumFromString(const FString& EnumAsString, Values& EnumValue);
+};
+
+class SNAPSER_API SnapserAuthLoginId : public Model
+{
+public:
+    virtual ~SnapserAuthLoginId() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Id;
+    TOptional<SnapserAuthLoginTypeType> Type;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+#### AuthValidateAppKey API
+<CodeGroup title="Validates an app key" tag="POST" label="ValidateAppKey">
+```csharp
+/// <summary>
+/// ValidateAppKey Validates an app key
+/// </summary>
+/// <exception cref="Snapser.Client.ApiException">Thrown when fails to make API call</exception>
+/// <param name="body"></param>
+/// <returns>Object</returns>
+public Object AuthValidateAppKey(AuthValidateAppKeyRequest body)
+{
+    Snapser.Client.ApiResponse<Object> localVarResponse = AuthValidateAppKeyWithHttpInfo(body);
+    return localVarResponse.Data;
+}
+
+/// Snapser.Model for AuthValidateAppKeyRequest
+/// <summary>
+/// Initializes a new instance of the <see cref="AuthValidateAppKeyRequest" /> class.
+/// </summary>
+/// <param name="key">key.</param>
+public AuthValidateAppKeyRequest(string key = default(string))
+{
+    this.Key = key;
+}
+```
+```cpp
+// Request
+class SNAPSER_API SnapserAuthServiceApi::AuthValidateAppKeyRequest : public Request
+{
+public:
+    virtual ~AuthValidateAppKeyRequest() {}
+    void SetupHttpRequest(const FHttpRequestRef& HttpRequest) const final;
+    FString ComputePath() const final;
+
+    SnapserAuthValidateAppKeyRequest Body;
+};
+
+class SNAPSER_API SnapserAuthValidateAppKeyRequest : public Model
+{
+public:
+    virtual ~SnapserAuthValidateAppKeyRequest() {}
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+    void WriteJson(JsonWriter& Writer) const final;
+
+    TOptional<FString> Key;
+};
+
+// Response
+class SNAPSER_API SnapserAuthServiceApi::AuthValidateAppKeyResponse : public Response
+{
+public:
+    virtual ~AuthValidateAppKeyResponse() {}
+    void SetHttpResponseCode(EHttpResponseCodes::Type InHttpResponseCode) final;
+    bool FromJson(const TSharedPtr<FJsonValue>& JsonValue) final;
+
+    TSharedPtr<FJsonObject> Content;
+};
+```
+```go
+// Coming soon
+```
+```python
+# Coming soon
+```
+</CodeGroup>
+
+### API Explorer
+You can view all the APIs exposed by this Snap via the API Explorer. On the Snapend home page,
+in the left nav bar, click on `Tools > API Explorer` and then select the snap name to view the APIs.
+
+![Api Pic](/images/docs/auth-api.png)
+
+### Error Codes
+
+Apart from these [generic errors](../generic-errors), below are snap specific error codes
+
+<div className="errorsTable">
+| Code | Variable                              | Message                                   | HTTP    | gRPC               |
+| ---- | ------------------------------------- | ----------------------------------------- | ------- | ------------------ |
+| 12   | ErrSessionNotFound                    | Session not found                         | 401     | Unauthenticated    |
+| 13   | ErrSessionExpired                     | Session expired                           | 401     | Unauthenticated    |
+| 14   | ErrUserBanned                         | User banned                               | 401     | Unauthenticated    |
+| 15   | ErrUserAuthNotAllowed                 | User auth not allowed                     | 401     | Unauthenticated    |
+| 16   | ErrApiKeyNotFound                     | API key not found                         | 401     | Unauthenticated    |
+| 17   | ErrApiKeyExpired                      | API key expired                           | 401     | Unauthenticated    |
+| 18   | ErrEndpointNotAllowed                 | Endpoint not allowed                      | 401     | Unauthenticated    |
+| 1010 | ErrUserNotFound                       | User not found                            | 404     | NotFound           |
+| 1011 | ErrUserAlreadyExists                  | User already exists                       | 409     | AlreadyExists      |
+| 1012 | ErrUserAlreadyAssociated              | Already associated with user              | 409     | AlreadyExists      |
+| 1013 | ErrLoginTypeAlreadyAssociated         | Login type already associated with target | 409     | AlreadyExists      |
+| 1014 | ErrCannotDisassociateLastLogin        | Cannot disassociate last login            | 400     | InvalidArgument    |
+| 1015 | ErrInvalidPassword                    | Invalid password                          | 401     | Unauthenticated    |
+| 1016 | ErrUserCreationNotAllowed             | User creation not allowed                 | 400     | FailedPrecondition |
+| 1020 | ErrAppKeyReadFailure                  | Failed to read app keys                   | 500     | Internal           |
+| 1030 | ErrAnonLoginNotEnabled                | Anonymous login not enabled               | 400     | FailedPrecondition |
+| 1040 | ErrEmailLoginNotEnabled               | Email login not enabled                   | 400     | FailedPrecondition |
+| 1041 | ErrOtpNotFound                        | OTP not sent                              | 404     | NotFound           |
+| 1042 | ErrOtpMismatch                        | OTP Mismatch                              | 401     | Unauthenticated    |
+| 1060 | ErrAppleLoginNotEnabled               | AppleID login not enabled                 | 400     | FailedPrecondition |
+| 1061 | ErrAppleLoginFailure                  | Apple login failure                       | 500     | Internal           |
+| 1070 | ErrFacebookLoginNotEnabled            | Facebook login not enabled                | 500     | FailedPrecondition |
+| 1071 | ErrFacebookLoginFailed                | Facebook login failure                    | dynamic | Internal           |
+| 1080 | ErrGoogleLoginNotEnabled              | Google login not enabled                  | 400     | FailedPrecondition |
+| 1081 | ErrGoogleLoginFailure                 | Google login failure                      | 500     | Internal           |
+| 1090 | ErrSettingsReadFailure                | Failed to read settings                   | 500     | Internal           |
+| 1091 | ErrSettingsUpdateFailure              | Failed to update settings                 | 500     | Internal           |
+| 1092 | ErrDeniedOtpRateLimit                 | Too many requests                         | 429     | ResourceExhausted  |
+| 1093 | ErrUserSuspended                      | User suspended                            | 401     | Unauthenticated    |
+| 1093 | ErrAppKeyNotFound                     | App key not found                         | 401     | Unauthenticated    |
+| 1094 | ErrOtpTemplateNotFound                | OTP template not found                    | 404     | NotFound           |
+| 1095 | ErrInvalidOtpTemplate                 | Invalid OTP template                      | 400     | InvalidArgument    |
+| 1101 | ErrSteamLoginNotEnabled               | Steam login not enabled                   | 400     | FailedPrecondition |
+| 1102 | ErrSteamLoginFailure                  | Steam login failure                       | 500     | Internal           |
+| 1110 | ErrXboxLoginNotEnabled                | Xbox login not enabled                    | 400     | FailedPrecondition |
+| 1111 | ErrXboxLoginFailure                   | Xbox login failure                        | 500     | Internal           |
+| 1120 | ErrEpicLoginNotEnabled                | Epic login not enabled                    | 400     | FailedPrecondition |
+| 1121 | ErrEpicLoginFailure                   | Epic login failure                        | 500     | Internal           |
+| 1130 | ErrDiscordLoginNotEnabled             | Discord login not enabled                 | 400     | FailedPrecondition |
+| 1131 | ErrDiscordLoginFailure                | Discord login failure                     | 500     | Internal           |
+| 1140 | ErrUsernamePasswordLoginNotEnabled    | Username/Password login not enabled       | 400     | FailedPrecondition |
+| 1141 | ErrUsernamePasswordLoginFailure       | Username/Password login failure           | 500     | Internal           |
+| 1150 | ErrEmailPasswordLoginNotEnabled       | Email/Password login not enabled          | 400     | FailedPrecondition |
+| 1151 | ErrEmailPasswordLoginFailure          | Email/Password login failure              | 500     | Internal           |
+| 1160 | ErrXLoginNotEnabled                   | X login not enabled                       | 400     | FailedPrecondition |
+| 1161 | ErrXLoginFailure                      | X login failure                           | 500     | Internal           |
+</div>
+
+## Additional Details
+
+### Data Stores
+
+Redis and POSTGRES
+
+### Service Dependencies
+
+The Auth service does not depend on any other Snap.
+
+### Upcoming enhancements
+
+We are in the process of adding more third party connectors like PSN,
+Nintendo, etc, along with supporting Custom Auth. Please reach out to us if you
+need any other connector.

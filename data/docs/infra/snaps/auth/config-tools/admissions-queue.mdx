@@ -1,0 +1,295 @@
+# Admissions Queue
+
+The **Admissions Queue** is the waiting line users see before they are let
+into your game. Instead of every user hitting your backend at once, users
+are enrolled into a queue and admitted at a rate you control. This is the same
+mechanism large live-service titles use to survive a launch, a season drop, or
+a free weekend — you decide how fast traffic arrives, and everyone else waits
+their turn with a position in line.
+
+<Note>
+  The Admissions Queue is available on **Auth snap v1.14.0 and above**. If your
+  Auth snap is on an older version, this tool will prompt you to upgrade.
+</Note>
+
+## Why use an admissions queue
+
+When a game opens its doors, arrival traffic is spiky and does not resemble
+steady-state load. Login, profile creation, inventory grants, and matchmaking
+all fire at once. Left unmanaged, that spike is what takes a backend down at
+the worst possible moment.
+
+An admissions queue converts that spike into a flat, predictable line:
+
+1. **Protect your backend.** You admit users at a rate your services and
+   databases are known to handle, rather than whatever rate users happen to
+   show up at.
+2. **Stay open instead of going down.** Users in the queue see a position and
+   a wait, which is a far better experience than failed logins or a hard error
+   screen.
+3. **Control your ramp.** Start conservative, watch your dashboards, and raise
+   the rate as you gain confidence. Everything is changeable live.
+
+## Pre-requisites
+
+You need at least the **cluster-service-view** role with **Auth** service
+access to view these settings, and update access to change them. If you do not
+have the required permissions, please reach out to your company administrator
+to upgrade your role.
+
+## Tool Location
+
+From your Snapend, open **Snaps Configuration**, select the **Auth** snap and
+click **Admissions Queue** in the side navigation.
+
+The tool reads your Snapend's current admissions queue configuration when it
+loads. Change any of the values below and click **Save** to apply them.
+
+## Enabling the queue
+
+The **Enable Admissions Queue** toggle is the master switch.
+
+- **Off** — this is today's behavior. Users log in exactly as they do now and
+  are never put in line. Nothing is enrolled and the queue consumer does
+  nothing.
+- **On** — arriving users are enrolled into the queue and admitted at the
+  consume rate you set.
+
+You can save the rate settings below while the queue is off, so you can dial in
+a configuration ahead of a launch and then flip the switch when you are ready.
+
+<Note>
+  Turning the queue off releases everyone who is currently waiting. Only turn it
+  off when you are confident your backend can absorb the users still in line.
+</Note>
+
+## Admission Rates
+
+Two settings work together to control throughput. Both are expressed in
+**users per second**.
+
+### Max Rate
+
+The ceiling admission rate — a hard backstop. The queue will never admit faster
+than this, no matter what the consume rate is set to. Pick a value your backend
+has actually been load tested at and leave it alone. Think of it as the fuse in
+the circuit, not the dial you turn during an event.
+
+### Consume Rate
+
+The rate you are actually admitting at right now. This must be between `0` and
+the max rate, and it is **live changeable** — you can raise or lower it during
+an event without a redeploy and the queue picks up the new rate immediately.
+
+This is the dial your live-ops team turns:
+
+- **Ramp up slowly** at the start of a launch window, then increase as your
+  dashboards stay healthy.
+- **Set it to `0`** to pause admissions entirely while keeping everyone in line
+  and holding their position. This is the lever to pull during an incident —
+  users keep waiting instead of getting kicked out.
+- **Raise it to the max rate** once the initial rush has passed and the queue
+  has drained.
+
+<Warning>
+  The consume rate cannot exceed the max rate. If you need to admit faster than
+  your current ceiling, raise the max rate first — and only after you are
+  confident your backend can take it.
+</Warning>
+
+## Burst Cap
+
+Admissions are metered by a shared token bucket. Tokens accrue at the consume
+rate, and each admitted user spends one. The **burst cap** is the maximum
+number of tokens that bucket can hold, which caps how large a group can be
+admitted at once after a quiet period.
+
+- Match it to your consume rate to allow a one second burst. That is the
+  smoothest setting and a good default.
+- Raise it to allow a larger clump of users through at once — useful if your
+  backend handles batches more efficiently than a perfectly even trickle.
+
+A burst cap of `600` at a consume rate of `60` users/sec means the queue can
+release roughly ten seconds worth of admissions in one go if it has been idle.
+
+<Warning>
+  The burst cap must be at least `1`. A burst cap of `0` is not a valid
+  configuration, and the tool will not let you save one.
+</Warning>
+
+## Reconnect Grace
+
+Waiting users hold a ticket. **Reconnect grace** is the silent window, in
+seconds, that a ticket survives without hearing from the user before it is
+reaped and their spot released.
+
+Set this long enough to survive the everyday interruptions — a brief network
+drop, a phone call, an app being backgrounded — so users do not lose their
+place through no fault of their own. Set it short enough that spots abandoned
+by users who gave up are freed for the people still waiting. A value around
+`30` seconds is a reasonable starting point.
+
+<Note>
+  A reconnect grace of `0` reaps a ticket as soon as a user goes silent. That
+  is almost never what you want on a mobile title, where brief disconnects are
+  routine.
+</Note>
+
+## Bypass APIs
+
+While the queue is enabled, a user who is still waiting in line gets a `403`
+from your backend. That is the whole point — it is what stops the rush from
+reaching your services before you are ready for it.
+
+But a client stuck on a queue screen usually still needs to do *something*.
+It may want to poll its position in line, show the store front, pull down a
+news feed or patch notes, or read remote config so the waiting screen renders
+correctly. **Bypass APIs** is where you nominate the endpoints that stay
+reachable while a user waits. Everything you list here answers normally;
+everything else keeps returning the `403` until the user is admitted.
+
+### Nominating endpoints
+
+The widget works the same way as the one in the
+[API Key Manager](/docs/infra/snaps/auth/config-tools/api-key-manager):
+
+1. <u>Available Snaps</u> - Pick the snaps you want to exempt. **Select All
+   Snaps** adds every snap on your Snapend at once. Removing a snap from this
+   list removes its bypass rule entirely.
+2. <u>All Endpoints or Custom Endpoints</u> - A newly added snap starts as
+   **All Endpoints**, meaning every API on it is exempt. Click **+ Custom
+   Endpoints** to narrow it down instead, which opens the API picker. Select
+   the endpoints you want and confirm.
+   <Note>
+     In the API picker widget, do not forget to click the "Confirm" button to
+     save your selection.
+   </Note>
+3. <u>Removing an endpoint</u> - Each selected endpoint has a delete button
+   next to it. Removing an endpoint puts it back behind the queue.
+
+Switching a snap from Custom Endpoints back to **All Endpoints** discards the
+individual endpoints you picked, so the tool asks you to confirm first.
+
+The picker lists the user-authenticated APIs on each snap, because those are
+the ones the queue gates. Your login and auth APIs are not in the list — a
+user has to be able to reach those before they can be put in line at all.
+
+Your BYOSnaps are not in the list either — they gate themselves. See
+[BYOSnaps and the admitted-at header](#byosnaps-and-the-admitted-at-header)
+below for how that works.
+
+<Note>
+  Endpoints are matched on their operation, not on their URL. That means a
+  bypass rule keeps working across a path change, and it also means the method
+  and URL shown in the list are there to make the entry readable rather than
+  to control what matches.
+</Note>
+
+### BYOSnaps and the admitted-at header
+
+A [BYOSnap](/docs/custom/bring-your-own-snap) is your own code, running in the
+Snapser cluster alongside the platform snaps. Snapser does not hold BYOSnap
+traffic back for the queue — it cannot reasonably decide on your behalf which
+of your endpoints a waiting user should be allowed to call.
+
+BYOSnaps handle their own gating instead, which is why they are left out of
+**Available Snaps**: that list drives the shared admission middleware, and your
+BYOSnap does not run it.
+
+Instead, every request forwarded to a BYOSnap carries an **`admitted-at`**
+header, and your handler decides what to do with it:
+
+| `admitted-at` | What it means |
+| --- | --- |
+| `0` | The caller has not been admitted through the queue. They are either still waiting in line, or they were never enrolled because the queue is off. |
+| A UTC timestamp | The caller cleared the queue, at that time. |
+
+So the decision the Bypass APIs list makes for platform snaps is one you make
+in code for your own:
+
+- **Reject on `0`** for anything that should wait its turn. Returning a `403`
+  keeps your BYOSnap consistent with how the rest of the Snapend behaves.
+- **Serve it anyway** for the handful of endpoints your queue screen genuinely
+  needs, exactly as you would add them to the bypass list.
+
+A useful pattern is to mirror the list above in your own code: keep one
+allowlist of handlers that are safe to serve to a waiting user, and have
+everything else check the header and turn away callers that have not been
+admitted.
+
+<Note>
+  Every request carries `admitted-at: 0` while the queue is off, because nobody
+  is being enrolled. Code that rejects on `0` alone will therefore turn away
+  all of your traffic the moment the queue is disabled — make sure your check
+  only applies when the queue is actually enabled.
+</Note>
+
+### Keep the list short
+
+Every API you exempt is traffic that reaches your backend before the queue has
+throttled it. That is a deliberate hole in the protection you just set up, so
+it is worth being strict about what goes in:
+
+- **Prefer individual endpoints over All Endpoints.** Exempting a whole snap
+  is convenient, but it also exempts every API that snap gains in the future,
+  including ones you have never load tested against launch traffic.
+- **Favor cheap reads.** A cached news feed or a remote config lookup costs
+  you very little. A write path, a matchmaking call, or anything that fans out
+  to several services is exactly what the queue exists to defer.
+- **Revisit it after a launch.** An endpoint you exempted to debug a bad
+  launch window does not need to stay exempt forever.
+
+<Warning>
+  Saving replaces the entire bypass list with what is on screen. It is not a
+  merge, so anything removed from the list stops being exempt the moment you
+  save.
+</Warning>
+
+If you set a snap to **Custom Endpoints** and then remove every endpoint under
+it, the tool will block **Save** and tell you which snap is empty. Either pick
+at least one endpoint, switch it back to All Endpoints, or remove the snap
+from the list.
+
+## Bypass Users
+
+Where Bypass APIs exempts *what* can be called, **Bypass Users** exempts *who*
+is calling. A user ID listed here is never put in the queue at all — they log
+in and play immediately, however long the line is.
+
+Enter a comma separated list of user IDs. Blanks and duplicates are ignored,
+and pasting a column of IDs one per line works too.
+
+This is for the accounts that have to be able to get in during a launch:
+
+- **QA and live-ops**, so they can verify the build and work an incident while
+  the queue is doing its job.
+- **Support**, so an agent can reproduce what a user is reporting.
+- **Partners and creators** you have committed to, where being stuck in line is
+  a business problem rather than a technical one.
+
+<Warning>
+  Every bypassed user is load the queue is not smoothing out. This list is for a
+  handful of internal accounts — it is not a way to let a segment of your users
+  skip the line, and a long list defeats the point of running a queue at all.
+</Warning>
+
+<Note>
+  Bypass Users is independent of Bypass APIs. A bypassed user is never queued,
+  so they reach every endpoint normally and the bypass endpoint list does not
+  come into it.
+</Note>
+
+## Recommended starting configuration
+
+| Setting | Suggested value | Reasoning |
+| --- | --- | --- |
+| Enabled | Off until launch day | Configure ahead of time, flip it on when you need it |
+| Max Rate | Your load tested ceiling | A backstop you never expect to hit |
+| Consume Rate | 25–50% of max rate | Ramp up as your dashboards stay healthy |
+| Burst Cap | Match your consume rate | Allows a one second burst, the smoothest admission |
+| Reconnect Grace | `30` | Survives a brief drop without holding dead spots |
+| Bypass APIs | Only what the queue screen needs | Every exempt API is un-throttled traffic |
+| Bypass Users | Your QA and live-ops accounts | Enough to work a launch, not enough to matter as load |
+
+Every game is different — treat these as a place to start, then tune against
+your own load tests.
