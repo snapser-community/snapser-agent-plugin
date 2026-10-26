@@ -4,6 +4,10 @@ Build and manage game backends without leaving your editor. The Snapser plugin b
 
 Works with **Claude** (Claude Code + Cowork), **OpenAI Codex**, **OpenCode**, and **Cursor** from this single repo — see [docs/INSTALL.md](docs/INSTALL.md).
 
+<!-- docs-version:start -->
+> **Bundled Snapser docs:** up to platform release **1.16.0** (October 19, 2026) · Admin SDK targets: see [data/admin-sdk/VERSION.md](data/admin-sdk/VERSION.md)
+<!-- docs-version:end -->
+
 ## What You Can Do
 
 - **Create backends** — spin up a Snapser backend (Snapend) with the snaps you need in seconds

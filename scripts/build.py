@@ -8,6 +8,7 @@ Generates:
   - AGENTS.md               (Codex and OpenCode both read AGENTS.md at the project root)
   - data/releases/INDEX.md  (lookup table over the release notes in data/releases/)
   - data/docs/INDEX.md      (path -> topic map over the docs in data/docs/)
+  - README.md docs-version line (between the docs-version markers)
 
 Also link-checks every local path referenced in source/CONTEXT.md and
 skills/**/*.md so a renamed skill or data file fails the build instead of
@@ -186,9 +187,10 @@ def parse_release(path: Path, known: set) -> dict:
     }
 
 
-def write_release_index() -> None:
+def write_release_index():
+    """Write data/releases/INDEX.md and return the latest release, or None."""
     if not RELEASES.is_dir():
-        return
+        return None
     known = canonical_snaps()
     releases = [
         parse_release(p, known)
@@ -196,7 +198,7 @@ def write_release_index() -> None:
         if VERSION_RE.match(p.stem)
     ]
     if not releases:
-        return
+        return None
     releases.sort(key=lambda r: [int(n) for n in r["version"].split(".")], reverse=True)
 
     by_snap = {}
@@ -251,6 +253,38 @@ def write_release_index() -> None:
 
     RELEASE_INDEX.write_text("\n".join(lines), encoding="utf-8")
     print(f"wrote data/releases/INDEX.md ({len(releases)} releases, {len(by_snap)} snaps)")
+    return latest
+
+
+# ---------------------------------------------------------------------------
+# README.md docs-version line
+#
+# Customers browsing the repo should see which Snapser release the bundled docs
+# cover. That is the newest release note, so stamp it into the README between
+# marker comments instead of hand-editing it on every docs sync. Kept separate
+# from the plugin version, which also bumps on skill-only releases.
+# ---------------------------------------------------------------------------
+
+README = ROOT / "README.md"
+DOCS_VERSION_RE = re.compile(
+    r"(<!-- docs-version:start -->\n)(?:.*?\n)?(<!-- docs-version:end -->)", re.S
+)
+
+
+def write_readme_docs_version(latest) -> None:
+    if not latest:
+        return
+    text = README.read_text(encoding="utf-8")
+    if not DOCS_VERSION_RE.search(text):
+        sys.exit("README.md is missing the docs-version markers.")
+    line = (
+        f"> **Bundled Snapser docs:** up to platform release **{latest['version']}** "
+        f"({latest['date']}) · Admin SDK targets: see "
+        "[data/admin-sdk/VERSION.md](data/admin-sdk/VERSION.md)"
+    )
+    README.write_text(DOCS_VERSION_RE.sub(lambda m: m.group(1) + line + "\n" + m.group(2), text),
+                      encoding="utf-8")
+    print(f"wrote README.md docs version ({latest['version']})")
 
 
 # ---------------------------------------------------------------------------
@@ -370,7 +404,7 @@ def main() -> None:
     if not SOURCE.exists():
         sys.exit(f"missing {SOURCE}")
     if "--check" not in sys.argv:
-        write_release_index()
+        write_readme_docs_version(write_release_index())
         write_docs_index()
     errors = link_check()
     if errors:
