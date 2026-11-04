@@ -5,7 +5,7 @@ Build and manage game backends without leaving your editor. The Snapser plugin b
 Works with **Claude** (Claude Code + Cowork), **OpenAI Codex**, **OpenCode**, and **Cursor** from this single repo — see [docs/INSTALL.md](docs/INSTALL.md).
 
 <!-- docs-version:start -->
-> **Bundled Snapser docs:** up to platform release **1.16.0** (October 19, 2026) · Admin SDK targets: see [data/admin-sdk/VERSION.md](data/admin-sdk/VERSION.md)
+> **Bundled Snapser docs:** up to platform release **1.17.0** (November 9, 2026) · Admin SDK targets: see [data/admin-sdk/VERSION.md](data/admin-sdk/VERSION.md)
 <!-- docs-version:end -->
 
 ## What You Can Do
@@ -19,6 +19,7 @@ Works with **Claude** (Claude Code + Cowork), **OpenAI Codex**, **OpenCode**, an
 - **Download SDKs** — grab your Unity, Unreal, Roblox, or any other platform SDK instantly
 - **Configure snap settings** — change auth connectors, leaderboards, storage keys and more programmatically via the Admin SDK
 - **Manage Snapends** — list, update, clone, and check the health of your backends
+- **Diagnose & monitor** — pull live logs, infra metrics (CPU, memory, latency), and business metrics (DAU, MAU, revenue) straight into your terminal with `snapctl inspect`
 - **Ask questions** — the plugin ships with the full Snapser documentation and API specs locally, so your agent can answer questions about Snapser without network calls
 
 ---

@@ -114,7 +114,7 @@
         "properties" : {
           "event_type_id" : {
             "description" : "An optional ID that can be used to identify the payload",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "message" : {
@@ -173,12 +173,12 @@
             "type" : "string"
           },
           "event_type_enum_value" : {
-            "format" : "int64",
+            "format" : "int32",
             "title" : "The index value of the enum in the proto file. This is used to identify the event type\nDeprecated in favor of event_type_id, if event_type_id != 0, then event_type_enum_value will be set to event_type_id",
             "type" : "integer"
           },
           "event_type_id" : {
-            "format" : "int64",
+            "format" : "int32",
             "title" : "An ID that can be used to identify the payload.\nThis is also the protobuf number value in the service proto files - which is used to unmarshal the payload",
             "type" : "integer"
           },

@@ -5,11 +5,11 @@ export const meta = {
   editor: 'Alex Vlahopoulos',
 }
 
-# Cluster Settings Sync
+# Snapend Configuration Sync
 
-A typical live app or game has a lot of active configuration powering the app. This includes things like the storage blob names, authentication connectors, In-app purchase secrets, etc. In addition, if a app has a live cadence there are a lot of changes that happen to the experimentation, segmentation, analytics configurations etc.
+A live app or game runs on a lot of configuration: storage blob names, authentication connectors, in-app purchase secrets, and more. With a live cadence, experiment, segment, and analytics configurations also change often.
 
-Keeping these configurations in sync across multiple environments is a challenge. Snapend solves this problem by providing a way to sync these configurations across multiple clusters.
+Keeping all of this in sync across environments is hard. The Sync Configuration tool copies snap configuration from another Snapend in the same app into the Snapend you are on.
 
 <Warning>
   This tool is only available for Premium tier customers.
@@ -17,34 +17,69 @@ Keeping these configurations in sync across multiple environments is a challenge
 
 ## Tool Location
 
-You can find the Cluster sync tool under the **Tools** of the home page of your snapend.
+Open the Snapend you want to sync **into**, then go to **Tools** → **Sync Configuration**.
 
 ![Snapend Pic](/images/docs/snapend-sync-tool.png)
 
+<Note>
+  The tool needs a desktop browser, and is unavailable while the Snapend is updating or in a failed state.
+</Note>
+
+## Who can sync
+
+You need two kinds of access: edit access on the Snapend you sync into, and view access on the snaps you sync from.
+
+| Where | Role you need |
+|---|---|
+| **Destination** — the Snapend you are on | **cluster-edit** or higher, or a game or company role that covers it |
+| **Source** — every snap | **cluster-view** or higher on the source Snapend, or a game or company role that covers it |
+| **Source** — individual snaps | A **cluster-service-** role on that snap |
+
+The **Select Source Snapend** list shows every Snapend in the app where you hold any role. After you pick one:
+
+- With **cluster-view** or higher on it, every snap is loaded.
+- With only **cluster-service-** roles, just those snaps are loaded. The other snaps are listed as **No view access** and cannot be synced.
+
+For example, say you are **cluster-admin** on Snapend A and **cluster-view** on Snapend B. You can sync every snap from B into A. If you also have **cluster-service-view** on just the Auth snap of Snapend C, you can sync only Auth from C into A.
+
+See [Access](/docs/resources/portal/access) for what each role allows.
+
 ## Sync Algorithm
 
-The sync is a total replace. This means that the configurations from the source cluster are blindly replacing the configuration in the destination cluster. There are some exceptions to this rule. Some settings like Auth connectors, IAP connectors etc are implicitly multi env aware. This means that the same connector can be used in multiple environments. In such cases the sync tool will replace the configuration by taking into account the env of the source and destination snapends.
+A sync is a full replace. The configuration from the source Snapend replaces the configuration in the destination Snapend.
+
+There is one exception. Some settings, like Auth and IAP connectors, are multi-environment aware, so the same connector can be used in several environments. For these, the tool takes the environment of the source and destination Snapends into account.
 
 ![Snapend Pic](/images/docs/snapend-sync-final-config.png)
 
 ### Selective Snaps
 
-You can chose to copy over configurations from the Snaps you want from the destination cluster. Eg: If you have 3 snaps in your destination cluster and you want to copy over the configurations from only 2 of them, you can do that by using the toggle next to the snap name. The sync tool will only copy over the configurations for the snaps that are toggled on.
+You choose which snaps to copy from the source Snapend. Use the toggle next to each snap, or **All** to toggle every snap you can sync. Only snaps that are toggled on are copied.
+
+Each snap row shows its state:
+
+| State | Meaning |
+|---|---|
+| Toggle | The snap can be synced. |
+| **Snap not present** | The snap is not on the destination Snapend, so there is nothing to sync into. |
+| Warning icon with **View Logs** | The source configuration failed validation on the destination. Hover the icon for the reason, or open **View Logs** to see the snap's validation logs. |
+| **No view access** | You do not have view access to this snap on the source Snapend. |
 
 ## Manual Configuration
-You can also chose to manually edit the configuration for a snap. Click on the **Diff** button to see the configuration diff for the snap.
+You can also edit a snap's configuration by hand before syncing. Click **Diff** to see the current and new configuration side by side.
 
 ![Snapend Pic](/images/docs/snapend-sync-auth-edit.png)
 
-You can then edit the configuration and click on the **Validate & Save** button to update the configuration for the snap.
+Edit the new configuration, then click **Validate & Save**. The tool validates your edit against the destination Snapend before you sync.
 
 ![Snapend Pic](/images/docs/snapend-sync-auth-edit-done.png)
 
-### Limitation
+When you are ready, click **Sync** and confirm.
+
+### Limitations
 
 #### Full replace only
-At the moment you can only copy entire configuration Snapshots. Eg: Cluster A has 3 experiments and Cluster B has 2 experiments. You can chose to copy all 3 experiments from Cluster A to Cluster B or none of them. You cannot chose to copy just 2 experiments from Cluster A to Cluster B.
+You can only copy a snap's whole configuration. For example, if Snapend A has 3 experiments and Snapend B has 2, you can copy all 3 experiments from A to B, or none. You cannot copy just 2 of them.
 
 #### No user data copy
-
-Only the tool configuration data is getting copied here. No user data. User data remains isolated between environments.
+Only snap configuration is copied, never user data. User data stays isolated between environments.

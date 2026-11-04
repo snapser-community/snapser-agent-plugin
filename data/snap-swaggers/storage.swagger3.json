@@ -1849,7 +1849,7 @@
         "properties" : {
           "ttl" : {
             "description" : "Optional TTL for the blob",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "value" : {
@@ -1864,7 +1864,7 @@
         "properties" : {
           "ttl" : {
             "description" : "Optional TTL for the blob",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "value" : {
@@ -1904,7 +1904,7 @@
           },
           "ttl" : {
             "description" : "Optional TTL for the blob",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "value" : {
@@ -1927,7 +1927,7 @@
           },
           "ttl" : {
             "description" : "Optional TTL for the json blob",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "value" : {
@@ -2994,7 +2994,7 @@
           },
           "ttl" : {
             "description" : "Optional TTL for the blob",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "value" : {
@@ -3031,7 +3031,7 @@
           },
           "ttl" : {
             "description" : "Optional TTL for the blob",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "value" : {
@@ -3164,7 +3164,7 @@
           },
           "ttl" : {
             "description" : "Optional TTL for the blob",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "value" : {
@@ -3209,7 +3209,7 @@
           },
           "ttl" : {
             "description" : "Optional TTL for the json blob",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "value" : {

@@ -12,6 +12,15 @@ To get started:
 3. **Active Toggle**: A toggle to activate or deactivate the quest.
 4. **Tags**: Optional comma separated list of tags to categorize the quest. The tags can be used to filter quests.
 
+## Quest Configuration Updates
+1. **Update in-progress user quests**: By default, changes you make to a quest only apply to users who start it after you save. Enable this toggle to also apply goal and task changes to users who have already started the quest. Their progress is updated the next time they check in.
+<Note>
+  Use this with care. Changing a goal or task on a live quest with this toggle enabled affects every user who is currently working through it.
+</Note>
+<Warning>
+  Quest Configuration Updates are available on the Quests snap version v1.17.0 and above. If you are on an older version, this section will not appear in the quest form. Upgrade the snap to start using it.
+</Warning>
+
 ## Quest Audience Target
 1. **Target**: The audience target for the quest. The quest can be targeted to all users or a specific segment.
     <Note>
@@ -20,6 +29,10 @@ To get started:
 
 ## Quest Assignment Details
 1. **Auto Assign**: A toggle to enable auto assignment of the quest. If enabled, the quest will be assigned to the user dynamically at runtime. Without this, the quest needs to be manually assigned to the user by calling the AssignQuest API.
+2. **Pre-requisite Quests**: An optional list of quests that users must complete before they qualify for this one. Assignment works the same way, auto or manual, but the quest is only assigned to users who have completed every quest in the list. The picker only offers non-recurring quests, and excludes the quest itself, so a quest can never be its own pre-requisite. Use this to chain quests together, for example `chapter_2` can require `chapter_1`.
+    <Note>
+      Pre-requisite quests are available from Quests snap version v1.17.0.
+    </Note>
 
 ## Quest Schedule
 1. **Category**: The category of the quest. The category can be recurring or non-recurring.

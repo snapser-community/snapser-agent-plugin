@@ -259,12 +259,12 @@
         "properties" : {
           "events_failed" : {
             "description" : "Count of failed events",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "events_ingested" : {
             "description" : "Count of events successfully ingested",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "responses" : {
@@ -321,7 +321,7 @@
           },
           "id" : {
             "description" : "Order in which events will be ingested",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "properties" : {

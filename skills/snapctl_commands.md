@@ -1009,6 +1009,96 @@ snapctl release-notes show
 snapctl release-notes show --version $version --out-path $out_path
 ```
 
+### 13. Accounts
+Bulk-manage developer accounts and roles on your company. The workflow is **export → edit the CSV → sync**: `export` writes the current roster as CSV, you edit it, and `sync` diffs your file against the live state and applies the difference.
+
+The company is derived from your API Key — there is no `--company-id`. Both subcommands run company-wide by default; pass `--application-id` to scope to a single application. **Requires an admin API Key** — a non-admin key gets exit code `117` on every subcommand.
+
+**IMPORTANT: a sync is a full replace, not an append.** The CSV becomes the complete list of roles for the scope you picked — any role missing from the file is revoked, and a user left with no roles in a company-wide sync is removed from the organization. Always start from `accounts export` and edit that file; never hand-write a CSV with only the rows you want to add.
+
+CSV columns (in this order): `email,game_id,cluster_id,service_id,role,view_modes`. One row is one role assignment.
+
+#### 1. accounts help
+```bash
+snapctl accounts --help
+```
+
+#### 2. accounts export
+Export the current accounts roster as CSV. Without `--out-path-filename` the CSV is printed on the console.
+```bash
+# $out_path_filename = (optional) Path and filename ending in .csv to save the roster to
+# $application_id = (optional) Scope the export to one application instead of the whole company
+snapctl accounts export
+snapctl accounts export --out-path-filename ./accounts.csv --application-id $application_id
+```
+
+#### 3. accounts sync
+Sync an edited CSV back to Snapser. `--dry-run` previews the sync (prints the diff, changes nothing) — **always preview first**. Without `--dry-run`, apply prompts for confirmation; pass `--force` to skip the prompt (required in CI).
+```bash
+# $accounts_path_filename = Full path to the accounts CSV, including the filename
+# Preview (no changes):
+snapctl accounts sync --accounts-path-filename $accounts_path_filename --dry-run
+# Apply (prompts for confirmation):
+snapctl accounts sync --accounts-path-filename $accounts_path_filename
+# Apply without a prompt (CI):
+snapctl accounts sync --accounts-path-filename $accounts_path_filename --force
+```
+Exit codes worth scripting against: `120` — the CSV was rejected, nothing was applied (fix and re-run); `121` — applied with some rows failed (continue-on-error, not rolled back — fix the failed rows and re-run).
+
+### 14. Inspect
+Pull live diagnostic data from a Snapend: logs, infrastructure graphs, and business metrics. Mirrors the Logs, Monitor, and Analytics tools in the Snapser web app. None of these take `--application-id` — only `--snapend-id`. See `skills/inspect-snapend/SKILL.md` for the full agent workflow.
+
+#### 1. inspect help
+```bash
+snapctl inspect --help
+```
+
+#### 2. inspect logs
+Download deployment, snap, or fleet logs to a file. Logs are saved oldest-first; if older lines exist beyond `--limit`, the result includes `next_end_time` — rerun with `--start-time`/`--end-time` to page further back.
+```bash
+# $category = (optional) deployment, snap, fleet. Default: deployment
+# $snaps = (optional, category=snap only) comma-separated snap ids
+# $regions, $game_servers = (optional, category=fleet only)
+# $filter = (optional) only keep log lines containing this text
+# $since = (optional) e.g. 5m, 15m, 1h, 12h, 1d. Default: 15m. Not combinable with --start-time/--end-time
+# $start_time, $end_time = (optional) ISO-8601 datetimes, instead of --since
+# $format = (optional) text, json (json writes .jsonl, one object per line). Default: text
+# $limit = (optional) max log lines. Default: 5000, max: 50000
+# $out_path_filename = (optional) full path+filename. Default: snapser-$snapend_id-$category-logs-$timestamp.log in the current directory
+snapctl inspect logs --snapend-id $snapend_id --category $category --since $since --out-path-filename $out_path_filename
+snapctl inspect logs --snapend-id $snapend_id --category snap --snaps $snaps --filter $filter --start-time $start_time --end-time $end_time --format $format --limit $limit
+snapctl inspect logs --snapend-id $snapend_id --category fleet --regions $regions --game-servers $game_servers --since $since
+```
+
+#### 3. inspect monitor
+Get an infrastructure graph for a Snapend's snaps or fleets. Result prints as JSON (one series per snap/method/pod/game server, `[timestamp, value]` points); `--out-path-filename` also saves it as `.json`/`.csv`. Time range is capped at 30 days.
+```bash
+# $category = (optional) snap, fleet. Default: snap
+# $metric = category=snap: cpu, memory, latency, rps, errors, restarts, top-requests, top-snaps
+#           category=fleet: cpu, memory, ingress-rate, egress-rate, ingress-total, egress-total
+#           cpu/memory are a percentage of the limit; latency is in milliseconds
+# $snaps = (optional, category=snap only) comma-separated snap ids. Default: every snap
+# $quantile = (optional, metric=latency only) p50, p75, p95, p99. Default: p95
+# $status_code = (optional, metric=rps only) 2xx, 3xx, 4xx, 5xx
+# $fleets = (required, category=fleet only) comma-separated fleet names
+# $regions, $game_servers = (optional, category=fleet only)
+# $since = (optional) e.g. 15m, 1h, 1d. Default: 15m
+# $start_time, $end_time = (optional) ISO-8601 datetimes, instead of --since
+snapctl inspect monitor --snapend-id $snapend_id --metric $metric --snaps $snaps --since $since
+snapctl inspect monitor --snapend-id $snapend_id --metric latency --quantile $quantile --start-time $start_time --end-time $end_time --out-path-filename $out_path_filename
+snapctl inspect monitor --snapend-id $snapend_id --category fleet --fleets $fleets --regions $regions --game-servers $game_servers --metric $metric --since $since
+```
+
+#### 4. inspect metrics
+Get a business metric for a Snapend. Requires the `analytics` snap. Result prints as JSON; `--out-path-filename` also saves it as `.json`/`.csv`. Time range is capped at 30 days.
+```bash
+# $metric = dau, mau, installs, revenue, locations
+#           dau/installs/revenue are per day, mau is per month, locations has no timestamp
+# $since = (optional) e.g. 7d, 30d. Default: 30d
+# $start_time, $end_time = (optional) ISO-8601 datetimes, instead of --since
+snapctl inspect metrics --snapend-id $snapend_id --metric $metric --since $since --out-path-filename $out_path_filename
+```
+
 ## Error codes
 ### CLI Return Codes
 | Error Code | Description                                              |
@@ -1163,3 +1253,21 @@ snapctl release-notes show --version $version --out-path $out_path
 |------------|----------------------------------------------------------|
 | 113        | Generic Admin SDK error                                  |
 | 114        | Admin SDK download error                                 |
+
+### Accounts Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 116        | Generic accounts error                                   |
+| 117        | Permission denied — `snapctl accounts` requires an admin API Key |
+| 118        | Accounts export error                                    |
+| 119        | Accounts sync error                                      |
+| 120        | Accounts sync not applicable — the CSV was rejected and nothing was applied |
+| 121        | Accounts sync applied with failed rows (continue-on-error, not rolled back) |
+
+### Inspect Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 122        | Generic inspect error                                    |
+| 123        | Inspect logs error                                       |
+| 124        | Inspect monitor error                                    |
+| 125        | Inspect metrics error                                    |

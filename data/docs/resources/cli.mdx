@@ -1345,6 +1345,142 @@ snapctl accounts sync --accounts-path-filename ./accounts.csv --dry-run --applic
 
 The full server response is always echoed on stdout as JSON (the diff/results tables go to stderr), so `snapctl accounts sync ... | jq` works.
 
+### 14. Inspect
+Snapctl commands to inspect your Snapend
+
+#### 1. inspect help
+
+See all the supported commands
+
+```bash
+# Help for the inspect command
+snapctl inspect --help
+```
+
+#### 2. inspect logs
+
+Download the logs of your Snapend to a file. Just like the Logs tool in the Snapser web app, you can
+pick one of three log categories:
+1. `deployment`: Logs created by your Snapend, like pods failing to come up, a BYOSnap or BYOGS
+   failing to start or SDK download errors. Start here when your Snapend is not healthy.
+2. `snap`: Logs created by your Snaps and BYOSnaps. Filter them by snap with `--snaps`.
+3. `fleet`: Logs created by your game server fleets. Filter them by region with `--regions` and by
+   game server with `--game-servers`.
+
+Logs are saved oldest first in the file you pass with `--out-path-filename`. If you do not pass it,
+they are saved in the current directory as `snapser-$snapend_id-$category-logs-$timestamp.log`
+(or `.jsonl` with `--format json`). The command pages through the logs for you and keeps the
+newest `--limit` lines. If older lines were left out, the result has a `next_end_time` and the
+message tells you to run the command again with `--start-time` and `--end-time` to get the older
+logs, like the Load more button in the web app.
+
+```bash
+# Help for the logs command
+snapctl inspect logs --help
+
+# Download your Snapend logs
+# $snapend_id = Cluster Id
+# $category = (optional) deployment, snap, fleet. Default: deployment
+# $snaps = (optional, --category snap only) Comma separated list of snap ids. Eg: auth,storage,my-byosnap
+# $regions = (optional, --category fleet only) Comma separated list of regions.
+#   regions(nvirginia, oregon, saopaulo, stockholm, frankfurt-ga, nvirginia-ga, oregon-ga, singapore-ga)
+# $game_servers = (optional, --category fleet only) Comma separated list of game server ids
+# $filter = (optional) Only keep log lines that contain this text
+# $since = (optional) How far back to go: a number followed by m, h or d. Eg: 5m, 15m, 30m, 1h, 3h, 12h, 1d.
+#   Default: 15m. Cannot be used with --start-time/--end-time
+# $start_time = (optional) Start of the time range as an ISO-8601 datetime. Eg: 2026-10-15T10:00:00Z.
+#   Times without a timezone are treated as UTC
+# $end_time = (optional) End of the time range as an ISO-8601 datetime. Needs --start-time. Default: now
+# $format = (optional) text, json. Default: text. json writes one JSON object per line:
+#   {"timestamp": "...", "labels": {...}, "line": "..."}
+# $limit = (optional) Maximum number of log lines to download. Default: 5000, max: 50000
+# $out_path_filename = (optional) Full path and filename to save the logs in.
+#   Default: snapser-$snapend_id-$category-logs-$timestamp.log (.jsonl with --format json) in the current directory
+# Example:
+# # Snapend not coming up: the last 15 minutes of deployment logs
+# snapctl inspect logs --snapend-id gx5x6bc0
+# # Errors from the auth snap in the last hour
+# snapctl inspect logs --snapend-id gx5x6bc0 --category snap --snaps auth --filter "error" --since 1h
+# # Fleet logs for one region, or for specific game servers
+# snapctl inspect logs --snapend-id gx5x6bc0 --category fleet --regions frankfurt-ga --since 3h
+# snapctl inspect logs --snapend-id gx5x6bc0 --category fleet --game-servers gs-7f2k9,gs-a81mx --filter "disconnect"
+# # An exact time window, for an incident review
+# snapctl inspect logs --snapend-id gx5x6bc0 --category snap --snaps matchmaking --start-time 2026-10-14T22:00:00Z --end-time 2026-10-14T23:30:00Z --limit 50000 --out-path-filename ./incident-1014/matchmaking.log
+# # JSON lines for scripts. With -q only the result JSON is printed, so you can find the file
+# snapctl inspect logs --snapend-id gx5x6bc0 --category snap --snaps my-byosnap --since 30m --format json -q
+snapctl inspect logs --snapend-id $snapend_id --category $category --since $since --out-path-filename $out_path_filename
+snapctl inspect logs --snapend-id $snapend_id --category snap --snaps $snaps --filter $filter --start-time $start_time --end-time $end_time --format $format --limit $limit --out-path-filename $out_path_filename
+snapctl inspect logs --snapend-id $snapend_id --category fleet --regions $regions --game-servers $game_servers --since $since --out-path-filename $out_path_filename
+```
+
+#### 3. inspect monitor
+
+Get an infrastructure graph of your Snapend, just like the Monitor tool in the Snapser web app.
+Pick the `snap` graphs of your Snaps and BYOSnaps, or the `fleet` graphs of your game server fleets
+with `--category`. The result is printed as JSON, with one series per snap, method, pod or game
+server and `[timestamp, value]` points. Pass `--out-path-filename` to also save it as a `.json` or
+`.csv` file. The time range can be at most 30 days.
+
+```bash
+# Help for the monitor command
+snapctl inspect monitor --help
+
+# Get an infrastructure graph of your Snapend
+# $snapend_id = Cluster Id
+# $category = (optional) snap, fleet. Default: snap
+# $metric = The graph to get:
+#   For category=snap metric=(cpu, memory, latency, rps, errors, restarts, top-requests, top-snaps)
+#   For category=fleet metric=(cpu, memory, ingress-rate, egress-rate, ingress-total, egress-total)
+#   cpu and memory are a percentage of the limit. latency is in milliseconds.
+# $snaps = (optional, --category snap only) Comma separated list of snap ids. Default: every snap
+# $quantile = (optional, --metric latency only) p50, p75, p95, p99. Default: p95
+# $status_code = (optional, --metric rps only) Only count responses with this status code: 2xx, 3xx, 4xx, 5xx
+# $fleets = (required, --category fleet only) Comma separated list of fleet names
+# $regions = (optional, --category fleet only) Comma separated list of regions. Default: every region
+#   regions(nvirginia, oregon, saopaulo, stockholm, frankfurt-ga, nvirginia-ga, oregon-ga, singapore-ga)
+# $game_servers = (optional, --category fleet only) Comma separated list of game server ids
+# $since = (optional) How far back to go: a number followed by m, h or d. Default: 15m
+# $start_time, $end_time = (optional) ISO-8601 datetimes, instead of --since
+# $out_path_filename = (optional) Full path to a .json or .csv file to also save the result in
+# Example:
+# # CPU of every snap in the last hour
+# snapctl inspect monitor --snapend-id gx5x6bc0 --metric cpu --since 1h
+# # 5xx responses per second of the auth and storage snaps
+# snapctl inspect monitor --snapend-id gx5x6bc0 --metric rps --status-code 5xx --snaps auth,storage --since 3h
+# # P99 latency for an incident window, saved as CSV
+# snapctl inspect monitor --snapend-id gx5x6bc0 --metric latency --quantile p99 --start-time 2026-10-14T22:00:00Z --end-time 2026-10-14T23:30:00Z --out-path-filename ./latency.csv
+# # Memory of the arena fleet in one region
+# snapctl inspect monitor --snapend-id gx5x6bc0 --category fleet --fleets arena --regions oregon-ga --metric memory --since 1d
+snapctl inspect monitor --snapend-id $snapend_id --metric $metric --snaps $snaps --since $since
+snapctl inspect monitor --snapend-id $snapend_id --category fleet --fleets $fleets --regions $regions --game-servers $game_servers --metric $metric --start-time $start_time --end-time $end_time --out-path-filename $out_path_filename
+```
+
+#### 4. inspect metrics
+
+Get a business metric of your Snapend: daily or monthly active users, installs, revenue or player
+locations. Your Snapend needs the `analytics` snap. The result is printed as JSON; pass
+`--out-path-filename` to also save it as a `.json` or `.csv` file. The time range can be at most
+30 days.
+
+```bash
+# Help for the metrics command
+snapctl inspect metrics --help
+
+# Get a business metric of your Snapend
+# $snapend_id = Cluster Id
+# $metric = dau, mau, installs, revenue, locations
+#   dau, installs and revenue are per day, mau is per month. locations is the number of logins per
+#   location, so its points have no timestamp.
+# $since = (optional) How far back to go: a number followed by m, h or d. Default: 30d
+# $start_time, $end_time = (optional) ISO-8601 datetimes, instead of --since
+# $out_path_filename = (optional) Full path to a .json or .csv file to also save the result in
+# Example:
+# # Daily active users over the last 30 days
+# snapctl inspect metrics --snapend-id gx5x6bc0 --metric dau
+# # Revenue per day for the last week, saved as CSV
+# snapctl inspect metrics --snapend-id gx5x6bc0 --metric revenue --since 7d --out-path-filename ./revenue.csv
+snapctl inspect metrics --snapend-id $snapend_id --metric $metric --since $since --out-path-filename $out_path_filename
+```
 
 ## Error codes
 ### CLI Return Codes
@@ -1481,6 +1617,14 @@ them from the [Image Manager](/docs/custom/tools/image-manager) in the web app. 
 | 119        | Accounts sync error                                      |
 | 120        | Accounts sync not applicable — the CSV was rejected (`validation_errors` / `guardrail_errors`) and nothing was applied |
 | 121        | Accounts sync applied with failed rows (`failed_count > 0`) — continue-on-error, not rolled back |
+
+### Inspect Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 122        | Generic inspect error                                    |
+| 123        | Inspect logs error                                       |
+| 124        | Inspect monitor error                                    |
+| 125        | Inspect metrics error                                    |
 
 ### Snapend Errors
 | Error Code | Description                                              |

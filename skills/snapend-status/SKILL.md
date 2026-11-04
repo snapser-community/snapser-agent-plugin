@@ -62,6 +62,7 @@ If the Snapend is in an error state, help diagnose:
   snapctl snap-config get-config --snaps auth,leaderboards --snapend-id $snapendId
   ```
   This pulls the live settings for specific snaps — useful for verifying auth methods are enabled, leaderboards are defined, storage keys exist, etc.
+- For deployment/snap/fleet logs or infra graphs (CPU, memory, latency), use `skills/inspect-snapend/SKILL.md` (`snapctl inspect`) to dig deeper.
 
 ### Phase 3 — Offer follow-up actions
 

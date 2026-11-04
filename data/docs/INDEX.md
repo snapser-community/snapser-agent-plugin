@@ -3,7 +3,7 @@
 
 # Snapser Documentation — Index
 
-Every Snapser documentation page bundled in this plugin — 201 files, with the topic each one covers. Read this first to pick the file that answers
+Every Snapser documentation page bundled in this plugin — 202 files, with the topic each one covers. Read this first to pick the file that answers
 the question, then read that file. Do not grep the whole folder, and never
 search the web for a Snapser answer — the docs are all here.
 
@@ -231,7 +231,7 @@ page; this file is the map.
 |---|---|
 | `data/docs/snapend/tools/api-explorer.mdx` | API Explorer |
 | `data/docs/snapend/tools/cluster-clone.mdx` | Cluster Clone — Snapend clone |
-| `data/docs/snapend/tools/cluster-sync.mdx` | Cluster Settings Sync — Cluster Sync |
+| `data/docs/snapend/tools/cluster-sync.mdx` | Snapend Configuration Sync — Cluster Sync |
 | `data/docs/snapend/tools/inspector.mdx` | Matchmaking Inspector |
 | `data/docs/snapend/tools/parties.mdx` | Parties Tool — Parties Snap Tool |
 | `data/docs/snapend/tools/simulator.mdx` | Matchmaking Simulator |
@@ -270,3 +270,4 @@ page; this file is the map.
 | `data/docs/resources/tools/alert-manager.mdx` | Alert Manager |
 | `data/docs/resources/tools/audit.mdx` | Audit |
 | `data/docs/resources/tools/examples.mdx` | Examples — Game Template |
+| `data/docs/resources/tools/invoices.mdx` | Invoices |

@@ -3,7 +3,7 @@
 
 # Snapser Release Notes — Index
 
-**Latest release: 1.16.0** (October 19, 2026). 36 releases on record, 1.0.0 (September 15, 2025) onward.
+**Latest release: 1.17.0** (November 9, 2026). 38 releases on record, 1.0.0 (September 15, 2025) onward.
 
 Each release is a file at `data/releases/<version>.mdx`. These are the Snapser
 **platform** release notes — human-readable changelogs of what shipped in the
@@ -18,6 +18,8 @@ platform, snaps, Web App, snapctl, and SDKs.
 
 | Version | Date | Sections |
 |---|---|---|
+| [1.17.0](1.17.0.mdx) | November 9, 2026 | Breaking Changes, Spotlight, Snaps, Web App, Snapctl, Appendix — exact affected symbols |
+| [1.16.1](1.16.1.mdx) | October 30, 2026 | Feature Improvements |
 | [1.16.0](1.16.0.mdx) | October 19, 2026 | Spotlight, Breaking Changes, Snaps, Web App, Appendix — exact affected symbols |
 | [1.15.0](1.15.0.mdx) | September 25, 2026 | Spotlight, Snaps, Web App, Snapctl |
 | [1.14.2](1.14.2.mdx) | September 22, 2026 | Bug Fixes |
@@ -63,13 +65,13 @@ table above.
 
 | Snap | Releases (newest first) |
 |---|---|
-| `analytics` | [1.4.0](1.4.0.mdx), [1.0.0](1.0.0.mdx) |
+| `analytics` | [1.17.0](1.17.0.mdx), [1.4.0](1.4.0.mdx), [1.0.0](1.0.0.mdx) |
 | `assets` | [1.1.0](1.1.0.mdx) |
-| `auth` | [1.16.0](1.16.0.mdx), [1.13.0](1.13.0.mdx), [1.12.0](1.12.0.mdx), [1.11.1](1.11.1.mdx), [1.11.0](1.11.0.mdx), [1.10.0](1.10.0.mdx), [1.9.0](1.9.0.mdx), [1.8.0](1.8.0.mdx), [1.3.3](1.3.3.mdx), [1.3.0](1.3.0.mdx) |
+| `auth` | [1.17.0](1.17.0.mdx), [1.16.0](1.16.0.mdx), [1.13.0](1.13.0.mdx), [1.12.0](1.12.0.mdx), [1.11.1](1.11.1.mdx), [1.11.0](1.11.0.mdx), [1.10.0](1.10.0.mdx), [1.9.0](1.9.0.mdx), [1.8.0](1.8.0.mdx), [1.3.3](1.3.3.mdx), [1.3.0](1.3.0.mdx) |
 | `chat` | [1.14.0](1.14.0.mdx) |
 | `decorators` | [1.4.0](1.4.0.mdx), [1.3.3](1.3.3.mdx) |
 | `eventbus` | [1.16.0](1.16.0.mdx), [1.7.0](1.7.0.mdx) |
-| `game-server-fleets` | [1.15.0](1.15.0.mdx), [1.13.0](1.13.0.mdx), [1.12.0](1.12.0.mdx), [1.8.0](1.8.0.mdx), [1.7.0](1.7.0.mdx) |
+| `game-server-fleets` | [1.17.0](1.17.0.mdx), [1.15.0](1.15.0.mdx), [1.13.0](1.13.0.mdx), [1.12.0](1.12.0.mdx), [1.8.0](1.8.0.mdx), [1.7.0](1.7.0.mdx) |
 | `gdpr` | [1.8.0](1.8.0.mdx) |
 | `guilds` | [1.12.0](1.12.0.mdx), [1.11.1](1.11.1.mdx), [1.11.0](1.11.0.mdx), [1.7.1](1.7.1.mdx), [1.7.0](1.7.0.mdx), [1.5.0](1.5.0.mdx) |
 | `iap` | [1.9.0](1.9.0.mdx), [1.8.0](1.8.0.mdx), [1.7.0](1.7.0.mdx), [1.6.0](1.6.0.mdx), [1.2.0](1.2.0.mdx), [1.1.0](1.1.0.mdx) |
@@ -77,17 +79,17 @@ table above.
 | `inventory` | [1.16.0](1.16.0.mdx), [1.14.0](1.14.0.mdx), [1.13.0](1.13.0.mdx), [1.12.0](1.12.0.mdx), [1.11.0](1.11.0.mdx), [1.9.0](1.9.0.mdx), [1.8.0](1.8.0.mdx), [1.7.0](1.7.0.mdx), [1.6.0](1.6.0.mdx), [1.4.0](1.4.0.mdx), [1.3.0](1.3.0.mdx) |
 | `leaderboards` | [1.16.0](1.16.0.mdx), [1.8.0](1.8.0.mdx), [1.6.0](1.6.0.mdx), [1.1.1](1.1.1.mdx), [1.1.0](1.1.0.mdx) |
 | `lobbies` | [1.10.0](1.10.0.mdx), [1.9.0](1.9.0.mdx), [1.8.0](1.8.0.mdx), [1.7.0](1.7.0.mdx), [1.6.0](1.6.0.mdx), [1.2.0](1.2.0.mdx) |
-| `matchmaking` | [1.16.0](1.16.0.mdx), [1.15.0](1.15.0.mdx), [1.14.0](1.14.0.mdx), [1.12.0](1.12.0.mdx), [1.10.0](1.10.0.mdx), [1.9.0](1.9.0.mdx), [1.7.0](1.7.0.mdx), [1.6.1](1.6.1.mdx), [1.6.0](1.6.0.mdx), [1.5.0](1.5.0.mdx), [1.3.0](1.3.0.mdx), [1.2.0](1.2.0.mdx) |
+| `matchmaking` | [1.17.0](1.17.0.mdx), [1.16.0](1.16.0.mdx), [1.15.0](1.15.0.mdx), [1.14.0](1.14.0.mdx), [1.12.0](1.12.0.mdx), [1.10.0](1.10.0.mdx), [1.9.0](1.9.0.mdx), [1.7.0](1.7.0.mdx), [1.6.1](1.6.1.mdx), [1.6.0](1.6.0.mdx), [1.5.0](1.5.0.mdx), [1.3.0](1.3.0.mdx), [1.2.0](1.2.0.mdx) |
 | `notifications` | [1.16.0](1.16.0.mdx) |
 | `parties` | [1.14.0](1.14.0.mdx), [1.12.0](1.12.0.mdx), [1.6.3](1.6.3.mdx), [1.6.0](1.6.0.mdx), [1.4.0](1.4.0.mdx) |
 | `profiles` | [1.16.0](1.16.0.mdx), [1.13.0](1.13.0.mdx) |
-| `quests` | [1.16.0](1.16.0.mdx), [1.14.0](1.14.0.mdx), [1.10.0](1.10.0.mdx) |
+| `quests` | [1.17.0](1.17.0.mdx), [1.16.0](1.16.0.mdx), [1.14.0](1.14.0.mdx), [1.10.0](1.10.0.mdx) |
 | `queues` | [1.13.0](1.13.0.mdx) |
 | `remote-config` | [1.13.0](1.13.0.mdx) |
 | `rewards` | [1.6.0](1.6.0.mdx) |
-| `scheduler` | [1.16.0](1.16.0.mdx), [1.8.0](1.8.0.mdx) |
+| `scheduler` | [1.17.0](1.17.0.mdx), [1.16.0](1.16.0.mdx), [1.8.0](1.8.0.mdx) |
 | `sequencer` | [1.3.3](1.3.3.mdx), [1.3.1](1.3.1.mdx) |
 | `social-graph` | [1.4.0](1.4.0.mdx) |
 | `statistics` | [1.9.0](1.9.0.mdx), [1.3.0](1.3.0.mdx) |
-| `storage` | [1.16.0](1.16.0.mdx), [1.14.0](1.14.0.mdx), [1.12.0](1.12.0.mdx), [1.9.0](1.9.0.mdx), [1.7.0](1.7.0.mdx), [1.6.2](1.6.2.mdx) |
+| `storage` | [1.17.0](1.17.0.mdx), [1.16.0](1.16.0.mdx), [1.14.0](1.14.0.mdx), [1.12.0](1.12.0.mdx), [1.9.0](1.9.0.mdx), [1.7.0](1.7.0.mdx), [1.6.2](1.6.2.mdx) |
 | `trackables` | [1.10.0](1.10.0.mdx), [1.9.0](1.9.0.mdx), [1.3.0](1.3.0.mdx), [1.1.0](1.1.0.mdx) |
