@@ -1,6 +1,6 @@
 {
   "name": "snapser",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "description": "Snapser game backend integration. Create and manage Snapends, publish custom BYOSnap microservices, sync game servers, attach your local workstation for live debugging, and download SDKs for Unity, Unreal, Roblox and more.",
   "author": {
     "name": "Snapser",
