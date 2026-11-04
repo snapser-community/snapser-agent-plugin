@@ -175,16 +175,19 @@ Key commands:
 | `snapctl snapend create` | Create a new Snapend |
 | `snapctl snapend update` | Add or remove snaps from a Snapend |
 | `snapctl snapend download` | Download an SDK, manifest, or protos for a Snapend |
+| `snapctl inspect logs` | Download deployment, snap, or fleet logs for a Snapend |
+| `snapctl inspect monitor` | Get infra graphs (CPU, memory, latency, RPS, errors) for a Snapend's snaps or fleets |
+| `snapctl inspect metrics` | Get business metrics (DAU, MAU, installs, revenue, locations) for a Snapend — needs the `analytics` snap |
 | `snapctl login` | Log in via the browser; mints and stores the API key automatically |
 | `snapctl admin-sdk download` | Fallback download of the Admin SDK (the plugin bundles it at `data/admin-sdk/`) |
 | `snapctl snapend-manifest create` | Generate a base manifest from a snap list |
 
 See `skills/snapctl_commands.md` for the complete command reference.
 
-**`--application-id` usage:** Only Snapend-level commands (`snapend create`, `snapend enumerate`, `snapend update`, `snapend clone`, etc.) require `--application-id`. Catalog commands like `snapctl snaps enumerate` list globally available snaps and do **not** take `--application-id`. When in doubt, check `snapctl <command> --help`.
+**`--application-id` usage:** Only Snapend-level commands (`snapend create`, `snapend enumerate`, `snapend update`, `snapend clone`, etc.) require `--application-id`. Catalog commands like `snapctl snaps enumerate` list globally available snaps and do **not** take `--application-id`. `snapctl inspect` subcommands take neither — only `--snapend-id`. When in doubt, check `snapctl <command> --help`.
 
 **Output path flags — do not mix these up:**
-- `--out-path-filename` = full file path including filename. Used by **manifest commands**: `snapend-manifest create`, `snapend-manifest sync`, `snapend-manifest update`, `snapend-manifest upgrade`.
+- `--out-path-filename` = full file path including filename. Used by **manifest commands** (`snapend-manifest create`, `snapend-manifest sync`, `snapend-manifest update`, `snapend-manifest upgrade`) and by **`snapctl inspect logs`/`inspect monitor`/`inspect metrics`** — don't assume `inspect` follows the `snapend download` pattern below just because both "download" data.
 - `--out-path` = directory path only (no filename). Used by **download commands**: `snapend download`. The file is created inside this directory automatically.
 
 These are different flags and are **not interchangeable**. Using the wrong one will cause the command to fail.
@@ -194,6 +197,8 @@ Useful snapctl command for inspecting live snap settings on an existing Snapend:
 snapctl snap-config get-config --snaps auth,leaderboards --snapend-id $snapendId
 ```
 This pulls the current settings for specific snaps from a deployed Snapend. Use it to inspect, verify, or troubleshoot snap configuration without downloading the full manifest.
+
+For logs, infra metrics (CPU, memory, latency, RPS), or business metrics (DAU, MAU, installs, revenue) on a live Snapend — as opposed to settings — use `snapctl inspect`. See `skills/inspect-snapend/SKILL.md` for the full workflow.
 
 When in doubt about a command, run `snapctl --help` or `snapctl <command> --help`.
 
@@ -375,6 +380,7 @@ it contains the detailed step-by-step instructions.
 | `skills/configure-snap-settings/SKILL.md` | User wants to change snap settings (auth connectors, leaderboards, storage keys, etc.) on a live Snapend — the Admin SDK workflow |
 | `skills/clone-snapend/SKILL.md` | User wants to clone a Snapend to a different environment (e.g. dev → staging). Note: stage → prod is not supported via CLI — web portal only |
 | `skills/snapend-status/SKILL.md` | User wants to check the health, state, or details of a Snapend |
+| `skills/inspect-snapend/SKILL.md` | User wants to diagnose a Snapend: view deployment/snap/fleet logs, or check infra metrics (CPU, memory, latency) or business metrics (DAU, MAU, revenue) |
 | `skills/download-sdk/SKILL.md` | User wants to download an SDK, protobuf files, or manifest for a Snapend |
 
 ### BYOSnap (Custom Microservices)
@@ -533,3 +539,4 @@ If the user already has a Snapend and wants to change it:
 - **Check current state:** `snapctl snapend enumerate`
 - **Clone to another environment:** `skills/clone-snapend/SKILL.md`
 - **Check Snapend health:** `skills/snapend-status/SKILL.md`
+- **Diagnose issues (logs/metrics):** `skills/inspect-snapend/SKILL.md`

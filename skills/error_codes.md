@@ -165,3 +165,23 @@ When a snapctl command fails:
 |------|-------------|----------|
 | 113 | Generic Admin SDK error | Verify the `--snaps name:version` pairs against `snapctl snaps enumerate` — only versions with `has_admin=true` are accepted, and versions require the `v` prefix (e.g. `auth:v1.0.0`). |
 | 114 | Admin SDK download error | Retry the download. Check network connectivity and that `--out-path` is an existing directory. |
+
+## Accounts Errors
+
+| Code | Description | Recovery |
+|------|-------------|----------|
+| 116 | Generic accounts error | Retry. Check network connectivity and that the API key is valid. |
+| 117 | Permission denied — `snapctl accounts` requires an admin API Key | The logged-in key isn't a company/application admin. Ask the user to log in with an admin API key, or run the sync from the web portal's Access > Sync instead. |
+| 118 | Accounts export error | Retry. If scoped with `--application-id`, verify that application id exists. |
+| 119 | Accounts sync error | Retry. If it persists, re-export a fresh CSV with `accounts export` before editing again. |
+| 120 | Accounts sync not applicable — the CSV was rejected (`validation_errors`/`guardrail_errors`) and nothing was applied | Read the printed validation/guardrail errors by row number — common causes are a row referencing an app/Snapend/Snap that doesn't exist, or a self-lockout (removing your own admin role at the synced scope). Fix the CSV and re-run `--dry-run` to confirm before applying. |
+| 121 | Accounts sync applied with failed rows (`failed_count > 0`) | This is continue-on-error with no rollback — the successful rows already landed. Fix the failed rows in the CSV and re-run the sync; already-correct rows will no-op. |
+
+## Inspect Errors
+
+| Code | Description | Recovery |
+|------|-------------|----------|
+| 122 | Generic inspect error | Verify `--snapend-id` is correct and `snapctl validate` passes; retry. |
+| 123 | Inspect logs error | Check that `--category`/`--snaps`/`--regions`/`--game-servers` are valid for this Snapend and the time range isn't malformed (`--since` can't combine with `--start-time`/`--end-time`); retry with a smaller `--since` window. |
+| 124 | Inspect monitor error | Verify the `--metric` is valid for the chosen `--category` (snap vs. fleet — they have different metric lists), that `--fleets` is set when `--category fleet` is used, and that the time range is 30 days or less. |
+| 125 | Inspect metrics error | Verify the Snapend has the `analytics` snap enabled (`snapctl snap-config get-config --snaps analytics --snapend-id $snapendId`) and that `--metric` is one of `dau`, `mau`, `installs`, `revenue`, `locations`. |
