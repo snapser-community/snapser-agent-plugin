@@ -1,0 +1,172 @@
+export const description = 'Invoices'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Invoices
+
+## Concept
+
+At the close of every month Snapser generates one invoice per app, covering
+everything that app consumed across all of its Snapends. The Invoices tool is
+where you read those invoices — the total you were billed, how that total was
+worked out, how much of your plan you used, and a per-Snapend breakdown of
+where the usage actually came from.
+
+<Note>
+  Invoices are available on every Snapser plan. They are not shown on
+  Enterprise self-hosted deployments, where billing is handled outside the
+  portal.
+</Note>
+
+## Pre-requisites
+
+The company-level Invoices page requires a `company-*` role with view access.
+The app-level page requires a `game-*` role with view access on that app. If
+you do not have the role, the page redirects you back to your landing page.
+
+## Tool Location
+
+There are two ways in, and they show the same data scoped differently:
+
+* **Company level** — from your company home page, open the left nav and click
+  **Tools → Invoices**. You land on a list of every app that has invoices.
+* **App level** — from an app's home page, click **Tools → Invoices**. This
+  skips the app picker and opens that app's invoices directly.
+
+## Picking an app
+
+The company-level page opens on a summary with one row per app:
+
+1. **Game** - The app the invoices belong to.
+2. **Billing month** - The most recent month Snapser has invoiced for.
+3. **Last invoice** - The total on that most recent invoice.
+
+Click a row to open that app's invoice history. Use the back arrow next to the
+app name to return to the summary.
+
+## Invoice history
+
+Once you are inside an app you get its month-by-month history:
+
+* A **Total monthly spend** bar chart, one bar per billing month, so you can
+  see the trend at a glance. It only appears once the app has more than one
+  invoice.
+* A table of every invoice, listing the **Billing month** and the **Total**.
+
+Click any row to open the full invoice.
+
+## Reading an invoice
+
+The invoice header shows the app name, the exact date range the invoice
+covers, and the **Total billed**. Use the back arrow in the header to return to
+the invoice history.
+
+![Invoices](/images/docs/invoices.png)
+
+### Cost composition
+
+A donut chart showing what share of the total each charge accounts for.
+Charges that came to zero are left out, so the chart only shows what you
+actually paid for.
+
+### Plan usage
+
+Next to the chart, newer invoices show how much of your plan you used during
+the month, with your plan tier alongside:
+
+1. **Seats**
+2. **BI seats**
+3. **Snaps**
+4. **Snapends**
+5. **Apps**
+
+Each one shows what you used against your plan's limit. The bar turns amber
+once you pass 90% of a limit and red once you exceed it.
+
+### Cost breakdown
+
+The breakdown table is split into sections. Each section ends with its own
+total, and the invoice **Total** sits at the bottom.
+
+**Usage** - Charges that vary with what your app did this month:
+
+1. **Game Server Fleets** - Compute and bandwidth for your game server fleets.
+2. **BYOSnap** - Compute for the custom snaps you brought to the platform.
+3. **Storage** - Data stored across your Snapends.
+4. **Telemetry** - Logs, metrics and traces.
+5. **Matchmaking** - Matchmaking usage.
+6. **Non-Production Usage** - Usage accrued on your development and staging
+   Snapends.
+7. **Production Usage** - See [How production usage is billed](#how-production-usage-is-billed)
+   below.
+
+**Platform and Features** - Your recurring plan charges:
+
+1. **Platform Fee** - The recurring fee for your plan.
+2. **Features (Support, etc.)** - Plan features such as your support tier.
+3. **Discounts** - Any discounts on your platform fee or features, taken off
+   before the section total.
+
+**Other Discounts** - Any remaining discounts, such as usage discounts, listed
+by discount code. This section only appears when one applies.
+
+Click a row with an arrow to see how it was worked out — the quantity, the
+rate, and the resulting amount. Rows that include a discount open
+automatically, so money taken off is never hidden.
+
+### How production usage is billed
+
+Your production usage is charged as the **higher** of two numbers, never the
+sum of both:
+
+* **Snap floor** - the committed usage amount for your plan.
+* **HAU Usage** - what you metered this month, measured in Hosted Active
+  Users. The label on this line follows the usage metric in your contract.
+
+The **Production Usage** row shows the amount actually charged. Expand it to
+see both numbers side by side: the one that was billed, and the other struck
+through, with a note saying which won this period. Only the billed amount
+contributes to your total.
+
+### Per-Snapend breakdown
+
+The last section attributes the month's usage to individual Snapends, so you
+can tell which environment drove the bill. Production Snapends are listed
+first, then staging, then development, each tagged with its environment. A
+Snapend that was deleted during the month is still listed, marked
+**Deleted**.
+
+For each Snapend you get:
+
+1. **Days** - How many days of the month the Snapend was billed for.
+2. **Game Servers** - Game server fleet compute and bandwidth.
+3. **BYOSnap** - Custom snap compute and bandwidth.
+4. **Storage** - Data stored.
+5. **Telemetry** - Logs, metrics and traces.
+6. **Matchmaking** - Matchmaking usage.
+7. **Production Usage** or **HAU** - The billed production usage. It only
+   appears on your production Snapend, since that is the only one it is
+   charged to. The column is named after whichever side won this period.
+8. **Total** - Everything attributed to that Snapend.
+
+Click a Snapend to see the raw quantities behind its costs, such as vCPU-hours,
+GiB transferred, GB-days stored and telemetry events. The **Total attributed**
+row at the bottom adds up every Snapend.
+
+<Note>
+  The per-Snapend breakdown covers usage only. Your platform fee, features
+  and discounts are not attributed to any Snapend, so **Total attributed**
+  will not always match the invoice total.
+</Note>
+
+## Paying your invoice
+
+The Invoices tool is read-only — it is where you review what you were charged,
+not where you pay. How you pay depends on your plan:
+
+* **Annual contract** - Snapser emails you the invoice along with a payment
+  link. There is nothing to set up in the portal.
+* **On-Demand** - You need a credit card on file. Add or update it under
+  **Settings → Billing**, and Snapser charges that card each month.

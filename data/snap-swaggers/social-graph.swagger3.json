@@ -37,7 +37,7 @@
           "name" : "limit",
           "required" : false,
           "schema" : {
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "style" : "form"
@@ -48,7 +48,7 @@
           "name" : "offset",
           "required" : false,
           "schema" : {
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "style" : "form"
@@ -184,7 +184,7 @@
           "name" : "limit",
           "required" : false,
           "schema" : {
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "style" : "form"
@@ -195,7 +195,7 @@
           "name" : "offset",
           "required" : false,
           "schema" : {
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "style" : "form"
@@ -383,7 +383,7 @@
           "name" : "limit",
           "required" : false,
           "schema" : {
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "style" : "form"
@@ -394,7 +394,7 @@
           "name" : "offset",
           "required" : false,
           "schema" : {
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "style" : "form"
@@ -520,7 +520,7 @@
           "name" : "limit",
           "required" : false,
           "schema" : {
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "style" : "form"
@@ -531,7 +531,7 @@
           "name" : "offset",
           "required" : false,
           "schema" : {
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "style" : "form"

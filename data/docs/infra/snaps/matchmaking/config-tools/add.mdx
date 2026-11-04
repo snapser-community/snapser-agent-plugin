@@ -32,6 +32,12 @@ To get started:
 1. **Backfilling**: A toggle to enable or disable backfilling. If enabled, the match will be created as soon as the min count has been reached, but then allow matches to be filled.
 2. **Timeout Seconds**: The duration in seconds that the backfill window stays open. After this timeout, no more players can be added to the match via backfilling.
 
+<Note>
+  This tool has no field for `allow_after_match_start`. Set it with the
+  [Admin SDK](/docs/resources/tools/admin-sdk). See
+  [Backfilling](/docs/infra/snaps/matchmaking#backfilling).
+</Note>
+
 ### Delay Partial Match
 1. **Delay Partial Match Seconds**: When set, the matchmaker will wait this many seconds before creating a partial match (a match that has between `min_players` and `max_players`). This gives the matchmaker additional time to find more players and create fuller matches. Full matches (at `max_players`) are always created immediately regardless of this setting. Set to `0` or leave unset to create partial matches as soon as the minimum player count is reached.
 
@@ -49,6 +55,12 @@ To get started:
   with "snap_matchmaking".
 </Note>
 
+<Note>
+  This tool has no field for the fleet allocation retry settings. Set them with the
+  [Admin SDK](/docs/resources/tools/admin-sdk). See
+  [Snapser Fleet](/docs/infra/snaps/matchmaking#snapser-fleet).
+</Note>
+
 ## Match Profile Team Formation
 1. **Enabled**: A toggle to enable or disable team formation.
 2. **Number of teams**: The number of teams in the match.
@@ -58,6 +70,18 @@ To get started:
    - **Least Populated**: Assign players to the team with the fewest players (default).
    - **Alternate**: Assign players to teams in an alternating fashion based on the Strategy Argument value, ensuring teams are competitively balanced.
 6. **Strategy Argument**: The rule key (from a number-based rule such as a statistic, leaderboard tier, or custom number) used to sort and balance players across teams when the `Alternate` strategy is selected. For example, setting this to `elo` will distribute players so that teams have balanced average elo.
+
+## Match Profile Match Quality
+Match Quality trades match speed for closer matches. It needs matchmaking snap version `1.17.0` or later.
+1. **Enabled**: A toggle to enable or disable the match quality rules.
+2. **Min Time In Pool (seconds)**: The number of seconds a ticket must wait before it can lead a match. The matchmaker still adds the ticket to a match that an older ticket leads. Set to `0` to disable the hold.
+3. **Optimize By Strategy Argument**: When enabled, the matchmaker orders candidates by their distance to the leading ticket on the Team Formation [Strategy Argument](#match-profile-team-formation). The closest tickets join the match first. A party uses the mean of its members. Tickets without a value join last. This option needs Team Formation enabled with a Strategy Argument.
+
+<Note>
+  An enabled Match Quality block must set a Min Time In Pool or enable
+  Optimize By Strategy Argument. The matchmaker rejects a profile where both
+  are off.
+</Note>
 
 ## Rule Set Details
 1. **Name**: The name of the Rule Set. This can be any alphanumeric string without spaces.

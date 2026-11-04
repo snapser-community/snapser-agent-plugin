@@ -17,7 +17,7 @@ There are a few key concepts to understand when using the Matchmaking snap.
 
 ### Setup Matchmaking
 This is where you can create Match Profiles and Rule Sets via the Matchmaking Configuration tool.
-1. **Base Settings**: These are matchmaking settings like min and max players size, match acceptance rules, team formation rules and backfilling rules. These settings determine the behavior of the matchmaker.
+1. **Base Settings**: These are matchmaking settings like min and max players size, match acceptance rules, team formation rules, match quality rules and backfilling rules. These settings determine the behavior of the matchmaker.
 2. **Allocation**: The Matchmaking snap has been integrated with the Snapser relay and game server fleet and lobbies snaps. You can decide if you want the match to be allocated to your relay, a specific game server fleet or a lobby.
 3. **Rule**: A rule is a specific condition that must be met for tickets to be matched. There are several types of rules. For example, a rule can be a custom tag rule, a custom string or number rule, a statistic rule, a leaderboard rule or a latency rule. The matchmaking snap will pull in data from the statistics and leaderboard snaps to match users based on these rules.
 4. **Rule set**: The rule set is a collection of rules that are used to match users together. A match profile can have multiple rule sets, and matches can be created for each rule set. All rules within a rule set are ANDed together.
@@ -75,10 +75,41 @@ You can also specify how teams are assigned via the Team Formation's 'Strategy' 
 
 ![Matchmaking Team Formation Settings](/images/docs/matchmaking-team-formation-strategy.png)
 
+### Match Quality
+
+By default, the matchmaker forms a match from the first tickets that pass the rules. Match Quality adds two controls that trade match speed for closer matches.
+
+**Minimum time in pool.** A ticket must wait this many seconds before it can lead a match. The matchmaker still adds a young ticket to a match that an older ticket leads. This gives the pool time to fill before the matchmaker commits a player to a match.
+
+**Optimize by strategy argument.** The matchmaker orders the candidates for a match by their distance to the leading ticket on the Team Formation strategy argument, for example `mmr`. The closest tickets join first. A party uses the mean of its members. Tickets without a value join last. This option needs Team Formation with a strategy argument.
+
+The two settings act at different moments on the same number. Match Quality picks the players that join the match. Team Formation then splits those players so the team averages are even.
+
+Match Quality is available from matchmaking snap version `1.17.0`.
+
 ### Backfilling
 This setting tells the matchmaker if it should start a match the minute the min count has been reached. More players can join as long as the match is not full or the backfilling timeout has not been reached.
 <Note>
   Presently, the backfilling rule does not work with **Relay** allocation.
+</Note>
+
+By default, the backfill for a match closes when its lobby starts, fills up or no longer exists. A ticket that was to fill the seat stays in the queue, and normal matching puts the player in a new match.
+
+**Backfill after match start.** Set `allow_after_match_start` in the profile's `backfill_settings` to keep adding players to a running match. This applies to **fleet** allocation, and to **lobby** allocation where the lobby starts a game server on a fleet. The lobby stays open after the match starts, and new players join the running game server.
+
+**Team backfill.** Set `has_team` and `team` on [CreateBackfill](#matchmakingcreatebackfill-api) to put the backfilled player on that team.
+
+**Acceptance.** With [Match Acceptance](#match-acceptance) enabled, each backfilled player must accept within the acceptance timeout. If the player does not accept in time, the matchmaker removes the player, sends `MATCHMAKING_MATCH_CANCELLED` and opens a new backfill for the same seat. A backfilled player who rejects does not cancel the running match. Without Match Acceptance, a backfilled player is `READY` at once.
+
+<Note>
+  The backfill closes on match start from matchmaking snap version `1.16.0`. Backfill after match start, team backfill and backfill acceptance need version `1.17.0`.
+</Note>
+
+<Note>
+  The Match Profile tool has no field for `allow_after_match_start`. Set it with
+  `CreateMatchProfile` or `UpdateMatchProfile` in the [Admin SDK](/docs/resources/tools/admin-sdk).
+  `CreateBackfill` needs `api-key` or `internal` auth, so team backfill is available only
+  through the Api-Key and Internal SDKs.
 </Note>
 
 ### Delay Partial Match
@@ -122,6 +153,19 @@ In the "Select Allocation" section pick **fleet** and then the fleet you want to
   Additionally, you will need to have a fleet created to allocate matches to a
   fleet. See the [Game Server Fleet Snap](/docs/infra/snaps/game-server-fleets) for more
   information.
+</Note>
+
+When the fleet has no server available, the matchmaker retries the allocation. The wait between attempts starts at one second and doubles up to a cap. Set `allocation_retry_settings` in the profile's `assignment_settings` to change the retry policy:
+
+- `max_retries`: The maximum number of attempts before the match fails. Range `0` to `100`. `0` uses the default of `10`.
+- `max_backoff_seconds`: The cap on the wait between attempts. Range `0` to `300`. `0` uses the default of `5`.
+
+<Note>
+  Allocation retry settings are available from matchmaking snap version `1.16.0`.
+  The Match Profile tool has no field for them. Set them with `CreateMatchProfile` or
+  `UpdateMatchProfile` in the [Admin SDK](/docs/resources/tools/admin-sdk).
+  A long retry can outlive the matched tickets. Increase the
+  [ticket TTL](#ticket-ttl) to match.
 </Note>
 
 ### Snapser Lobby
@@ -457,6 +501,17 @@ then the rule set will only apply to tickets created within the last 60 seconds.
   20s from rule set 2), then it will not be evaluated against any rule set.
 </Note>
 
+### Ticket TTL
+
+The matchmaker deletes a ticket when it is older than the longest rule set window across all Match Profiles, plus `ttl_after_no_rules_apply_seconds` (default `300` seconds). This applies to matched tickets too, so set it longer than your slowest fleet allocation.
+
+`ttl_after_no_rules_apply_seconds` is a service-level setting, not a Match Profile setting. The Web App has no field for it. Use `UpdateMatchmakingSettings` (`PUT /v1/matchmaking/settings`) in the [Admin SDK](/docs/resources/tools/admin-sdk) to change it. The range is `0` to `86400`, and `0` uses the default. If you omit the field, the stored value stays. The `debug_players` list in the same request replaces the stored list, so send the full settings object.
+
+<Note>
+  The ticket TTL setting is available from matchmaking snap version `1.16.1`.
+  The older `/v1/matchmaking/settings/debug-config` path still works. Do not use it in new integrations.
+</Note>
+
 ## Queue Settings 
 
 For certain match profiles, it may be desirable to limit the size of the parties that can create tickets. This is supported via the QueueSettings object in the Match Profile Settings. 
@@ -504,6 +559,38 @@ Any participant in a match can update the match's metadata using the [UpdateMatc
   Only users who are participants in the match (present in the `statuses` map) can read or update the match data.
 </Note>
 
+### Removing Users from a Match
+
+Your game server or backend can remove users from a running match, for example an idle or disconnected player. Call the `MatchmakingRemoveUsersFromMatch` API with `api-key` or `internal` auth. This API is available only through the Api-Key and Internal SDKs, not the game client SDK.
+
+<CodeGroup title="RemoveUsersFromMatch API payload" label="removals">
+```
+POST /v1/matchmaking/match-data/{match_id}/removals
+{
+  "user_ids": ["user-3", "user-7"],
+  "reason": "afk",
+  "skip_backfill": false
+}
+```
+</CodeGroup>
+
+For each removed user, the matchmaker:
+1. Removes the user from the match data and deletes the user's ticket.
+2. For a lobby allocation, removes the user from the lobby and its chat room.
+3. Sends the user a `MATCHMAKING_MATCH_REMOVED` event with your `reason`.
+4. Opens a backfill for the freed seat, on the same team. Use `search_fields` to set the backfill attributes. Set `skip_backfill` to `true` to leave the seat empty.
+
+If the host leaves, the matchmaker picks a new host. It prefers a `READY` user.
+
+The response holds the updated `match_data`, the `backfills` that opened, and `skipped_user_ids` for users who were not in the match.
+
+<Note>
+  The match must have a fleet or lobby allocation, and at least one user must stay in the match.
+  Players fill the backfills only when the profile has [Backfilling](#backfilling) enabled.
+  After the match starts, the profile also needs `allow_after_match_start`.
+  This API is available from matchmaking snap version `1.17.0`.
+</Note>
+
 ## APIs
 
 The `Matchmaking` snap exposes the following APIs
@@ -514,6 +601,7 @@ The `Matchmaking` snap exposes the following APIs
 | [MatchmakingGetPingUrls](#matchmakinggetpingurls-api)                     | GET         | Fetch the region ping urls enabled for matchmaking |
 | [MatchmakingCreateBackfill](#matchmakingcreatebackfill-api)               | POST        | Create a backfill ticket for a match               |
 | [MatchmakingDeleteBackfill](#matchmakingdeletebackfill-api)               | DELETE      | Delete a backfill by its ID                        |
+| [MatchmakingRemoveUsersFromMatch](#removing-users-from-a-match)           | POST        | Remove users from a match and backfill their seats |
 | [MatchmakingGetTitanUrls](#matchmakinggettitanurls-api)                   | GET         | Fetch the titan urls enabled for matchmaking (legacy) |
 | [MatchmakingAcceptMatch](#matchmakingacceptmatch-api)                     | POST        | Accepts a match for a user                         |
 | [MatchmakingDeleteTicketsForParty](#matchmakingdeleteticketsforparty-api) | DELETE      | Deletes tickets for the users of a party           |
@@ -2261,6 +2349,9 @@ Apart from these [generic errors](../generic-errors), below are snap specific er
 | 12011 | ErrTitanTagNotFound            | Tag not found                        | 404  | NotFound         |
 | 12012 | ErrMatchAcceptanceNotEnabled   | Match acceptance not enabled         | 400  | InvalidArgument  |
 | 12013 | ErrSettingsUpdateFailure       | Failed to update settings            | 500  | Internal         |
+| 12014 | ErrMatchLobbyGone              | Match's lobby no longer exists; please re-queue | 400 | FailedPrecondition |
+| 12015 | ErrMatchNoAllocation           | Match has no allocation              | 400  | FailedPrecondition |
+| 12016 | ErrLobbiesRemovalUnsupported   | Lobbies does not support match player removal | 400 | FailedPrecondition |
 </div>
 
 ### Websocket Events emitted by snap
@@ -2280,6 +2371,7 @@ These protobuf messages can be downloaded from the Downloads page.
 | 7        | MATCHMAKING_MATCH_CREATE_ERROR   | Published when match server allocation fails           | EventMatchmakingMatchCreateError    |
 | 8        | MATCHMAKING_MATCH_ACCEPTED       | Published when a user accepts a match (sent to all participants) | EventMatchmakingMatchAccepted |
 | 9        | MATCHMAKING_MATCH_REJECTED       | Published when a user rejects a match (sent to all participants) | EventMatchmakingMatchRejected |
+| 10       | MATCHMAKING_MATCH_REMOVED        | Published when a user is removed from a match (sent to the removed user) | EventMatchmakingMatchRemoved |
 
 ## FAQs
 ### How many Match Profiles and rule sets should I have?
@@ -2296,6 +2388,8 @@ Conceptually, the rules within a rule set are "AND"ed together, whereas the rule
 ### What order are tickets matched in?
 
 Match Profiles by default will match tickets in a FIFO manner. If there are no other rule sets existing on a Match Profile, then the tickets will be matched in the order they were created.
+
+With [Match Quality](#match-quality) enabled, a ticket younger than the minimum time in pool cannot lead a match. With optimize by strategy argument on, the matchmaker orders the candidates for a match by their distance to the leading ticket instead of by age.
 
 ### Okay, I have a Match Profile. Now what?
 

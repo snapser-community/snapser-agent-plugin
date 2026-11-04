@@ -1,0 +1,10 @@
+# 1.16.1
+##### October 30, 2026
+
+## Feature Improvements
+
+### Snaps
+
+#### Matchmaking
+1. **Players timed out during a long fleet allocation retry** — the matchmaker deleted tickets 300 seconds after the longest pool window, even while a fleet allocation was still retrying. A late allocation then left an empty server, and the players timed out. The new service-level setting `ttl_after_no_rules_apply_seconds` replaces the fixed 300 seconds. Set it with `PUT /v1/matchmaking/settings` in the Admin SDK. See [Ticket TTL](/docs/infra/snaps/matchmaking#ticket-ttl).
+2. **Settings path** — the matchmaking settings endpoints moved to `/v1/matchmaking/settings`. The old `/v1/matchmaking/settings/debug-config` path still works, but it is deprecated.

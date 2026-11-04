@@ -776,7 +776,7 @@
           "name" : "limit",
           "required" : false,
           "schema" : {
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "style" : "form"
@@ -787,7 +787,7 @@
           "name" : "offset",
           "required" : false,
           "schema" : {
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "style" : "form"
@@ -1070,7 +1070,7 @@
           "name" : "limit",
           "required" : false,
           "schema" : {
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "style" : "form"
@@ -1081,7 +1081,7 @@
           "name" : "offset",
           "required" : false,
           "schema" : {
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "style" : "form"
@@ -1770,7 +1770,7 @@
           },
           "value" : {
             "description" : "Value for the member count comparison",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           }
         },
@@ -1861,7 +1861,7 @@
           },
           "limit" : {
             "description" : "Number of results returned. The maximum allowed is 50, defaults to 10 if not provided.",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "member_count" : {
@@ -1880,7 +1880,7 @@
           },
           "offset" : {
             "description" : "Number of results to skip from the start of the result set",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "sort" : {

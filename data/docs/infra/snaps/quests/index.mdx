@@ -93,6 +93,21 @@ GetActiveQuests.
   type of quest.
 </Note>
 
+### Chained Quests
+A quest can have one or more pre-requisite quests. Users only qualify for a quest once they have completed every
+pre-requisite set on it.
+Assignment itself does not change: auto-assigned and manually assigned quests follow the same flow as above, but the
+quest is only assigned to users who have completed all of its pre-requisites. This lets you chain quests together, for example `chapter_1` → `chapter_2` → `chapter_3`.
+You can set the pre-requisites from the [Quests Settings](/docs/infra/snaps/quests/config-tools/settings#quest-assignment-details) tool.
+
+<Note>
+  A pre-requisite must be a non-recurring quest, and a quest can never require itself.
+</Note>
+
+<Note>
+  Pre-requisite quests are available from Quests snap version v1.17.0.
+</Note>
+
 ## APIs & Emitters
 
 The `Quests` snap exposes the following APIs

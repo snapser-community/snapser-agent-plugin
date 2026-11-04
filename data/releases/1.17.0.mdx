@@ -1,0 +1,165 @@
+# 1.17.0
+##### November 9, 2026
+
+## Breaking Changes
+
+This release is mostly additive. The main break narrows a set of count, duration, and list-pagination fields from 64-bit to 32-bit integers. On the wire these values change from quoted JSON strings to plain JSON numbers. A few request fields became required, and new optional fields shift C# constructor argument order. Each item links to its exact affected symbols in the [Appendix](#appendix--exact-affected-symbols) at the end of these notes.
+
+### Admin SDK
+
+**Hard breaks** — code will not build until you update it.
+1. **Numeric settings narrow to 32-bit integers** — count and duration fields on the Auth and Inventory snaps change from 64-bit to 32-bit integers. Go and C# code that passes or reads these as the old 64-bit type no longer compiles. The values also change on the wire, from quoted JSON strings to plain JSON numbers. [Affected symbols](#admin-sdk-numeric-fields-narrowed-to-32-bit).
+
+**Source breaks** — recoverable with small changes.
+1. **Fleet environment profiles are now required** — creating or updating a Game Server Fleets fleet requires the `dev_profile`, `stage_profile`, and `prod_profile` fields. Requests that omit any of the three fail. [Affected symbols](#admin-sdk-fleet-profiles-required).
+2. **C# constructor arguments shifted** — new optional fields on some Auth, Matchmaking, and Quests models shift the arguments after them, because C# orders constructor arguments alphabetically. Switch C# positional callers to named arguments. Other languages are unaffected. [Affected symbols](#admin-sdk-constructor-argument-shift).
+
+### Client SDK
+
+**Hard breaks** — code will not build until you update it.
+1. **Numeric fields and pagination parameters narrow to 32-bit integers** — the `limit` and `offset` parameters on paginated list and search endpoints change from 64-bit to 32-bit integers. A group of model fields on Analytics, Eventbus, Guilds, Inventory, Quago, and Storage change too. Go and C# code that passes or reads these as the old 64-bit type no longer compiles. The values also change on the wire, from quoted JSON strings to plain JSON numbers. [Affected symbols](#client-sdk-numeric-fields-narrowed-to-32-bit).
+
+**Source breaks** — recoverable with small changes.
+1. **C# constructor arguments shifted** — new optional fields on some Auth, Lobbies, and Matchmaking models shift the arguments after them. Switch C# positional callers to named arguments. Only code that builds these models by hand is affected. Other languages are unaffected. [Affected symbols](#client-sdk-constructor-argument-shift).
+
+---
+
+## Spotlight
+1. **Snapctl Inspect** — a new command family pulls live Snapend data into your terminal: deployment, snap, and fleet logs; infrastructure graphs; and business metrics like DAU, MAU, installs, and revenue. Each one matches its Web App tool, so you get the same data without leaving the terminal. See [Snapctl](/docs/resources/cli).
+2. **Chained quests** — a quest can require one or more other quests to be completed first. Build a quest line like `chapter_1` → `chapter_2` → `chapter_3` without client-side logic. See [Quests](/docs/infra/snaps/quests).
+3. **Remove users from a match** — your game server or backend can remove idle or disconnected players from a running match. Matchmaking opens a backfill for each freed seat, so the match continues. See [Removing Users from a Match](/docs/infra/snaps/matchmaking#removing-users-from-a-match).
+
+---
+
+## Snaps
+
+### Analytics
+1. **Reason and item name on `snap_economy`** — the `snap_economy` event has two new properties. `reason` says why the balance changed (`purchase`, `refund`, `grant`, `reward`, `convert`, `container_open`, `container_unlock`, `drop_table`, or `one_time_grant`). `item_name` names the item involved, if there is one.
+
+### Auth
+1. **Discord metadata in the login response** — a Discord login response can include the Discord refresh token and its expiry. Both appear only when the player logs in with a code, not with an access token.
+2. **Configurable verification code attempt limit** — you can set the number of attempts allowed for an email OTP or verification code, instead of using a fixed limit. This is available through the Auth tool and the Admin API.
+
+### Game Server Fleets
+1. **Crash on create or update** — creating or updating a fleet with invalid params could throw a null pointer exception. Fixed.
+
+### Matchmaking
+1. **Remove users from a match** — `RemoveUsersFromMatch` removes users from a running match and its lobby. It opens a backfill for each freed seat on the same team, and sends each removed user a `MATCHMAKING_MATCH_REMOVED` event. Set `skip_backfill` to leave the seats empty. The endpoint needs `api-key` or `internal` auth, and works for fleet and lobby allocations.
+2. **Backfill after a match starts** — set `backfill_settings.allow_after_match_start` on a match profile to seat backfilled players in a match that already started. This works for fleet allocation, and for lobbies that start a fleet server. It does not work for relay. Set the flag with the Admin SDK. See [Backfilling](/docs/infra/snaps/matchmaking#backfilling).
+3. **Team backfill** — `CreateBackfill` accepts `has_team` and `team` to put the backfilled player on a specific team.
+4. **Acceptance for backfilled players** — with Match Acceptance on, each backfilled player must accept within the acceptance timeout. If the player does not accept, the seat opens for a new backfill. A backfilled player who rejects no longer cancels the running match.
+5. **Match quality settings** — `match_quality_settings` on a match profile can stop a new ticket from leading a match until it is `min_time_in_pool_seconds` old. It can also order candidates nearest-first on `strategy_arg`. The Web App has no field for these settings yet, so set them with the Admin SDK.
+
+### Quests
+1. **Chained quests** — a quest can require one or more prerequisite quests to be completed first. Every prerequisite must be completed, and a prerequisite must be a non-recurring quest. A quest can never require itself.
+2. **Update goals and tasks for in-progress quests** — a quest update can also apply to players already working through that quest, not just players who start it afterward. Their progress updates the next time they check in.
+
+### Scheduler
+1. **Crash during task upsert** — creating or updating a scheduled task with invalid params could throw a null pointer exception. Fixed.
+
+### Storage
+1. **Update a storage key's scope** — you can change whether an existing storage key is internal or external. The key's access type and storage type cannot change, because stored data is addressed by them.
+
+---
+
+## Web App
+
+### Snap Tools
+1. **Prerequisite quest field** — the Quests tool has a field for picking one or more prerequisite quests. The list excludes the quest itself and offers only non-recurring quests.
+2. **Update in-progress quests toggle** — the Quests tool has a toggle, **Update in-progress user quests**, that applies a goal or task change to players already working through the quest.
+3. **Verification code attempt limit field** — the Auth tool has a field for the OTP and verification code attempt limit.
+
+### Bug Fixes
+1. **Sync Configuration works for more than company and game admins** — previously, only **company-admin** and **game-admin** users could use the tool. Everyone else saw an empty source Snapend list. You can now sync into a Snapend where you have **cluster-edit** or higher, from any Snapend in the app where you hold a role. If your role on the source Snapend is **cluster-view** or higher, every snap can be synced. If you only hold **cluster-service-** roles on some of its snaps, only those snaps can be synced, and the rest are listed as locked with **No view access**. See [Cluster Sync](/docs/snapend/tools/cluster-sync#who-can-sync).
+
+---
+
+## Snapctl
+
+### Commands
+#### Inspect
+1. **`snapctl inspect logs`** — downloads deployment, snap, or fleet logs for a Snapend, with the same filters as the Logs tool. It paginates automatically, writes text or JSON lines, and exits `123` on failure.
+2. **`snapctl inspect monitor`** — pulls the same infrastructure graphs as the Monitor tool, for snaps or for fleets. The result prints as JSON, or saves as `.json` or `.csv`; the command exits `124` on failure.
+3. **`snapctl inspect metrics`** — pulls a business metric, such as DAU, MAU, installs, or revenue, for a Snapend with the Analytics snap. It exits `125` on failure.
+4. **`snapctl snapend --help`** — options are grouped into panels instead of one flat list.
+
+---
+
+## Appendix — exact affected symbols
+
+Reference detail for the [Breaking Changes](#breaking-changes) above. For the narrowed numeric fields, the wire value also changes: it serializes as a plain JSON number instead of a quoted string, and the Go struct tag changes from `json:"...,string"` to `json:"..."`.
+
+### Admin SDK numeric fields narrowed to 32-bit
+**Languages/libraries:** all 8 admin SDKs (Python `sdk-python`, Go `sdk-go`, TypeScript `sdk-typescript-node` / `-axios` / `-fetch`, C# `sdk-csharp-httpclient` / `sdk-csharp-unitywebrequest`, C++ `sdk-cpp-ue4`). Hard compile break in Go (`*int64` → `*int32`, `Set*(v int64)` → `Set*(v int32)`) and both C# SDKs (`long` → `int`). Python (`Int64` → `int`) and TypeScript (`number`, unchanged at the language level) do not break at compile time, but the wire value still changes. The Admin SDK has no scopes.
+
+| Model | Fields |
+|---|---|
+| `AuthEmailLogin` | `otp_length`, `otp_validity` |
+| `AuthEmailPasswordLogin` | `verification_code_length`, `verification_code_validity` |
+| `AuthEnableEmailLoginRequest` | `otp_length`, `otp_validity` |
+| `AuthEnableEmailPasswordLoginRequest` | `verification_code_length`, `verification_code_validity` |
+| `AuthEnableSteamLoginRequest` | `app_id` |
+| `AuthSteamLogin` | `app_id` |
+| `AuthFixedRateLimiterSettings` | `duration_in_seconds`, `limit`, `lockout_duration_in_seconds` |
+| `AuthUpdateSessionTokenValidityRequest` | `session_inactivity_timeout`, `session_token_validity` |
+| `AuthUpdateSettingsRequest` | `processing_report_retention_seconds`, `resolved_report_retention_seconds`, `session_inactivity_timeout`, `session_token_validity`, `unprocessed_report_retention_seconds` |
+| `InventoryCatalogItem` | `ttl` |
+| `InventoryCreateCatalogItemRequest` | `ttl` |
+| `InventoryServiceUpdateCatalogItemBody` | `ttl` |
+
+Each old type was `Int64` / `long` / `*int64,string`; each new type is `StrictInt` / `int` / `*int32`.
+
+### Admin SDK Fleet profiles required
+**Languages/libraries:** all 8 admin SDKs (request models — breaks callers that build these requests). Go, C++, and C# drop the optional/pointer wrapper; TypeScript drops the `?`; Python changes `Optional[...] = None` to a required field.
+
+| Model | Fields (old → new) |
+|---|---|
+| `GameServerFleetsCreateFleetRequest` | `dev_profile`, `stage_profile`, `prod_profile`: `Optional[GameServerFleetsFleetProfile] = None` → required `GameServerFleetsFleetProfile` |
+| `GameServerFleetsServiceUpdateFleetBody` | `dev_profile`, `stage_profile`, `prod_profile`: same |
+
+### Admin SDK constructor argument shift
+**Languages/libraries:** C# only — `sdk-csharp-httpclient` and `sdk-csharp-unitywebrequest`. Non-breaking in Python, Go, TypeScript, and C++ (named/property args).
+
+| Model | New field(s) inserted mid-list |
+|---|---|
+| `AuthEmailLogin`, `AuthEnableEmailLoginRequest` | `otp_max_attempts` |
+| `AuthEmailPasswordLogin`, `AuthEnableEmailPasswordLoginRequest` | `verification_code_max_attempts` |
+| `MatchmakingBackfillSettings` | `allow_after_match_start` |
+| `MatchmakingMatchProfile` | `match_quality_settings` |
+| `MatchmakingMatchmakingSettings` | `ttl_after_no_rules_apply_seconds` |
+| `QuestsCreateQuestRequest`, `QuestsQuest`, `QuestsServiceUpdateQuestBody` | `prerequisite_quests`, `update_in_progress_user_quests` |
+
+The 64-bit → 32-bit retype above also changes the C# constructor signatures for the affected Auth models (for example `long otpLength` → `int otpLength`). That is covered as a hard break.
+
+### Client SDK numeric fields narrowed to 32-bit
+**Languages/libraries:** all SDKs the scope ships. `unified` and `user` ship all 8 languages; `internal` and `api-key` ship only Python `sdk-python`, Go `sdk-go`, TypeScript `sdk-typescript-node`, and C# `sdk-csharp-httpclient`. Hard compile break in Go (`*int64` / `int64` → `*int32` / `int32`) and the C# SDKs (`long` → `int`). Python (`Int64` → `int`) and TypeScript (`number`) do not break at compile time, but the wire value still changes.
+
+**Endpoint parameters:** `limit` and `offset` on every paginated list and search endpoint (about 18 per scope — guilds, lobbies, parties, and other list/search operations). `Int64` → `StrictInt`, that is `long?` → `int?` / `*int64` → `*int32`.
+
+| Model | Fields |
+|---|---|
+| `AnalyticsBatchCreateEventResponse` | `events_failed`, `events_ingested` |
+| `AnalyticsGenericEvent` | `id` |
+| `EventbusSnapserEventType` | `event_type_enum_value`, `event_type_id` |
+| `PublishByoEventRequest` | `event_type_id` |
+| `GuildsMemberCountFilter` | `value` |
+| `GuildsSearchGuildsRequest` | `limit`, `offset` |
+| `LobbiesListLobbiesRequest`, `LobbiesSearchLobbiesRequest` | `limit`, `offset` |
+| `PartiesListPartiesRequest`, `PartiesSearchPartiesRequest` | `limit`, `offset` |
+| `QuagoQuagoGetUserResponse` | `cnt_device_ids`, `cnt_inauth_days`, `cnt_ips` |
+| `InventoryCatalogItem` | `ttl` |
+| `InsertBlobRequest`, `InsertJsonBlobRequest`, `ReplaceBlobRequest`, `ReplaceJsonBlobRequest` | `ttl` |
+| `StorageInsertBlobRequest`, `StorageInsertJsonBlobRequest`, `StorageReplaceBlobRequest`, `StorageReplaceJsonBlobRequest` | `ttl` |
+
+Each old type was `Int64` / `long` / `*int64,string`; each new type is `StrictInt` / `int` / `*int32`.
+
+### Client SDK constructor argument shift
+**Languages/libraries:** C# only — `sdk-csharp-httpclient` (scopes `unified`, `user`, `internal`, `api-key`) and `sdk-csharp-unitywebrequest` (scopes `unified`, `user`). Non-breaking in Python, Go, and TypeScript (named/property args).
+
+| Model | New field(s) inserted mid-list |
+|---|---|
+| `AuthDiscordLoginResponse` | `expires_in`, `refresh_token` |
+| `LobbiesLobby` | `keep_after_match_start` |
+| `MatchmakingBackfill`, `MatchmakingCreateBackfillRequest` | `has_team`, `team` |
+
+The 64-bit → 32-bit retype above also changes the C# constructor signatures for the affected models (for example `long ttl` → `int ttl`, `long eventTypeId` → `int eventTypeId`). That is covered as a hard break.
