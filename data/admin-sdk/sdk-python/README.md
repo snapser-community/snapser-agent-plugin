@@ -151,6 +151,7 @@ Class | Method | HTTP request | Description
 *ExperimentsServiceApi* | [**experiments_update_exclusion_group**](docs/ExperimentsServiceApi.md#experiments_update_exclusion_group) | **PATCH** /{cluster_id}/services/experiments/settings/exclusion-groups/{exclusion_group_name} | Update exclusion group
 *ExperimentsServiceApi* | [**experiments_update_experiment**](docs/ExperimentsServiceApi.md#experiments_update_experiment) | **PATCH** /{cluster_id}/services/experiments/settings/experiments/{experiment_name} | Update experiment
 *ExperimentsServiceApi* | [**experiments_update_experiment_state**](docs/ExperimentsServiceApi.md#experiments_update_experiment_state) | **PATCH** /{cluster_id}/services/experiments/settings/experiments/{experiment_name}/state | Update Experiment State
+*GameServerFleetsServiceApi* | [**game_server_fleets_allocate_game_server**](docs/GameServerFleetsServiceApi.md#game_server_fleets_allocate_game_server) | **POST** /{cluster_id}/services/game-server-fleets/settings/fleets/{fleet_name}/game-servers | Game Server
 *GameServerFleetsServiceApi* | [**game_server_fleets_create_fleet**](docs/GameServerFleetsServiceApi.md#game_server_fleets_create_fleet) | **POST** /{cluster_id}/services/game-server-fleets/settings/fleets | Create and get fleets
 *GameServerFleetsServiceApi* | [**game_server_fleets_delete_fleet**](docs/GameServerFleetsServiceApi.md#game_server_fleets_delete_fleet) | **DELETE** /{cluster_id}/services/game-server-fleets/settings/fleets/{fleet_name} | Update and delete fleets
 *GameServerFleetsServiceApi* | [**game_server_fleets_get_fleet**](docs/GameServerFleetsServiceApi.md#game_server_fleets_get_fleet) | **GET** /{cluster_id}/services/game-server-fleets/settings/fleets/{fleet_name} | Create and get fleets
@@ -218,7 +219,8 @@ Class | Method | HTTP request | Description
 *MatchmakingServiceApi* | [**matchmaking_delete_match_profile**](docs/MatchmakingServiceApi.md#matchmaking_delete_match_profile) | **DELETE** /{cluster_id}/services/matchmaking/settings/match_profiles/{id} | Delete match profile
 *MatchmakingServiceApi* | [**matchmaking_delete_simulator_scenario**](docs/MatchmakingServiceApi.md#matchmaking_delete_simulator_scenario) | **DELETE** /{cluster_id}/services/matchmaking/settings/simulator/scenarios/{id} | 
 *MatchmakingServiceApi* | [**matchmaking_get_match_profile**](docs/MatchmakingServiceApi.md#matchmaking_get_match_profile) | **GET** /{cluster_id}/services/matchmaking/settings/match_profiles/{id} | Get match profile
-*MatchmakingServiceApi* | [**matchmaking_get_matchmaking_settings**](docs/MatchmakingServiceApi.md#matchmaking_get_matchmaking_settings) | **GET** /{cluster_id}/services/matchmaking/settings/debug-config | Get matchmaking settings
+*MatchmakingServiceApi* | [**matchmaking_get_matchmaking_settings**](docs/MatchmakingServiceApi.md#matchmaking_get_matchmaking_settings) | **GET** /{cluster_id}/services/matchmaking/settings | Get matchmaking settings
+*MatchmakingServiceApi* | [**matchmaking_get_matchmaking_settings2**](docs/MatchmakingServiceApi.md#matchmaking_get_matchmaking_settings2) | **GET** /{cluster_id}/services/matchmaking/settings/debug-config | Get matchmaking settings
 *MatchmakingServiceApi* | [**matchmaking_get_simulator_run**](docs/MatchmakingServiceApi.md#matchmaking_get_simulator_run) | **GET** /{cluster_id}/services/matchmaking/settings/simulator/runs/{id} | 
 *MatchmakingServiceApi* | [**matchmaking_get_simulator_scenario**](docs/MatchmakingServiceApi.md#matchmaking_get_simulator_scenario) | **GET** /{cluster_id}/services/matchmaking/settings/simulator/scenarios/{id} | 
 *MatchmakingServiceApi* | [**matchmaking_list_all_simulator_runs**](docs/MatchmakingServiceApi.md#matchmaking_list_all_simulator_runs) | **GET** /{cluster_id}/services/matchmaking/settings/simulator/runs | 
@@ -228,7 +230,8 @@ Class | Method | HTTP request | Description
 *MatchmakingServiceApi* | [**matchmaking_run_simulation**](docs/MatchmakingServiceApi.md#matchmaking_run_simulation) | **POST** /{cluster_id}/services/matchmaking/settings/simulator/run | 
 *MatchmakingServiceApi* | [**matchmaking_start_simulation**](docs/MatchmakingServiceApi.md#matchmaking_start_simulation) | **POST** /{cluster_id}/services/matchmaking/settings/simulator/start | Starts a simulation in the background and returns its run id immediately. The run is recorded in state &#39;running&#39; and flips to &#39;completed&#39; or &#39;failed&#39;; poll GetSimulatorRun for the result.
 *MatchmakingServiceApi* | [**matchmaking_update_match_profile**](docs/MatchmakingServiceApi.md#matchmaking_update_match_profile) | **PATCH** /{cluster_id}/services/matchmaking/settings/match_profiles/{id} | Update match profile
-*MatchmakingServiceApi* | [**matchmaking_update_matchmaking_settings**](docs/MatchmakingServiceApi.md#matchmaking_update_matchmaking_settings) | **PUT** /{cluster_id}/services/matchmaking/settings/debug-config | Update matchmaking settings
+*MatchmakingServiceApi* | [**matchmaking_update_matchmaking_settings**](docs/MatchmakingServiceApi.md#matchmaking_update_matchmaking_settings) | **PUT** /{cluster_id}/services/matchmaking/settings | Update matchmaking settings
+*MatchmakingServiceApi* | [**matchmaking_update_matchmaking_settings2**](docs/MatchmakingServiceApi.md#matchmaking_update_matchmaking_settings2) | **PUT** /{cluster_id}/services/matchmaking/settings/debug-config | Update matchmaking settings
 *MatchmakingServiceApi* | [**matchmaking_update_simulator_scenario**](docs/MatchmakingServiceApi.md#matchmaking_update_simulator_scenario) | **PATCH** /{cluster_id}/services/matchmaking/settings/simulator/scenarios/{id} | 
 *PartiesServiceApi* | [**parties_get_settings**](docs/PartiesServiceApi.md#parties_get_settings) | **GET** /{cluster_id}/services/parties/settings | Get parties service settings
 *PartiesServiceApi* | [**parties_update_settings**](docs/PartiesServiceApi.md#parties_update_settings) | **POST** /{cluster_id}/services/parties/settings | Update parties service settings
@@ -297,6 +300,7 @@ Class | Method | HTTP request | Description
 *StorageServiceApi* | [**storage_add_keys**](docs/StorageServiceApi.md#storage_add_keys) | **POST** /{cluster_id}/services/storage/settings/keys | Add storage keys
 *StorageServiceApi* | [**storage_delete_key**](docs/StorageServiceApi.md#storage_delete_key) | **DELETE** /{cluster_id}/services/storage/settings/keys/{key} | Delete storage key
 *StorageServiceApi* | [**storage_get_keys**](docs/StorageServiceApi.md#storage_get_keys) | **GET** /{cluster_id}/services/storage/settings/keys | List storage keys
+*StorageServiceApi* | [**storage_update_key**](docs/StorageServiceApi.md#storage_update_key) | **PATCH** /{cluster_id}/services/storage/settings/keys/{key} | Update storage key
 *TrackablesServiceApi* | [**trackables_create_energy**](docs/TrackablesServiceApi.md#trackables_create_energy) | **POST** /{cluster_id}/services/trackables/settings/energy | Create energy setting
 *TrackablesServiceApi* | [**trackables_create_streak_setting**](docs/TrackablesServiceApi.md#trackables_create_streak_setting) | **POST** /{cluster_id}/services/trackables/settings/streaks | Create streak setting
 *TrackablesServiceApi* | [**trackables_create_xp_setting**](docs/TrackablesServiceApi.md#trackables_create_xp_setting) | **POST** /{cluster_id}/services/trackables/settings/xp | Create xp setting
@@ -396,6 +400,7 @@ Class | Method | HTTP request | Description
  - [ExperimentsServiceUpdateExperimentStateBody](docs/ExperimentsServiceUpdateExperimentStateBody.md)
  - [ExperimentsVariant](docs/ExperimentsVariant.md)
  - [FleetDeploymentFleetDeploymentStatus](docs/FleetDeploymentFleetDeploymentStatus.md)
+ - [GameServerFleetsAllocateGameServerResponse](docs/GameServerFleetsAllocateGameServerResponse.md)
  - [GameServerFleetsCounterSpec](docs/GameServerFleetsCounterSpec.md)
  - [GameServerFleetsCounterStatus](docs/GameServerFleetsCounterStatus.md)
  - [GameServerFleetsCreateFleetRequest](docs/GameServerFleetsCreateFleetRequest.md)
@@ -415,6 +420,7 @@ Class | Method | HTTP request | Description
  - [GameServerFleetsListSpec](docs/GameServerFleetsListSpec.md)
  - [GameServerFleetsListStatus](docs/GameServerFleetsListStatus.md)
  - [GameServerFleetsRegionList](docs/GameServerFleetsRegionList.md)
+ - [GameServerFleetsServiceAllocateGameServerBody](docs/GameServerFleetsServiceAllocateGameServerBody.md)
  - [GameServerFleetsServiceUpdateFleetBody](docs/GameServerFleetsServiceUpdateFleetBody.md)
  - [GameServerFleetsUpdateFleetResponse](docs/GameServerFleetsUpdateFleetResponse.md)
  - [GameServerState](docs/GameServerState.md)
@@ -536,6 +542,7 @@ Class | Method | HTTP request | Description
  - [MatchmakingListSimulatorScenariosResponse](docs/MatchmakingListSimulatorScenariosResponse.md)
  - [MatchmakingMatchAcceptanceSettings](docs/MatchmakingMatchAcceptanceSettings.md)
  - [MatchmakingMatchProfile](docs/MatchmakingMatchProfile.md)
+ - [MatchmakingMatchQualitySettings](docs/MatchmakingMatchQualitySettings.md)
  - [MatchmakingMatchmakingSettings](docs/MatchmakingMatchmakingSettings.md)
  - [MatchmakingPool](docs/MatchmakingPool.md)
  - [MatchmakingQueueSettings](docs/MatchmakingQueueSettings.md)
@@ -665,6 +672,7 @@ Class | Method | HTTP request | Description
  - [StorageAddKeysResponse](docs/StorageAddKeysResponse.md)
  - [StorageGetKeysResponse](docs/StorageGetKeysResponse.md)
  - [StorageKey](docs/StorageKey.md)
+ - [StorageServiceUpdateKeyBody](docs/StorageServiceUpdateKeyBody.md)
  - [TrackablesCreateEnergyRequest](docs/TrackablesCreateEnergyRequest.md)
  - [TrackablesCreateStreakSettingRequest](docs/TrackablesCreateStreakSettingRequest.md)
  - [TrackablesCreateStreakSettingResponse](docs/TrackablesCreateStreakSettingResponse.md)

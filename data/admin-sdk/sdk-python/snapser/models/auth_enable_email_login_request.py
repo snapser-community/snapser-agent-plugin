@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Admin SDK — 14099996-1131-4e18-89dc-2b18c7af8204
+    Admin SDK — 75d2091a-908d-4d6e-95a1-0d4aabe00829
 
     Tooling SDK that calls into snapends via the Snapser portal admin forward route.
 
@@ -17,8 +17,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, Field, StrictStr
-from snapser.int64 import Int64
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from snapser.models.auth_fixed_rate_limiter_settings import AuthFixedRateLimiterSettings
 from typing import Optional, Set
@@ -29,10 +28,11 @@ class AuthEnableEmailLoginRequest(BaseModel):
     AuthEnableEmailLoginRequest
     """ # noqa: E501
     environment: StrictStr = Field(description="Environment scope: dev, stage, or prod")
-    otp_length: Int64 = Field(description="Length of the one-time password to generate (4-8 digits)")
+    otp_length: StrictInt = Field(description="Length of the one-time password to generate (4-8 digits)")
+    otp_max_attempts: Optional[StrictInt] = Field(default=None, description="Maximum validation attempts allowed per OTP before it is invalidated (1-100; 0 or omitted defaults to 10)")
     otp_rate_limit_settings: Optional[AuthFixedRateLimiterSettings] = None
-    otp_validity: Int64 = Field(description="Validity window for the one-time password, in seconds (300-900)")
-    __properties: ClassVar[List[str]] = ["environment", "otp_length", "otp_rate_limit_settings", "otp_validity"]
+    otp_validity: StrictInt = Field(description="Validity window for the one-time password, in seconds (300-900)")
+    __properties: ClassVar[List[str]] = ["environment", "otp_length", "otp_max_attempts", "otp_rate_limit_settings", "otp_validity"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -90,6 +90,7 @@ class AuthEnableEmailLoginRequest(BaseModel):
         _obj = cls.model_validate({
             "environment": obj.get("environment"),
             "otp_length": obj.get("otp_length"),
+            "otp_max_attempts": obj.get("otp_max_attempts"),
             "otp_rate_limit_settings": AuthFixedRateLimiterSettings.from_dict(obj["otp_rate_limit_settings"]) if obj.get("otp_rate_limit_settings") is not None else None,
             "otp_validity": obj.get("otp_validity")
         })

@@ -118,6 +118,7 @@ snapser/models/experiments_service_update_experiment_body.py
 snapser/models/experiments_service_update_experiment_state_body.py
 snapser/models/experiments_variant.py
 snapser/models/fleet_deployment_fleet_deployment_status.py
+snapser/models/game_server_fleets_allocate_game_server_response.py
 snapser/models/game_server_fleets_counter_spec.py
 snapser/models/game_server_fleets_counter_status.py
 snapser/models/game_server_fleets_create_fleet_request.py
@@ -137,6 +138,7 @@ snapser/models/game_server_fleets_list_game_servers_response.py
 snapser/models/game_server_fleets_list_spec.py
 snapser/models/game_server_fleets_list_status.py
 snapser/models/game_server_fleets_region_list.py
+snapser/models/game_server_fleets_service_allocate_game_server_body.py
 snapser/models/game_server_fleets_service_update_fleet_body.py
 snapser/models/game_server_fleets_update_fleet_response.py
 snapser/models/game_server_state.py
@@ -258,6 +260,7 @@ snapser/models/matchmaking_list_simulator_runs_response.py
 snapser/models/matchmaking_list_simulator_scenarios_response.py
 snapser/models/matchmaking_match_acceptance_settings.py
 snapser/models/matchmaking_match_profile.py
+snapser/models/matchmaking_match_quality_settings.py
 snapser/models/matchmaking_matchmaking_settings.py
 snapser/models/matchmaking_pool.py
 snapser/models/matchmaking_queue_settings.py
@@ -387,6 +390,7 @@ snapser/models/storage_add_keys_request.py
 snapser/models/storage_add_keys_response.py
 snapser/models/storage_get_keys_response.py
 snapser/models/storage_key.py
+snapser/models/storage_service_update_key_body.py
 snapser/models/trackables_create_energy_request.py
 snapser/models/trackables_create_streak_setting_request.py
 snapser/models/trackables_create_streak_setting_response.py

@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Admin SDK — 14099996-1131-4e18-89dc-2b18c7af8204
+    Admin SDK — 75d2091a-908d-4d6e-95a1-0d4aabe00829
 
     Tooling SDK that calls into snapends via the Snapser portal admin forward route.
 
@@ -18,7 +18,6 @@ import re  # noqa: F401
 import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
-from snapser.int64 import Int64
 from typing import Any, ClassVar, Dict, List, Optional
 from snapser.models.inventory_consumable import InventoryConsumable
 from snapser.models.inventory_container import InventoryContainer
@@ -42,7 +41,7 @@ class InventoryServiceUpdateCatalogItemBody(BaseModel):
     sub_inventory: Optional[InventorySubInventory] = None
     tags: Optional[List[StrictStr]] = Field(default=None, description="Tags associated with the item")
     tradable: StrictBool = Field(description="True if item is tradable")
-    ttl: Optional[Int64] = Field(default=None, description="Time after which item will be removed from user inventory")
+    ttl: Optional[StrictInt] = Field(default=None, description="Time after which item will be removed from user inventory")
     user_inventory_instance_limit: Optional[StrictInt] = Field(default=None, description="True if item can have multiple instances in user inventory, false if only one instance is allowed")
     user_inventory_instance_limit_per_sub_inventory: Optional[StrictInt] = Field(default=None, description="Maximum number of instances of this item allowed per sub-inventory (or in the main inventory if not targeting a sub-inventory)")
     __properties: ClassVar[List[str]] = ["class_name", "consumable", "container", "description", "display_name", "metadata", "purchasable", "stackable", "sub_inventory", "tags", "tradable", "ttl", "user_inventory_instance_limit", "user_inventory_instance_limit_per_sub_inventory"]

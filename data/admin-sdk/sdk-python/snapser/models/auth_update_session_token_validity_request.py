@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Admin SDK — 14099996-1131-4e18-89dc-2b18c7af8204
+    Admin SDK — 75d2091a-908d-4d6e-95a1-0d4aabe00829
 
     Tooling SDK that calls into snapends via the Snapser portal admin forward route.
 
@@ -17,8 +17,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, Field, StrictStr
-from snapser.int64 import Int64
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List
 from typing import Optional, Set
 from typing_extensions import Self
@@ -28,8 +27,8 @@ class AuthUpdateSessionTokenValidityRequest(BaseModel):
     AuthUpdateSessionTokenValidityRequest
     """ # noqa: E501
     environment: StrictStr = Field(description="Environment scope: dev, stage, or prod")
-    session_inactivity_timeout: Int64 = Field(description="Session inactivity timeout in seconds (30 to 2,592,000)")
-    session_token_validity: Int64 = Field(description="Session token validity in seconds (30 to 2,592,000)")
+    session_inactivity_timeout: StrictInt = Field(description="Session inactivity timeout in seconds (30 to 2,592,000)")
+    session_token_validity: StrictInt = Field(description="Session token validity in seconds (30 to 2,592,000)")
     __properties: ClassVar[List[str]] = ["environment", "session_inactivity_timeout", "session_token_validity"]
 
     model_config = ConfigDict(

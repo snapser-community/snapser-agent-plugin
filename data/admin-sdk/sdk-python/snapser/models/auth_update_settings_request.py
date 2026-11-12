@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Admin SDK — 14099996-1131-4e18-89dc-2b18c7af8204
+    Admin SDK — 75d2091a-908d-4d6e-95a1-0d4aabe00829
 
     Tooling SDK that calls into snapends via the Snapser portal admin forward route.
 
@@ -17,8 +17,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
-from snapser.int64 import Int64
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from typing import Optional, Set
 from typing_extensions import Self
@@ -29,12 +28,12 @@ class AuthUpdateSettingsRequest(BaseModel):
     """ # noqa: E501
     disable_user_creation: Optional[StrictBool] = Field(default=None, description="Whether new user creation is disabled. Omit to keep the current value")
     environment: StrictStr = Field(description="Environment scope: dev, stage, or prod")
-    processing_report_retention_seconds: Optional[Int64] = Field(default=None, description="Retention in seconds for processing user reports. Omit or 0 to keep the current value")
-    resolved_report_retention_seconds: Optional[Int64] = Field(default=None, description="Retention in seconds for resolved user reports. Omit or 0 to keep the current value")
-    session_inactivity_timeout: Optional[Int64] = Field(default=None, description="Session inactivity timeout in seconds (30 to 2,592,000). Omit to keep the current value")
-    session_token_validity: Optional[Int64] = Field(default=None, description="Session token validity in seconds (30 to 2,592,000). Omit to keep the current value")
+    processing_report_retention_seconds: Optional[StrictInt] = Field(default=None, description="Retention in seconds for processing user reports. Omit or 0 to keep the current value")
+    resolved_report_retention_seconds: Optional[StrictInt] = Field(default=None, description="Retention in seconds for resolved user reports. Omit or 0 to keep the current value")
+    session_inactivity_timeout: Optional[StrictInt] = Field(default=None, description="Session inactivity timeout in seconds (30 to 2,592,000). Omit to keep the current value")
+    session_token_validity: Optional[StrictInt] = Field(default=None, description="Session token validity in seconds (30 to 2,592,000). Omit to keep the current value")
     single_session_per_user: Optional[StrictBool] = Field(default=None, description="Whether each user is limited to a single active session. Omit to keep the current value")
-    unprocessed_report_retention_seconds: Optional[Int64] = Field(default=None, description="Retention in seconds for unprocessed user reports. Omit or 0 to keep the current value")
+    unprocessed_report_retention_seconds: Optional[StrictInt] = Field(default=None, description="Retention in seconds for unprocessed user reports. Omit or 0 to keep the current value")
     __properties: ClassVar[List[str]] = ["disable_user_creation", "environment", "processing_report_retention_seconds", "resolved_report_retention_seconds", "session_inactivity_timeout", "session_token_validity", "single_session_per_user", "unprocessed_report_retention_seconds"]
 
     model_config = ConfigDict(

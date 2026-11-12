@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Admin SDK — 14099996-1131-4e18-89dc-2b18c7af8204
+    Admin SDK — 75d2091a-908d-4d6e-95a1-0d4aabe00829
 
     Tooling SDK that calls into snapends via the Snapser portal admin forward route.
 
@@ -40,6 +40,7 @@ class QuestsCreateQuestRequest(BaseModel):
     is_active: Optional[StrictBool] = Field(default=None, description="If true, quest is active, and will be assigned to relevant segment/all users")
     metadata: Optional[Dict[str, Any]] = Field(default=None, description="Metadata for the quest")
     name: StrictStr = Field(description="Name of the quest, has to be unique")
+    prerequisite_quests: Optional[List[StrictStr]] = Field(default=None, description="Names of quests that must be completed before this quest can be assigned. All must be completed (AND). Prerequisites must be non-recurring quests.")
     reward_currencies: Optional[List[QuestsRewardCurrency]] = Field(default=None, description="Currencies to be rewarded on completion")
     reward_drop_tables: Optional[List[QuestsRewardDropTable]] = Field(default=None, description="Drop tables to be evaluated on completion")
     reward_energy: Optional[List[QuestsRewardEnergy]] = Field(default=None, description="Energy to be rewarded on completion")
@@ -50,7 +51,8 @@ class QuestsCreateQuestRequest(BaseModel):
     tags: Optional[List[StrictStr]] = Field(default=None, description="Tags for the quest")
     tasks: Optional[List[QuestsTask]] = Field(default=None, description="Tasks to be completed to finish the quest")
     type: Optional[StrictStr] = Field(default=None, description="Type of the quest, recurring or non recurring")
-    __properties: ClassVar[List[str]] = ["all_users", "auto_assign", "cron_expr", "description", "is_active", "metadata", "name", "reward_currencies", "reward_drop_tables", "reward_energy", "reward_inventory_items", "reward_statistics", "reward_xp", "segment", "tags", "tasks", "type"]
+    update_in_progress_user_quests: StrictBool = Field(description="If true, in-progress user quests are reconciled against quest config changes (goal edits, added/removed tasks) lazily on refresh. Completed tasks and quests are never affected.")
+    __properties: ClassVar[List[str]] = ["all_users", "auto_assign", "cron_expr", "description", "is_active", "metadata", "name", "prerequisite_quests", "reward_currencies", "reward_drop_tables", "reward_energy", "reward_inventory_items", "reward_statistics", "reward_xp", "segment", "tags", "tasks", "type", "update_in_progress_user_quests"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -159,6 +161,7 @@ class QuestsCreateQuestRequest(BaseModel):
             "is_active": obj.get("is_active"),
             "metadata": obj.get("metadata"),
             "name": obj.get("name"),
+            "prerequisite_quests": obj.get("prerequisite_quests"),
             "reward_currencies": [QuestsRewardCurrency.from_dict(_item) for _item in obj["reward_currencies"]] if obj.get("reward_currencies") is not None else None,
             "reward_drop_tables": [QuestsRewardDropTable.from_dict(_item) for _item in obj["reward_drop_tables"]] if obj.get("reward_drop_tables") is not None else None,
             "reward_energy": [QuestsRewardEnergy.from_dict(_item) for _item in obj["reward_energy"]] if obj.get("reward_energy") is not None else None,
@@ -168,7 +171,8 @@ class QuestsCreateQuestRequest(BaseModel):
             "segment": obj.get("segment"),
             "tags": obj.get("tags"),
             "tasks": [QuestsTask.from_dict(_item) for _item in obj["tasks"]] if obj.get("tasks") is not None else None,
-            "type": obj.get("type")
+            "type": obj.get("type"),
+            "update_in_progress_user_quests": obj.get("update_in_progress_user_quests")
         })
         return _obj
 

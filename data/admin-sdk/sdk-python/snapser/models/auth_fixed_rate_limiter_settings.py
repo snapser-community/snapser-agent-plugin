@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Admin SDK — 14099996-1131-4e18-89dc-2b18c7af8204
+    Admin SDK — 75d2091a-908d-4d6e-95a1-0d4aabe00829
 
     Tooling SDK that calls into snapends via the Snapser portal admin forward route.
 
@@ -17,8 +17,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, Field, StrictStr
-from snapser.int64 import Int64
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from typing import Optional, Set
 from typing_extensions import Self
@@ -29,9 +28,9 @@ class AuthFixedRateLimiterSettings(BaseModel):
     """ # noqa: E501
     allow_list: Optional[List[StrictStr]] = Field(default=None, description="allow list for bypassing rate limt")
     deny_list: Optional[List[StrictStr]] = Field(default=None, description="deny list for always denying for an otp")
-    duration_in_seconds: Int64 = Field(description="duration in seconds")
-    limit: Int64 = Field(description="allowed number of requests in a provided duration")
-    lockout_duration_in_seconds: Int64 = Field(description="lockout duration in seconds if rate limit exceeded")
+    duration_in_seconds: StrictInt = Field(description="duration in seconds")
+    limit: StrictInt = Field(description="allowed number of requests in a provided duration")
+    lockout_duration_in_seconds: StrictInt = Field(description="lockout duration in seconds if rate limit exceeded")
     type: StrictStr = Field(description="type of rate limiter")
     __properties: ClassVar[List[str]] = ["allow_list", "deny_list", "duration_in_seconds", "limit", "lockout_duration_in_seconds", "type"]
 

@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Admin SDK — 14099996-1131-4e18-89dc-2b18c7af8204
+    Admin SDK — 75d2091a-908d-4d6e-95a1-0d4aabe00829
 
     Tooling SDK that calls into snapends via the Snapser portal admin forward route.
 
@@ -17,8 +17,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
-from snapser.int64 import Int64
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from typing import Optional, Set
 from typing_extensions import Self
@@ -30,9 +29,10 @@ class AuthEnableEmailPasswordLoginRequest(BaseModel):
     enable_password_update: Optional[StrictBool] = Field(default=None, description="Whether users can update their password after login")
     environment: StrictStr = Field(description="Environment scope: dev, stage, or prod")
     password_regex: StrictStr = Field(description="Regex the password must match")
-    verification_code_length: Int64 = Field(description="Length of the email verification code (4-10 characters)")
-    verification_code_validity: Int64 = Field(description="Validity window for the verification code, in seconds (300-3600)")
-    __properties: ClassVar[List[str]] = ["enable_password_update", "environment", "password_regex", "verification_code_length", "verification_code_validity"]
+    verification_code_length: StrictInt = Field(description="Length of the email verification code (4-10 characters)")
+    verification_code_max_attempts: Optional[StrictInt] = Field(default=None, description="Maximum validation attempts allowed per verification code before it is invalidated (1-100; 0 or omitted defaults to 10)")
+    verification_code_validity: StrictInt = Field(description="Validity window for the verification code, in seconds (300-3600)")
+    __properties: ClassVar[List[str]] = ["enable_password_update", "environment", "password_regex", "verification_code_length", "verification_code_max_attempts", "verification_code_validity"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -89,6 +89,7 @@ class AuthEnableEmailPasswordLoginRequest(BaseModel):
             "environment": obj.get("environment"),
             "password_regex": obj.get("password_regex"),
             "verification_code_length": obj.get("verification_code_length"),
+            "verification_code_max_attempts": obj.get("verification_code_max_attempts"),
             "verification_code_validity": obj.get("verification_code_validity")
         })
         return _obj

@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Admin SDK — 14099996-1131-4e18-89dc-2b18c7af8204
+    Admin SDK — 75d2091a-908d-4d6e-95a1-0d4aabe00829
 
     Tooling SDK that calls into snapends via the Snapser portal admin forward route.
 
@@ -19,6 +19,7 @@ from typing_extensions import Annotated
 from pydantic import Field, StrictStr
 from typing import List, Optional
 from typing_extensions import Annotated
+from snapser.models.game_server_fleets_allocate_game_server_response import GameServerFleetsAllocateGameServerResponse
 from snapser.models.game_server_fleets_create_fleet_request import GameServerFleetsCreateFleetRequest
 from snapser.models.game_server_fleets_create_fleet_response import GameServerFleetsCreateFleetResponse
 from snapser.models.game_server_fleets_delete_fleet_response import GameServerFleetsDeleteFleetResponse
@@ -26,6 +27,7 @@ from snapser.models.game_server_fleets_get_fleet_response import GameServerFleet
 from snapser.models.game_server_fleets_get_fleets_response import GameServerFleetsGetFleetsResponse
 from snapser.models.game_server_fleets_get_game_servers_response import GameServerFleetsGetGameServersResponse
 from snapser.models.game_server_fleets_list_game_servers_response import GameServerFleetsListGameServersResponse
+from snapser.models.game_server_fleets_service_allocate_game_server_body import GameServerFleetsServiceAllocateGameServerBody
 from snapser.models.game_server_fleets_service_update_fleet_body import GameServerFleetsServiceUpdateFleetBody
 from snapser.models.game_server_fleets_update_fleet_response import GameServerFleetsUpdateFleetResponse
 
@@ -45,6 +47,324 @@ class GameServerFleetsServiceApi:
         if api_client is None:
             api_client = ApiClient.get_default()
         self.api_client = api_client
+
+
+    @validate_call
+    def game_server_fleets_allocate_game_server(
+        self,
+        fleet_name: Annotated[StrictStr, Field(description="The name of the fleet to allocate a game server from")],
+        api_key: Annotated[StrictStr, Field(description="API key issued from the Snapser portal under Developer Center → API Keys. Required on every Admin SDK call.")],
+        cluster_id: Annotated[StrictStr, Field(description="Target Snapend cluster ID — selected at call time so the same Admin SDK can target any cluster in the game.")],
+        body: GameServerFleetsServiceAllocateGameServerBody,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> GameServerFleetsAllocateGameServerResponse:
+        """Game Server
+
+        Allocate a game server
+
+        :param fleet_name: The name of the fleet to allocate a game server from (required)
+        :type fleet_name: str
+        :param api_key: API key issued from the Snapser portal under Developer Center → API Keys. Required on every Admin SDK call. (required)
+        :type api_key: str
+        :param cluster_id: Target Snapend cluster ID — selected at call time so the same Admin SDK can target any cluster in the game. (required)
+        :type cluster_id: str
+        :param body: (required)
+        :type body: GameServerFleetsServiceAllocateGameServerBody
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._game_server_fleets_allocate_game_server_serialize(
+            fleet_name=fleet_name,
+            api_key=api_key,
+            cluster_id=cluster_id,
+            body=body,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "GameServerFleetsAllocateGameServerResponse",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+
+    @validate_call
+    def game_server_fleets_allocate_game_server_with_http_info(
+        self,
+        fleet_name: Annotated[StrictStr, Field(description="The name of the fleet to allocate a game server from")],
+        api_key: Annotated[StrictStr, Field(description="API key issued from the Snapser portal under Developer Center → API Keys. Required on every Admin SDK call.")],
+        cluster_id: Annotated[StrictStr, Field(description="Target Snapend cluster ID — selected at call time so the same Admin SDK can target any cluster in the game.")],
+        body: GameServerFleetsServiceAllocateGameServerBody,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[GameServerFleetsAllocateGameServerResponse]:
+        """Game Server
+
+        Allocate a game server
+
+        :param fleet_name: The name of the fleet to allocate a game server from (required)
+        :type fleet_name: str
+        :param api_key: API key issued from the Snapser portal under Developer Center → API Keys. Required on every Admin SDK call. (required)
+        :type api_key: str
+        :param cluster_id: Target Snapend cluster ID — selected at call time so the same Admin SDK can target any cluster in the game. (required)
+        :type cluster_id: str
+        :param body: (required)
+        :type body: GameServerFleetsServiceAllocateGameServerBody
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._game_server_fleets_allocate_game_server_serialize(
+            fleet_name=fleet_name,
+            api_key=api_key,
+            cluster_id=cluster_id,
+            body=body,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "GameServerFleetsAllocateGameServerResponse",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+
+    @validate_call
+    def game_server_fleets_allocate_game_server_without_preload_content(
+        self,
+        fleet_name: Annotated[StrictStr, Field(description="The name of the fleet to allocate a game server from")],
+        api_key: Annotated[StrictStr, Field(description="API key issued from the Snapser portal under Developer Center → API Keys. Required on every Admin SDK call.")],
+        cluster_id: Annotated[StrictStr, Field(description="Target Snapend cluster ID — selected at call time so the same Admin SDK can target any cluster in the game.")],
+        body: GameServerFleetsServiceAllocateGameServerBody,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Game Server
+
+        Allocate a game server
+
+        :param fleet_name: The name of the fleet to allocate a game server from (required)
+        :type fleet_name: str
+        :param api_key: API key issued from the Snapser portal under Developer Center → API Keys. Required on every Admin SDK call. (required)
+        :type api_key: str
+        :param cluster_id: Target Snapend cluster ID — selected at call time so the same Admin SDK can target any cluster in the game. (required)
+        :type cluster_id: str
+        :param body: (required)
+        :type body: GameServerFleetsServiceAllocateGameServerBody
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._game_server_fleets_allocate_game_server_serialize(
+            fleet_name=fleet_name,
+            api_key=api_key,
+            cluster_id=cluster_id,
+            body=body,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "GameServerFleetsAllocateGameServerResponse",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        return response_data.response
+
+
+    def _game_server_fleets_allocate_game_server_serialize(
+        self,
+        fleet_name,
+        api_key,
+        cluster_id,
+        body,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: Dict[str, str] = {
+        }
+
+        _path_params: Dict[str, str] = {}
+        _query_params: List[Tuple[str, str]] = []
+        _header_params: Dict[str, Optional[str]] = _headers or {}
+        _form_params: List[Tuple[str, str]] = []
+        _files: Dict[
+            str, Union[str, bytes, List[str], List[bytes], List[Tuple[str, bytes]]]
+        ] = {}
+        _body_params: Optional[bytes] = None
+
+        # process the path parameters
+        if fleet_name is not None:
+            _path_params['fleet_name'] = fleet_name
+        if cluster_id is not None:
+            _path_params['cluster_id'] = cluster_id
+        # process the query parameters
+        # process the header parameters
+        if api_key is not None:
+            _header_params['Api-Key'] = api_key
+        # process the form parameters
+        # process the body parameter
+        if body is not None:
+            _body_params = body
+
+
+        # set the HTTP header `Accept`
+        if 'Accept' not in _header_params:
+            _header_params['Accept'] = self.api_client.select_header_accept(
+                [
+                    'application/json'
+                ]
+            )
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params['Content-Type'] = _content_type
+        else:
+            _default_content_type = (
+                self.api_client.select_header_content_type(
+                    [
+                        'application/json'
+                    ]
+                )
+            )
+            if _default_content_type is not None:
+                _header_params['Content-Type'] = _default_content_type
+
+        # authentication setting
+        _auth_settings: List[str] = [
+        ]
+
+        return self.api_client.param_serialize(
+            method='POST',
+            resource_path='/{cluster_id}/services/game-server-fleets/settings/fleets/{fleet_name}/game-servers',
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth
+        )
+
+
 
 
     @validate_call
