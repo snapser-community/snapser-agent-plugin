@@ -2,7 +2,7 @@
 
 # flake8: noqa
 """
-    Admin SDK — 14099996-1131-4e18-89dc-2b18c7af8204
+    Admin SDK — 75d2091a-908d-4d6e-95a1-0d4aabe00829
 
     Tooling SDK that calls into snapends via the Snapser portal admin forward route.
 
@@ -96,6 +96,7 @@ from snapser.models.experiments_service_update_experiment_body import Experiment
 from snapser.models.experiments_service_update_experiment_state_body import ExperimentsServiceUpdateExperimentStateBody
 from snapser.models.experiments_variant import ExperimentsVariant
 from snapser.models.fleet_deployment_fleet_deployment_status import FleetDeploymentFleetDeploymentStatus
+from snapser.models.game_server_fleets_allocate_game_server_response import GameServerFleetsAllocateGameServerResponse
 from snapser.models.game_server_fleets_counter_spec import GameServerFleetsCounterSpec
 from snapser.models.game_server_fleets_counter_status import GameServerFleetsCounterStatus
 from snapser.models.game_server_fleets_create_fleet_request import GameServerFleetsCreateFleetRequest
@@ -115,6 +116,7 @@ from snapser.models.game_server_fleets_list_game_servers_response import GameSer
 from snapser.models.game_server_fleets_list_spec import GameServerFleetsListSpec
 from snapser.models.game_server_fleets_list_status import GameServerFleetsListStatus
 from snapser.models.game_server_fleets_region_list import GameServerFleetsRegionList
+from snapser.models.game_server_fleets_service_allocate_game_server_body import GameServerFleetsServiceAllocateGameServerBody
 from snapser.models.game_server_fleets_service_update_fleet_body import GameServerFleetsServiceUpdateFleetBody
 from snapser.models.game_server_fleets_update_fleet_response import GameServerFleetsUpdateFleetResponse
 from snapser.models.game_server_state import GameServerState
@@ -236,6 +238,7 @@ from snapser.models.matchmaking_list_simulator_runs_response import MatchmakingL
 from snapser.models.matchmaking_list_simulator_scenarios_response import MatchmakingListSimulatorScenariosResponse
 from snapser.models.matchmaking_match_acceptance_settings import MatchmakingMatchAcceptanceSettings
 from snapser.models.matchmaking_match_profile import MatchmakingMatchProfile
+from snapser.models.matchmaking_match_quality_settings import MatchmakingMatchQualitySettings
 from snapser.models.matchmaking_matchmaking_settings import MatchmakingMatchmakingSettings
 from snapser.models.matchmaking_pool import MatchmakingPool
 from snapser.models.matchmaking_queue_settings import MatchmakingQueueSettings
@@ -365,6 +368,7 @@ from snapser.models.storage_add_keys_request import StorageAddKeysRequest
 from snapser.models.storage_add_keys_response import StorageAddKeysResponse
 from snapser.models.storage_get_keys_response import StorageGetKeysResponse
 from snapser.models.storage_key import StorageKey
+from snapser.models.storage_service_update_key_body import StorageServiceUpdateKeyBody
 from snapser.models.trackables_create_energy_request import TrackablesCreateEnergyRequest
 from snapser.models.trackables_create_streak_setting_request import TrackablesCreateStreakSettingRequest
 from snapser.models.trackables_create_streak_setting_response import TrackablesCreateStreakSettingResponse

@@ -7,14 +7,14 @@
   },
   "metadata": {
     "description": "Snapser plugin marketplace for Claude Code",
-    "version": "1.16.0"
+    "version": "1.17.0"
   },
   "plugins": [
     {
       "name": "snapser",
       "source": "./",
       "description": "Build and manage game backends with Snapser \u2014 create Snapends, publish BYOSnaps, sync game servers and download SDKs directly from Claude Code.",
-      "version": "1.16.0"
+      "version": "1.17.0"
     }
   ]
 }

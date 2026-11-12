@@ -1884,6 +1884,10 @@
           },
           "login_metadata" : {
             "$ref" : "#/components/schemas/authLoginMetadata"
+          },
+          "redirect_uri" : {
+            "description" : "Redirect URI for the Discord code exchange. Must exactly match the redirect_uri used in the authorize request that produced the code. Leave empty only if the authorize request did not use a redirect_uri. Ignored for access-token logins.",
+            "type" : "string"
           }
         },
         "type" : "object"
@@ -1891,6 +1895,15 @@
       "authDiscordLoginResponse" : {
         "properties" : {
           "access_token" : {
+            "type" : "string"
+          },
+          "expires_in" : {
+            "description" : "Lifetime in seconds of the Discord access token. Only populated when logging in with a code",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "refresh_token" : {
+            "description" : "Discord refresh token. Only populated when logging in with a code; empty when logging in with an access token",
             "type" : "string"
           },
           "user" : {

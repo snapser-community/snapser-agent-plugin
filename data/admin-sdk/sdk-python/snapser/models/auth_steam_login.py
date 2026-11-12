@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Admin SDK — 14099996-1131-4e18-89dc-2b18c7af8204
+    Admin SDK — 75d2091a-908d-4d6e-95a1-0d4aabe00829
 
     Tooling SDK that calls into snapends via the Snapser portal admin forward route.
 
@@ -17,8 +17,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
-from snapser.int64 import Int64
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from typing import Optional, Set
 from typing_extensions import Self
@@ -28,7 +27,7 @@ class AuthSteamLogin(BaseModel):
     AuthSteamLogin
     """ # noqa: E501
     api_key: Optional[StrictStr] = Field(default=None, description="Deprecated. Use web_api_key or publisher_api_key instead")
-    app_id: Optional[Int64] = Field(default=None, description="Steam application ID")
+    app_id: Optional[StrictInt] = Field(default=None, description="Steam application ID")
     enabled: Optional[StrictBool] = Field(default=None, description="Whether the Steam login connector is enabled")
     publisher_api_key: Optional[StrictStr] = Field(default=None, description="Steam Publisher API key")
     web_api_key: Optional[StrictStr] = Field(default=None, description="Steam Web API key")

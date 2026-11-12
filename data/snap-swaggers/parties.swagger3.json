@@ -1392,12 +1392,12 @@
         "properties" : {
           "limit" : {
             "description" : "Number of results returned. The maximum allowed is 50, defaults to 10 if not provided.",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "offset" : {
             "description" : "Number of results to skip from the start of the result set",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "sort" : {
@@ -1632,7 +1632,7 @@
         "properties" : {
           "limit" : {
             "description" : "Number of results returned. The maximum allowed is 50, defaults to 10 if not provided.",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "metadata_filters" : {
@@ -1644,7 +1644,7 @@
           },
           "offset" : {
             "description" : "Number of results to skip from the start of the result set",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "sort" : {

@@ -168,6 +168,49 @@
         "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
       }
     },
+    "/v1/matchmaking/match-data/{match_id}/removals" : {
+      "post" : {
+        "description" : "Evict users from a match and open a backfill for each freed seat",
+        "operationId" : "RemoveUsersFromMatch",
+        "parameters" : [ {
+          "description" : "The match ID to remove users from",
+          "explode" : false,
+          "in" : "path",
+          "name" : "match_id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RemoveUsersFromMatch_request"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/matchmakingRemoveUsersFromMatchResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Match",
+        "tags" : [ "MatchmakingService" ],
+        "x-codegen-request-body-name" : "body",
+        "x-snapser-auth-types" : [ "api-key", "internal" ]
+      }
+    },
     "/v1/matchmaking/pingUrls" : {
       "get" : {
         "description" : "Fetch the region ping urls enabled for matchmaking",
@@ -545,6 +588,30 @@
         },
         "type" : "object"
       },
+      "RemoveUsersFromMatch_request" : {
+        "properties" : {
+          "reason" : {
+            "description" : "The reason sent to the removed users",
+            "type" : "string"
+          },
+          "search_fields" : {
+            "$ref" : "#/components/schemas/matchmakingSearchFields"
+          },
+          "skip_backfill" : {
+            "description" : "Whether to skip the backfill for the freed seats",
+            "type" : "boolean"
+          },
+          "user_ids" : {
+            "description" : "The IDs of the users to remove",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "user_ids" ],
+        "type" : "object"
+      },
       "UpdateMatchMetadata_request" : {
         "properties" : {
           "metadata" : {
@@ -632,6 +699,9 @@
             "format" : "int64",
             "type" : "string"
           },
+          "has_team" : {
+            "type" : "boolean"
+          },
           "id" : {
             "type" : "string"
           },
@@ -646,6 +716,10 @@
           },
           "search_fields" : {
             "$ref" : "#/components/schemas/matchmakingSearchFields"
+          },
+          "team" : {
+            "format" : "int32",
+            "type" : "integer"
           }
         },
         "type" : "object"
@@ -677,6 +751,10 @@
           "assignment" : {
             "$ref" : "#/components/schemas/matchmakingAssignment"
           },
+          "has_team" : {
+            "description" : "Whether the backfill targets a team",
+            "type" : "boolean"
+          },
           "match_id" : {
             "description" : "The match ID to use for this backfill",
             "title" : "The match id for this backfill",
@@ -689,6 +767,11 @@
           },
           "search_fields" : {
             "$ref" : "#/components/schemas/matchmakingSearchFields"
+          },
+          "team" : {
+            "description" : "The team index the backfill targets",
+            "format" : "int32",
+            "type" : "integer"
           }
         },
         "required" : [ "assignment", "match_id", "match_profile_id" ],
@@ -847,6 +930,28 @@
             "format" : "int32",
             "title" : "The number of tickets in this queue",
             "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "matchmakingRemoveUsersFromMatchResponse" : {
+        "properties" : {
+          "backfills" : {
+            "description" : "The backfills opened for the freed seats",
+            "items" : {
+              "$ref" : "#/components/schemas/matchmakingBackfill"
+            },
+            "type" : "array"
+          },
+          "match_data" : {
+            "$ref" : "#/components/schemas/matchmakingMatchData"
+          },
+          "skipped_user_ids" : {
+            "description" : "The users removed before this call",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
           }
         },
         "type" : "object"

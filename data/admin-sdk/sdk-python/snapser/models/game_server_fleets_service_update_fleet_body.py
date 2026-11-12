@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Admin SDK — 14099996-1131-4e18-89dc-2b18c7af8204
+    Admin SDK — 75d2091a-908d-4d6e-95a1-0d4aabe00829
 
     Tooling SDK that calls into snapends via the Snapser portal admin forward route.
 
@@ -33,13 +33,13 @@ class GameServerFleetsServiceUpdateFleetBody(BaseModel):
     counters: Optional[List[GameServerFleetsCounterSpec]] = Field(default=None, description="Agones Counters to declare on the fleet's game server template (max 10)")
     debug_port: Optional[StrictInt] = Field(default=None, description="Optional debug port")
     description: Optional[StrictStr] = Field(default=None, description="Human-readable description of the fleet")
-    dev_profile: Optional[GameServerFleetsFleetProfile] = None
+    dev_profile: GameServerFleetsFleetProfile
     image_tag: Optional[StrictStr] = Field(default=None, description="Container image tag used by all fleet deployments")
     lists: Optional[List[GameServerFleetsListSpec]] = Field(default=None, description="Agones Lists to declare on the fleet's game server template (max 10)")
     port: Optional[StrictInt] = Field(default=None, description="Primary game-server port")
-    prod_profile: Optional[GameServerFleetsFleetProfile] = None
+    prod_profile: GameServerFleetsFleetProfile
     rotate_after_seconds: Optional[Int64] = Field(default=None, description="Seconds after which a game server is rotated (0 disables)")
-    stage_profile: Optional[GameServerFleetsFleetProfile] = None
+    stage_profile: GameServerFleetsFleetProfile
     __properties: ClassVar[List[str]] = ["counters", "debug_port", "description", "dev_profile", "image_tag", "lists", "port", "prod_profile", "rotate_after_seconds", "stage_profile"]
 
     model_config = ConfigDict(

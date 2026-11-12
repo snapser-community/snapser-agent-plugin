@@ -37,7 +37,22 @@ Install via the plugin marketplace:
 Restart Claude Code when prompted. The skills auto-trigger — just say things like
 "create a Snapser backend" or "scaffold a BYOSnap".
 
-To update later: `/plugin marketplace update snapser-plugins`.
+### Upgrading
+
+Refresh the marketplace catalog, then update the installed plugin:
+
+```
+/plugin marketplace update snapser-plugins
+/plugin update snapser@snapser-plugins
+```
+
+Restart Claude Code to load the new version. (From a terminal, the same commands are
+`claude plugin marketplace update snapser-plugins` and
+`claude plugin update snapser@snapser-plugins`.)
+
+Updating the marketplace alone only refreshes the catalog — it does not upgrade the
+installed plugin. To get new releases automatically, enable auto-update for the
+`snapser-plugins` marketplace under `/plugin` → **Marketplaces**.
 
 ## Claude Cowork (desktop)
 
@@ -46,6 +61,9 @@ To update later: `/plugin marketplace update snapser-plugins`.
 
 Alternatively, clone this repo and select it as a working folder — Claude picks up
 `CLAUDE.md` and the `skills/` directory automatically.
+
+To upgrade, update the **snapser** plugin from the same Plugins screen (or `git pull`
+in your clone if you use the working-folder setup).
 
 ## OpenAI Codex
 
@@ -104,6 +122,17 @@ first and follow the skill files it points to under its skills/ directory.
 
 Project-local clones still win for teams (everyone gets the same pinned version via
 git), but the global setup is convenient for individuals working across many repos.
+
+## Upgrading a cloned install (Codex, OpenCode, Cursor)
+
+Pull the latest release into your clone:
+
+```bash
+cd .snapser-plugin && git pull     # or the path of your central clone
+```
+
+If you added the plugin as a git submodule, run `git submodule update --remote .snapser-plugin`
+from your project root and commit the updated submodule pointer.
 
 ---
 

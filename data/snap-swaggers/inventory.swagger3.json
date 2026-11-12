@@ -1827,7 +1827,7 @@
           },
           "ttl" : {
             "description" : "Time after which item will be removed from user inventory",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "user_inventory_instance_limit" : {

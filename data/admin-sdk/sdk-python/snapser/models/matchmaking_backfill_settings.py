@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Admin SDK — 14099996-1131-4e18-89dc-2b18c7af8204
+    Admin SDK — 75d2091a-908d-4d6e-95a1-0d4aabe00829
 
     Tooling SDK that calls into snapends via the Snapser portal admin forward route.
 
@@ -27,9 +27,10 @@ class MatchmakingBackfillSettings(BaseModel):
     """
     MatchmakingBackfillSettings
     """ # noqa: E501
+    allow_after_match_start: Optional[StrictBool] = Field(default=None, description="Whether backfill may add players after the match starts")
     enabled: Optional[StrictBool] = Field(default=None, description="Whether backfill is enabled for this profile")
     timeout_seconds: Optional[Int64] = Field(default=None, description="Seconds after which an open backfill ticket times out")
-    __properties: ClassVar[List[str]] = ["enabled", "timeout_seconds"]
+    __properties: ClassVar[List[str]] = ["allow_after_match_start", "enabled", "timeout_seconds"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -82,6 +83,7 @@ class MatchmakingBackfillSettings(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "allow_after_match_start": obj.get("allow_after_match_start"),
             "enabled": obj.get("enabled"),
             "timeout_seconds": obj.get("timeout_seconds")
         })

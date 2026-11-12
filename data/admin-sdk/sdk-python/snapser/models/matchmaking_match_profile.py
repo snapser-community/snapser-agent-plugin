@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Admin SDK — 14099996-1131-4e18-89dc-2b18c7af8204
+    Admin SDK — 75d2091a-908d-4d6e-95a1-0d4aabe00829
 
     Tooling SDK that calls into snapends via the Snapser portal admin forward route.
 
@@ -23,6 +23,7 @@ from snapser.models.matchmaking_assignment_settings import MatchmakingAssignment
 from snapser.models.matchmaking_backfill_settings import MatchmakingBackfillSettings
 from snapser.models.matchmaking_host_selection_settings import MatchmakingHostSelectionSettings
 from snapser.models.matchmaking_match_acceptance_settings import MatchmakingMatchAcceptanceSettings
+from snapser.models.matchmaking_match_quality_settings import MatchmakingMatchQualitySettings
 from snapser.models.matchmaking_pool import MatchmakingPool
 from snapser.models.matchmaking_queue_settings import MatchmakingQueueSettings
 from snapser.models.matchmaking_team_formation_settings import MatchmakingTeamFormationSettings
@@ -41,6 +42,7 @@ class MatchmakingMatchProfile(BaseModel):
     id: Optional[StrictStr] = Field(default=None, description="Unique identifier of the match profile")
     is_active: Optional[StrictBool] = Field(default=None, description="Whether this match profile is active and used for matchmaking")
     match_acceptance_settings: Optional[MatchmakingMatchAcceptanceSettings] = None
+    match_quality_settings: Optional[MatchmakingMatchQualitySettings] = None
     max_players: Optional[StrictInt] = Field(default=None, description="Maximum number of players allowed in a match")
     metadata: Optional[Dict[str, StrictStr]] = Field(default=None, description="Arbitrary key-value metadata passed through to the match function")
     min_players: Optional[StrictInt] = Field(default=None, description="Minimum number of players required to form a match")
@@ -49,7 +51,7 @@ class MatchmakingMatchProfile(BaseModel):
     queue_settings: Optional[MatchmakingQueueSettings] = None
     require_match_acceptance: Optional[StrictBool] = Field(default=None, description="Whether players must explicitly accept a match before it is finalized")
     team_formation_settings: Optional[MatchmakingTeamFormationSettings] = None
-    __properties: ClassVar[List[str]] = ["assignment_settings", "backfill_settings", "delay_partial_match_seconds", "description", "host_selection_settings", "id", "is_active", "match_acceptance_settings", "max_players", "metadata", "min_players", "name", "pools", "queue_settings", "require_match_acceptance", "team_formation_settings"]
+    __properties: ClassVar[List[str]] = ["assignment_settings", "backfill_settings", "delay_partial_match_seconds", "description", "host_selection_settings", "id", "is_active", "match_acceptance_settings", "match_quality_settings", "max_players", "metadata", "min_players", "name", "pools", "queue_settings", "require_match_acceptance", "team_formation_settings"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -102,6 +104,9 @@ class MatchmakingMatchProfile(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of match_acceptance_settings
         if self.match_acceptance_settings:
             _dict['match_acceptance_settings'] = self.match_acceptance_settings.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of match_quality_settings
+        if self.match_quality_settings:
+            _dict['match_quality_settings'] = self.match_quality_settings.to_dict()
         # override the default output from pydantic by calling `to_dict()` of each item in pools (list)
         _items = []
         if self.pools:
@@ -135,6 +140,7 @@ class MatchmakingMatchProfile(BaseModel):
             "id": obj.get("id"),
             "is_active": obj.get("is_active"),
             "match_acceptance_settings": MatchmakingMatchAcceptanceSettings.from_dict(obj["match_acceptance_settings"]) if obj.get("match_acceptance_settings") is not None else None,
+            "match_quality_settings": MatchmakingMatchQualitySettings.from_dict(obj["match_quality_settings"]) if obj.get("match_quality_settings") is not None else None,
             "max_players": obj.get("max_players"),
             "metadata": obj.get("metadata"),
             "min_players": obj.get("min_players"),

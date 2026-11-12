@@ -59,17 +59,17 @@
           },
           "cnt_device_ids" : {
             "description" : "The count of unique device IDs used by the user",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "cnt_inauth_days" : {
             "description" : "Count of days the user was recorded inauthentic",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "cnt_ips" : {
             "description" : "The count of unique IP addresses associated with the user",
-            "format" : "int64",
+            "format" : "int32",
             "type" : "integer"
           },
           "countries" : {

@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Admin SDK — 14099996-1131-4e18-89dc-2b18c7af8204
+    Admin SDK — 75d2091a-908d-4d6e-95a1-0d4aabe00829
 
     Tooling SDK that calls into snapends via the Snapser portal admin forward route.
 
@@ -17,7 +17,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from typing import Optional, Set
 from typing_extensions import Self
@@ -27,7 +27,8 @@ class MatchmakingMatchmakingSettings(BaseModel):
     MatchmakingMatchmakingSettings
     """ # noqa: E501
     debug_players: Optional[List[StrictStr]] = Field(default=None, description="List of player IDs for which detailed matchmaking trace logging is enabled")
-    __properties: ClassVar[List[str]] = ["debug_players"]
+    ttl_after_no_rules_apply_seconds: Optional[StrictInt] = Field(default=None, description="Seconds a ticket stays in the pool after its last pool rule stops applying. 0 uses the default of 300. Omit the field on update to keep the stored value")
+    __properties: ClassVar[List[str]] = ["debug_players", "ttl_after_no_rules_apply_seconds"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -68,6 +69,11 @@ class MatchmakingMatchmakingSettings(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if ttl_after_no_rules_apply_seconds (nullable) is None
+        # and model_fields_set contains the field
+        if self.ttl_after_no_rules_apply_seconds is None and "ttl_after_no_rules_apply_seconds" in self.model_fields_set:
+            _dict['ttl_after_no_rules_apply_seconds'] = None
+
         return _dict
 
     @classmethod
@@ -80,7 +86,8 @@ class MatchmakingMatchmakingSettings(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "debug_players": obj.get("debug_players")
+            "debug_players": obj.get("debug_players"),
+            "ttl_after_no_rules_apply_seconds": obj.get("ttl_after_no_rules_apply_seconds")
         })
         return _obj
 

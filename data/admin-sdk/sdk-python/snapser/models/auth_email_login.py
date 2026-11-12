@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Admin SDK — 14099996-1131-4e18-89dc-2b18c7af8204
+    Admin SDK — 75d2091a-908d-4d6e-95a1-0d4aabe00829
 
     Tooling SDK that calls into snapends via the Snapser portal admin forward route.
 
@@ -17,7 +17,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt
 from snapser.int64 import Int64
 from typing import Any, ClassVar, Dict, List, Optional
 from typing import Optional, Set
@@ -28,9 +28,10 @@ class AuthEmailLogin(BaseModel):
     AuthEmailLogin
     """ # noqa: E501
     enabled: Optional[StrictBool] = Field(default=None, description="Whether the email/OTP login connector is enabled")
-    otp_length: Optional[Int64] = Field(default=None, description="Length of the one-time password")
-    otp_validity: Optional[Int64] = Field(default=None, description="Validity window for the one-time password, in seconds")
-    __properties: ClassVar[List[str]] = ["enabled", "otp_length", "otp_validity"]
+    otp_length: Optional[StrictInt] = Field(default=None, description="Length of the one-time password")
+    otp_max_attempts: Optional[Int64] = Field(default=None, description="Maximum number of validation attempts allowed per OTP before it is invalidated")
+    otp_validity: Optional[StrictInt] = Field(default=None, description="Validity window for the one-time password, in seconds")
+    __properties: ClassVar[List[str]] = ["enabled", "otp_length", "otp_max_attempts", "otp_validity"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -65,10 +66,12 @@ class AuthEmailLogin(BaseModel):
         * OpenAPI `readOnly` fields are excluded.
         * OpenAPI `readOnly` fields are excluded.
         * OpenAPI `readOnly` fields are excluded.
+        * OpenAPI `readOnly` fields are excluded.
         """
         excluded_fields: Set[str] = set([
             "enabled",
             "otp_length",
+            "otp_max_attempts",
             "otp_validity",
         ])
 
@@ -91,6 +94,7 @@ class AuthEmailLogin(BaseModel):
         _obj = cls.model_validate({
             "enabled": obj.get("enabled"),
             "otp_length": obj.get("otp_length"),
+            "otp_max_attempts": obj.get("otp_max_attempts"),
             "otp_validity": obj.get("otp_validity")
         })
         return _obj
