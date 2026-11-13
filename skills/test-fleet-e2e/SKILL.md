@@ -78,7 +78,8 @@ Omit `--application-id` only if `SNAPSER_APPLICATION_ID` is set in the Snapser c
    status with `snapctl snapend enumerate` and wait for it to come online. For any other
    failure, check the exit code against `skills/error_codes.md`.
 
-5. Note the **Snapend ID** from the output — you need it in every later step.
+5. Note the **Snapend ID** — you need it in every later step. The create output prints
+   it as `Cluster ID assigned: <id>`. If you missed it, run `snapctl snapend enumerate`.
 
 ### Phase 3 — Create the fleet (settings, via the Admin SDK)
 
@@ -157,9 +158,13 @@ print(fleet.status)
 for d in fleet.fleet_deployments or []:
     print(d.region, d.fleet_deployment_status)
 ```
-   - `IN_PROGRESS` — the fleet is still deploying. Wait a minute and read it again.
-   - `LIVE` — the fleet is up.
+   - `IN_PROGRESS` — the fleet is still deploying (each deployment shows `DEPLOYING`).
+     A first deployment takes a few minutes. Read the status again every 15–30 seconds.
+   - `LIVE` — the fleet is up, and each deployment shows `DEPLOYED`.
    - `FAILED` — see the issues list below.
+   - **The call raises HTTP 400** — a fleet whose deployment failed can make
+     `game_server_fleets_get_fleet` fail. Read `game_server_fleets_get_fleets` (the
+     list call) to see the status; treat it as `FAILED`.
 
 2. Ask the user to confirm in the web app:
 
@@ -169,11 +174,12 @@ Wait for the user to confirm before proceeding.
 
 If there are issues:
 - **Fleet not visible** — The Snapend may still be provisioning the fleet. Ask the user to wait a minute and refresh.
+- **Error `no agones internal url configured for region`** — the Snapend's platform does not serve that region. Delete the fleet (`game_server_fleets_delete_fleet`) and create it again with another region.
 - **Fleet in error state** — Check the image tag and port, and verify the BYOGS image was published successfully. Inspect the live fleet settings:
   ```bash
   snapctl snap-config get-config --snaps game-server-fleets --snapend-id $snapendId
   ```
-  For fleet logs, use `skills/inspect-snapend/SKILL.md` (`snapctl inspect logs --category fleet`).
+  For the reason a deployment failed, read the snap logs with `skills/inspect-snapend/SKILL.md` (`snapctl inspect logs --category snap --snaps game-server-fleets`). For game server logs, use `--category fleet`.
 - **Snapend in error state** — Use `skills/snapend-status/SKILL.md` to diagnose.
 
 ### Phase 6 — Report results and next steps
