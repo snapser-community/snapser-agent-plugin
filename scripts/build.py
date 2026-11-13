@@ -4,15 +4,15 @@ Build script for the Snapser plugin.
 
 Single source of truth: source/CONTEXT.md
 Generates:
-  - CLAUDE.md               (loaded only when this repo is the working folder)
   - AGENTS.md               (Codex, OpenCode and Cursor read AGENTS.md)
   - data/releases/INDEX.md  (lookup table over the release notes in data/releases/)
   - data/docs/INDEX.md      (path -> topic map over the docs in data/docs/)
   - README.md docs-version line (between the docs-version markers)
 
-Claude Code does NOT load CLAUDE.md or AGENTS.md from an installed plugin — it
+Claude Code does NOT load AGENTS.md or a CLAUDE.md from an installed plugin — it
 loads only the skills. So the rules every workflow needs live in
 skills/core-rules.md, and every SKILL.md must point to it (checked below).
+There is deliberately no root CLAUDE.md; see CONTRIBUTING.md.
 
 Also link-checks every local path referenced in source/CONTEXT.md and
 skills/**/*.md so a renamed skill or data file fails the build instead of
@@ -35,7 +35,7 @@ HEADER = (
     "<!-- Edit source/CONTEXT.md and run `python3 scripts/build.py`. -->\n\n"
 )
 
-TARGETS = ["CLAUDE.md", "AGENTS.md"]
+TARGETS = ["AGENTS.md"]
 
 # Local paths referenced in prose/code blocks, e.g. skills/foo/SKILL.md,
 # data/docs/..., data/snap-swaggers/... Bare directories are checked too.

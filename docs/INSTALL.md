@@ -7,7 +7,7 @@ The Snapser plugin works with **Claude** (Claude Code and Cowork), **OpenAI Code
 |---|---|
 | `skills/` | Step-by-step workflow instructions the agent reads before executing |
 | `skills/core-rules.md` | The rules every workflow shares — prerequisite check, execution mode, manifest and settings rules. Every skill points to it |
-| `AGENTS.md` / `CLAUDE.md` | Agent context — concepts, skill index, workflows (generated from `source/CONTEXT.md`). Codex, OpenCode, and Cursor read `AGENTS.md`. Claude Code does **not** load either file from an installed plugin — it loads the skills |
+| `AGENTS.md` | Agent context for Codex, OpenCode, and Cursor — concepts, skill index, workflows (generated from `source/CONTEXT.md`). Claude Code does **not** load it from an installed plugin — it loads the skills |
 | `data/docs/` | Full Snapser documentation (offline) |
 | `data/snap-swaggers/` | OpenAPI specs for every snap's API |
 | `.claude-plugin/` | Claude plugin + marketplace manifest |
@@ -60,11 +60,7 @@ installed plugin. To get new releases automatically, enable auto-update for the
 1. Open **Settings → Capabilities → Plugins**.
 2. Add the marketplace `snapser-community/snapser-agent-plugin` and install **snapser**.
 
-Alternatively, clone this repo and select it as a working folder — Claude picks up
-`CLAUDE.md` and the `skills/` directory automatically.
-
-To upgrade, update the **snapser** plugin from the same Plugins screen (or `git pull`
-in your clone if you use the working-folder setup).
+To upgrade, update the **snapser** plugin from the same Plugins screen.
 
 ## OpenAI Codex
 
@@ -145,11 +141,4 @@ searching the web. Then try: *"Validate my snapctl setup"* — it should run
 
 ## For contributors
 
-`CLAUDE.md` and `AGENTS.md` are **generated** — edit `source/CONTEXT.md` and run:
-
-```bash
-python3 scripts/build.py
-```
-
-The build also link-checks every `skills/` and `data/` path referenced from the context
-and skill files.
+See [CONTRIBUTING.md](../CONTRIBUTING.md).
