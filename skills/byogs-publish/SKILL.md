@@ -116,6 +116,6 @@ Ask the user:
 
 ## Notes
 - BYOGS images are published to the organization's private registry — other team members can use them.
-- Fleet creation and management happens in the Snapser Web App, not via CLI.
+- Fleet creation and management happens in the Snapser Web App or through the Admin SDK (`skills/test-fleet-e2e/SKILL.md` creates a fleet that way) — not via the CLI.
 - Be conversational — guide the user step by step, don't dump all commands at once.
 - If any step fails, explain the error clearly using `skills/error_codes.md` and offer to retry or adjust.

@@ -350,9 +350,12 @@ or "test my fleet."
 
 ```
 1. Publish the game server image → skills/byogs-publish/SKILL.md
-2. Prepare a Snapend manifest with auth + game-server-fleets (sample manifest is in the skill)
+2. Generate a base manifest with auth + game-server-fleets → snapctl snapend-manifest create
+   (do NOT edit it; the fleet is a setting, not part of the manifest)
 3. Create the Snapend → snapctl snapend create --blocking
-4. User verifies fleet is running in the Snapser web app
+4. Create the fleet via the Admin SDK → skills/configure-snap-settings/SKILL.md
+5. Download the manifest to the project root → snapctl snapend download
+6. Check the fleet status; user confirms the fleet is running in the Snapser web app
 ```
 
 If the user doesn't have a game server yet, guide them through `skills/byogs-publish/SKILL.md` first
