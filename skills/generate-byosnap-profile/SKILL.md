@@ -5,6 +5,14 @@ description: Generate or edit a snapser-byosnap-profile.json file
 
 # Skill: Generate or Edit a BYOSnap Profile
 
+> **Before you start:** read `${CLAUDE_PLUGIN_ROOT}/skills/core-rules.md` if you have
+> not read it in this session. It holds the prerequisite check and the rules that
+> apply to every Snapser workflow.
+>
+> All `skills/` and `data/` paths in this file start at the plugin root,
+> `${CLAUDE_PLUGIN_ROOT}`. If that value is not an absolute path, the plugin root is
+> the folder two levels above this file.
+
 Generates a new BYOSnap profile (`snapser-byosnap-profile.json`) from scratch or helps
 the user modify an existing one. The profile defines the BYOSnap's metadata, ingress,
 health check, and resource allocation for each environment.

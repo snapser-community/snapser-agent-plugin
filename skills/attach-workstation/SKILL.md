@@ -5,6 +5,14 @@ description: Attach your local workstation to a Snapend for live debugging (BYOW
 
 # Skill: Attach Workstation to Snapend (BYOWS)
 
+> **Before you start:** read `${CLAUDE_PLUGIN_ROOT}/skills/core-rules.md` if you have
+> not read it in this session. It holds the prerequisite check and the rules that
+> apply to every Snapser workflow.
+>
+> All `skills/` and `data/` paths in this file start at the plugin root,
+> `${CLAUDE_PLUGIN_ROOT}`. If that value is not an absolute path, the plugin root is
+> the folder two levels above this file.
+
 Guides the developer through attaching their local machine to a remote DEVELOPMENT Snapend
 so that traffic intended for their BYOSnap is reverse-proxied to their local server.
 This enables live local debugging against real Snapend traffic without rebuild/redeploy cycles.

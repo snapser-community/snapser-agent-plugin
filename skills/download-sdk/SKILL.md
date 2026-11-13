@@ -5,6 +5,14 @@ description: Download SDKs, protobuf files, or manifests for a Snapend
 
 # Skill: Download SDK, Protobufs or Manifest for a Snapend
 
+> **Before you start:** read `${CLAUDE_PLUGIN_ROOT}/skills/core-rules.md` if you have
+> not read it in this session. It holds the prerequisite check and the rules that
+> apply to every Snapser workflow.
+>
+> All `skills/` and `data/` paths in this file start at the plugin root,
+> `${CLAUDE_PLUGIN_ROOT}`. If that value is not an absolute path, the plugin root is
+> the folder two levels above this file.
+
 Guides the developer through downloading the correct SDK, protos, or manifest for their
 Snapend based on their platform, language, and use case.
 

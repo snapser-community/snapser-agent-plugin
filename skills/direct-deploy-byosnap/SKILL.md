@@ -5,6 +5,14 @@ description: Deploy a BYOSnap directly to a dev Snapend for fast iteration
 
 # Skill: Direct-Deploy a BYOSnap (Development Workflow)
 
+> **Before you start:** read `${CLAUDE_PLUGIN_ROOT}/skills/core-rules.md` if you have
+> not read it in this session. It holds the prerequisite check and the rules that
+> apply to every Snapser workflow.
+>
+> All `skills/` and `data/` paths in this file start at the plugin root,
+> `${CLAUDE_PLUGIN_ROOT}`. If that value is not an absolute path, the plugin root is
+> the folder two levels above this file.
+
 Builds and deploys a BYOSnap directly to a DEVELOPMENT Snapend without publishing.
 This is the fastest iteration loop — no versioning, no registry, just build and deploy.
 

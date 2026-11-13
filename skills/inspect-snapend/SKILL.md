@@ -5,6 +5,14 @@ description: Pull live logs, infrastructure metrics (CPU, memory, latency, RPS),
 
 # Skill: Inspect a Snapend
 
+> **Before you start:** read `${CLAUDE_PLUGIN_ROOT}/skills/core-rules.md` if you have
+> not read it in this session. It holds the prerequisite check and the rules that
+> apply to every Snapser workflow.
+>
+> All `skills/` and `data/` paths in this file start at the plugin root,
+> `${CLAUDE_PLUGIN_ROOT}`. If that value is not an absolute path, the plugin root is
+> the folder two levels above this file.
+
 Pulls live diagnostic data from a Snapend using `snapctl inspect` — deployment/snap/fleet
 logs, infrastructure graphs (CPU, memory, latency, RPS, errors, restarts), and business
 metrics (DAU, MAU, installs, revenue, locations). This mirrors the Logs, Monitor, and

@@ -5,6 +5,14 @@ description: Create a custom BYOSnap microservice from scratch
 
 # Skill: Create a BYOSnap (Custom Microservice)
 
+> **Before you start:** read `${CLAUDE_PLUGIN_ROOT}/skills/core-rules.md` if you have
+> not read it in this session. It holds the prerequisite check and the rules that
+> apply to every Snapser workflow.
+>
+> All `skills/` and `data/` paths in this file start at the plugin root,
+> `${CLAUDE_PLUGIN_ROOT}`. If that value is not an absolute path, the plugin root is
+> the folder two levels above this file.
+
 Guides the developer through creating a new custom microservice (BYOSnap) from scratch,
 including project scaffolding, required files, and optional deployment.
 

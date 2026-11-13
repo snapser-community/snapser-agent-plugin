@@ -5,6 +5,14 @@ description: Build a playable browser game with a Snapser backend from scratch
 
 # Skill: Build a Web Game with Snapser Backend
 
+> **Before you start:** read `${CLAUDE_PLUGIN_ROOT}/skills/core-rules.md` if you have
+> not read it in this session. It holds the prerequisite check and the rules that
+> apply to every Snapser workflow.
+>
+> All `skills/` and `data/` paths in this file start at the plugin root,
+> `${CLAUDE_PLUGIN_ROOT}`. If that value is not an absolute path, the plugin root is
+> the folder two levels above this file.
+
 Builds a fully playable browser-based game from scratch, creates a Snapser backend with
 the right snaps, downloads the web-ts SDK (bundled to a single JS file), and wires everything together — so the user goes
 from zero to a working game with a live backend in a single session.

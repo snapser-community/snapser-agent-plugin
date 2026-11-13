@@ -1,12 +1,13 @@
 # Installing the Snapser Plugin
 
 The Snapser plugin works with **Claude** (Claude Code and Cowork), **OpenAI Codex**,
-**OpenCode**, and **Cursor** from this single repository. All of them read the same content:
+**OpenCode**, and **Cursor** from this single repository. All of them use the same content:
 
 | File / folder | Purpose |
 |---|---|
-| `CLAUDE.md` / `AGENTS.md` | Agent context — concepts, rules, workflows (generated from `source/CONTEXT.md`) |
 | `skills/` | Step-by-step workflow instructions the agent reads before executing |
+| `skills/core-rules.md` | The rules every workflow shares — prerequisite check, execution mode, manifest and settings rules. Every skill points to it |
+| `AGENTS.md` / `CLAUDE.md` | Agent context — concepts, skill index, workflows (generated from `source/CONTEXT.md`). Codex, OpenCode, and Cursor read `AGENTS.md`. Claude Code does **not** load either file from an installed plugin — it loads the skills |
 | `data/docs/` | Full Snapser documentation (offline) |
 | `data/snap-swaggers/` | OpenAPI specs for every snap's API |
 | `.claude-plugin/` | Claude plugin + marketplace manifest |

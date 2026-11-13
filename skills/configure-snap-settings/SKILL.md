@@ -5,6 +5,14 @@ description: Configure snap settings on a live Snapend programmatically using th
 
 # Skill: Configure Snap Settings (Admin SDK)
 
+> **Before you start:** read `${CLAUDE_PLUGIN_ROOT}/skills/core-rules.md` if you have
+> not read it in this session. It holds the prerequisite check and the rules that
+> apply to every Snapser workflow.
+>
+> All `skills/` and `data/` paths in this file start at the plugin root,
+> `${CLAUDE_PLUGIN_ROOT}`. If that value is not an absolute path, the plugin root is
+> the folder two levels above this file.
+
 The Admin SDK is the primary way to read and change snap settings — auth connectors,
 leaderboards, storage keys, profiles, statistics, trackables, inventory, and more — on a
 **live Snapend**. It replaces hand-editing manifest JSON: every operation is a typed,

@@ -5,6 +5,14 @@ description: Deploy and test a game server fleet end-to-end on Snapser
 
 # Skill: End-to-End Fleet Test
 
+> **Before you start:** read `${CLAUDE_PLUGIN_ROOT}/skills/core-rules.md` if you have
+> not read it in this session. It holds the prerequisite check and the rules that
+> apply to every Snapser workflow.
+>
+> All `skills/` and `data/` paths in this file start at the plugin root,
+> `${CLAUDE_PLUGIN_ROOT}`. If that value is not an absolute path, the plugin root is
+> the folder two levels above this file.
+
 Tests that a game server fleet is working end-to-end on a Snapend — from publishing the
 game server image, to creating a Snapend with a fleet, to verifying it comes online.
 

@@ -12,37 +12,21 @@ backends on Snapser. Read this before executing any skill or command.
 
 ---
 
-## First: Check Pre-requisites
+## First: Read the Core Rules
 
-Before running any Snapser command, verify the following:
+Before running any Snapser command, read `skills/core-rules.md` and do the prerequisite
+check in it. That file is the one canonical copy of the rules every workflow shares:
 
-**1. Snapctl is installed and configured.**
-Run:
-```bash
-snapctl validate
-```
-This checks that snapctl is installed, the API key is valid, and the application is configured. If it fails:
-- If snapctl is not found → guide the user through `skills/setup-snapctl/SKILL.md`
-- If the API key is missing or invalid → run `snapctl login`. It opens a browser where the user clicks **Activate**; the key is minted and stored automatically. It is idempotent (safe to run any time) and self-heals expired keys. Tell the user to watch for the browser window and confirm the short code shown in the terminal.
-- If no application is configured → ask the user if they want to create a new application (use the `create_application` skill), or run `snapctl application enumerate` to list their applications and let them pick
+- the `snapctl validate` prerequisite check
+- the Agent Mode / Guide Mode choice
+- the HARD RULE that keeps structure (manifest) and settings (Admin SDK) in separate phases
+- the command rules — `--blocking`, `--application-id`, output path flags, input validation
+- error handling
 
-**Do not proceed with any workflow until `snapctl validate` passes.**
+Every skill file points to it as well. All `skills/` and `data/` paths in this file and
+in the skill files start at the plugin root — the folder that contains the `skills/` and `data/` directories.
 
-**2. Choose execution mode.**
-After confirming snapctl is set up, tell the user:
-
-> "I'm running in **Agent Mode** — I'll execute commands on your behalf. If you'd prefer **Guide Mode** where I walk you through each step and show you the commands to run yourself, just let me know."
-
-If the user chooses **Guide Mode**, follow these rules for the rest of the session:
-- **Do NOT execute** any `snapctl` commands. Instead, show the user the exact command to run with all parameters filled in, and explain what it does.
-- Wait for the user to confirm they ran each command and share the output before moving to the next step.
-- If the user shares an error, look it up in `skills/error_codes.md` and explain the fix — but still show the recovery command rather than running it.
-
-If the user stays in **Agent Mode** (the default), execute commands normally as described in the skill files.
-
-The user can switch modes at any time during the session by saying "switch to guide mode" or "switch to agent mode."
-
-**Do not proceed with any workflow until prerequisites 1–2 are confirmed.**
+**Do not proceed with any workflow until the prerequisite check in `skills/core-rules.md` passes.**
 
 ---
 
@@ -181,13 +165,8 @@ Key commands:
 
 See `skills/snapctl_commands.md` for the complete command reference.
 
-**`--application-id` usage:** Only Snapend-level commands (`snapend create`, `snapend enumerate`, `snapend update`, `snapend clone`, etc.) require `--application-id`. Catalog commands like `snapctl snaps enumerate` list globally available snaps and do **not** take `--application-id`. `snapctl inspect` subcommands take neither — only `--snapend-id`. When in doubt, check `snapctl <command> --help`.
-
-**Output path flags — do not mix these up:**
-- `--out-path-filename` = full file path including filename. Used by **manifest commands** (`snapend-manifest create`, `snapend-manifest sync`, `snapend-manifest update`, `snapend-manifest upgrade`) and by **`snapctl inspect logs`/`inspect monitor`/`inspect metrics`** — don't assume `inspect` follows the `snapend download` pattern below just because both "download" data.
-- `--out-path` = directory path only (no filename). Used by **download commands**: `snapend download`. The file is created inside this directory automatically.
-
-These are different flags and are **not interchangeable**. Using the wrong one will cause the command to fail.
+For the `--application-id` and output path flag rules (`--out-path` vs
+`--out-path-filename`), see `skills/core-rules.md`.
 
 Useful snapctl command for inspecting live snap settings on an existing Snapend:
 ```bash
@@ -199,158 +178,30 @@ For logs, infra metrics (CPU, memory, latency, RPS), or business metrics (DAU, M
 
 When in doubt about a command, run `snapctl --help` or `snapctl <command> --help`.
 
-### Answering Questions — Lookup Priority
+### Answering Questions
 
-**IMPORTANT: NEVER use web search or fetch remote URLs for Snapser questions.** All Snapser documentation and API specs are bundled locally in this plugin. Always answer from local files only.
+**IMPORTANT: NEVER use web search or fetch remote URLs for Snapser questions.** All Snapser
+documentation, API specs, and release notes are bundled locally in this plugin under `data/`.
 
-When the user asks a question about Snapser, follow this priority order:
-
-1. **Snap API questions** (endpoints, request/response, SDK examples) → read the LOCAL swagger file at `data/snap-swaggers/<snap-name>.swagger3.json`.
-2. **Snap feature/concept/config-tool questions** (how does auth work, how do I configure leaderboards, what connectors are available) → read `data/docs/INDEX.md` first — it lists every documentation page with the topic it covers — then read the page(s) it points to.
-3. **"What changed / what's new / when did X ship" questions** → read `data/releases/INDEX.md` first, then the specific release file(s) it points to. See "Release Notes" below.
-
-See `skills/snapser-help/SKILL.md` for the full workflow including a term-to-snap-name mapping.
-
-### Local Documentation — `data/docs/`
-
-The `data/docs/` folder contains the full Snapser documentation as `.mdx` files. These are
-MDX (Markdown + JSX) — ignore the `import` statements and JSX component tags at the top of
-each file; the useful content is the prose, headings, code blocks, and tables below them.
-
-**Always start at `data/docs/INDEX.md`** — a generated map of all 201 pages, grouped by
-area, each with the topic it covers. Read the index, pick the page that answers the
-question, read that page. Do not grep the whole folder blind, and never read the folder
-into context wholesale. (`data/docs/index.mdx` is the docs *landing page* — prose for a
-human, not a map. `INDEX.md` is the map.) The index is generated by `scripts/build.py`:
-drop a new `.mdx` into `data/docs/` and re-run it — never hand-edit `INDEX.md`.
-
-**Folder map:**
-
-| Path | What's there |
-|---|---|
-| `data/docs/index.mdx` | Docs landing page — high-level intro |
-| `data/docs/overview.mdx` | Platform overview |
-| `data/docs/concept.mdx` | Core Snapser concepts (Snaps, Snapends, environments, etc.) |
-| `data/docs/ai/` | AI integrations — Cortex, MCP, OpenAI |
-| `data/docs/business-intelligence/` | BI dashboards, charts, SQL lab, alerts/reports |
-| `data/docs/custom/` | BYOSnap, BYOWS (workstation), BYOGS (game server), BYO data store, BYO external server |
-| `data/docs/custom/tools/` | Config tool, profile tool, tool builder, user manager tool |
-| `data/docs/guides/samples/` | Sample projects — Unity, Unreal, Roblox, web apps, mobile, e-commerce, social |
-| `data/docs/guides/tutorials/` | Step-by-step tutorials — setup snapctl, create Snapend, auth, BYOSnap (basic→advanced), BYOGS, security, cloning, tools |
-| `data/docs/infra/` | Infrastructure layer — generic errors, snap index |
-| `data/docs/infra/snaps/<snap-name>/index.mdx` | Per-snap overview (what it does, key features) |
-| `data/docs/infra/snaps/<snap-name>/config-tools/` | Per-snap config tool docs (web portal settings UI) |
-| `data/docs/infra/snaps/auth/connectors/` | Auth connector setup guides — anonymous, Apple, Discord, email, Epic, Facebook, Google, Steam, username/password, X, Xbox |
-| `data/docs/resources/cli.mdx` | Snapctl CLI reference |
-| `data/docs/resources/marketplace.mdx` | Snap marketplace docs |
-| `data/docs/resources/portal/` | Web portal — access management, team settings |
-| `data/docs/resources/tools/` | Audit tool, examples |
-| `data/docs/snapend/` | Snapend deep-dive — admin tools, dev pipeline, infra-as-code, logs, monitoring, protos, SDKs, WebSocket |
-| `data/docs/snapend/networking/` | Gateway, intra-Snapend networking, security |
-| `data/docs/snapend/tools/` | API explorer, cluster clone/sync, inspector, user data, user manager, WS tester |
-
-**How to find the right file:**
-
-- If the question is about a specific snap → go to `data/docs/infra/snaps/<snap-name>/`
-- If it's about how to configure a snap in the web portal → check `config-tools/` under that snap
-- If it's about auth connectors (Google login, Steam, etc.) → `data/docs/infra/snaps/auth/connectors/`
-- If it's about BYOSnap/BYOWS/BYOGS → `data/docs/custom/`
-- If it's about Snapend architecture, networking, SDKs → `data/docs/snapend/`
-- If it's a how-to or tutorial → `data/docs/guides/tutorials/`
-- If it's about a sample project → `data/docs/guides/samples/`
-- If you're unsure which file → read `data/docs/INDEX.md` and match the question against the topic column. Grep `data/docs/` only if the index leaves you with nothing.
-
-### Release Notes — `data/releases/`
-
-Snapser **platform** release notes, one `.mdx` per release (`data/releases/1.12.0.mdx`),
-covering what shipped in the platform, snaps, Web App, snapctl, and SDKs. Use them to
-answer "what's new", "did anything change in <snap>", "when did <feature> ship", or
-"what should I know before upgrading my SDK".
-
-**Always start at `data/releases/INDEX.md`** — a generated lookup table with every
-release, its date, its sections, and a snap → releases reverse index. Read it first,
-then open only the release file(s) it points you to. Never grep all 30 release files
-blind, and never read them all into context.
-
-> **HARD RULE — release notes are read-only, user-facing information.**
-> They exist to tell a human what changed. They are NEVER an input to building or
-> changing anything. Do not take snap versions, manifest structure, `settings` values,
-> API shapes, or command flags from a release note. Structure still comes only from
-> `snapctl snapend-manifest ...`, settings only from the Admin SDK, API shapes only from
-> `data/snap-swaggers/`, and the live snap catalog only from `snapctl snaps enumerate`.
-> A version number mentioned in a release note is **not** a version to pin.
-
-The index is generated by `scripts/build.py`. To add a release, drop the new `.mdx` into
-`data/releases/` and re-run `python3 scripts/build.py` — never hand-edit `INDEX.md`.
+For any Snapser question, follow `skills/snapser-help/SKILL.md`. It holds the lookup
+priority (swagger files for API questions, `data/docs/INDEX.md` for feature and
+configuration questions, `data/releases/INDEX.md` for "what changed" questions), the
+`data/docs/` folder map, and the rule that release notes are read-only information —
+never an input to a manifest, a setting, or a version pin.
 
 ---
 
 ## Important Rules
 
-> ### HARD RULE — structure and settings are two separate phases. Never combine them.
->
-> This is non-negotiable. Building/changing a backend's snaps is one phase; changing
-> snap settings is a completely separate phase. They are never done in the same step.
->
-> **Phase 1 — Structure (snaps & features).** The ONLY way to build or change a
-> manifest is `snapctl snapend-manifest create/update/sync/upgrade`. Bring the Snapend
-> online with `snapctl snapend create` / `snapctl snapend apply` (always `--blocking`).
-> The manifest you create or apply MUST have an empty `settings` array. Do NOT put snap
-> settings into the manifest.
->
-> **Phase 2 — Settings.** Once the Snapend is live, change EVERY snap setting through
-> the bundled Admin SDK by following `skills/configure-snap-settings/SKILL.md`. The
-> Admin SDK is the *only* sanctioned way to change a setting.
->
-> **After every settings change, immediately download the manifest to the project
-> root:** `snapctl snapend download --snapend-id $id --category snapend-manifest --format json --out-path .`
-> The downloaded manifest is the canonical, version-controllable record — it is an
-> OUTPUT of the Admin SDK phase, never a hand-authored input.
->
-> **Never manipulate the manifest with any other tool.** No `python`, no `jq`, no
-> `sed`, no here-doc scripts, no hand-editing. In particular, never assemble a
-> `settings` block — even one grounded in the Admin SDK source or the config docs — and
-> write/inject it into the manifest. That it produces "valid JSON" or that it worked
-> once does not make it allowed: settings ONLY change via live Admin SDK calls.
->
-> **Configure-only requests** (the snap already exists and the user just wants to
-> change its settings): skip Phase 1 entirely — go straight to the Admin SDK against the
-> live Snapend, then download the manifest to the project root.
+The rules live in `skills/core-rules.md`. Read that file before any workflow. In short:
 
-**Do:**
-- **Always fetch snaps dynamically** using `snapctl snaps enumerate`. Never assume snap names or IDs.
-- **Always use `--blocking`** when creating or updating a Snapend so the agent waits for it to be live before proceeding.
-- **Always validate** the BYOSnap profile before publishing: `snapctl byosnap validate-profile`.
-- **Default to DEVELOPMENT** for any new backend unless the user explicitly says otherwise.
-- **Auth snap is always included** — never ask the user whether they want it.
-- **Configure snap settings ONLY via the Admin SDK, never by editing or scripting manifest JSON.** For any settings change (auth methods, leaderboards, storage keys, profiles, statistics, trackables, inventory, fleets), follow `skills/configure-snap-settings/SKILL.md`: read its config-cheatsheet.md first, use the **plugin-bundled Python SDK** at `data/admin-sdk/sdk-python` optimistically (no upfront version checks), apply the change to the live Snapend, then download the manifest to the project root. See the HARD RULE at the top of this section. Handle version mismatches only when the server rejects a call — the skill's error-handling ladder covers upgrade / matched-SDK download / web portal Config tool.
+- **Structure and settings are two separate phases (HARD RULE).** Build and change the
+  manifest only with `snapctl snapend-manifest ...`; change settings only through the
+  Admin SDK on the live Snapend. Never write, edit, or script manifest JSON.
+- **Download the manifest to the project root after every Snapend mutation.**
+- **Look up every error code** in `skills/error_codes.md` — do not guess.
 
-**Validate:**
-- **Snapend names:** Max 20 characters, alphanumeric and dashes only, must start with a letter, must be unique per environment. No spaces.
-- **BYOSnap IDs:** Must start with `byosnap-`. Validate this before running any BYOSnap command.
-- **Versions:** Must be semantic — e.g. `v0.0.1`, `v1.0.0`. Remind the user if they pass an invalid format.
-
-**Don't:**
-- Don't guess error meanings — look up the code in `skills/error_codes.md` and use the recovery guidance there.
-- Don't hardcode snap names — always run `snapctl snaps enumerate` first.
-- Don't suggest staging/production unless the user asks for it.
-- Don't skip `--blocking` — without it, subsequent steps may fail because the Snapend isn't ready.
-- **Don't use web search or fetch remote URLs for anything Snapser-related.** All documentation and API specs are bundled locally in this plugin at `data/docs/` and `data/snap-swaggers/`. If a user asks a question about Snapser, read the local files — never search the web or fetch snapser.com.
-- **Don't write, edit, or inject manifest JSON with any tool** — not from scratch, and not with `python`, `jq`, `sed`, or a here-doc script. The manifest is produced and modified ONLY by `snapctl snapend-manifest create/update/sync/upgrade`. Never construct `service_definitions`/`feature_definitions` manually, and never assemble a `settings` block (even one grounded in the Admin SDK source or config docs) and write it into the manifest — settings go through the Admin SDK against the live Snapend. A manifest passed to `snapend create`/`apply` must have an empty `settings` array.
-- **The bundled Admin SDK is the default; downloads are a fallback.** The plugin ships the Python Admin SDK at `data/admin-sdk/sdk-python` (target snap versions in `data/admin-sdk/VERSION.md`). Only use `snapctl admin-sdk download` when a Snapend runs deliberately pinned older snaps — pin `--snaps` to the deployed `name:version` pairs (required `v` prefix, e.g. `auth:v1.12.0`; only versions with `has_admin=true` are accepted).
-
----
-
-## Error Handling
-
-See `skills/error_codes.md` for the complete error code reference with recovery actions.
-
-When a command fails:
-1. Check the exit code against `skills/error_codes.md`
-2. Explain the error clearly to the user using the description and suggested recovery
-3. If the error is a timeout (codes 64, 67, 70, 74, 79), suggest retrying and checking status with `snapctl snapend enumerate`
-4. If the error is a permission issue (codes 26, 36, 39, 42, 52), ask the user to verify their API key scopes
-5. If the error persists after recovery, suggest contacting Snapser support
+`skills/core-rules.md` has the full text of these rules and the command rules.
 
 ---
 
@@ -403,12 +254,13 @@ These are data and reference files that other skills read — don't use them as 
 
 | File | Purpose |
 |---|---|
+| `skills/core-rules.md` | The rules every workflow shares — prerequisite check, execution mode, the manifest/settings HARD RULE, command rules, error handling. **Read before any workflow.** |
 | `skills/backend_templates.md` | Recommended snap sets by game/app type (arcade, RPG, battle royale, SaaS, etc.) |
 | `skills/error_codes.md` | Complete error code reference with recovery actions |
 | `skills/snapctl_commands.md` | Complete snapctl CLI command reference |
 | `skills/snapser-help/SKILL.md` | Workflow for answering questions — routes to local docs and swagger files |
 | `data/docs/INDEX.md` | Generated map of all 201 documentation pages — path → topic, grouped by area. **Start here for any Snapser docs question**, then read the page it points to. |
-| `data/docs/` | Full Snapser documentation (201 `.mdx` files). Reach it through `data/docs/INDEX.md`; the folder map in "Local Documentation" above is the coarse view. |
+| `data/docs/` | Full Snapser documentation (201 `.mdx` files). Reach it through `data/docs/INDEX.md`; the folder map in `skills/snapser-help/SKILL.md` is the coarse view. |
 | `data/snap-swaggers/*.swagger3.json` | OpenAPI 3.0 specs for each snap's API endpoints. **Read these for any snap API question.** |
 | `data/releases/INDEX.md` | Generated index of the platform release notes in `data/releases/`. **Start here for any "what changed / what's new" question.** Read-only user-facing info — never an input to manifests, settings, or version pinning. |
 | `data/admin-sdk/sdk-python` | Bundled Python Admin SDK for configuring snap settings on a live Snapend (see `data/admin-sdk/VERSION.md` for target snap versions) |
