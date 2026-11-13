@@ -31,7 +31,7 @@ game server image, to creating a Snapend with a fleet, to verifying it comes onl
 - "get a game server fleet running"
 
 ## Requirements
-- Snapser CLI (`snapctl`) installed
+- Snapser CLI (`snapctl`) installed and configured
 - Docker installed and running
 - A game server project with a Dockerfile (or willingness to scaffold one via `skills/byogs-publish/SKILL.md`)
 
@@ -41,348 +41,163 @@ game server image, to creating a Snapend with a fleet, to verifying it comes onl
 
 Follow the `skills/byogs-publish/SKILL.md` skill to publish a game server image.
 
-**Keep note of the image tag** used during the publish — you will need it in Phase 2.
+**Keep note of the image tag** used during the publish — you will need it in Phase 3.
 
 If the user already has a published BYOGS image and knows the tag, skip this phase.
 
-### Phase 2 — Prepare the test manifest
+### Phase 2 — Create the Snapend (structure)
 
-Use the pre-built sample manifest below (do NOT generate a manifest from scratch — use this exact template). For detailed fleet settings documentation, see `data/docs/infra/snaps/game-server-fleets/`. For post-create settings changes, use the Admin SDK (`skills/configure-snap-settings/SKILL.md`).
+The Snapend comes first, with no settings. The fleet is a **setting** — you create it in
+Phase 3, on the live Snapend. Do NOT write or edit manifest JSON, and do NOT put a fleet
+or any other settings block into the manifest (see the HARD RULE in
+`skills/core-rules.md`).
 
-You need to modify three fields before creating the Snapend:
+1. Ask for a test Snapend name (max 20 chars, alphanumeric + dashes, starts with a
+   letter). Example: `fleet-test-1`
 
-1. **`name`** (top level) — Pick a test Snapend name (max 20 chars, alphanumeric + dashes, starts with letter). Example: `fleet-test-1`
-2. **`settings[1].data.fleets[0].image_tag`** — Set this to the **exact tag** from Phase 1. **Do NOT add any prefix** — use the tag exactly as passed to `--tag` during publish. For example, if you published with `--tag byogs-go-v1`, the value here must be `"image_tag": "byogs-go-v1"` — NOT `"byogs.byogs-go-v1"`, NOT `"snapser/byogs-go-v1"`, NOT any other prefixed form.
-3. **`settings[1].data.fleets[0].name`** — Set a fleet name (e.g. `test-fleet`)
-4. **`settings[1].data.fleets[0].port`** — Set the port your game server listens on
-
-Write the modified manifest to a local file (e.g. `fleet-test-manifest.json`).
-
-**Sample manifest:**
-
-```json
-{
-  "version": "v1",
-  "id": "z4zddcet",
-  "name": "REPLACE_WITH_SNAPEND_NAME",
-  "environment": "DEVELOPMENT",
-  "service_definitions": [
-    {
-      "id": "auth",
-      "language": "go",
-      "version": "v1.5.0",
-      "author_id": "snapser",
-      "category": "SNAPSER",
-      "subcategory": "SERVICE",
-      "data_dependencies": [
-        {
-          "type": "POSTGRES",
-          "postgres": {
-            "database": "auth"
-          }
-        },
-        {
-          "type": "POSTGRES",
-          "postgres": {
-            "database": "auth_settings"
-          }
-        },
-        {
-          "type": "REDIS",
-          "redis": {}
-        }
-      ]
-    },
-    {
-      "id": "game-server-fleets",
-      "language": "go",
-      "version": "v1.7.0",
-      "author_id": "snapser",
-      "category": "SNAPSER",
-      "subcategory": "FLEET",
-      "data_dependencies": [
-        {
-          "type": "POSTGRES",
-          "postgres": {
-            "database": "game_server_fleets_settings"
-          }
-        },
-        {
-          "type": "REDIS",
-          "redis": {}
-        }
-      ]
-    }
-  ],
-  "settings": [
-    {
-      "id": "auth",
-      "data": {
-        "dev": {
-          "anon": {
-            "enabled": true
-          },
-          "api_keys": [],
-          "app_auth": null,
-          "app_verify": null,
-          "apple": null,
-          "disable_user_creation": false,
-          "discord": null,
-          "email": null,
-          "email_password": null,
-          "epic": null,
-          "facebook": null,
-          "fixed_rate_limiter_settings": [
-            {
-              "allow_list": [],
-              "deny_list": [],
-              "duration_in_seconds": 60,
-              "limit": 5,
-              "lockout_duration_in_seconds": 60,
-              "type": "email_login"
-            },
-            {
-              "allow_list": [],
-              "deny_list": [],
-              "duration_in_seconds": 60,
-              "limit": 5,
-              "lockout_duration_in_seconds": 60,
-              "type": "email_verification"
-            },
-            {
-              "allow_list": [],
-              "deny_list": [],
-              "duration_in_seconds": 60,
-              "limit": 5,
-              "lockout_duration_in_seconds": 60,
-              "type": "account_recovery"
-            }
-          ],
-          "google": null,
-          "password": null,
-          "session_inactivity_timeout": 604800,
-          "session_token_validity": 2592000,
-          "single_session_per_user": false,
-          "steam": null,
-          "user_auth_restrictions": [],
-          "username_password": null,
-          "x": null,
-          "xbox": null
-        },
-        "email_templates": [],
-        "prod": {
-          "anon": null,
-          "api_keys": [],
-          "app_auth": null,
-          "app_verify": null,
-          "apple": null,
-          "disable_user_creation": false,
-          "discord": null,
-          "email": null,
-          "email_password": null,
-          "epic": null,
-          "facebook": null,
-          "fixed_rate_limiter_settings": [
-            {
-              "allow_list": [],
-              "deny_list": [],
-              "duration_in_seconds": 60,
-              "limit": 5,
-              "lockout_duration_in_seconds": 60,
-              "type": "email_login"
-            },
-            {
-              "allow_list": [],
-              "deny_list": [],
-              "duration_in_seconds": 60,
-              "limit": 5,
-              "lockout_duration_in_seconds": 60,
-              "type": "email_verification"
-            },
-            {
-              "allow_list": [],
-              "deny_list": [],
-              "duration_in_seconds": 60,
-              "limit": 5,
-              "lockout_duration_in_seconds": 60,
-              "type": "account_recovery"
-            }
-          ],
-          "google": null,
-          "password": null,
-          "session_inactivity_timeout": 604800,
-          "session_token_validity": 2592000,
-          "single_session_per_user": false,
-          "steam": null,
-          "user_auth_restrictions": [],
-          "username_password": null,
-          "x": null,
-          "xbox": null
-        },
-        "stage": {
-          "anon": {
-            "enabled": true
-          },
-          "api_keys": [],
-          "app_auth": null,
-          "app_verify": null,
-          "apple": null,
-          "disable_user_creation": false,
-          "discord": null,
-          "email": null,
-          "email_password": null,
-          "epic": null,
-          "facebook": null,
-          "fixed_rate_limiter_settings": [
-            {
-              "allow_list": [],
-              "deny_list": [],
-              "duration_in_seconds": 60,
-              "limit": 5,
-              "lockout_duration_in_seconds": 60,
-              "type": "email_login"
-            },
-            {
-              "allow_list": [],
-              "deny_list": [],
-              "duration_in_seconds": 60,
-              "limit": 5,
-              "lockout_duration_in_seconds": 60,
-              "type": "email_verification"
-            },
-            {
-              "allow_list": [],
-              "deny_list": [],
-              "duration_in_seconds": 60,
-              "limit": 5,
-              "lockout_duration_in_seconds": 60,
-              "type": "account_recovery"
-            }
-          ],
-          "google": null,
-          "password": null,
-          "session_inactivity_timeout": 604800,
-          "session_token_validity": 2592000,
-          "single_session_per_user": false,
-          "steam": null,
-          "user_auth_restrictions": [],
-          "username_password": null,
-          "x": null,
-          "xbox": null
-        }
-      },
-      "version": "v1.5.0",
-      "exported_at": "1774413538"
-    },
-    {
-      "id": "game-server-fleets",
-      "data": {
-        "fleets": [
-          {
-            "debug_port": 0,
-            "description": "desc",
-            "dev_profile": {
-              "args": [],
-              "buffer": "1",
-              "cmd": "",
-              "cpu": 100,
-              "env_params": [],
-              "max_replicas": 1,
-              "memory": 0.125,
-              "min_replicas": 1,
-              "regions": [
-                "oregon"
-              ]
-            },
-            "fleet_deployments": [],
-            "image_tag": "REPLACE_WITH_IMAGE_TAG",
-            "name": "REPLACE_WITH_FLEET_NAME",
-            "port": 7654,
-            "prod_profile": {
-              "args": [],
-              "buffer": "1",
-              "cmd": "",
-              "cpu": 100,
-              "env_params": [],
-              "max_replicas": 1,
-              "memory": 0.125,
-              "min_replicas": 1,
-              "regions": [
-                "oregon"
-              ]
-            },
-            "stage_profile": {
-              "args": [],
-              "buffer": "1",
-              "cmd": "",
-              "cpu": 100,
-              "env_params": [],
-              "max_replicas": 1,
-              "memory": 0.125,
-              "min_replicas": 1,
-              "regions": [
-                "oregon"
-              ]
-            },
-            "status": "IN_PROGRESS"
-          }
-        ]
-      },
-      "version": "v1.7.0",
-      "exported_at": "-62135596800"
-    }
-  ],
-  "applied_configuration": ""
-}
+2. Generate the base manifest with `auth` and `game-server-fleets`:
+```bash
+snapctl snapend-manifest create \
+  --name $snapendName \
+  --env DEVELOPMENT \
+  --snaps auth,game-server-fleets \
+  --out-path-filename ./$snapendName-manifest.json
 ```
 
-### Phase 3 — Create the Snapend
-
-Create the Snapend using the modified manifest:
-
+3. Create the Snapend from the generated manifest. Do not edit the manifest first:
 ```bash
 snapctl snapend create \
-  --manifest-path-filename $pathToManifest \
+  --manifest-path-filename ./$snapendName-manifest.json \
+  --application-id $applicationId \
   --blocking
 ```
+**Always use `--blocking`** so the command waits until the Snapend is fully online.
+Omit `--application-id` only if `SNAPSER_APPLICATION_ID` is set in the Snapser config.
 
-**Always use `--blocking`** so the command waits until the Snapend is fully online before returning.
+4. If the create times out (exit code 79), the Snapend is still provisioning. Check
+   status with `snapctl snapend enumerate` and wait for it to come online. For any other
+   failure, check the exit code against `skills/error_codes.md`.
 
-If the command fails, check the exit code against `skills/error_codes.md` and help the user recover.
+5. Note the **Snapend ID** — you need it in every later step. The create output prints
+   it as `Cluster ID assigned: <id>`. If you missed it, run `snapctl snapend enumerate`.
 
-Once the create completes, note the **Snapend ID** from the output — save it for reference.
+### Phase 3 — Create the fleet (settings, via the Admin SDK)
 
-### Phase 4 — Verify the fleet in the web app
+Create the fleet on the live Snapend with the bundled Admin SDK. Follow
+`skills/configure-snap-settings/SKILL.md` for the environment setup, the API key, and
+the base URL — and read its cheat sheet first. The fleet-specific part of the script is:
 
-After the Snapend comes up, ask the user to verify their fleet is running:
+```python
+from snapser.api.game_server_fleets_service_api import GameServerFleetsServiceApi
+from snapser.models.game_server_fleets_create_fleet_request import GameServerFleetsCreateFleetRequest
+from snapser.models.game_server_fleets_fleet_profile import GameServerFleetsFleetProfile
 
-> Your Snapend is online. Please go to the **Snapser Web App**, navigate to your Snapend, and confirm that your fleet is listed and its status shows as running. You should see the fleet name and image tag you configured.
+
+def profile():
+    # Smallest hardware profile — enough for a test fleet
+    return GameServerFleetsFleetProfile(
+        buffer="1", cpu=100, memory=0.125, min_replicas=1, max_replicas=1,
+        regions=["oregon"],
+    )
+
+
+fleets = GameServerFleetsServiceApi(ApiClient(config))
+fleets.game_server_fleets_create_fleet(
+    api_key=api_key,
+    cluster_id=snapend_id,
+    body=GameServerFleetsCreateFleetRequest(
+        name=fleet_name,          # e.g. "test-fleet"
+        description="Fleet end-to-end test",
+        image_tag=image_tag,      # the exact tag from Phase 1
+        port=port,                # the port the game server listens on
+        dev_profile=profile(),
+        stage_profile=profile(),
+        prod_profile=profile(),
+    ),
+)
+```
+
+Set these values from the user's input:
+
+- **`image_tag`** — the **exact tag** from Phase 1. **Do NOT add any prefix** — use the
+  tag exactly as passed to `--tag` during publish. If the user published with
+  `--tag byogs-go-v1`, the value is `"byogs-go-v1"` — NOT `"byogs.byogs-go-v1"`, NOT
+  `"snapser/byogs-go-v1"`, NOT any other prefixed form.
+- **`name`** — the fleet name, unique per Snapend, 1-25 characters from `[a-z0-9-_]`
+  (e.g. `test-fleet`).
+- **`port`** — the port the game server listens on. Ask the user; do not guess it.
+- **`regions`** — default to the standard region `oregon`. The valid region ids are in
+  `data/docs/infra/snaps/game-server-fleets/index.mdx`. Do not pick a protected region
+  (an id that ends in `-ga`) for this test unless the user asks — a protected region pins
+  the fleet's ports to `7777` and `7778`.
+
+All three profiles (`dev_profile`, `stage_profile`, `prod_profile`) are required, and
+each profile requires `buffer` and `regions`. For what the other fleet settings mean,
+read `data/docs/infra/snaps/game-server-fleets/config-tools/fleets.mdx`.
+
+### Phase 4 — Download the manifest
+
+The fleet is a settings change, so download the manifest to the project root —
+MANDATORY:
+```bash
+snapctl snapend download \
+  --snapend-id $snapendId \
+  --category snapend-manifest \
+  --format json \
+  --out-path .
+```
+
+### Phase 5 — Verify the fleet
+
+1. Read the fleet back with the Admin SDK and check its status:
+```python
+fleet = fleets.game_server_fleets_get_fleet(
+    fleet_name=fleet_name, api_key=api_key, cluster_id=snapend_id,
+).fleet
+print(fleet.status)
+for d in fleet.fleet_deployments or []:
+    print(d.region, d.fleet_deployment_status)
+```
+   - `IN_PROGRESS` — the fleet is still deploying (each deployment shows `DEPLOYING`).
+     A first deployment takes a few minutes. Read the status again every 15–30 seconds.
+   - `LIVE` — the fleet is up, and each deployment shows `DEPLOYED`.
+   - `FAILED` — see the issues list below.
+   - **The call raises HTTP 400** — a fleet whose deployment failed can make
+     `game_server_fleets_get_fleet` fail. Read `game_server_fleets_get_fleets` (the
+     list call) to see the status; treat it as `FAILED`.
+
+2. Ask the user to confirm in the web app:
+
+> Your Snapend is online and the fleet is created. Please go to the **Snapser Web App**, navigate to your Snapend, and confirm that your fleet is listed and its status shows as running. You should see the fleet name and image tag you configured.
 
 Wait for the user to confirm before proceeding.
 
-If the user reports issues:
-- **Fleet not visible** — The Snapend may still be provisioning the fleet. Ask them to wait a minute and refresh.
-- **Fleet in error state** — Check the fleet configuration in the manifest (image tag, port) and verify the BYOGS image was published successfully. Inspect the live fleet settings to confirm they match what was configured:
+If there are issues:
+- **Fleet not visible** — The Snapend may still be provisioning the fleet. Ask the user to wait a minute and refresh.
+- **Error `no agones internal url configured for region`** — the Snapend's platform does not serve that region. Delete the fleet (`game_server_fleets_delete_fleet`) and create it again with another region.
+- **Fleet in error state** — Check the image tag and port, and verify the BYOGS image was published successfully. Inspect the live fleet settings:
   ```bash
   snapctl snap-config get-config --snaps game-server-fleets --snapend-id $snapendId
   ```
+  For the reason a deployment failed, read the snap logs with `skills/inspect-snapend/SKILL.md` (`snapctl inspect logs --category snap --snaps game-server-fleets`). For game server logs, use `--category fleet`.
 - **Snapend in error state** — Use `skills/snapend-status/SKILL.md` to diagnose.
 
-### Phase 5 — Report results and next steps
+### Phase 6 — Report results and next steps
 
 If the fleet is confirmed running:
 - Report success — the game server image was published, the Snapend was created, and the fleet is live.
 - Provide the Snapend ID for their records.
 
 Offer next steps:
-- **Want to update the game server?** Publish a new image with a new tag via `skills/byogs-publish/SKILL.md`, then update the fleet configuration.
+- **Want to update the game server?** Publish a new image with a new tag via `skills/byogs-publish/SKILL.md`, then update the fleet through the Admin SDK (`skills/configure-snap-settings/SKILL.md`).
+- **Want players to log in?** Enable an auth method, e.g. anonymous login → `skills/configure-snap-settings/SKILL.md`
 - **Want to clone this Snapend to staging?** → `skills/clone-snapend/SKILL.md`
 - **Want to add more snaps?** → `skills/update-backend/SKILL.md`
 - **Want to download the SDK?** → `skills/download-sdk/SKILL.md`
 
 ## Notes
 - Be conversational — guide the user step by step, don't dump all commands at once.
-- The manifest includes auth (always required) and game-server-fleets snaps with sensible defaults for dev.
-- The three fields you MUST update in the manifest are: top-level `name`, `fleets[0].image_tag`, `fleets[0].name`, and optionally `fleets[0].port` if the user's game server uses a different port.
-- Default port in the manifest is `7654` — confirm with the user if their game server uses a different port.
+- The Snapend has `auth` (always required) and `game-server-fleets`. The fleet itself is a setting, created through the Admin SDK after the Snapend is live — never through the manifest.
+- The values you MUST get from the user are the Snapend name, the image tag, the fleet name, and the game server port.
+- In Guide Mode, show the user the commands and the script instead of running them.
 - If any step fails, explain the error clearly using `skills/error_codes.md` and offer to retry or adjust.
