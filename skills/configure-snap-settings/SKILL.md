@@ -76,7 +76,7 @@ method names.) Each call has the shape `<snap>_<action>(api_key, cluster_id, bod
 
 1. Check `~/.snapser/config` for a `PORTAL_ENDPOINT` entry (written by
    `snapctl login --portal-endpoint` for enterprise/private deployments), e.g.
-   `PORTAL_ENDPOINT = https://gateway.snapser.poe-dev.scopely.com/snapser`.
+   `PORTAL_ENDPOINT = https://gateway.snapser.example.com/snapser`.
    If present, the host is `{PORTAL_ENDPOINT}/v1/snapser-api/clusters` — the
    endpoint already includes the trailing `/snapser` segment.
 2. If absent, use the bundled SDK's baked-in default

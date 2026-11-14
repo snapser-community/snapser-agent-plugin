@@ -23,8 +23,7 @@ near the end.
   `/v1/snapser-api/clusters`) if present, else the bundled SDK's default
   (`https://gateway.snapser.com/snapser/v1/snapser-api/clusters`). Note: SDKs
   freshly downloaded via `snapctl admin-sdk download` may carry a wrong default
-  host — always apply the same resolution. Dev-environment host is
-  `https://gateway.dev.snapser.io/snapser/v1/snapser-api/clusters`.
+  host — always apply the same resolution.
 - **Method names have no `admin` infix.** It's `leaderboards_create_leaderboard`,
   not `leaderboards_admin_create_leaderboard`.
 - **int64 fields travel as JSON strings on the wire** (proto3 JSON). The SDK's
@@ -117,8 +116,9 @@ near the end.
 - **Drop table** requires `name` + `drops`. ⚠️ The SDK types the create `drops`
   as `Dict[str,Any]`, but sending an object yields a server proto error
   ("unexpected token {"); the response model uses `List[InventoryDropTableDrops]`.
-  Request/response shape mismatch — likely can't be created via the SDK as-is;
-  confirm the real payload and report to team.
+  Request/response shape mismatch — likely can't be created via the SDK as-is.
+  If the call fails, direct the user to the inventory Config tool in the web
+  portal.
 - **One-time grant** requires `grant_id` + `name`.
 - Currency conversions are keyed by `from_currency` + `to_currency` (path params).
 - Monetary/quantity fields use the `*_64` variants (e.g. `multiplier_64`,
@@ -278,8 +278,7 @@ test harness.
   (`max_users`, `api_keys`, `snap_wildcards`, `match_profile`,
   `exclusion_groups`, …). int64→bigint is still handled. So reading a multi-word
   field off an axios response needs snake_case (or normalize keys back to
-  camelCase). **Flag for SDK team:** regenerate axios with camelCase model naming
-  so all three variants match.
+  camelCase).
 - **node array query params need `useQuerystring = true`.** The legacy `request`
   lib defaults to bracket form (`overrides[0]=x`), which the gateway ignores;
   set `api.useQuerystring = true` so arrays serialize as repeated keys
@@ -297,8 +296,7 @@ test harness.
   `currencies64`/`currencies_64` in TS too — the divergence is specifically the
   inventory-**settings** default grant.)
 
-These mean a value valid in one language can be silently dropped in another;
-worth reconciling SDK-side.
+These mean a value valid in one language can be silently dropped in another.
 
 ---
 
