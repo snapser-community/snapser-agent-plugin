@@ -4,11 +4,15 @@ Build script for the Snapser plugin.
 
 Single source of truth: source/CONTEXT.md
 Generates:
-  - CLAUDE.md               (Claude Code / Cowork reads this at the plugin root)
-  - AGENTS.md               (Codex and OpenCode both read AGENTS.md at the project root)
+  - AGENTS.md               (Codex, OpenCode and Cursor read AGENTS.md)
   - data/releases/INDEX.md  (lookup table over the release notes in data/releases/)
   - data/docs/INDEX.md      (path -> topic map over the docs in data/docs/)
   - README.md docs-version line (between the docs-version markers)
+
+Claude Code does NOT load AGENTS.md or a CLAUDE.md from an installed plugin — it
+loads only the skills. So the rules every workflow needs live in
+skills/core-rules.md, and every SKILL.md must point to it (checked below).
+There is deliberately no root CLAUDE.md; see CONTRIBUTING.md.
 
 Also link-checks every local path referenced in source/CONTEXT.md and
 skills/**/*.md so a renamed skill or data file fails the build instead of
@@ -31,11 +35,20 @@ HEADER = (
     "<!-- Edit source/CONTEXT.md and run `python3 scripts/build.py`. -->\n\n"
 )
 
-TARGETS = ["CLAUDE.md", "AGENTS.md"]
+TARGETS = ["AGENTS.md"]
 
 # Local paths referenced in prose/code blocks, e.g. skills/foo/SKILL.md,
 # data/docs/..., data/snap-swaggers/... Bare directories are checked too.
-PATH_RE = re.compile(r"(?<![\w/.-])((?:skills|data|source|scripts|docs)/[\w./-]*)")
+# A path may carry the ${CLAUDE_PLUGIN_ROOT}/ prefix that Claude Code resolves
+# in skill bodies.
+PATH_RE = re.compile(
+    r"(?:(?<=\$\{CLAUDE_PLUGIN_ROOT\}/)|(?<![\w/.-]))"
+    r"((?:skills|data|source|scripts|docs)/[\w./-]*)"
+)
+
+# Every skill must send the agent to the shared rules, by a path that resolves
+# from an installed plugin.
+CORE_RULES_REF = "${CLAUDE_PLUGIN_ROOT}/skills/core-rules.md"
 
 # References that contain placeholders and can't be checked literally.
 PLACEHOLDER_RE = re.compile(r"[<>$*{}]")
@@ -58,6 +71,9 @@ def link_check() -> int:
             if not (ROOT / ref).exists():
                 print(f"BROKEN REF: {f.relative_to(ROOT)} -> {ref}")
                 errors += 1
+        if f.name == "SKILL.md" and CORE_RULES_REF not in text:
+            print(f"MISSING CORE RULES POINTER: {f.relative_to(ROOT)} -> {CORE_RULES_REF}")
+            errors += 1
     return errors
 
 

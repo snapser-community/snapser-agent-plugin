@@ -5,6 +5,14 @@ description: Complete end-to-end game backend setup with snaps, BYOSnap, and SDK
 
 # Skill: Full Game Backend Wizard
 
+> **Before you start:** read `${CLAUDE_PLUGIN_ROOT}/skills/core-rules.md` if you have
+> not read it in this session. It holds the prerequisite check and the rules that
+> apply to every Snapser workflow.
+>
+> All `skills/` and `data/` paths in this file start at the plugin root,
+> `${CLAUDE_PLUGIN_ROOT}`. If that value is not an absolute path, the plugin root is
+> the folder two levels above this file.
+
 The end-to-end wizard that takes a developer from zero to a fully working game backend
 with Snapser snaps, a custom microservice (BYOSnap), and an SDK — all in one guided flow.
 

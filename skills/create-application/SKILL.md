@@ -5,6 +5,14 @@ description: Create a new Snapser application space
 
 # Skill: Create an application space on Snapser
 
+> **Before you start:** read `${CLAUDE_PLUGIN_ROOT}/skills/core-rules.md` if you have
+> not read it in this session. This skill is a recovery path for the prerequisite
+> check in that file, so do not run that check first.
+>
+> All `skills/` and `data/` paths in this file start at the plugin root,
+> `${CLAUDE_PLUGIN_ROOT}`. If that value is not an absolute path, the plugin root is
+> the folder two levels above this file.
+
 Creates an application space on Snapser. All backends belong to an application space.
 
 ## Trigger Phrases

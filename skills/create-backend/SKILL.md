@@ -5,6 +5,14 @@ description: Create a new Snapend backend from Snapser snap catalog
 
 # Skill: Create a Backend on Snapser aka Snapend
 
+> **Before you start:** read `${CLAUDE_PLUGIN_ROOT}/skills/core-rules.md` if you have
+> not read it in this session. It holds the prerequisite check and the rules that
+> apply to every Snapser workflow.
+>
+> All `skills/` and `data/` paths in this file start at the plugin root,
+> `${CLAUDE_PLUGIN_ROOT}`. If that value is not an absolute path, the plugin root is
+> the folder two levels above this file.
+
 Guides the developer through setting up a complete Snapser development environment
 from scratch — backend and SDK.
 

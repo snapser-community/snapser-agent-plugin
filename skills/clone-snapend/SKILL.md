@@ -5,6 +5,14 @@ description: Clone a Snapend to a new environment (dev to staging)
 
 # Skill: Clone a Snapend to a New Environment
 
+> **Before you start:** read `${CLAUDE_PLUGIN_ROOT}/skills/core-rules.md` if you have
+> not read it in this session. It holds the prerequisite check and the rules that
+> apply to every Snapser workflow.
+>
+> All `skills/` and `data/` paths in this file start at the plugin root,
+> `${CLAUDE_PLUGIN_ROOT}`. If that value is not an absolute path, the plugin root is
+> the folder two levels above this file.
+
 Clones an existing Snapend into a new environment — typically dev → dev, or dev → staging.
 IMPORTANT: You cannot clone stage → prod. That can only be done via the web tool for security reasons.
 

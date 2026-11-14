@@ -5,6 +5,14 @@ description: Check the health, state, and details of a Snapend
 
 # Skill: Check Snapend Status
 
+> **Before you start:** read `${CLAUDE_PLUGIN_ROOT}/skills/core-rules.md` if you have
+> not read it in this session. It holds the prerequisite check and the rules that
+> apply to every Snapser workflow.
+>
+> All `skills/` and `data/` paths in this file start at the plugin root,
+> `${CLAUDE_PLUGIN_ROOT}`. If that value is not an absolute path, the plugin root is
+> the folder two levels above this file.
+
 Checks the health and state of a Snapend — useful for diagnosing issues, verifying
 deployments, or confirming a Snapend is online after an operation.
 

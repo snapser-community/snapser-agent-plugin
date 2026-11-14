@@ -5,6 +5,13 @@ description: Answer any Snapser question from the docs bundled in this plugin �
 
 # Skill: Snapser Help — Answer Any Question About Snapser
 
+> All `skills/` and `data/` paths in this file start at the plugin root,
+> `${CLAUDE_PLUGIN_ROOT}`. If that value is not an absolute path, the plugin root is
+> the folder two levels above this file.
+>
+> This skill needs no `snapctl` command. If the answer leads to one, read
+> `${CLAUDE_PLUGIN_ROOT}/skills/core-rules.md` first.
+
 Answers any question that touches Snapser — from "what is Snapser?" to "what's the request body for the matchmaking create-ticket endpoint?". Use this skill whenever the user mentions Snapser, a specific snap, Snapends, BYOSnap, BYOWS, BYOGS, snapctl, or any other Snapser concept.
 
 **IMPORTANT — All documentation is local. Do NOT fetch remote URLs or use web search.**
@@ -167,11 +174,13 @@ content is the prose, headings, code blocks, and tables).
 | Custom tools (config tool, profile tool) | `data/docs/custom/tools/` |
 | Snapser concepts, architecture | `data/docs/concept.mdx`, `data/docs/overview.mdx` |
 | Snapend internals (networking, SDKs, monitoring, logs) | `data/docs/snapend/` |
+| Snapend networking (gateway, intra-Snapend networking, security) | `data/docs/snapend/networking/` |
 | Snapend tools (API explorer, inspector, clone, sync) | `data/docs/snapend/tools/` |
 | Tutorials (setup, auth, BYOSnap, BYOGS, security) | `data/docs/guides/tutorials/` |
 | Sample projects (Unity, Unreal, Roblox, web, mobile) | `data/docs/guides/samples/` |
 | CLI reference | `data/docs/resources/cli.mdx` |
 | Web portal (access, teams) | `data/docs/resources/portal/` |
+| Audit tool, examples | `data/docs/resources/tools/` |
 | Marketplace | `data/docs/resources/marketplace.mdx` |
 | AI integrations (Cortex, MCP, OpenAI) | `data/docs/ai/` |
 | Business intelligence (dashboards, charts, SQL lab) | `data/docs/business-intelligence/` |
