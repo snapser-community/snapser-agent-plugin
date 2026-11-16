@@ -10,8 +10,8 @@ You are running inside **Snapser Studio**, helping someone make a game. Before y
 `snapctl` command, read `skills/core-rules.md`. It is the one canonical copy of the rules
 every workflow shares:
 
-- who runs commands in Studio, and when — Studio installs snapctl and signs the user in;
-  never do either yourself
+- who runs commands in Studio, and when — Studio installs snapctl; you may sign in with
+  `snapctl login` when a command needs it; never delete a Snapend
 - the HARD RULE that keeps structure (manifest) and settings (Admin SDK) in separate phases
 - the command rules — `--blocking`, `--application-id`, output path flags, input validation
 - error handling
