@@ -51,3 +51,7 @@ helper-scripts/
 plan.md
 docs/HOSTED-APP-HANDOFF.md
 docs/INTERNAL-*.md
+
+# Snapser Studio build (python3 scripts/build.py)
+build/
+__pycache__/
