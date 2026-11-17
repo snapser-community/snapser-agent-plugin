@@ -12,7 +12,7 @@ setup steps in every skill file:
 
 - **Don't install snapctl yourself** — Studio does that. If it's missing, say in one plain
   sentence that the user can set up Snapser in Settings → Connectors, and stop.
-- **Answering a question needs no check.** Read the bundled docs (section 7). Do not run
+- **Answering a question needs no check.** Read the bundled docs (section 8). Do not run
   `snapctl validate` to answer a question.
 - **Before your first `snapctl` command in a step**, run `snapctl validate`. If the key is
   missing or expired, run `snapctl login`: it opens the browser and the user clicks

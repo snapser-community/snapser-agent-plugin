@@ -95,14 +95,27 @@ The example script below implements this resolution.
 
 ### Phase 3 — Write and run the script
 
-Read the API key from `~/.snapser/config` at runtime (it's what `snapctl login`
-stored). **Never hardcode the key in the script, and never echo or print it.**
+Read the API key at runtime **exactly the way snapctl does**, so the script uses the same
+key snapctl just used:
+
+1. the `SNAPSER_API_KEY` environment variable, if set;
+2. otherwise the config file — `SNAPSER_CONFIG_PATH` if set, else `~/.snapser/config`
+   (`%USERPROFILE%\.snapser\config` on Windows) — **from the `[default]` section**, or from
+   `[profile <name>]` only if snapctl was run with `--profile <name>`.
+
+**Never take the first key in the file.** The file can hold several profiles (other
+accounts, other environments); a key from the wrong one is rejected and nothing changes.
+Read it with `configparser`, by section — never with a regex over the whole file.
+`PORTAL_ENDPOINT` comes from the same section.
+
+**Never hardcode the key in the script, and never echo or print it.**
 
 Example — enable anonymous login on a dev Snapend:
 
 ```python
 # ./.snapser/configure.py
-import re
+import configparser
+import os
 import sys
 from pathlib import Path
 
@@ -110,14 +123,22 @@ from snapser import ApiClient, Configuration
 from snapser.api.auth_service_api import AuthServiceApi
 from snapser.models.auth_enable_anon_login_request import AuthEnableAnonLoginRequest
 
-# Key + optional portal endpoint from ~/.snapser/config
-config_text = (Path.home() / ".snapser" / "config").read_text()
-api_key = re.search(r"SNAPSER_API_KEY\s*=\s*(\S+)", config_text).group(1)
+# Key + optional portal endpoint, resolved the way snapctl resolves them:
+# SNAPSER_API_KEY env var, else the [default] section of the config file
+# (SNAPSER_CONFIG_PATH, else ~/.snapser/config). Pass PROFILE only if snapctl used --profile.
+PROFILE = None
+section = "default" if PROFILE in (None, "", "default") else f"profile {PROFILE}"
+config_path = Path(os.environ.get("SNAPSER_CONFIG_PATH") or Path.home() / ".snapser" / "config")
+cfg = configparser.ConfigParser()
+cfg.read(config_path, encoding="utf-8-sig")
+api_key = os.environ.get("SNAPSER_API_KEY") or cfg.get(section, "SNAPSER_API_KEY", fallback=None, raw=True)
+if not api_key:
+    sys.exit(f"No SNAPSER_API_KEY in [{section}] of {config_path} — run `snapctl login`.")
+portal = os.environ.get("PORTAL_ENDPOINT") or cfg.get(section, "PORTAL_ENDPOINT", fallback=None, raw=True)
 
 # Base URL: PORTAL_ENDPOINT (enterprise) wins; else the SDK's baked-in default
-portal = re.search(r"PORTAL_ENDPOINT\s*=\s*(\S+)", config_text)
 config = (
-    Configuration(host=f"{portal.group(1).rstrip('/')}/v1/snapser-api/clusters")
+    Configuration(host=f"{portal.rstrip('/')}/v1/snapser-api/clusters")
     if portal
     else Configuration()
 )
