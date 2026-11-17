@@ -33,6 +33,32 @@ Do not edit a generated file. Edit the source, then run `python3 scripts/build.p
 To add a documentation page or a release note, put the `.mdx` file in its folder and
 run the build.
 
+## The Snapser Studio build
+
+Snapser Studio ships this plugin inside the app and loads it into every agent it runs.
+Studio installs snapctl and signs the user in itself, and it decides in each run whether
+the agent may run commands. So two parts of the shared rules read differently there: the
+prerequisite check and the execution mode choice.
+
+The build writes a second copy of the plugin to `build/studio/` (gitignored). It is the
+same plugin, except that each `## ` section in an overlay file replaces the section with
+the same heading in its base file:
+
+| Overlay | Base | Becomes |
+|---|---|---|
+| `source/studio/skills/core-rules.md` | `skills/core-rules.md` | `build/studio/skills/core-rules.md` |
+| `source/studio/CONTEXT.md` | `source/CONTEXT.md` | `build/studio/AGENTS.md` |
+
+Rules:
+
+- Change a shared rule in the base file. Both builds get it.
+- Put only Studio's differences in an overlay, as whole `## ` sections.
+- If you rename or remove a section that an overlay replaces, the build fails. Update the
+  overlay heading in the same change.
+- The Studio build must not mention Agent Mode or Guide Mode. The build fails if it does.
+- `build/studio/BUILD.json` records the plugin version and the commit it was built from.
+  Snapser Studio vendors from `build/studio/`, never from the repository root.
+
 ## Rules for skill files
 
 - Each skill is `skills/<name>/SKILL.md` with `name` and `description` frontmatter.

@@ -8,6 +8,7 @@ Generates:
   - data/releases/INDEX.md  (lookup table over the release notes in data/releases/)
   - data/docs/INDEX.md      (path -> topic map over the docs in data/docs/)
   - README.md docs-version line (between the docs-version markers)
+  - build/studio/           the Snapser Studio build of the plugin (gitignored)
 
 Claude Code does NOT load AGENTS.md or a CLAUDE.md from an installed plugin — it
 loads only the skills. So the rules every workflow needs live in
@@ -17,6 +18,12 @@ There is deliberately no root CLAUDE.md; see CONTRIBUTING.md.
 Also link-checks every local path referenced in source/CONTEXT.md and
 skills/**/*.md so a renamed skill or data file fails the build instead of
 silently breaking an agent at runtime.
+
+Snapser Studio ships this plugin inside the app and loads it into every agent run.
+Studio installs snapctl and signs the user in itself, and decides per run whether the
+agent may run commands, so the prerequisite check and the Agent/Guide Mode choice read
+differently there. The Studio build is a copy of the plugin with the sections in
+source/studio/ swapped in; everything else is shared. See CONTRIBUTING.md.
 
 Usage:
   python3 scripts/build.py           # build + link check
@@ -416,17 +423,142 @@ def write_docs_index() -> None:
     print(f"wrote data/docs/INDEX.md ({len(files)} pages, {len(seen)} sections)")
 
 
+# ---------------------------------------------------------------------------
+# build/studio/ — the Snapser Studio build
+#
+# One source, two outputs. source/studio/ holds overlay files: each `## `
+# section in an overlay replaces the section with the same heading in its base
+# file. Nothing else differs, so a fix to a shared section reaches both builds.
+# A heading the base no longer has fails the build: a renamed section must not
+# silently drop Studio's version of it.
+# ---------------------------------------------------------------------------
+
+import json
+import shutil
+import subprocess
+
+STUDIO_SRC = ROOT / "source" / "studio"
+STUDIO_OUT = ROOT / "build" / "studio"
+
+# What the Studio build contains. Not here on purpose: source/ (Studio gets the
+# built files), docs/ (install notes for people), .claude/ (this repo's own
+# settings), helper scripts.
+STUDIO_COPY = [".claude-plugin", "skills", "data", "gemini-extension.json", "LICENSE", "README.md"]
+
+# overlay (under source/studio/) -> (base file, file it becomes in the Studio build)
+STUDIO_OVERLAYS = {
+    "skills/core-rules.md": (ROOT / "skills" / "core-rules.md", "skills/core-rules.md"),
+    "CONTEXT.md": (SOURCE, "AGENTS.md"),
+}
+
+# Words that must not reach a Studio agent in the shared rules: Studio has no
+# modes, and an agent that offers one confuses the person it works for.
+STUDIO_FORBIDDEN = ["Agent Mode", "Guide Mode"]
+
+FENCE_RE = re.compile(r"^\s*(```|~~~)")
+COMMENT_RE = re.compile(r"<!--.*?-->", re.S)
+
+
+def split_sections(text: str):
+    """(preamble, [(heading line, block)]) split on `## ` lines outside code fences."""
+    preamble, sections = [], []
+    current = None
+    fenced = False
+    for line in text.splitlines(keepends=True):
+        if FENCE_RE.match(line):
+            fenced = not fenced
+        if not fenced and line.startswith("## "):
+            current = [line.rstrip("\n"), [line]]
+            sections.append(current)
+            continue
+        (current[1] if current else preamble).append(line)
+    return "".join(preamble), [(h, "".join(b)) for h, b in sections]
+
+
+def apply_overlay(base: str, overlay: str, name: str) -> str:
+    pre, replacements = split_sections(overlay)
+    if COMMENT_RE.sub("", pre).strip():
+        sys.exit(f"source/studio/{name}: only a comment may come before the first `## ` section.")
+    if not replacements:
+        sys.exit(f"source/studio/{name}: no `## ` sections to swap in.")
+    base_pre, sections = split_sections(base)
+    headings = [h for h, _ in sections]
+    out = dict(sections)
+    for heading, block in replacements:
+        if headings.count(heading) != 1:
+            sys.exit(f"source/studio/{name}: '{heading}' must match exactly one section of the base file.")
+        # Keep the base's spacing before the next heading.
+        tail = out[heading][len(out[heading].rstrip("\n")):]
+        out[heading] = block.rstrip("\n") + (tail or "\n")
+    return base_pre + "".join(out[h] for h in headings)
+
+
+def git(*args: str) -> str:
+    try:
+        return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return ""
+
+
+def studio_link_check() -> int:
+    errors = 0
+    for f in sorted(STUDIO_SRC.rglob("*.md")):
+        for ref in set(find_refs(f.read_text(encoding="utf-8"))):
+            if not (ROOT / ref).exists():
+                print(f"BROKEN REF: {f.relative_to(ROOT)} -> {ref}")
+                errors += 1
+    for name in STUDIO_OVERLAYS:
+        if not (STUDIO_SRC / name).exists():
+            print(f"MISSING STUDIO OVERLAY: source/studio/{name}")
+            errors += 1
+    return errors
+
+
+def build_studio() -> None:
+    if STUDIO_OUT.exists():
+        shutil.rmtree(STUDIO_OUT)
+    STUDIO_OUT.mkdir(parents=True)
+    ignore = shutil.ignore_patterns(".DS_Store", "__pycache__", "*.pyc")
+    for name in STUDIO_COPY:
+        src = ROOT / name
+        if src.is_dir():
+            shutil.copytree(src, STUDIO_OUT / name, ignore=ignore)
+        else:
+            shutil.copy2(src, STUDIO_OUT / name)
+
+    for name, (base, dest) in STUDIO_OVERLAYS.items():
+        text = apply_overlay(base.read_text(encoding="utf-8"),
+                             (STUDIO_SRC / name).read_text(encoding="utf-8"), name)
+        if dest == "AGENTS.md":
+            text = HEADER.replace("source/CONTEXT.md", "source/CONTEXT.md + source/studio/CONTEXT.md") + text
+        hits = [w for w in STUDIO_FORBIDDEN if w in text]
+        if hits:
+            sys.exit(f"Studio build: {dest} still says {', '.join(hits)}. Override that section in source/studio/{name}.")
+        (STUDIO_OUT / dest).write_text(text, encoding="utf-8")
+
+    version = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))["metadata"]["version"]
+    stamp = {
+        "variant": "studio",
+        "version": version,
+        "sourceSha": git("rev-parse", "HEAD") or None,
+        "sourceDirty": bool(git("status", "--porcelain")),
+    }
+    (STUDIO_OUT / "BUILD.json").write_text(json.dumps(stamp, indent=2) + "\n", encoding="utf-8")
+    print(f"wrote build/studio/ (Studio build of {version})")
+
+
 def main() -> None:
     if not SOURCE.exists():
         sys.exit(f"missing {SOURCE}")
     if "--check" not in sys.argv:
         write_readme_docs_version(write_release_index())
         write_docs_index()
-    errors = link_check()
+    errors = link_check() + studio_link_check()
     if errors:
         sys.exit(f"{errors} broken reference(s). Fix before building.")
     if "--check" not in sys.argv:
         build()
+        build_studio()
     print("link check passed.")
 
 
