@@ -77,6 +77,30 @@ A list holds a set of unique text values, like player IDs.
 
 ![Fleet Add](/images/docs/fleet-add.png)
 
+## Configuration Region Overrides
+A fleet uses the same Allocation Settings in every region. A region override sets different values for one region. Use an override for a region that has less traffic and needs fewer servers.
+
+- **Region** - The region that the override applies to. The region must be one of the regions of the fleet. A region can have at most one override, so the dropdown only offers regions that don't already have one — you can add as many overrides as there are regions selected for the environment.
+- **Min Server Count**, **Max Server Count**, **Buffer Server Value** - The allocation values for the region. An empty field uses the value from Allocation Settings.
+- **Arguments** - The arguments for the game server in the region. These arguments replace all the arguments from Optional Settings. If you add no argument, the region uses the arguments from Optional Settings.
+- **Environment Variables** - The environment variables for the game server in the region. Snapser adds these variables to the variables from Optional Settings. If two variables have the same key, Snapser uses the value of the region.
+
+<Note>
+  Region Overrides are configured per environment, same as Regions and Allocation Settings. If you remove a region from an environment, Snapser also removes that environment's override for it.
+</Note>
+
+For example, a production configuration has a min server count of 4, a max server count of 20, and a buffer of 2:
+
+| Region | Override | Min | Max | Buffer |
+| --- | --- | --- | --- | --- |
+| oregon | none | 4 | 20 | 2 |
+| california | min 1, buffer 1 | 1 | 20 | 1 |
+| singapore-ga | min 1, max 5, buffer 1 | 1 | 5 | 1 |
+
+<Note>
+  The rules for Allocation Settings also apply to the values of a region. For example, the min server count of a region cannot be less than the buffer number of that region. An override cannot remove the arguments or an environment variable of the configuration. Region overrides need Game Server Fleets v1.18.0 or later.
+</Note>
+
 ## Configuration Hardware Settings
 - **CPU** - The number of CPUs you want to allocate to your game server.
 - **Memory** - The amount of memory you want to allocate to your game server.

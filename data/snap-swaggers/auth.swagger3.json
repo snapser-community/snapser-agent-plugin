@@ -307,10 +307,42 @@
             "description" : "A successful response."
           }
         },
-        "summary" : "Discord Login",
+        "summary" : "Discord",
         "tags" : [ "AuthService" ],
         "x-codegen-request-body-name" : "body",
         "x-snapser-auth-passthrough" : true,
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
+      }
+    },
+    "/v1/auth/discord/refresh" : {
+      "post" : {
+        "description" : "Exchanges a Discord refresh token for rotated access and refresh tokens",
+        "operationId" : "DiscordRefresh",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/authDiscordRefreshRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/authDiscordRefreshResponse"
+                }
+              }
+            },
+            "description" : "A successful response."
+          }
+        },
+        "summary" : "Discord",
+        "tags" : [ "AuthService" ],
+        "x-codegen-request-body-name" : "body",
         "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
       }
     },
@@ -1070,7 +1102,7 @@
     },
     "/v1/auth/user" : {
       "get" : {
-        "description" : "Retrieves a user based on user_id",
+        "description" : "Retrieves a user based on user_id or login_id. A user can only retrieve its own user; with user auth, user_id defaults to the caller.",
         "operationId" : "GetUser",
         "parameters" : [ {
           "description" : "UserID of the user, used if specified",
@@ -1129,7 +1161,7 @@
         },
         "summary" : "Get User",
         "tags" : [ "AuthService" ],
-        "x-snapser-auth-types" : [ "api-key", "internal" ]
+        "x-snapser-auth-types" : [ "user", "api-key", "internal" ]
       }
     },
     "/v1/auth/user/{id}/ban" : {
@@ -1659,7 +1691,7 @@
         "properties" : {
           "suspend_for" : {
             "description" : "Duration in seconds for which the user should be suspended",
-            "format" : "uint64",
+            "format" : "int64",
             "type" : "integer"
           }
         },
@@ -1908,6 +1940,38 @@
           },
           "user" : {
             "$ref" : "#/components/schemas/authUser"
+          }
+        },
+        "type" : "object"
+      },
+      "authDiscordRefreshRequest" : {
+        "properties" : {
+          "refresh_token" : {
+            "description" : "Discord refresh token previously issued to this user",
+            "type" : "string"
+          },
+          "user_id" : {
+            "description" : "Snapser user id whose session is making the call; must match the authenticated session",
+            "type" : "string"
+          }
+        },
+        "required" : [ "refresh_token", "user_id" ],
+        "type" : "object"
+      },
+      "authDiscordRefreshResponse" : {
+        "properties" : {
+          "access_token" : {
+            "description" : "Newly issued Discord access token",
+            "type" : "string"
+          },
+          "expires_in" : {
+            "description" : "Lifetime in seconds of the new Discord access token",
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "refresh_token" : {
+            "description" : "Newly rotated Discord refresh token; the previous one is now spent",
+            "type" : "string"
           }
         },
         "type" : "object"

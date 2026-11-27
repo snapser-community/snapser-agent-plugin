@@ -75,6 +75,24 @@ leaderboards are forever leaderboards where the scores never reset.
   prize.
 </Note>
 
+### Previous Periods to Keep
+
+Recurring leaderboards also let you set how many past periods to retain. For example, if
+you have a weekly leaderboard and set **Previous Periods to Keep** to `2`, Snapser keeps the
+data for the last 2 completed weeks around in addition to the current one. Once a period
+rolls past that window, its data is purged.
+
+This setting controls how far back the `offset` parameter on
+[LeaderboardsGetScores](#leaderboardsgetscores-api) and
+[LeaderboardsBatchGetScores](#leaderboardsbatchgetscores-api) can reach. With **Previous
+Periods to Keep** set to `2`, you can query an offset of up to 2 periods in the past.
+
+<Note>
+  This setting only applies to recurring leaderboards. Non-recurring leaderboards never
+  reset, so there are no previous periods to keep. Previous Periods to Keep needs
+  Leaderboards v1.18.0 or later.
+</Note>
+
 ## Retrieving Leaderboard Data
 
 Every leaderboard can be set up to return user ranks in an **Ascending** order or **Descending** order.

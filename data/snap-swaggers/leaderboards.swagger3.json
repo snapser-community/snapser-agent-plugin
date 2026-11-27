@@ -665,7 +665,7 @@
         "properties" : {
           "bucket_size" : {
             "description" : "Maximum number of users per bucket within this tier",
-            "format" : "uint64",
+            "format" : "int64",
             "type" : "integer"
           },
           "description" : {

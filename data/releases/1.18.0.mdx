@@ -1,0 +1,92 @@
+# 1.18.0
+##### December 3, 2026
+
+## Spotlight
+1. **Jobs snap** — a new snap runs your own code over every user in your game. Write a small worker, publish it with `snapctl byojob publish`, and start a run. Snapser sends the user Ids to your worker in batches, retries failures, and tracks progress. See [Jobs](/docs/infra/snaps/jobs).
+2. **Enterprise command center** — Enterprise customers get their own Snapser command center. {/* REVIEW: no ticket or docs page. Add what it includes and a docs link. */}
+3. **Access groups** — bundle roles into a group, then add users to it. Everyone in a group gets every role in it. See [Groups](/docs/resources/portal/access#g-groups).
+4. **Fleet region overrides** — a fleet can use different allocation settings in each region. Size your busiest region without over-provisioning the others. See [Region Overrides](/docs/infra/snaps/game-server-fleets#region-overrides).
+
+---
+
+## Snaps
+
+### Auth
+1. **Read your own logins** — a user can call `GetUser` with its session token. The response includes the `logins` that are associated with the user. A user can only read its own user. See [Reading the Logins of a User](/docs/infra/snaps/auth#reading-the-logins-of-a-user).
+2. **Discord token refresh** — `POST /v1/auth/discord/refresh` exchanges a Discord refresh token for new Discord access and refresh tokens. The call needs a valid Snapser session.
+
+### Assets
+1. **Assets in the Admin SDK** — the bucket and app asset endpoints are available in the Admin SDK. You can create, update, delete, and list buckets, and list and delete app assets.
+
+### Game Server Fleets
+1. **Region overrides** — a fleet can set different values for one region. An override can set the min server count, max server count, buffer, arguments, and environment variables. A value with no override uses the value of the environment. See [Region Overrides](/docs/infra/snaps/game-server-fleets/config-tools/fleets#configuration-region-overrides).
+2. **Region validation** — the Admin SDK accepted a fleet in a region that does not exist. A delete of that Snapend then left the fleet behind. Create and update calls reject an unknown region.
+
+### Inbox
+1. **Delete many messages** — a request that deleted more than 16 messages from a user's inbox failed. Fixed.
+
+### Jobs
+1. **New snap** — the Jobs snap runs a worker image over the users of your Snapend. A run takes a snapshot of the users when it starts. You can pause, resume, cancel, and rerun the failures of a run. Use the [Scheduler](/docs/infra/snaps/scheduler) snap to run a job on a schedule. See [Jobs](/docs/infra/snaps/jobs).
+
+<Warning>
+  Jobs is a Premium snap. A Snapend runs one job run at a time.
+</Warning>
+
+### Leaderboards
+1. **Previous periods to keep** — a recurring leaderboard can keep a set number of past periods. Snapser deletes the data of older periods. The value also limits how far back the `offset` parameter on the Get Scores APIs can reach. The default, `0`, keeps all periods. See [Previous Periods to Keep](/docs/infra/snaps/leaderboards#previous-periods-to-keep).
+2. **Leaderboard delete** — a delete of a leaderboard also deleted the data of each leaderboard whose name started with the same text. For example, a delete of `weekly` deleted the data of `weekly2`. Fixed.
+
+### Profiles
+1. **Concurrent patches** — two patches at the same time to different keys of one profile could overwrite each other. Fixed.
+
+### All Snaps
+1. **Fewer CORS preflights** — browsers sent a CORS preflight before each call to a snap. Snaps send `Access-Control-Max-Age: 600`, so browsers cache the preflight for 10 minutes. Browser clients make fewer round trips.
+
+---
+
+## Web App
+
+### New Tools
+1. **Jobs tool** — the Jobs snap has a Jobs tool to create, test, and run jobs, and a Runs tool to follow and control runs. See [Jobs](/docs/infra/snaps/jobs/config-tools/jobs).
+
+### Access
+1. **Groups** — the studio and game Access tools have a **Groups** tab. A group is a named set of roles. A user in a group gets every role in it. When you invite users, you can add them to a group instead of assigning a role. Groups need the Premium Tier or higher. See [Groups](/docs/resources/portal/access#g-groups).
+
+<Note>
+  A group only adds access. If a user has a direct role and a group role on the same resource, the user gets the more powerful role. The **Roles** tab shows direct roles only.
+</Note>
+
+### Invoices
+1. **Invoice export** — an invoice has an **Export** button. Download the invoice as a PDF, or the cost breakdown as a CSV. See [Exporting an invoice](/docs/resources/tools/invoices#exporting-an-invoice).
+
+### Image Manager
+1. **BYOJOBS tab** — the Image Manager has a **BYOJOBS** tab for job worker images. You cannot delete a worker image that a job uses. See [Image Manager](/docs/custom/tools/image-manager).
+
+### Snap Tools
+1. **Region overrides list** — the Fleets tool has a "Region overrides" list below Allocation Settings on each environment tab. The list needs Game Server Fleets v1.18.0 or later.
+2. **Match Quality form** — the Matchmaking tool has a Match Quality form on each match profile. The form sets the match quality fields that Matchmaking v1.17.0 added. Before this release, only the Admin SDK could set these fields. See [Match Profile Match Quality](/docs/infra/snaps/matchmaking/config-tools/add#match-profile-match-quality).
+3. **Previous Periods to Keep field** — the Leaderboards tool shows this field under Duration for a recurring leaderboard. You can change it after the leaderboard starts. The field needs Leaderboards v1.18.0 or later.
+
+### Bug Fixes
+1. **KWS credentials** — text in the KWS credentials form was lost when you switched to another environment tab. Fixed.
+2. **BI tool access** — you could not grant access to the BI tool from the Web App. Fixed. {/* REVIEW: SNAPS-4382 has no PR or description. Confirm the wording. */}
+3. **Fleets tool load** — the Fleets tool reads game server and fleet status from a cache. Large fleets load faster. {/* REVIEW: SNAPS-4039 cut API server load; confirm a customer sees a speedup, or drop this bullet. */}
+
+---
+
+## Snapctl
+
+### Commands
+#### BYOJob
+1. **`snapctl byojob`** — a new command group for the Jobs snap. `publish` uploads a worker image. `job-list`, `job-run`, and `job-test` list, start, and test jobs. `run-status`, `run-pause`, `run-resume`, `run-cancel`, `run-rerun-failures`, and `run-tune` follow and control a run. See [Snapctl](/docs/resources/cli).
+
+#### Image Manager
+1. **`snapctl image-manager`** — lists and deletes your BYOSnap, BYOGs, and BYOJob images. `list-images` and `delete-images` take `--category byosnap`, `byogs`, or `byojob`. The command refuses to delete an image that a Snapend, fleet, or job uses. It exits `142` on a refused delete.
+
+<Warning>
+  A delete cannot be undone. A published BYOSnap version that uses a deleted image becomes unpublished.
+</Warning>
+
+#### BYOSnap and BYOGs
+1. **`--build-arg`** — `byosnap publish`, `byosnap sync`, `byogs publish`, and `byogs sync` accept `--build-arg KEY=VALUE` and pass it to `docker build`. Repeat the flag for more args. Build args stay in the image history, so use `--secrets` for secrets.
+2. **Fleet settings after an image update** — an update of a fleet image with `snapctl` set the server rotation, counters, and lists of the fleet back to empty. Fixed.

@@ -16,6 +16,8 @@ To get started:
 - **Cron Selector** - If you choose `Cron` you will see a text box where you can enter your cron string. You can also use the Cron builder to help you build your cron string.
 
 ## Scheduler Tasks Action
-- **Add a HTTP Action** - Click on this button to add an action to your task. You can then select the Snap and the API you want to call and add the appropriate parameters.
+- **Action Type** - Shown when your Snapend has the [Jobs](/docs/infra/snaps/jobs) snap. Choose between `HTTP API` and `Job`.
+- **Add a HTTP Action** - For the `HTTP API` type. Click on this button to add an action to your task. You can then select the Snap and the API you want to call and add the appropriate parameters.
+- **Job** - For the `Job` type. Pick the job to run. Each time the task fires, it starts a full run of the job. The job's overlap policy still applies if its previous run is still going. See [Scheduling](/docs/infra/snaps/jobs#scheduling).
 
 ![Task Pic](/images/docs/scheduler-task.png)
