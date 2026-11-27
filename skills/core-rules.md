@@ -146,7 +146,24 @@ Do not guess what an error means. When a command fails:
    key scopes.
 5. If the error persists after recovery, suggest contacting Snapser support.
 
-## 7. Questions and documentation
+## 7. Calling Snapser from game code
+
+Game code that calls a Snapser API directly (no SDK, or an SDK that doesn't build) must get
+every call exactly right. A guessed HTTP method or field name fails silently in front of the
+player.
+
+- **Never write a call from memory or by convention.** Take each call's HTTP method, path,
+  headers and body from: the SDK's `apis/*.ts` (or the equivalent files in other SDKs — each
+  call states its method and path, even when the SDK doesn't compile), or the snap's spec in
+  `data/snap-swaggers/<snap>.swagger3.json`. Copy the method exactly: a login is not always
+  `POST` (anonymous login is `PUT /v1/auth/login/anon`).
+- **Try the calls before you call them done**, when you can reach the Snapend: log in with a
+  throwaway test user and call each endpoint the game uses. Write down the method, path,
+  headers, a sample body and the reply's shape for each call that worked.
+- **Never say a call is checked or verified** unless you compared its method, path and body
+  against the SDK or the spec, or saw it succeed. If you couldn't, list it as unchecked.
+
+## 8. Questions and documentation
 
 **Never use web search or fetch remote URLs for anything Snapser-related.** All
 documentation, API specs, and release notes are bundled in this plugin under `data/`.
