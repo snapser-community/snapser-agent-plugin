@@ -74,6 +74,25 @@ your Snapser services.
 **IMPORTANT**: Snapser Authentication can be thought of as a keychain. The user can have multiple
 keys to open the same lock. The lock here is your Snapser services.
 
+### Reading the Logins of a User
+
+The `GetUser` API (`GET /v1/auth/user`) returns a user. The `logins` field of the user lists
+each login that is associated with the user. Each login has a `type` (for example, `ANON` or `STEAM`) and an `id`.
+
+Your game client can call `GetUser` with the session token of the user. Use this call to show
+the user which accounts are linked, for example before you call `AuthAssociateLogins` or `AuthDisassociateLogin`.
+
+- Send no `user_id` and no `login_id`. The API returns the user of the session token.
+- You can also send the `user_id` of the user, or a `login_id` and `login_type` that belong to the user.
+- A user can only read its own user. A request for a different user returns `401 Unauthorized`.
+- A request with an unknown `login_id` also returns `401`. Thus a user cannot find out if a login exists.
+
+An API key or an internal call can read any user. For these callers, an unknown `login_id` returns `404`.
+
+<Note>
+  User access to `GetUser` needs Auth v1.18.0 or later. Earlier versions accept only API key and internal calls.
+</Note>
+
 ## Authentication Tokens
 Users are validated using a session token. This token is generated when the user logs in
 and is used to authenticate the user for all subsequent calls to your Snapser services.

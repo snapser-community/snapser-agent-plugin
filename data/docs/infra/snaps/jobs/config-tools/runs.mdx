@@ -1,0 +1,46 @@
+# Runs
+
+This tool shows the runs of each job. You can start runs, control active runs, inspect failures and rerun them.
+
+To get started:
+
+1. Click on `Runs` from the side Nav.
+2. Pick a job from the `Job` dropdown.
+3. Click `Run` to start a full run, or `Test run` to try the job on a few users first.
+
+## Runs Table
+Each row shows one run of the job:
+
+- **Run** - The run ID. Test runs and reruns are marked with a chip. Click the ID to open the run.
+- **State** - Pending, Running, Paused, Completed, Failed or Cancelled. Hover the state to see why a run paused or failed.
+- **Progress** - The share of users with a final result. Successes show in green, failures in red.
+- **OK / Failed** - How many users succeeded and how many failed for good.
+- **Worker image** - The image tag the run started with.
+- **Run by** - Who started the run: the user's email, or `Scheduler`, `BYOSnap` or `Snapser Admin`.
+- **Started** and **Duration** - When the run started and how long it ran, or has been running.
+
+Snapser keeps the 50 most recent finished runs of each job. Older completed, failed and cancelled runs are deleted with their failures. Active runs are never deleted. See [Run history](/docs/infra/snaps/jobs#run-history).
+
+## Run Actions
+The actions shown depend on the run's state:
+
+- **Pause** - No new batches are sent. In-flight batches finish and their results are kept. The run can resume from where it stopped.
+- **Resume** - The run continues from where it stopped.
+- **Tune** - Change the worker replicas, concurrency and rate of an active run. The change applies to this run only; the job's own settings do not change.
+- **Cancel** - No new batches are sent. In-flight batches finish, then the run ends. A cancelled run cannot resume.
+- **Rerun failures** - Shown once a run has ended with failures. Starts a new run over only the users that failed. Fix the cause first, and publish a new worker if needed.
+- **Delete** - Delete a finished run with its failures and history.
+
+Pause, cancel and rerun take an optional reason, recorded in the run history.
+
+## Run Details
+Click a run to open its details:
+
+- **Progress** - Total, OK, Failed and Retrying counts. While the run is active you also see in-flight batches, throughput, error rate, time left and how many workers are ready. The page refreshes live.
+- **Details** - The run ID, its job, kind, worker image, who ran it, and when it was created, started and ended. A rerun links to the run whose failures it reran.
+- **Settings** - The run settings, fixed when the run started.
+- **Final failures** - Every user that failed for good, with the number of attempts, the last error your worker returned and when it failed. Click `Download CSV` to export them all.
+
+<Note>
+  The error text in the failures list is what your worker returned. Keep personal data out of it.
+</Note>

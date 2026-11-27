@@ -1,0 +1,447 @@
+export const description = 'Jobs'
+
+export const meta = {
+  author: 'AJ Apte',
+}
+
+# Jobs
+
+The Jobs snap runs your own code across your whole user base. You write a
+small HTTP service, called a **worker**. Snapser handles the rest: it finds the
+users, sends them to your worker in batches, controls the pace, retries what
+fails, tracks progress, and lets you pause or resume at any time.
+
+<Warning>
+  This is a Premium snap. You will need to be on a Premium plan to use it.
+</Warning>
+
+Typical uses:
+
+- **Data migrations:** move every user's save data to a new format after a
+  game update.
+- **Backfills and corrections:** grant a missed reward, fix a bad inventory
+  entry, or recompute a stat for every affected user.
+- **Cleanups:** expire old entitlements or remove data you no longer need.
+- **Scheduled maintenance:** combine with the [Scheduler](/docs/infra/snaps/scheduler) snap to run a job on a
+  regular schedule.
+
+Your worker never has to find the users, track where it got to, or handle
+crashes in the middle of a run. It only has to answer one question: *"here are
+some user IDs, process them."*
+
+---
+
+## Concepts
+
+| Term | What it is |
+|------|------------|
+| **Job** | A saved definition: which users to process, which worker image to use, and the run settings (batch size, speed, retries). You create it once and run it as often as you like. |
+| **Run** | One execution of a job. A run takes a snapshot of the matching users when it starts, then works through them until it is done. |
+| **Worker** | Your container image. Snapser starts it when a run begins and removes it when the run ends. |
+| **Batch** | A group of user IDs that Snapser sends to your worker in one request. |
+
+### How a run works
+
+1. You start a run from the Web App, snapctl, the API, or the Scheduler snap.
+2. Snapser starts your worker (one or more copies) inside your Snapend and
+   waits until its health check passes.
+3. Snapser reads user IDs from the Auth snap, from oldest to newest, and
+   sends them to your worker in batches.
+4. Your worker processes each batch and reports how each user went.
+5. Snapser retries what failed, records users that fail for good, and keeps
+   the progress up to date.
+6. When every user is handled, the run completes and Snapser removes the
+   worker.
+
+A Snapend runs **one job run at a time**. If you start a run while another is
+active, the job's **overlap policy** decides what happens:
+
+| Policy | Behavior |
+|--------|----------|
+| Skip new (default) | The new start is rejected and recorded in the job history. |
+| Cancel active | The active run is cancelled, its in-flight batches finish, then the new run starts. |
+
+---
+
+## Quick start
+
+1. **Write a worker** that serves `POST /batch` and `GET /health` on port
+   8080. See [The worker contract](#the-worker-contract) below, or start
+   from the [Go example worker](https://github.com/snapser-community/snapser-byojobs/tree/main/basic/byojob-go).
+2. **Publish the image** with snapctl:
+
+   ```bash
+   snapctl byojob publish --tag user-migration-v1 --path ./user_migration
+   ```
+
+3. **Create a job** in the Web App under your Snapend's [Jobs tool](/docs/infra/snaps/jobs/config-tools/jobs).
+   Set the worker image tag to `user-migration-v1`, and add any
+   environment variables your worker needs.
+4. **Test it** on a few users before running everyone:
+
+   ```bash
+   snapctl byojob job-test --snapend-id $snapend_id --job-id $job_id --sample-size 50
+   ```
+
+5. **Start a full run** and watch it:
+
+   ```bash
+   snapctl byojob job-run --snapend-id $snapend_id --job-id $job_id
+   snapctl byojob run-status --snapend-id $snapend_id --job-id $job_id --run-id $run_id --watch
+   ```
+
+---
+
+## The worker contract
+
+Your worker is a plain HTTP server in any language. It needs two endpoints,
+both on the same port (8080 by default, or the port you set on the job).
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /health` | **Required.** Return `200` when the worker is ready to take batches. Snapser uses it to tell when the worker has started, to restart it if it hangs, and to check that it is reachable before sending the first batch. |
+| `POST /batch` | Process one batch of users. |
+
+The paths are fixed. If you want one image to do several kinds of work, use
+environment variables on each job to choose what it does. For example, set
+`TASK=migrate-saves` on one job and `TASK=grant-reward` on another.
+
+### The request
+
+```http
+POST /batch
+Content-Type: application/json
+
+{
+  "job_id": "8f3c...",
+  "run_id": "a41e...",
+  "batch_id": "b-000123",
+  "attempt": 1,
+  "items": ["user-id-1", "user-id-2", "user-id-3"]
+}
+```
+
+| Field | Meaning |
+|-------|---------|
+| `job_id`, `run_id` | The job and run this batch belongs to. Useful for logging. |
+| `batch_id` | Identifies the batch. When Snapser sends the same batch again, it keeps the same `batch_id`. |
+| `attempt` | 1 the first time a batch is sent, then higher each time Snapser retries it. |
+| `items` | The user IDs to process, at most the job's batch size. Users you asked to retry may come back grouped with other retried users in a new batch. |
+
+### The response
+
+**Everything succeeded:** return `200`. An empty body or `{}` is fine.
+
+**Some users had problems:** return `200` with a result for each user
+that did not succeed. Any user you leave out counts as a success.
+
+```json
+{
+  "results": [
+    { "id": "user-id-2", "status": "retry",  "error": "inventory service timed out" },
+    { "id": "user-id-3", "status": "failed", "error": "save data is corrupt" }
+  ]
+}
+```
+
+| Status | Meaning | What Snapser does |
+|--------|---------|-------------------|
+| `ok` | Done. | Counts it as a success. |
+| `retry` | A temporary problem. Try this user again later. | Sends the user again after a backoff, up to the job's max attempts. After the last attempt, it is recorded as a failure. |
+| `failed` | A permanent problem. Retrying will not help. | Records it as a failure straight away, with your `error` text. |
+
+Keep `error` short and useful. It appears in the run's failure list and in
+the failures CSV export.
+
+### Status codes
+
+| Your worker answers | Snapser treats it as |
+|---------------------|----------------------|
+| `200` | The batch was handled. Per-user results, if any, are applied. |
+| `429` | "Slow down." The batch is sent again later and the run lowers its pace for a while. This is **not** counted as an error. Use it when something you depend on is rate-limiting you. |
+| Other `4xx` or `5xx`, or no answer before the timeout | The whole batch failed. Every user in it is retried, and the failure counts toward the run's error rate. |
+
+If Snapser cannot reach your worker at all, for example while it is
+restarting, the batch is sent again without using an attempt. If the worker
+stays unreachable, the run pauses so you can look into it.
+
+### Environment
+
+Snapser sets these environment variables on every worker:
+
+| Variable | Value |
+|----------|-------|
+| `PORT` | The port to listen on. |
+| `SNAPSER_JOB_ID`, `SNAPSER_RUN_ID` | The job and run the worker was started for. |
+| `SNAPEND_ID`, `SNAPEND_NAME`, `SNAPEND_ENV` | Which Snapend the worker is running in. |
+| `SNAPEND_<SNAP>_<PORT>_URL` | The address of each snap in your Snapend, for example `SNAPEND_INVENTORY_HTTP_URL`. These are the same variables a BYOSnap gets. |
+| `SNAPEND_INTERNAL_HEADER_NAME`, `SNAPEND_INTERNAL_HEADER` | Send this header and value on calls to your snaps to use their internal APIs. |
+
+Any environment variables you add to the job are set too. Use them for
+settings and feature switches. You can't override the variables above.
+
+### What makes a good worker
+
+- **Make it idempotent.** Snapser delivers every user *at least once*. A
+  batch that timed out may have partly finished, and Snapser sends it again.
+  Processing the same user twice must be safe. For example, check whether
+  a migration is already applied before applying it.
+- **Answer within the timeout.** The default is 30 seconds per batch.
+  Set the batch size so that a full batch finishes well inside the batch timeout.
+- **Report per user.** Return `retry` or `failed` for the users that had
+  problems rather than failing the whole batch. One bad user should not
+  hold back the other 99.
+- **Use `429` for back-pressure.** If a downstream service is struggling,
+  `429` slows the run down without counting as errors.
+- **Keep `/health` cheap.** It is called often. Return `200` once the worker
+  can take work. Don't call other services from it.
+- **Shut down cleanly.** When a run ends, the worker receives `SIGTERM` and
+  has 30 seconds to finish any batch it is working on.
+- **Log to stdout.** Include `run_id` and `batch_id` in your log lines so you
+  can trace problems.
+
+### Example worker (Go)
+
+```go
+package main
+
+import (
+    "encoding/json"
+    "net/http"
+    "os"
+)
+
+type batch struct {
+    RunID   string   `json:"run_id"`
+    Attempt int      `json:"attempt"`
+    Items   []string `json:"items"`
+}
+
+type result struct {
+    ID     string `json:"id"`
+    Status string `json:"status"`
+    Error  string `json:"error,omitempty"`
+}
+
+func main() {
+    http.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
+        w.WriteHeader(http.StatusOK)
+    })
+    http.HandleFunc("POST /batch", func(w http.ResponseWriter, r *http.Request) {
+        var b batch
+        if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
+            http.Error(w, err.Error(), http.StatusBadRequest)
+            return
+        }
+        var problems []result
+        for _, id := range b.Items {
+            if err := migrateUser(id); err != nil {
+                problems = append(problems, result{ID: id, Status: "retry", Error: err.Error()})
+            }
+        }
+        json.NewEncoder(w).Encode(map[string]any{"results": problems})
+    })
+    port := os.Getenv("PORT")
+    if port == "" {
+        port = "8080"
+    }
+    http.ListenAndServe(":"+port, nil)
+}
+
+func migrateUser(id string) error {
+    // Your work goes here. Make it safe to run twice for the same user.
+    return nil
+}
+```
+
+For a complete example you can publish and run as-is, see
+[snapser-byojobs](https://github.com/snapser-community/snapser-byojobs). It
+includes a Dockerfile, a Makefile for `snapctl byojob publish`, a failure mode
+for trying out retries and failures, and a script that seeds test users in
+your Snapend.
+
+---
+
+## Publishing your worker
+
+Your worker is a Docker image built from a `Dockerfile`, and snapctl builds
+and pushes it for you:
+
+```bash
+snapctl byojob publish --tag $image_tag --path $code_root_path
+```
+
+- The tag can be at most **56 characters**. Use a new tag for each version,
+  such as `user-migration-v2`. Then update the job to use it.
+- snapctl builds worker images for **linux/arm64**, the same as BYOSnaps.
+  Commands in your Dockerfile may be specific to a hardware architecture, and
+  snapctl warns you if it detects a mismatch.
+- A run uses the job's image tag from the moment it starts. Changing the
+  job's tag does not affect a run that is already going.
+
+See [BYO Job](/docs/resources/cli#5-byo-job---bring-your-own-job-worker) in the CLI docs for every `snapctl byojob` command.
+
+---
+
+## Job settings
+
+You choose which users a job includes, and how fast and how hard it works.
+Any setting you leave empty takes the default. Snapser checks every value
+against the limits below when you save the job.
+
+### Job
+
+| Setting | Default | Limits | Meaning |
+|---------|---------|--------|---------|
+| Name | (required) | 1–100 characters. Starts with a letter, ends with a letter or digit, and uses only letters, digits, `-` and `_`. Unique within the Snapend. | How you refer to the job. |
+| Description | Empty | Up to 1,024 characters. | Notes for your team. |
+| Overlap policy | Skip new | Skip new or Cancel active. | What happens if a run starts while another is active. See [How a run works](#how-a-run-works). |
+
+### Which users
+
+| Setting | Default | Limits | Meaning |
+|---------|---------|--------|---------|
+| Source | Users | Users is the only source today. | User IDs, read from the Auth snap. |
+| Created after | None | A date and time. Must be before *Created before* when both are set. | Only include users created at or after this time. |
+| Created before | None | A date and time. A run always stops at its own start time. | Only include users created before this time. A run never includes users created after it started. |
+
+### Worker
+
+| Setting | Default | Limits | Meaning |
+|---------|---------|--------|---------|
+| Image tag | (required) | 1–56 characters. Starts with a letter or digit, then letters, digits, `.`, `_` and `-`. The tag must already be published. | The tag you published with `snapctl byojob publish`, without the `byojob.` prefix. |
+| HTTP port | 8080 | 1–65535. | The port the worker serves `/batch` and `/health` on. Snapser also passes it to the worker as `PORT`. |
+| CPU | 200m (0.2 cores) | Up to **2 cores**. In the Web App, pick `100m`, `200m`, `250m`, `500m`, `1`, `1500m` or `2`. Through the API, any value above 0 in cores (`0.5`) or millicores (`500m`). | The CPU each worker copy gets. It is reserved for the worker and is also its cap. |
+| Memory | 200Mi | Up to **1Gi**. In the Web App, pick `128Mi`, `200Mi`, `256Mi`, `512Mi`, `768Mi` or `1Gi`. Through the API, any size above 0, such as `384Mi`. | The memory each worker copy gets. It is reserved for the worker and is also its cap. If the worker uses more, it is restarted. |
+| Environment variables | None | Up to 64. Names are 1–128 characters, start with a letter or `_`, and use only letters, digits and `_`. Each name may be used once. | Extra settings passed to the worker. Names that Snapser sets itself (see [Environment](#environment)) are ignored. |
+
+CPU and memory apply to **each** worker copy. A run with 4 replicas at `500m`
+and `512Mi` uses 2 cores and 2Gi in total. If a worker needs more than one copy
+can have, add replicas instead.
+
+<Note>
+Through the API or a settings import, a job can set a separate request and
+limit for CPU and for memory. The same caps apply to both, and the request
+can't be above the limit. If you set only one of them, the other takes the
+same value. If you set neither, both take the default.
+</Note>
+
+### Run settings
+
+| Setting | Default | Limits | Meaning |
+|---------|---------|--------|---------|
+| Batch size | 100 | 1–1,000 | User IDs per batch. |
+| Worker replicas | 1 | 1–8 | Copies of your worker running in parallel. |
+| Concurrency | 4 | 1–64 | Batches in flight at once, across all copies. |
+| Rate | 10 per second | 1–100 per second | The most batches sent per second. |
+| Batch timeout | 30 s | 1 s–5 min | How long one batch may take before it counts as failed. |
+| Max attempts | 3 | 1–10 | How many times a user is tried before it is recorded as a failure. |
+| Initial backoff | 1 s | 1 ms–1 h | The wait before the first retry. Each later wait doubles. |
+| Max backoff | 60 s | From the initial backoff up to 1 h | The longest wait between retries. |
+| Auto-pause error rate | 50% | 1%–100% | If the error rate over the last minute goes above this, the run pauses itself. |
+
+### Test runs
+
+| Setting | Limits | Meaning |
+|---------|--------|---------|
+| Sample size | 1–1,000 | Process the first N users that match the job. |
+| User IDs | 1–1,000 IDs | Process only these users. |
+
+**Throughput** is limited by whichever is lowest: the rate, the concurrency,
+or how fast your worker answers. For example, with batch size 100, rate 10 and
+fast answers, a run handles about 1,000 users per second.
+
+You can change replicas, concurrency and rate on a run that is already going,
+to speed it up or ease off. The same limits apply:
+
+```bash
+snapctl byojob run-tune --snapend-id $snapend_id --job-id $job_id --run-id $run_id --rate 50 --replicas 4
+```
+
+---
+
+## Running and controlling jobs
+
+You can do all of the following from the Web App, using the [Runs tool](/docs/infra/snaps/jobs/config-tools/runs), or with snapctl.
+
+| Action | snapctl | Notes |
+|--------|---------|-------|
+| Start a run | `job-run` | Processes every user that matches the job. |
+| Test run | `job-test --sample-size N` or `job-test --ids a,b,c` | Up to 1,000 users: the first N, or the IDs you name. Always do this before a full run. |
+| Watch | `run-status --watch` | Live progress: done, failed, retrying, users per second, error rate, and estimated time left. |
+| Pause / resume | `run-pause`, `run-resume` | In-flight batches finish, then the run waits. Resume continues where it left off. |
+| Cancel | `run-cancel` | Stops the run for good. |
+| See failures | `run-failures [--out-path-filename failures.csv]` | Every user that failed for good, with the attempt count and last error. |
+| Rerun failures | `run-rerun-failures` | Starts a new run with only the failed users from an earlier run. Fix the cause first, publish a new worker if needed, then rerun. |
+| Delete runs | `run-delete` | Removes the history of finished runs. |
+
+### Run history
+
+Snapser keeps the **50 most recent finished runs of each job**: completed,
+failed and cancelled. When a job has more, the oldest are deleted
+automatically, along with their failure lists. Active runs never count
+toward the 50 and are never deleted.
+
+A run is kept while a rerun of its failures is still active. Export the
+failures with `run-failures --out-path-filename` if you need them for
+longer.
+
+### Run states
+
+| State | Meaning |
+|-------|---------|
+| Pending | Starting the worker and waiting for its health check. |
+| Running | Sending batches. |
+| Paused | Waiting. You paused it, or it paused itself (the reason is shown). Resume when ready. |
+| Completed | Every user was handled. Some may have failed; check the failure count. |
+| Failed | The run could not start, for example because the worker image could not be pulled or the worker never became healthy. |
+| Cancelled | Someone cancelled it. |
+
+### When a run pauses itself
+
+A run pauses itself, rather than failing, so that you can fix the problem and
+resume without losing progress. It does this when:
+
+- **The error rate goes above the job's auto-pause error rate.** Look at the failures
+  and your worker logs. Fix the cause, publish a new image if needed, and
+  resume.
+- **The worker is unreachable.** It may be crashing on start, running out of
+  memory, or failing its health check. Check the worker's restarts and logs.
+
+A run's progress is saved as it goes, so pauses, worker restarts and
+Snapser's own maintenance do not lose work or count a user twice in the
+progress.
+
+---
+
+## Scheduling
+
+To run a job on a schedule, such as every night at 03:00, create a task in the
+[Scheduler](/docs/infra/snaps/scheduler/config-tools/tasks) snap with the **Job** action and pick the job. Each time the
+task fires, it starts a run, recorded with the Scheduler trigger. The job's
+overlap policy still applies if the previous run is still going.
+
+---
+
+## User data and privacy
+
+The Jobs snap stores only user IDs, and only for users that failed for
+good, along with the error text your worker returned. Keep personal data out
+of your `error` messages. A user's failure records are included when you
+export or delete that user's data through Snapser's user data tools.
+Failure records are also deleted with their run, once the run falls outside
+the [run history](#run-history) limit.
+
+---
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+|---------|--------------|
+| Run fails right away: image can't be pulled | The image tag is wrong, or it was never published. Check the tag matches `snapctl byojob publish --tag`, without the `byojob.` prefix. |
+| Run fails: worker is not reachable | The worker isn't listening on the job's HTTP port, or `GET /health` doesn't return `200`. |
+| Run fails: worker keeps restarting | The worker crashes on start or runs out of memory. Check its logs, and raise the job's memory if needed (up to 1Gi). |
+| Every batch times out | The batch size is too large for the timeout. Lower the batch size or raise the timeout. |
+| Run pauses at a high error rate | Your worker is returning errors or non-`200` answers. See `run-failures` and your worker logs. |
+| Run is slower than expected | Raise the rate, the concurrency or the replicas. If your worker answers `429`, the run slows itself down on purpose. |
+| "The snapend already has an active run" | Another run is still active. Wait for it, cancel it, or set the job's overlap policy to Cancel active. |

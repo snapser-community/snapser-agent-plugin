@@ -14,11 +14,15 @@ server, the image you built lands in a private repository on Snapser, and that
 repository is what the Image Manager shows you — with each image's size, the version
 it was published as, and whether a Snapend is currently using it.
 
-It covers both kinds of custom code, split across two tabs:
+It covers every kind of custom code, split across three tabs:
 
 - **BYOSNAPS** — images pushed by `snapctl byosnap publish`, `snapctl byosnap sync`,
   `snapctl byosnap publish-image` and `snapctl byosnap direct-deploy`.
 - **BYOGS** — images pushed by `snapctl byogs publish` and `snapctl byogs sync`.
+- **BYOJOBS** — worker images pushed by `snapctl byojob publish`. A worker image that a
+  job uses can't be deleted; change those jobs to another worker image tag first.
+
+All three share one repository, so they count toward the same limit.
 
 ## Location
 
@@ -94,7 +98,7 @@ interrupted publish, or the timestamped tags that `snapctl byosnap sync` and
 
 The workflow to reclaim space:
 
-1. Open **Tools > Image Manager** and pick the **BYOSNAPS** or **BYOGS** tab.
+1. Open **Tools > Image Manager** and pick the **BYOSNAPS**, **BYOGS** or **BYOJOBS** tab.
 2. Click the filter icon on the **In Use** column and tick **Unpublished**.
 3. Tick the checkbox on each row you want to remove, or the checkbox in the header row
    to select every row the filter is currently showing. **A Delete button appears once
@@ -113,4 +117,29 @@ If you have not published anything yet, the tab reads **No Images Found**.
   it. Keep the last known-good image for each snap even when it shows as Unused.
 </Warning>
 
-There is no `snapctl` equivalent — pruning is done from the web app.
+## Using snapctl
+
+`snapctl image-manager` lists and deletes the same images from the command line, which
+is how you prune from a CI pipeline. Pick the images with `--category`:
+
+| Category | Images | Deleting is refused when |
+|---|---|---|
+| `byosnap` | BYOSnap images | A BYOSnap version that uses the image is live on a Snapend. Published versions that use any other deleted image are **unpublished**. |
+| `byogs` | BYOGs images | A fleet is deployed with the image. |
+| `byojob` | BYOJob worker images | A job uses the image as its worker image, or a Snapend running the Jobs snap cannot be checked. |
+
+```bash
+# List images, newest first
+snapctl image-manager list-images --category byosnap --byosnap-id byosnap-leaderboard
+snapctl image-manager list-images --category byogs
+snapctl image-manager list-images --category byojob --out-path-filename ./byojob-images.json
+
+# Delete images by tag. Repeat --tag for more. --force skips the confirmation (required in CI).
+snapctl image-manager delete-images --category byosnap --byosnap-id byosnap-leaderboard --tag v1.0.0 --tag v1.0.1
+snapctl image-manager delete-images --category byogs --tag my-first-image --force
+snapctl image-manager delete-images --category byojob --tag my-first-worker
+```
+
+Refused tags are reported as failed, with the reason when Snapser gives one, and the
+command exits with `142`. See [Image Manager](/docs/resources/cli#15-image-manager) in the
+CLI docs for every flag.

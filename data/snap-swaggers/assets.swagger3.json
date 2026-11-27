@@ -21,6 +21,7 @@
         "description" : "Delete app assets",
         "operationId" : "DeleteAppAssets",
         "parameters" : [ {
+          "description" : "IDs of the app assets to delete",
           "explode" : true,
           "in" : "query",
           "name" : "asset_ids",
@@ -416,6 +417,7 @@
       "assetsDeleteAppAssetsResponse" : {
         "properties" : {
           "deleted_ids" : {
+            "description" : "IDs of the app assets that were deleted",
             "items" : {
               "format" : "int32",
               "type" : "integer"
@@ -423,6 +425,7 @@
             "type" : "array"
           },
           "failed_ids" : {
+            "description" : "IDs of the app assets that failed to delete",
             "items" : {
               "format" : "int32",
               "type" : "integer"
@@ -456,12 +459,14 @@
       "assetsGetAppAssetsResponse" : {
         "properties" : {
           "assets" : {
+            "description" : "App assets matching the query",
             "items" : {
               "$ref" : "#/components/schemas/assetsAsset"
             },
             "type" : "array"
           },
           "count" : {
+            "description" : "Number of app assets returned",
             "format" : "int32",
             "type" : "integer"
           }

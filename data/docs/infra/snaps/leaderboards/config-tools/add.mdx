@@ -33,6 +33,11 @@ To get started:
 2. **Period**: The leaderboard can be recurring or non-recurring.
    - **Recurring** - Leaderboard that resets over a schedule.
    - **Non-Recurring** - Leaderboard that never resets.
+3. **Previous Periods to Keep**: Only shown for recurring leaderboards. The number of past periods to keep data for. For example, set this to `2` on a weekly leaderboard to keep the last 2 weeks of data around after each reset.
+
+<Note>
+  Previous Periods to Keep controls how far back clients can query with the `offset` parameter on the Get Scores APIs. This setting needs Leaderboards v1.18.0 or later.
+</Note>
 
 ## Leaderboard Type
 

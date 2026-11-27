@@ -151,7 +151,7 @@
         "properties" : {
           "sequence" : {
             "description" : "The sequence number for the event that starts at 1 for a given subject",
-            "format" : "uint64",
+            "format" : "int64",
             "type" : "integer"
           }
         },

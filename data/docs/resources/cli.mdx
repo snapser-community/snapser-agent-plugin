@@ -8,6 +8,14 @@ export const meta = {
 
 Snapser has developed a CLI tool called **snapctl** that can be used on MacOSX, Linux and Windows machines. Snapctl will be the best way for game studios to integrate Snapser into their build pipelines.
 
+<Warning>
+  **Each BYOSnap and BYOGS image repository holds a maximum of 500 images.** Once a
+  repository is full, pushes are rejected and the tag never registers, which surfaces
+  later as **`Image tag not found`**. Prune from **Tools > Image Manager** in the web app
+  ([docs](/docs/custom/tools/image-manager)) — see
+  [byosnap publish](#4-byosnap-publish) for the full explanation.
+</Warning>
+
 ## Quick Start
 
 One command. You do not need Python installed first — the installer brings its own.
@@ -513,9 +521,12 @@ snapctl byosnap publish --help
 #   If you do not pass `--profile-filename` then
 #   Snapser choses the default `snapser-byosnap-profile.json` as the filename to validate
 # $skip-build = true/false. Default is false. Pass this flag as true to skip the build and head straight to tag and push. Build step needs to run and tag using the --tag you pass to the publish-image command for this to work. Make sure the tag matches the version number you are passing.
+# $build_arg = Optional. Docker build arg in KEY=VALUE format, passed to `docker build --build-arg`. Repeat the flag for multiple args. A bare KEY reads the value from your environment. Build args are stored in the image history, so use --secrets for secrets.
 # Example:
 snapctl byosnap publish --byosnap-id byosnap-jinks-flask --version "v0.0.1" --path /Users/DevName/Development/SnapserEngine/byosnap-python --profile-filename $profile_filename
 snapctl byosnap publish --byosnap-id $byosnap_id --version $version --path $code_root_path
+# With Dockerfile build args
+snapctl byosnap publish --byosnap-id $byosnap_id --version $version --path $code_root_path --build-arg PYTHON_VERSION=3.12 --build-arg APP_ENV=production
 byosnap publish --byosnap-id byosnap-python --version "v1.0.0" --path /Users/AJ/Development/byosnap-python --profile-filename my-byosnap-profile.yaml
 ```
 
@@ -542,9 +553,11 @@ snapctl byosnap sync --help
 # $tag = Semantic version for your snap Eg: v0.0.1
 # $version =
 # $snapend_id = Dev Snapend Id
+# $build_arg = Optional. Docker build arg in KEY=VALUE format, passed to `docker build --build-arg`. Repeat the flag for multiple args. A bare KEY reads the value from your environment. Build args are stored in the image history, so use --secrets for secrets.
 # Example:
 snapctl byosnap sync --byosnap-id byosnap-jinks-flask --path /Users/DevName/Development/SnapserEngine/byosnap-python --version "v0.0.11" --snapend-id "jxmmfryo"
 snapctl byosnap sync --byosnap-id $byosnap_id --path $code_root_path --version $version --snapend-id $snapend_id
+snapctl byosnap sync --byosnap-id $byosnap_id --path $code_root_path --version $version --snapend-id $snapend_id --build-arg PYTHON_VERSION=3.12
 ```
 
 #### 6. byosnap create
@@ -757,11 +770,14 @@ snapctl byogs publish --help
 # $code_root_path = Local code path where your Dockerfile is present
 # $resources_path = Optional path to the resources directory. This ensures, you are not forced to put the Dockerfile at the root directory of your Game Server code.
 # $skip-build = Default is false. Pass this flag as true to skip the build and head straight to tag and push. Build step needs to run and tagged using the --tag you pass to the publish-image command for this to work.
+# $build_arg = Optional. Docker build arg in KEY=VALUE format, passed to `docker build --build-arg`. Repeat the flag for multiple args. A bare KEY reads the value from your environment. Build args are stored in the image history, so use --secrets for secrets.
 # Example:
 # snapctl byogs publish --tag my-first-image --path /Users/DevName/Development/SnapserEngine/game_server
 snapctl byogs publish --tag $image_tag --path $code_root_path
 snapctl byogs publish --tag $image_tag --path $code_root_path --resources-path $resources_path
 snapctl byogs publish --tag $image_tag --skip-build
+# With Dockerfile build args
+snapctl byogs publish --tag $image_tag --path $code_root_path --build-arg UE_VERSION=5.4 --build-arg BUILD_CONFIG=Shipping
 ```
 
 #### 3. byogs sync
@@ -779,12 +795,150 @@ snapctl byogs sync --help
 # $image_tag = An image tag for your snap. Max 46 characters. Note snapctl adds a timestamp, allowing you to use the same command.
 # $snapend_id = Snapend Id
 # $fleet_names = Comma separated fleet names
+# $build_arg = Optional. Docker build arg in KEY=VALUE format, passed to `docker build --build-arg`. Repeat the flag for multiple args. A bare KEY reads the value from your environment. Build args are stored in the image history, so use --secrets for secrets.
 # Example:
 snapctl byogs sync --path /Users/DevName/Development/SnapserEngine/game_server --tag my-first-image --snapend-id "jxmmfryo" --fleet-names "my-fleet,my-second-fleet"
 snapctl byogs sync --path $code_root_path --tag $image_tag --snapend-id $snapend_id --fleet-names $fleet_names
+snapctl byogs sync --path $code_root_path --tag $image_tag --snapend-id $snapend_id --fleet-names $fleet_names --build-arg UE_VERSION=5.4
 ```
 
-### 5. Application
+### 5. BYO Job - Bring your own Job Worker
+Snapctl commands for Batch Jobs: publish your worker image, then start and control job runs.
+Jobs and runs are stored by the Jobs snap of a Snapend, so every command except `publish` takes `--snapend-id`.
+A run belongs to a job, so the `run-*` commands also take both `--job-id` and `--run-id`.
+A job is created in the web app. A run is one execution of a job. A worker is a container image that Snapser runs when a job
+run starts. Snapser sends batches of user IDs to the worker with `POST /batch`; your worker does the
+work on each user and returns a result. The worker must also answer `GET /health`; a run sends no batches until it does.
+To ask Snapser to slow down, answer `429`. A `502` or `503` means the batch never reached your worker: it is sent again without using a retry attempt, and the run pauses if the worker stays unreachable.
+
+Run states are returned as `RUN_STATE_PENDING`, `RUN_STATE_RUNNING`, `RUN_STATE_PAUSED`, `RUN_STATE_COMPLETED`, `RUN_STATE_FAILED` and `RUN_STATE_CANCELLED`. Timestamps (`created_at`, `started_at`, `ended_at`, ...) are unix seconds; `0` means not set. Runs started by snapctl are recorded with the `RUN_TRIGGER_SNAPCTL` trigger.
+
+<Warning>
+  Jobs is a Premium snap. You will need to be on a Premium plan to use it. See the
+  [Jobs docs](/docs/infra/snaps/jobs) for the worker contract, job settings and limits.
+</Warning>
+
+**Image tag limit**: The `--tag` you pass to `byojob publish` can be a maximum of **56 characters**. Kubernetes caps the full pushed image tag at 63 characters, and `publish` pushes `byojob.<tag>`.
+
+**Image limit**: Worker images live in the same image repository as your BYOSnap and BYOGs images, so they share its 500 image limit. List and delete old worker images with [`snapctl image-manager --category byojob`](#15-image-manager).
+
+#### 1. byojob help
+
+See all the supported commands
+
+```bash
+# Help for the byojob command
+snapctl byojob --help
+```
+
+#### 2. byojob publish
+
+Publish your job worker image. Then select the image and tag when you create a job in the web app. For a worker you can publish right away, see the [BYOJob examples](https://github.com/snapser-community/snapser-byojobs).
+
+**IMPORTANT**: Take note of the hardware architecture of machine and your Dockerfile commands. Commands in docker file may be hardware architecture specific. Snapser throws a warning if it detects a mismatch.
+
+```bash
+# Help for the byojob command
+snapctl byojob publish --help
+
+# Publish a new image
+# $image_tag = An image tag for your worker. Max 56 characters
+# $code_root_path = Local code path where your Dockerfile is present
+# $resources_path = Optional path to the resources directory, if your Dockerfile is not at the root of your code.
+# $skip-build = Default is false. Pass this flag to skip the build and head straight to tag and push. The image must already be built and tagged locally with the --tag you pass.
+# Example:
+# snapctl byojob publish --tag my-first-worker --path /Users/DevName/Development/SnapserEngine/user_migration
+snapctl byojob publish --tag $image_tag --path $code_root_path
+snapctl byojob publish --tag $image_tag --path $code_root_path --resources-path $resources_path
+snapctl byojob publish --tag $image_tag --skip-build
+```
+
+#### 3. byojob job-list
+
+List the jobs of a Snapend, newest first.
+
+```bash
+# $snapend_id = Snapend Id
+snapctl byojob job-list --snapend-id $snapend_id
+```
+
+#### 4. byojob job-run
+
+Start a run of a job over every user within the job filter. The run uses the worker tag set on the job. A Snapend runs one job at a time; the job's overlap policy decides whether a new start is rejected or cancels the active run.
+
+```bash
+# $snapend_id = Snapend Id
+# $job_id = Job Id
+snapctl byojob job-run --snapend-id $snapend_id --job-id $job_id
+```
+
+#### 5. byojob job-test
+
+Start a test run of a job on a few users before you run it on all of them. Pass either `--ids` (up to 1000 user IDs) or `--sample-size` (the first N users, 1 to 1000).
+
+```bash
+# $user_ids = Comma separated user IDs
+snapctl byojob job-test --snapend-id $snapend_id --job-id $job_id --ids $user_ids
+snapctl byojob job-test --snapend-id $snapend_id --job-id $job_id --sample-size 50
+```
+
+#### 6. byojob run-status
+
+Get the state and progress of a run. Pass `--watch` to keep polling until the run is completed, failed or cancelled.
+
+```bash
+# $snapend_id = Snapend Id
+# $job_id = Job Id
+# $run_id = Run Id. `job-run`, `job-test` and `run-rerun-failures` return it as `id`.
+snapctl byojob run-status --snapend-id $snapend_id --job-id $job_id --run-id $run_id
+snapctl byojob run-status --snapend-id $snapend_id --job-id $job_id --run-id $run_id --watch
+```
+
+#### 7. byojob run-pause, run-resume and run-cancel
+
+`run-pause` stops new batches; batches already sent still finish. `run-resume` continues from the last checkpoint. `run-cancel` ends the run; a cancelled run cannot resume.
+
+```bash
+snapctl byojob run-pause --snapend-id $snapend_id --job-id $job_id --run-id $run_id
+snapctl byojob run-resume --snapend-id $snapend_id --job-id $job_id --run-id $run_id
+snapctl byojob run-cancel --snapend-id $snapend_id --job-id $job_id --run-id $run_id
+```
+
+#### 8. byojob run-rerun-failures
+
+Start a new run over the final failures of an ended run. The new run's `parent_run_id` is the run you pass.
+
+```bash
+snapctl byojob run-rerun-failures --snapend-id $snapend_id --job-id $job_id --run-id $run_id
+```
+
+#### 9. byojob run-tune
+
+Change the settings of an active run. Pass at least one of `--rate` (maximum batches per second), `--replicas` (worker pods) and `--concurrency` (batches in flight across all pods). Snapser applies its own limits above these values.
+
+```bash
+snapctl byojob run-tune --snapend-id $snapend_id --job-id $job_id --run-id $run_id --rate 50 --replicas 4
+```
+
+#### 10. byojob run-failures
+
+Get the IDs that failed in a run, with the attempts and last error. Pass `--out-path-filename` to save them as a CSV file; the CSV `failed_at` column is ISO 8601 UTC.
+
+```bash
+snapctl byojob run-failures --snapend-id $snapend_id --job-id $job_id --run-id $run_id
+snapctl byojob run-failures --snapend-id $snapend_id --job-id $job_id --run-id $run_id --out-path-filename failures.csv
+```
+
+#### 11. byojob run-delete
+
+Delete ended runs (completed, failed or cancelled) of a job, with their failures and history. Pass one run ID or a comma separated list of up to 100. It deletes all of them or none: if any run is still active, is not in the job, or is the source of an active rerun, nothing is deleted. Needs the admin role on the Snapend.
+
+```bash
+snapctl byojob run-delete --snapend-id $snapend_id --job-id $job_id --run-id $run_id
+snapctl byojob run-delete --snapend-id $snapend_id --job-id $job_id --run-id $run_id_1,$run_id_2
+```
+
+### 6. Application
 Snapctl commands for your application
 
 <Note>
@@ -812,7 +966,7 @@ List all the applications
 snapctl application enumerate
 ```
 
-### 6. Secret
+### 7. Secret
 Snapctl commands for managing application-scoped secrets. Secrets are append-only and **tag-keyed**: every `create` writes a new `(file_name, tag)` pair, values are stored encrypted at rest, and values are returned redacted (`********`) on every operation except `reveal`. The `file_name` is the secret's primary key; `tag` is a user-chosen identifier for a specific version of a secret. Both follow the regex `^[-._a-zA-Z0-9]+$` (1–253 chars). Secret values are limited to 65536 bytes.
 
 **There is intentionally no `update` operation.** To rotate a secret value, call `create` again with a new tag. Older tags remain available until you explicitly delete them.
@@ -896,7 +1050,7 @@ snapctl secret reveal --application-id $application_id --file-name $file_name --
 
 **Note:** `--tag` is strictly rejected on `enumerate` and `get` — this catches typos like `snapctl secret get --tag prod --file-name foo` when you actually meant `reveal`.
 
-### 7. Snapend Manifest
+### 8. Snapend Manifest
 Snapctl commands for the Snapend manifest. Manifest is the representation of your Snapser backend stored as a JSON or YAML. The manifest can then be used to create, update your backend.
 
 #### 1. snapend-manifest help
@@ -997,7 +1151,7 @@ snapctl snapend-manifest update --manifest-path-filename $input_manifest --add-s
 ```
 
 
-### 8. Snapend
+### 9. Snapend
 Snapctl commands for your snapend
 
 #### 1. snapend help
@@ -1160,7 +1314,7 @@ snapctl snapend enumerate --help
 snapctl snapend enumerate --application-id $application_id
 ```
 
-### 9. Generate
+### 10. Generate
 Generator tool to help generate credentials
 
 #### 1. generate help
@@ -1179,7 +1333,7 @@ snapctl generate credentials --category "ecr" --out-path $output_path
 ```
 
 
-### 10. Snap Configuration
+### 11. Snap Configuration
 Retrieve snap-specific configuration from a deployed Snapend.
 
 #### 1. snap-config help
@@ -1199,7 +1353,7 @@ Get the configuration for specific snaps from a Snapend. This downloads the Snap
 snapctl snap-config get-config --snaps $snaps --snapend-id $snapend_id
 ```
 
-### 11. Admin SDK
+### 12. Admin SDK
 Download the Admin SDK — a downloadable SDK that lets you write your own scripts and tools to configure your Snapends programmatically (e.g. set a storage key blob, a profile attribute, an authenticator connector). The SDK is not tied to a single Snapend; its methods take the Snapend id at runtime. The download is therefore scoped by snap (`name:version`) rather than by `--snapend-id`, and accepts the same `--format`/`--http-lib` inputs as `snapend download`.
 
 #### 1. admin-sdk help
@@ -1237,7 +1391,7 @@ snapctl admin-sdk download --format $format --snaps $snaps --out-path $out_path
 snapctl admin-sdk download --format $format --http-lib $http_lib --snaps $snaps --out-path $out_path
 ```
 
-### 12. Release Notes
+### 13. Release Notes
 View the release notes for Snapctl.
 
 #### 1. release-notes help
@@ -1264,7 +1418,7 @@ snapctl release-notes show
 snapctl release-notes show --version $version --out-path $out_path
 ```
 
-### 13. Accounts
+### 14. Accounts
 Snapctl commands for bulk managing the developer accounts and roles on your company. The workflow is **export → edit the CSV → sync**: `export` writes the current roster as CSV, you edit it in a spreadsheet or a script, and `sync` diffs your file against the live state and applies the difference.
 
 The company is derived from your API Key, so there is no `--company-id`. Both subcommands run company wide by default. Pass `--application-id` (or set the `SNAPSER_APPLICATION_ID` environment variable / Snapser config key, same fallback as `snapctl snapend`) to scope the export/sync to a single application.
@@ -1345,7 +1499,7 @@ snapctl accounts sync --accounts-path-filename ./accounts.csv --dry-run --applic
 
 The full server response is always echoed on stdout as JSON (the diff/results tables go to stderr), so `snapctl accounts sync ... | jq` works.
 
-### 14. Inspect
+### 15. Inspect
 Snapctl commands to inspect your Snapend
 
 #### 1. inspect help
@@ -1482,6 +1636,64 @@ snapctl inspect metrics --help
 snapctl inspect metrics --snapend-id $snapend_id --metric $metric --since $since --out-path-filename $out_path_filename
 ```
 
+### 15. Image Manager
+Snapctl commands to list and delete your BYOSnap, BYOGs and BYOJob images. This is the CLI version of the
+[Image Manager](/docs/custom/tools/image-manager) in the web app.
+
+BYOSnap, BYOGs and BYOJob images live in the same image repository, so they share its 500 image limit.
+Deleting images you no longer use is how you free up room. Pick the images with `--category`:
+1. `byosnap`: BYOSnap images. Deleting an image used by a BYOSnap version that is live on a Snapend
+   is refused. Published versions that use any other deleted image are **unpublished**.
+2. `byogs`: BYOGs images. Deleting an image that a fleet is deployed with is refused.
+3. `byojob`: BYOJob worker images. Deleting an image that a job uses as its worker image is refused;
+   change those jobs to another worker image tag first. Snapser checks the jobs on every Snapend
+   running the Jobs snap, and refuses the delete if one of those Snapends cannot be checked.
+
+Refused tags are reported as failed, with the reason when Snapser gives one, and the command exits
+with `142`. Deletes cannot be undone, so
+`delete-images` asks for confirmation unless you pass `--force`.
+
+#### 1. image-manager help
+
+See all the supported commands
+
+```bash
+# Help for the image-manager command
+snapctl image-manager --help
+```
+
+#### 2. image-manager list-images
+
+List your images with their size, upload time, the number of Snapends using them and, for BYOSnap,
+the versions published with them. For BYOJob, it also shows the number of jobs that use each image.
+
+```bash
+# $category = byosnap, byogs or byojob
+# $byosnap_id = (optional, byosnap only) Only list this BYOSnap's images
+# $out_path_filename = (optional) Full path to a .json file to also save the list in
+# Example:
+# snapctl image-manager list-images --category byogs
+# snapctl image-manager list-images --category byosnap --byosnap-id byosnap-leaderboard
+# snapctl image-manager list-images --category byojob --out-path-filename ./byojob-images.json
+snapctl image-manager list-images --category $category --byosnap-id $byosnap_id --out-path-filename $out_path_filename
+```
+
+#### 3. image-manager delete-images
+
+Delete images by tag. Repeat `--tag` to delete several at once.
+
+```bash
+# $category = byosnap, byogs or byojob
+# $byosnap_id = (required for byosnap) BYOSnap the tags belong to
+# $tag = Image tag to delete. Repeat the flag for more tags.
+# --force = (optional) Skip the confirmation. Required in non-interactive sessions such as CI.
+# Example:
+# snapctl image-manager delete-images --category byosnap --byosnap-id byosnap-leaderboard --tag v1.0.0 --tag v1.0.1
+# snapctl image-manager delete-images --category byogs --tag my-first-image --force
+# snapctl image-manager delete-images --category byojob --tag my-first-worker --tag v2
+snapctl image-manager delete-images --category $category --byosnap-id $byosnap_id --tag $tag
+```
+
 ## Error codes
 ### CLI Return Codes
 | Error Code | Description                                              |
@@ -1534,6 +1746,19 @@ snapctl inspect metrics --snapend-id $snapend_id --metric $metric --since $since
 | 26         | BYOGS publish permission error                           |
 | 27         | BYOGS publish duplicate tag error                        |
 
+### BYOJob Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 130        | Generic BYOJob error                                     |
+| 131        | BYOJob dependency missing                                |
+| 132        | BYOJob ECR login error                                   |
+| 133        | BYOJob build error                                       |
+| 134        | BYOJob tag error                                         |
+| 135        | BYOJob publish error                                     |
+| 136        | BYOJob publish duplicate tag error                       |
+| 137        | BYOJob job command error                                 |
+| 138        | BYOJob run command error                                 |
+
 ### BYOSNAP Errors
 | Error Code | Description                                              |
 |------------|----------------------------------------------------------|
@@ -1574,7 +1799,8 @@ Returned by `snapctl snapend update`, `snapctl snapend create`, `snapctl snapend
 `snapctl byosnap sync` report the same condition as `44` and `47` respectively.
 
 The most common cause is a full image repository. Repositories cap at 500 images; prune
-them from the [Image Manager](/docs/custom/tools/image-manager) in the web app. See
+them from the [Image Manager](/docs/custom/tools/image-manager) in the web app
+or with [`snapctl image-manager`](#15-image-manager). See
 [byosnap publish](#4-byosnap-publish) for the full explanation.
 
 ### Application Errors
@@ -1625,6 +1851,13 @@ them from the [Image Manager](/docs/custom/tools/image-manager) in the web app. 
 | 123        | Inspect logs error                                       |
 | 124        | Inspect monitor error                                    |
 | 125        | Inspect metrics error                                    |
+
+### Image Manager Errors
+| Error Code | Description                                              |
+|------------|----------------------------------------------------------|
+| 140        | Image Manager list-images error                          |
+| 141        | Image Manager delete-images error                        |
+| 142        | Some images were not deleted (in use on a Snapend, fleet or job, or not found) |
 
 ### Snapend Errors
 | Error Code | Description                                              |

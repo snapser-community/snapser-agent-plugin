@@ -8,6 +8,8 @@ export const meta = {
 
 Snapser supports a role-based access control system. This allows you to assign different levels of access to different users.
 
+A user can get a role in two ways: you assign it to them **directly**, or they are in a [group](#g-groups) that has the role. The two are completely separate. A user can have the same role both ways at once, and removing one never touches the other.
+
 The Snapser access control system has five main categories:
 1. company
 2. game
@@ -39,12 +41,16 @@ The resource is the full path the role points at, and that path is what makes th
 
 So the same user can hold a **company-\*** role, a **game-\*** role on each of your apps, a **cluster-\*** role on each Snapend, and a Snap-level role on each Snap — those are all different resources. What they cannot hold is two roles on the *same* resource.
 
+<Note>
+This rule applies to roles you assign **directly**. Roles that come from a [group](#g-groups) are tracked separately and do not count against it. A user can have a direct role and a group role on the same resource, even the same role. Neither replaces the other, and the user gets whichever is more powerful.
+</Note>
+
 <Warning>
 **IMPORTANT**: Look at the last two rows above. **cluster-service-\*** and **cluster-service-user-\*** point at the **same** resource, so a user can only hold one of them per Snap — granting one **replaces** the other. You rarely need both: **cluster-service-\*** already covers the **User Manager** tool as well as Snap configuration. Reach for **cluster-service-user-\*** only when you want to give someone User Manager access *without* Configuration access.
 </Warning>
 
 <Warning>
-  Tiers below Premium are limited to company and game roles. Upgrade to the Premium Tier or higher for granular access control, including cluster and cluster-service roles.
+  Tiers below Premium are limited to company and game roles. Upgrade to the Premium Tier or higher for granular access control, including cluster and cluster-service roles, and [groups](#g-groups).
 </Warning>
 
 ![Access Pic](/images/docs/access.png)
@@ -62,6 +68,8 @@ this tool:
 
 - Tool at the cluster level. This tool allows you to manage cluster-_, cluster-service-_, and cluster-service-user-\* roles.
   ![Access Cluster Pic](/images/docs/access-snapend.png)
+
+On the Premium Tier and higher, the studio and game level tools have three tabs: **Accounts**, **Groups** and **Roles**. The main button in the header follows the tab you are on: **Invite users** on Accounts, **Create group** on Groups and **Assign roles** on Roles. Click the arrow next to it to pick one of the other two.
 
 ## A. Company roles
 
@@ -511,6 +519,82 @@ preview shows in the browser.
   [CLI doc](/docs/resources/cli) for the exit codes.
 </Note>
 
+## G. Groups
+
+A group is a named set of roles. Add a user to a group and they get every role in it. Remove them and those roles are taken away. Groups are useful when several people need the same access, like everyone on a game team or your QA team. You set up the roles once and add or remove people as the team changes.
+
+<Warning>
+  Groups are available on the Premium Tier and higher.
+</Warning>
+
+![Access Groups Pic](/images/docs/access-groups.png)
+
+### Where you can create groups
+
+Groups live in the **Groups** tab of the Access tool. Which roles a group can hold, and who can manage it, depends on where you create it:
+
+| Access tool       | Roles a group can hold                                                                  | Who can create, edit and delete groups |
+| ----------------- | --------------------------------------------------------------------------------------- | -------------------------------------- |
+| Studio level      | **company-\*** and **game-\***                                                          | **company-admin**                      |
+| Game level        | **game-\***, **cluster-\***, **cluster-service-\*** and **cluster-service-user-\***       | **game-admin** or **company-admin**    |
+
+A group created in an app's Access tool can only hold roles inside that app. Groups are not available in the Snapend level Access tool.
+
+Everyone else with access to the tool can open a group to see its roles and users, but cannot change it.
+
+### Creating a group
+
+1. Open the **Groups** tab and click **Create group**.
+2. Enter a **Name** and an optional **Description**.
+3. Add the **Roles** the group should give. For each role, pick the resource it applies to, just like when you assign a role directly: an app for **game-\*** roles, a Snapend for **cluster-\*** roles, and a Snapend and a Snap for Snap level roles.
+4. Pick the **Users** to add. You can only pick users who are already part of your organization. To add someone new, see [Inviting a user into a group](#inviting-a-user-into-a-group).
+5. Click **Save**.
+
+Roles and users are optional when you create a group. You can save it first and add them later.
+
+![Access Group Form Pic](/images/docs/access-group-form.png)
+
+### Editing a group
+
+Hover over a group in the **Groups** tab and click **Edit**. The same form opens in a window, where you can rename the group, change its description, add or remove roles, and add or remove users in one go.
+
+If your changes remove any roles or users, you will be asked to confirm before anything is saved. Removing a user from a group takes away the roles they got from it. Roles assigned to them directly are not affected.
+
+### Deleting a group
+
+Hover over a group and click **Delete**. Everyone in the group loses the roles it gave them. Roles you assigned to them directly are not affected, even if they are the same roles the group had.
+
+### Inviting a user into a group
+
+When you invite users, you can choose **Add to a group** instead of **Assign a role**. The new users join your organization and the group in one step, and get every role in the group. This option only shows up once you have at least one group.
+
+### Group roles and direct roles are separate
+
+<Warning>
+  **IMPORTANT**: A role a user gets from a group and a role you assign to them directly are two **separate** memberships. They live side by side, and changing one never changes the other.
+</Warning>
+
+Say `abc@gmail.com` is in a group called **Game A Team**, which has the **game-admin** role on Game A. You can still go to the **Roles** tab and assign `abc@gmail.com` the **game-admin** role on Game A directly. They now hold **game-admin** twice, once through the group and once directly:
+
+| What you do                                    | Group role (via Game A Team) | Direct role       |
+| ---------------------------------------------- | ---------------------------- | ----------------- |
+| Starting point                                 | game-admin                   | game-admin        |
+| Remove them from **Game A Team**               | Removed                      | **Still there**   |
+| Delete **Game A Team**                         | Removed                      | **Still there**   |
+| Remove their direct role in the **Roles** tab  | **Still there**              | Removed           |
+
+To take away the access completely, you have to remove both.
+
+A few more things to keep in mind:
+
+- **A group only adds access.** It never removes or lowers a role a user already has, so you cannot use a group to downgrade someone.
+- **The more powerful role wins.** If a user has a direct role and a group role on the same resource, they get the more powerful one.
+- **The Roles tab shows direct roles only.** Roles a user gets from a group are not listed in the **Roles** tab. Open the group in the **Groups** tab to see them.
+
+### Seeing all of a user's memberships
+
+Hover over a user in the **Accounts** tab and click **Memberships**. It shows two lists: the **Groups** the user is in, and the **Direct roles** assigned to them outside any group. Use it to see every place a user's access comes from before you remove something.
+
 ## FAQs
 
 ### I assigned a new role to someone and their old role disappeared. Is that a bug?
@@ -521,6 +605,24 @@ No. Both point at the same resource, so granting one replaces the other. You alm
 
 ### How do I give someone access to two different Snaps?
 Assign the role twice, once per Snap. Two Snaps are two different resources, so both roles stick. The same applies across Snapends and across apps — you only ever replace a role when you point at a resource the user already has a role on.
+
+### I removed someone from a group. Did they lose the roles I assigned to them directly?
+No. Removing a user from a group, or deleting the group, only takes away the roles that group gave them. Roles you assigned directly stay as they are, even if the group had the exact same role. See [Group roles and direct roles are separate](#group-roles-and-direct-roles-are-separate).
+
+### Can a user have the same role directly and through a group?
+Yes. They are two separate memberships. For example, a user can be in a group with **game-admin** on Game A and also have **game-admin** on Game A assigned directly. Removing either one leaves the other in place. Use **Memberships** in the **Accounts** tab to see both.
+
+### Can I use a group to give someone less access?
+No. A group only ever adds access. If a user already has a more powerful role directly, adding them to a group with a weaker role changes nothing. To lower someone's access, change their direct role in the **Roles** tab.
+
+### Why do roles from a group not show up in the Roles tab?
+The **Roles** tab lists the roles you assigned directly. Roles that come from a group are shown on that group in the **Groups** tab, so you always know where a user's access is coming from.
+
+### Why can I not add a new email address to a group?
+A group can only hold users who are already part of your organization. To bring in someone new, use **Invite users** and pick **Add to a group**. That invites them and adds them to the group in one step.
+
+### I am a game-edit user. Why can I not create a group?
+Only admins can manage groups: **company-admin** in the studio level Access tool, and **game-admin** or **company-admin** in an app's Access tool. Other users can open groups to see their roles and users.
 
 ### Who should have the company-admin role?
 The company-admin role should be given to the CTO or the highest level of technical staff in your company. This role has the highest level of access and can manage all users and games.

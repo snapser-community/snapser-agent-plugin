@@ -161,6 +161,32 @@ row at the bottom adds up every Snapend.
   will not always match the invoice total.
 </Note>
 
+## Exporting an invoice
+
+To take an invoice out of the portal, open it and click **Export** at the top
+right of the page, then pick a format:
+
+* **Download PDF** - A printable copy of the invoice, ready to file or attach
+  to an expense report or purchase order. It includes the app, billing period,
+  invoice number and total billed, the full cost breakdown with every row
+  expanded, and the per-Snapend breakdown.
+* **Download CSV** - The same breakdown as a spreadsheet. Amounts are plain
+  numbers, with discounts as negatives.
+
+In the CSV, use the **Type** column to pick the rows you need. `line` rows are
+the charges, `detail` rows show how each charge was worked out, and `subtotal`
+and `total` rows carry the section totals. Adding up every row would count
+charges more than once. The side of production usage that was not billed is
+marked **(not billed)**.
+
+Files are named after the app and billing month, for example
+`snapser-invoice-space-raiders-2026-10.pdf`.
+
+<Note>
+  The export covers the invoice itself. The cost composition chart and plan
+  usage are not included.
+</Note>
+
 ## Paying your invoice
 
 The Invoices tool is read-only — it is where you review what you were charged,

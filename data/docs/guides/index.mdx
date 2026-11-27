@@ -8,7 +8,7 @@ export const meta = {
 
 # Guides
 
-Below you will find a collection of Tutorials, Starter Projects, Bring your own Snaps (BYOSnap) and Bring your own Game Servers (BYOGS) examples to help you get started with Snapser.
+Below you will find a collection of Tutorials, Starter Projects, Bring your own Snaps (BYOSnap), Bring your own Jobs (BYOJob) and Bring your own Game Servers (BYOGS) examples to help you get started with Snapser.
 
 ## Tutorials
 
@@ -82,6 +82,15 @@ These examples demonstrate how you can tap into the Snapser Hooks system from yo
 
     * [Advanced Python](https://github.com/snapser-community/snapser-byosnaps/tree/main/intermediate/byosnap-python) - Advanced example of a BYOSnap written in Python 3.X.
     * [Game Characters](https://github.com/snapser-community/snapser-byosnaps/tree/main/games/byosnap-characters) - BYOSnap created to support characters in game. This BYOSnap creates a character map, containing an ID and a Session token for each character, allowing game studios to start storing information into the Snaps for each character. It also integrates with the Snapser Hooks system.
+
+## BYOJob Examples
+
+  Bring your own worker code and let the [Jobs](/docs/infra/snaps/jobs) snap run it across your whole user base.
+
+### Basic Examples
+These examples demonstrate how to publish a job worker with snapctl and run it over the users in your Snapend.
+
+    * [Basic Go](https://github.com/snapser-community/snapser-byojobs/tree/main/basic/byojob-go) - Basic example of a BYOJob worker written in Go. It includes an optional failure mode for trying out retries and failures, and a script that seeds test users in your Snapend.
 
 ## BYOGS Examples
 

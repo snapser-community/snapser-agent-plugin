@@ -1,0 +1,69 @@
+# Jobs
+
+This tool allows you to create, edit and delete jobs, and to start runs. It also shows any run that is active in your Snapend.
+
+<Warning>
+  Jobs is a Premium snap. You will need to be on a Premium plan to use it.
+</Warning>
+
+To get started:
+
+1. Publish a worker image with `snapctl byojob publish`. See [Publishing your worker](/docs/infra/snaps/jobs#publishing-your-worker).
+2. Click on `Jobs` from the side Nav.
+3. Click on the `Add Job` button.
+4. You will then see a form where you can configure your job.
+
+<Note>
+  Until you create your first job, the page shows the **Snapctl CLI Commands** panel. It walks you through the pre-requisites, writing a worker, publishing it, and creating and running your first job.
+</Note>
+
+## Job Summary
+- **Name** - A unique name for the job. Starts with a letter, ends with a letter or digit, and uses only letters, digits, `-` and `_`. Up to 100 characters.
+- **Description** - Optional notes for your team. Up to 1,024 characters.
+- **Source** - The users the job runs over, read from the Auth snap from oldest to newest. Users is the only source today.
+
+## Job Worker
+- **Image tag** - The worker image to run. The list shows the images you published with `snapctl byojob publish`, newest first. If an image the job uses was removed, it stays selected and is marked `image not found`.
+- **HTTP port** - The port your worker serves `POST /batch` and `GET /health` on. The default is `8080`.
+- **Replicas, resources and environment** - Expand this section to set:
+  - **Worker replicas** - Copies of your worker that run at once, from 1 to 8.
+  - **CPU** and **Memory** - What each worker copy gets, up to 2 cores and 1Gi.
+  - **Environment variables** - Extra settings passed to your worker, for example `TASK=grant-reward`. Up to 64.
+
+## Job Filter
+- **Users created at or after** - Optional. Only include users created at or after this time.
+- **Users created before** - Optional. Only include users created before this time. A run always stops at the newest user that existed when it started.
+
+Both dates are in your local time.
+
+## Run Settings
+- **Batch size** - User IDs per batch.
+- **Concurrency** - Batches in flight at once, across all worker copies.
+- **Rate** - The most batches sent per second.
+- **Batch timeout** - How long one batch may take before it counts as failed.
+- **Max attempts** - How many times a user is tried before it is recorded as a failure.
+- **Initial backoff** and **Max backoff** - The wait before the first retry, and the longest wait between retries.
+- **Auto-pause error rate** - If the error rate over the last minute goes above this, the run pauses itself.
+- **When the Snapend already has an active run** - The overlap policy: `Skip the new run` or `Cancel the active run`.
+
+See [Job settings](/docs/infra/snaps/jobs#job-settings) for every default and limit.
+
+<Note>
+  Changes to a job apply to its next run. An active run keeps the settings and worker image it started with.
+</Note>
+
+## Jobs Table
+Each row shows the job's worker image, its run settings, its filter and its last run. Click the job name to see its runs, or click the last run to open it.
+
+- **Run** - Start a full run over every user that matches the job. If the Snapend already has an active run, the dialog tells you what the job's overlap policy will do.
+- **Test** - Start a test run on the first N users or on a list of user IDs, up to 1,000. Always test before a full run.
+- **Runs** - Open the [Runs](/docs/infra/snaps/jobs/config-tools/runs) tool for this job.
+- **Edit** - Change the job.
+- **Delete** - Delete the job. A job with an active run cannot be deleted.
+
+<Warning>
+  In a production Snapend, starting a run processes your live users. The tool shows a production warning before you start.
+</Warning>
+
+## Active Runs
+While a run is active, it shows at the top of the page with its live progress, counts, throughput, error rate and time left. From there you can pause, resume, tune or cancel it, or click `Details` to open the run.

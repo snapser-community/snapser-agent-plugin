@@ -1925,7 +1925,7 @@
         "properties" : {
           "bucket_size" : {
             "description" : "Number of players per bucket within the tier",
-            "format" : "uint64",
+            "format" : "int64",
             "type" : "integer"
           },
           "description" : {

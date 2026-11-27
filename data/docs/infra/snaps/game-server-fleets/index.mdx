@@ -113,6 +113,24 @@ are actually on.
   details.
 </Note>
 
+## Region Overrides
+
+A fleet's Allocation Settings — min server count, max server count and buffer — apply the same
+way across every region you pick for an environment. In practice, traffic is rarely even across
+regions: `oregon` might carry most of your production load while `california` only serves a
+handful of players. A region override lets you set different allocation values, arguments or
+environment variables for a single region, instead of sizing every region in the fleet to match
+your busiest one.
+
+Each region can have at most one override, and overrides are scoped per environment, the same
+way Regions and Allocation Settings are. See
+[Configuration Region Overrides](/docs/infra/snaps/game-server-fleets/config-tools/fleets#configuration-region-overrides)
+for the full list of fields and the rules an override must follow.
+
+<Note>
+  Region Overrides need Game Server Fleets v1.18.0 or later.
+</Note>
+
 ## UDP Ping Endpoints
 
 Before submitting a matchmaking ticket, clients should measure their round-trip time (RTT) to each fleet region. Snapser provides dedicated UDP ping servers in every region on port **50000** for this purpose.
